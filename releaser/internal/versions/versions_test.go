@@ -465,10 +465,16 @@ func TestBuildModulePathMap(t *testing.T) {
 		"go.opentelemetry.io/testroot":   ModuleFilePath(filepath.Join(repoRoot, "go.mod")),
 	}
 
+	makeTree(t)
+
 	actual, err := vCfg.BuildModulePathMap(repoRoot)
 
 	require.NoError(t, err)
 	assert.Equal(t, expected, actual)
+}
+
+func makeTree(t *testing.T) {
+
 }
 
 func TestCombineModuleTagNamesAndVersion(t *testing.T) {

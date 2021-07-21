@@ -79,7 +79,7 @@ func MockModuleVersioning(modSetMap ModuleSetMap, modPathMap ModulePathMap) (Mod
 
 	modInfoMap, err := vCfg.buildModuleMap()
 	if err != nil {
-		return ModuleVersioning{}, fmt.Errorf("error getting MockModuleVersioning: %v", err)
+		return ModuleVersioning{}, fmt.Errorf("error building module map: %v", err)
 	}
 
 	return ModuleVersioning{
@@ -92,9 +92,9 @@ func MockModuleVersioning(modSetMap ModuleSetMap, modPathMap ModulePathMap) (Mod
 // ModuleSetRelease contains info about a specific set of modules in the versioning file to be updated.
 type ModuleSetRelease struct {
 	ModuleVersioning
-	modSet   ModuleSet
-	repoRoot string
-	tagNames []ModuleTagName
+	ModSetName string
+	ModSet     ModuleSet
+	TagNames   []ModuleTagName
 }
 
 // NewModuleSetRelease returns a ModuleSetRelease struct by specifying a specific set of modules to update.
@@ -122,26 +122,50 @@ func NewModuleSetRelease(versioningFilename, modSetToUpdate, repoRoot string) (M
 
 	return ModuleSetRelease{
 		ModuleVersioning: modVersioning,
-		modSet:           modSet,
-		repoRoot:         repoRoot,
-		tagNames:         tagNames,
+		ModSetName:       modSetToUpdate,
+		ModSet:           modSet,
+		TagNames:         tagNames,
 	}, nil
 
 }
 
+// MockModuleSetRelease creates a ModuleSetRelease struct for testing purposes.
+func MockModuleSetRelease(modSetMap ModuleSetMap, modPathMap ModulePathMap, modSetToUpdate string, repoRoot string) (ModuleSetRelease, error) {
+	modVersioning, err := MockModuleVersioning(modSetMap, modPathMap)
+	if err != nil {
+		return ModuleSetRelease{}, fmt.Errorf("error getting MockModuleVersioning: %v", err)
+	}
+
+	modSet := modSetMap[modSetToUpdate]
+
+	// get tag names of mods to update
+	tagNames, err := modulePathsToTagNames(
+		modSet.Modules,
+		modPathMap,
+		repoRoot,
+	)
+
+	return ModuleSetRelease{
+		ModuleVersioning: modVersioning,
+		ModSetName:       modSetToUpdate,
+		ModSet:           modSet,
+		TagNames:         tagNames,
+	}, nil
+}
+
 // ModSetVersion gets the version of the module set to update.
 func (modRelease ModuleSetRelease) ModSetVersion() string {
-	return modRelease.modSet.Version
+	return modRelease.ModSet.Version
 }
 
 // ModSetPaths gets the import paths of all modules in the module set to update.
 func (modRelease ModuleSetRelease) ModSetPaths() []ModulePath {
-	return modRelease.modSet.Modules
+	return modRelease.ModSet.Modules
 }
 
 // ModSetTagNames gets the tag names of all modules in the module set to update.
 func (modRelease ModuleSetRelease) ModSetTagNames() []ModuleTagName {
-	return modRelease.tagNames
+	return modRelease.TagNames
 }
 
 // ModuleFullTagNames gets the full tag names (including the version) of all modules in the module set to update.

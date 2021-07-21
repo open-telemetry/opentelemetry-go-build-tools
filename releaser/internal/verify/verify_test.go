@@ -37,14 +37,14 @@ func captureOutput(f func()) string {
 	var buf bytes.Buffer
 	log.SetOutput(&buf)
 	defer func() {
-		log.SetOutput(os.Stderr)
+		log.SetOutput(ioutil.Discard)
 	}()
 
 	f()
 	return buf.String()
 }
 
-// MockVerification creates a Verification struct for testing purposes.
+// MockVerification creates a verification struct for testing purposes.
 func MockVerification(modSetMap versions.ModuleSetMap, modPathMap versions.ModulePathMap, dependencies dependencyMap) verification {
 	modVersioning, err := versions.MockModuleVersioning(modSetMap, modPathMap)
 	if err != nil {
@@ -58,6 +58,7 @@ func MockVerification(modSetMap versions.ModuleSetMap, modPathMap versions.Modul
 	}
 }
 
+// Positive-only test
 func TestMockVerification(t *testing.T) {
 	modSetMap := versions.ModuleSetMap{
 		"mod-set-1": versions.ModuleSet{
