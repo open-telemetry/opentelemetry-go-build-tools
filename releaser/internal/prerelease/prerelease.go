@@ -73,8 +73,8 @@ func RunPrerelease(versioningFile, moduleSetName, fromExistingBranch string, ski
 	}
 
 	fmt.Println("\nPrerelease finished successfully. Now run the following to verify the changes:")
-	fmt.Println("\ngit diff main\n")
-	fmt.Println("Then, push the changes to upstream.")
+	fmt.Println("\ngit diff main")
+	fmt.Println("\nThen, push the changes to upstream.")
 }
 
 type prerelease struct {
