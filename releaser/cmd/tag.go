@@ -16,10 +16,7 @@ package cmd
 
 import (
 	"fmt"
-	"go.opentelemetry.io/build-tools/releaser/internal/versions"
 	"log"
-	"os/exec"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -47,7 +44,7 @@ var tagCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Using versioning file", versioningFile)
 
-		tag.RunTag()
+		tag.RunTag(versioningFile, moduleSetName, commitHash, deleteModuleSetTags)
 	},
 }
 
