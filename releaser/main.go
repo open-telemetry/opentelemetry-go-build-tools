@@ -14,7 +14,7 @@
 
 package main
 
-import "go.opentelemetry.io/build-tools/releasing/cmd"
+import "go.opentelemetry.io/build-tools/releaser/cmd"
 
 func main() {
 	cmd.Execute()
