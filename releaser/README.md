@@ -19,7 +19,7 @@ An example versioning file is given in [the versions-example.yaml file]("./docs/
 
 ## Creating the app binary
 
-TODO: switch to automatically pulling newest version of `releasing` app binary.
+TODO: switch to automatically pulling newest version of `releaser` app binary.
 
 This section describes the current process used for building the Cobra app binary,
 but the process will be updated soon to automatically fetch the most recent version
@@ -27,12 +27,12 @@ of the app.
 
 ## Verify Module Versioning
 
-Once changes have been completed to the `versions.yaml` file, and the `releasing` file 
+Once changes have been completed to the `versions.yaml` file, and the `releaser` file 
 is within the target repo, verify that the versioning is correct by running the `verify` subcommand:
 
 ```
 # within the target repo
-./releasing verify
+./releaser verify
 ```
 
 * The script is called with the following parameters:
@@ -57,7 +57,7 @@ Update `go.mod` for all modules to depend on the specified module set's new rele
    all release changes.
 
     ```
-    ./releasing prerelease --module-set-name <name>
+    ./releaser prerelease --module-set-name <name>
     ```
     * The script is called with the following parameters:
         * **module-set-name (required):** Name of module set whose version is being changed.
@@ -95,7 +95,7 @@ In other words, once a Pull Request has been merged, the commit hash of the sing
 The tag can be given as its abbreviation, in which case the script will attempt to find and print the full SHA1 hash.
 
     ```
-    ./releasing tag --module-set-name <name> --commit-hash <hash>
+    ./releaser tag --module-set-name <name> --commit-hash <hash>
     ```
 
 2. Push tags for ALL updated modules to the upstream remote (not your fork), which are printed by the `tag` script. 
@@ -113,7 +113,7 @@ version specified in `versions.yaml`.
 This command will not allow you to delete tags that already exist in the upstream remote.
 
 ```
-./releasing tag --module-set-name <name> --delete-module-set-tags
+./releaser tag --module-set-name <name> --delete-module-set-tags
 ```
 
 ## Release
