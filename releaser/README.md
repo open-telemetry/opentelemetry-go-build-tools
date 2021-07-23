@@ -25,6 +25,14 @@ This section describes the current process used for building the Cobra app binar
 but the process will be updated soon to automatically fetch the most recent version
 of the app.
 
+To build the binary, simply use the following commands:
+
+```
+# from the opentelemetry-go-build-tools repo root
+cd releaser
+go build -o releaser main.go
+```
+
 ## Verify Module Versioning
 
 Once changes have been completed to the `versions.yaml` file, and the `releaser` file 
