@@ -16,7 +16,6 @@ package prerelease
 
 import (
 	"fmt"
-	"github.com/go-git/go-git/v5/storage/memory"
 	"io/ioutil"
 	"log"
 	"os/exec"
@@ -25,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 
 	"go.opentelemetry.io/build-tools/releaser/internal/common"
 )
@@ -88,39 +88,53 @@ type prerelease struct {
 func newPrerelease(versioningFilename, modSetToUpdate, repoRoot string) (prerelease, error) {
 	modRelease, err := common.NewModuleSetRelease(versioningFilename, modSetToUpdate, repoRoot)
 	if err != nil {
-		log.Fatalf("Error creating new prerelease struct: %v", err)
+		return prerelease{}, fmt.Errorf("error creating new prerelease struct: %v", err)
 	}
 
-	repo := r, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
-		URL: "https://"
-	})
+	repo, err := git.PlainOpen(repoRoot)
+	if err != nil {
+		return prerelease{}, fmt.Errorf("error getting git.Repository from repo root dir %v: %v", repoRoot, err)
+	}
 
 	return prerelease{
 		ModuleSetRelease: modRelease,
-		Repo: repo,
+		Repo: *repo,
 	}, nil
 }
 
 // verifyGitTagsDoNotAlreadyExist checks if Git tags have already been created that match the specific module tag name
 // and version number for the modules being updated. If the tag already exists, an error is returned.
 func (p prerelease) verifyGitTagsDoNotAlreadyExist() error {
-	modFullTags := p.ModuleFullTagNames()
+	var newTags map[string]bool
 
-	//cmd := exec.Command("git", "tag")
-	//output, err := cmd.Output()
-	//if err != nil {
-	//	return fmt.Errorf("could not execute git tag: %v", err)
-	//}
-
-	existingTags := map[string]bool{}
-
-	for _, tag := range strings.Split(string(output), "\n") {
-		existingTags[strings.TrimSpace(tag)] = true
+	for _, newFullTag := range p.ModuleFullTagNames() {
+		newTags[newFullTag] = true
 	}
 
-	for _, newFullTag := range modFullTags {
-		if existingTags[newFullTag] {
-			return fmt.Errorf("git tag already exists for %v", newFullTag)
+	existingTags, err := p.Repo.Tags()
+	if err != nil {
+		return fmt.Errorf("error getting repo tags: %v", err)
+	}
+
+	var errors []errGitTagAlreadyExists
+
+	existingTags.ForEach(func (ref *plumbing.Reference) error {
+		tagObj, err := p.Repo.TagObject(ref.Hash())
+		if err != nil {
+			return fmt.Errorf("error retrieving tag object: %v", err)
+		}
+		if _, exists := newTags[tagObj.Name]; exists {
+			errors = append(errors, errGitTagAlreadyExists{
+				gitTag: tagObj.Name,
+			})
+		}
+
+		return nil
+	})
+
+	if len(errors) > 0 {
+		return &errGitTagAlreadyExistsSlice{
+			errors: errors,
 		}
 	}
 

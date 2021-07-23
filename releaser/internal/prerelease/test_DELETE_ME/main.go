@@ -3,7 +3,6 @@ package main
 
 import (
 	"fmt"
-
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 
@@ -17,11 +16,17 @@ func main() {
 
 	tags, _ := repo.Tags()
 
+	var errors []error
+
 	tags.ForEach(func (ref *plumbing.Reference) error {
 		obj, _ := repo.TagObject(ref.Hash())
 
-		fmt.Println(obj)
+		if obj.Name != "" {
+			errors = append(errors, fmt.Errorf("hello"))
+		}
 
 		return nil
 	})
+
+	fmt.Println(errors)
 }
