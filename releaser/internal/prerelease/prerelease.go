@@ -16,6 +16,7 @@ package prerelease
 
 import (
 	"fmt"
+	"github.com/go-git/go-git/v5/storage/memory"
 	"io/ioutil"
 	"log"
 	"os/exec"
@@ -23,12 +24,14 @@ import (
 	"regexp"
 	"strings"
 
-	"go.opentelemetry.io/build-tools/releaser/internal/versions"
+	"github.com/go-git/go-git/v5"
+
+	"go.opentelemetry.io/build-tools/releaser/internal/common"
 )
 
 func RunPrerelease(versioningFile, moduleSetName, fromExistingBranch string, skipMake bool) {
 
-	repoRoot, err := versions.ChangeToRepoRoot()
+	repoRoot, err := common.ChangeToRepoRoot()
 	if err != nil {
 		log.Fatalf("unable to change to repo root: %v", err)
 	}
@@ -78,17 +81,23 @@ func RunPrerelease(versioningFile, moduleSetName, fromExistingBranch string, ski
 }
 
 type prerelease struct {
-	versions.ModuleSetRelease
+	common.ModuleSetRelease
+	Repo git.Repository
 }
 
 func newPrerelease(versioningFilename, modSetToUpdate, repoRoot string) (prerelease, error) {
-	modRelease, err := versions.NewModuleSetRelease(versioningFilename, modSetToUpdate, repoRoot)
+	modRelease, err := common.NewModuleSetRelease(versioningFilename, modSetToUpdate, repoRoot)
 	if err != nil {
 		log.Fatalf("Error creating new prerelease struct: %v", err)
 	}
 
+	repo := r, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+		URL: "https://"
+	})
+
 	return prerelease{
 		ModuleSetRelease: modRelease,
+		Repo: repo,
 	}, nil
 }
 
@@ -97,11 +106,11 @@ func newPrerelease(versioningFilename, modSetToUpdate, repoRoot string) (prerele
 func (p prerelease) verifyGitTagsDoNotAlreadyExist() error {
 	modFullTags := p.ModuleFullTagNames()
 
-	cmd := exec.Command("git", "tag")
-	output, err := cmd.Output()
-	if err != nil {
-		return fmt.Errorf("could not execute git tag: %v", err)
-	}
+	//cmd := exec.Command("git", "tag")
+	//output, err := cmd.Output()
+	//if err != nil {
+	//	return fmt.Errorf("could not execute git tag: %v", err)
+	//}
 
 	existingTags := map[string]bool{}
 
@@ -201,14 +210,14 @@ func (p prerelease) commitChanges(skipMake bool) error {
 
 // updateGoModVersions reads the fromFile (a go.mod file), replaces versions
 // for all specified modules in newModPaths, and writes the new go.mod to the toFile file.
-func (p prerelease) updateGoModVersions(modFilePath versions.ModuleFilePath) error {
+func (p prerelease) updateGoModVersions(modFilePath common.ModuleFilePath) error {
 	newGoModFile, err := ioutil.ReadFile(string(modFilePath))
 	if err != nil {
 		panic(err)
 	}
 
 	for _, modPath := range p.ModSetPaths() {
-		oldVersionRegex := filePathToRegex(string(modPath)) + versions.SemverRegex
+		oldVersionRegex := filePathToRegex(string(modPath)) + common.SemverRegex
 		r, err := regexp.Compile(oldVersionRegex)
 		if err != nil {
 			return fmt.Errorf("error compiling regex: %v", err)

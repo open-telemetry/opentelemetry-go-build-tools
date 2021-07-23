@@ -17,12 +17,12 @@ package verify
 import (
 	"fmt"
 
-	"go.opentelemetry.io/build-tools/releaser/internal/versions"
+	"go.opentelemetry.io/build-tools/releaser/internal/common"
 )
 
 type errModuleNotInSet struct {
-	modPath     versions.ModulePath
-	modFilePath versions.ModuleFilePath
+	modPath     common.ModulePath
+	modFilePath common.ModuleFilePath
 }
 
 func (e *errModuleNotInSet) Error() string {
@@ -30,7 +30,7 @@ func (e *errModuleNotInSet) Error() string {
 }
 
 type errModuleNotInRepo struct {
-	modPath    versions.ModulePath
+	modPath    common.ModulePath
 	modSetName string
 }
 
@@ -59,9 +59,9 @@ func (e *errMultipleSetSameVersion) Error() string {
 
 // errDependency is logged upon discovery that a stable module depends on an unstable module.
 type errDependency struct {
-	modPath    versions.ModulePath
+	modPath    common.ModulePath
 	modVersion string
-	depPath    versions.ModulePath
+	depPath    common.ModulePath
 	depVersion string
 }
 

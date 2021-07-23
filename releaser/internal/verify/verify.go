@@ -23,7 +23,7 @@ import (
 	"golang.org/x/mod/semver"
 
 	tools "go.opentelemetry.io/build-tools"
-	"go.opentelemetry.io/build-tools/releaser/internal/versions"
+	"go.opentelemetry.io/build-tools/releaser/internal/common"
 )
 
 func RunVerify(versioningFile string) {
@@ -52,14 +52,14 @@ func RunVerify(versioningFile string) {
 }
 
 type verification struct {
-	versions.ModuleVersioning
+	common.ModuleVersioning
 	dependencies dependencyMap
 }
 
-type dependencyMap map[versions.ModulePath][]versions.ModulePath
+type dependencyMap map[common.ModulePath][]common.ModulePath
 
 func newVerification(versioningFilename, repoRoot string) (verification, error) {
-	modVersioning, err := versions.NewModuleVersioning(versioningFilename, repoRoot)
+	modVersioning, err := common.NewModuleVersioning(versioningFilename, repoRoot)
 	if err != nil {
 		return verification{}, fmt.Errorf("call to NewModuleVersioning failed: %v\n", err)
 	}
@@ -76,7 +76,7 @@ func newVerification(versioningFilename, repoRoot string) (verification, error) 
 }
 
 // getDependencies returns a map of each module's dependencies on other modules within the same repo.
-func getDependencies(modVersioning versions.ModuleVersioning) (dependencyMap, error) {
+func getDependencies(modVersioning common.ModuleVersioning) (dependencyMap, error) {
 	dependencies := make(dependencyMap)
 
 	// Dependencies are defined by the require section of go.mod files.
@@ -92,8 +92,8 @@ func getDependencies(modVersioning versions.ModuleVersioning) (dependencyMap, er
 		// get dependencies as defined by the "require" section
 		for _, dep := range modFile.Require {
 			// check if dependency is in the same repo (i.e. if it exists in the module versioning file)
-			if _, exists := modVersioning.ModInfoMap[versions.ModulePath(dep.Mod.Path)]; exists {
-				dependencies[modPath] = append(dependencies[modPath], versions.ModulePath(dep.Mod.Path))
+			if _, exists := modVersioning.ModInfoMap[common.ModulePath(dep.Mod.Path)]; exists {
+				dependencies[modPath] = append(dependencies[modPath], common.ModulePath(dep.Mod.Path))
 			}
 		}
 	}
@@ -142,7 +142,7 @@ func (v verification) verifyVersions() error {
 			}
 		}
 
-		if versions.IsStableVersion(modSet.Version) {
+		if common.IsStableVersion(modSet.Version) {
 			// Add all sets to major version map
 			modSetMajorVersion := semver.Major(modSet.Version)
 			setMajorVersions[modSetMajorVersion] = append(setMajorVersions[modSetMajorVersion], modSetName)
@@ -169,12 +169,12 @@ func (v verification) verifyDependencies() {
 	for modPath, modDeps := range v.dependencies {
 		// check if module is stable
 		modVersion := v.ModInfoMap[modPath].Version
-		if versions.IsStableVersion(modVersion) {
+		if common.IsStableVersion(modVersion) {
 
 			for _, depPath := range modDeps {
 				// check if dependency is on an unstable module
 				depVersion := v.ModInfoMap[depPath].Version
-				if !versions.IsStableVersion(depVersion) {
+				if !common.IsStableVersion(depVersion) {
 					log.Println(
 						&errDependency{
 							modPath:    modPath,

@@ -14,4 +14,4 @@
 
 // Package versions provides helper functions for reading and parsing Module versioning
 // files, as well as common functions used by multiple commands in the Cobra application.
-package versions
+package common

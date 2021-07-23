@@ -20,12 +20,12 @@ import (
 	"os/exec"
 	"strings"
 
-	"go.opentelemetry.io/build-tools/releaser/internal/versions"
+	"go.opentelemetry.io/build-tools/releaser/internal/common"
 )
 
 func RunTag(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags bool) {
 
-	repoRoot, err := versions.ChangeToRepoRoot()
+	repoRoot, err := common.ChangeToRepoRoot()
 	if err != nil {
 		log.Fatalf("unable to change to repo root: %v", err)
 	}
@@ -52,12 +52,12 @@ func RunTag(versioningFile, moduleSetName, commitHash string, deleteModuleSetTag
 }
 
 type tagger struct {
-	versions.ModuleSetRelease
+	common.ModuleSetRelease
 	CommitHash string
 }
 
 func newTagger(versioningFilename, modSetToUpdate, repoRoot, hash string, deleteModuleSetTags bool) (tagger, error) {
-	modRelease, err := versions.NewModuleSetRelease(versioningFilename, modSetToUpdate, repoRoot)
+	modRelease, err := common.NewModuleSetRelease(versioningFilename, modSetToUpdate, repoRoot)
 	if err != nil {
 		return tagger{}, fmt.Errorf("error creating prerelease struct: %v", err)
 	}

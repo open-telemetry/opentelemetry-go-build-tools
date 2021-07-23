@@ -19,12 +19,12 @@ import (
 	"log"
 	"testing"
 
-	"go.opentelemetry.io/build-tools/releaser/internal/versions"
+	"go.opentelemetry.io/build-tools/releaser/internal/common"
 )
 
 // MockPrerelease creates a prerelease struct for testing purposes.
-func MockPrerelease(modSetMap versions.ModuleSetMap, modPathMap versions.ModulePathMap, modSetToUpdate string, repoRoot string) prerelease {
-	modSetRelease, err := versions.MockModuleSetRelease(modSetMap, modPathMap, modSetToUpdate, repoRoot)
+func MockPrerelease(modSetMap common.ModuleSetMap, modPathMap common.ModulePathMap, modSetToUpdate string, repoRoot string) prerelease {
+	modSetRelease, err := common.MockModuleSetRelease(modSetMap, modPathMap, modSetToUpdate, repoRoot)
 	if err != nil {
 		log.Printf("error getting MockModuleVersioning: %v", err)
 		return prerelease{}
@@ -37,23 +37,23 @@ func MockPrerelease(modSetMap versions.ModuleSetMap, modPathMap versions.ModuleP
 
 // Positive-only test
 func TestMockPrerelease(t *testing.T) {
-	modSetMap := versions.ModuleSetMap{
-		"mod-set-1": versions.ModuleSet{
+	modSetMap := common.ModuleSetMap{
+		"mod-set-1": common.ModuleSet{
 			Version: "v1.2.3-RC1+meta",
-			Modules: []versions.ModulePath{
+			Modules: []common.ModulePath{
 				"go.opentelemetry.io/test/test1",
 				"go.opentelemetry.io/test/test2",
 			},
 		},
-		"mod-set-2": versions.ModuleSet{
+		"mod-set-2": common.ModuleSet{
 			Version: "v0.1.0",
-			Modules: []versions.ModulePath{
+			Modules: []common.ModulePath{
 				"go.opentelemetry.io/test3",
 			},
 		},
 	}
 
-	modPathMap := versions.ModulePathMap{
+	modPathMap := common.ModulePathMap{
 		"go.opentelemetry.io/test/test1": "root/path/to/mod/test/test1/go.mod",
 		"go.opentelemetry.io/test/test2": "root/path/to/mod/test/test2/go.mod",
 		"go.opentelemetry.io/test3":      "root/test3/go.mod",
@@ -62,20 +62,20 @@ func TestMockPrerelease(t *testing.T) {
 	modSetName := "mod-set-1"
 
 	expected := prerelease{
-		ModuleSetRelease: versions.ModuleSetRelease{
-			ModuleVersioning: versions.ModuleVersioning{
+		ModuleSetRelease: common.ModuleSetRelease{
+			ModuleVersioning: common.ModuleVersioning{
 				ModSetMap:  modSetMap,
 				ModPathMap: modPathMap,
-				ModInfoMap: versions.ModuleInfoMap{
-					"go.opentelemetry.io/test/test1": versions.ModuleInfo{
+				ModInfoMap: common.ModuleInfoMap{
+					"go.opentelemetry.io/test/test1": common.ModuleInfo{
 						ModuleSetName: "mod-set-1",
 						Version:       "v1.2.3-RC1+meta",
 					},
-					"go.opentelemetry.io/test/test2": versions.ModuleInfo{
+					"go.opentelemetry.io/test/test2": common.ModuleInfo{
 						ModuleSetName: "mod-set-1",
 						Version:       "v1.2.3-RC1+meta",
 					},
-					"go.opentelemetry.io/test3": versions.ModuleInfo{
+					"go.opentelemetry.io/test3": common.ModuleInfo{
 						ModuleSetName: "mod-set-2",
 						Version:       "v0.1.0",
 					},
@@ -83,7 +83,7 @@ func TestMockPrerelease(t *testing.T) {
 			},
 			ModSetName: modSetName,
 			ModSet:     modSetMap[modSetName],
-			TagNames: []versions.ModuleTagName{
+			TagNames: []common.ModuleTagName{
 				"path/to/mod/test/test1",
 				"path/to/mod/test/test2",
 			},
