@@ -15,7 +15,6 @@
 package common
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -27,61 +26,13 @@ import (
 )
 
 const (
-	testDataDir = "./releaser/internal/common/test_data"
+	testDataDir = "./test_data"
 )
 
 // TestMain performs setup for the tests and suppress printing logs.
 func TestMain(m *testing.M) {
 	log.SetOutput(ioutil.Discard)
 	os.Exit(m.Run())
-}
-
-func TestMockModuleVersioning(t *testing.T) {
-	modSetMap := ModuleSetMap{
-		"mod-set-1": ModuleSet{
-			Version: "v1.2.3-RC1+meta",
-			Modules: []ModulePath{
-				"go.opentelemetry.io/test/test1",
-				"go.opentelemetry.io/test/test2",
-			},
-		},
-		"mod-set-2": ModuleSet{
-			Version: "v0.1.0",
-			Modules: []ModulePath{
-				"go.opentelemetry.io/test3",
-			},
-		},
-	}
-
-	modPathMap := ModulePathMap{
-		"go.opentelemetry.io/test/test1": "root/path/to/mod/test/test1/go.mod",
-		"go.opentelemetry.io/test/test2": "root/path/to/mod/test/test2/go.mod",
-		"go.opentelemetry.io/test3":      "root/test3/go.mod",
-	}
-
-	expected := ModuleVersioning{
-		ModSetMap:  modSetMap,
-		ModPathMap: modPathMap,
-		ModInfoMap: ModuleInfoMap{
-			"go.opentelemetry.io/test/test1": ModuleInfo{
-				ModuleSetName: "mod-set-1",
-				Version:       "v1.2.3-RC1+meta",
-			},
-			"go.opentelemetry.io/test/test2": ModuleInfo{
-				ModuleSetName: "mod-set-1",
-				Version:       "v1.2.3-RC1+meta",
-			},
-			"go.opentelemetry.io/test3": ModuleInfo{
-				ModuleSetName: "mod-set-2",
-				Version:       "v0.1.0",
-			},
-		},
-	}
-
-	actual, err := MockModuleVersioning(modSetMap, modPathMap)
-
-	require.NoError(t, err)
-	assert.Equal(t, expected, actual)
 }
 
 func TestNewModuleVersioning(t *testing.T) {
@@ -100,7 +51,7 @@ func TestNewModuleVersioning(t *testing.T) {
 		ModuleFilePath(filepath.Join(tmpRootDir, "test", "test2", "go.mod")): []byte("module \"go.opentelemetry.io/test/testexcluded\"\n\ngo 1.16\n"),
 	}
 
-	if err := writeModFileTree(modFiles); err != nil {
+	if err := WriteGoModFiles(modFiles); err != nil {
 		t.Fatal("could not create go mod file tree", err)
 	}
 
@@ -493,7 +444,7 @@ func TestBuildModulePathMap(t *testing.T) {
 		ModuleFilePath(filepath.Join(tmpRootDir, "test", "test2", "go.mod")): []byte("module \"go.opentelemetry.io/test/testexcluded\"\n\ngo 1.16\n"),
 	}
 
-	if err := writeModFileTree(modFiles); err != nil {
+	if err := WriteGoModFiles(modFiles); err != nil {
 		t.Fatal("could not create go mod file tree", err)
 	}
 
@@ -507,19 +458,4 @@ func TestBuildModulePathMap(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Equal(t, expected, actual)
-}
-
-func writeModFileTree(modFiles map[ModuleFilePath][]byte) error {
-	perm := os.FileMode(0700)
-
-	for modFilePath, file := range modFiles {
-		path := filepath.Dir(string(modFilePath))
-		os.MkdirAll(path, perm)
-
-		if err := ioutil.WriteFile(string(modFilePath), file, perm); err != nil {
-			return fmt.Errorf("could not write temporary mod file %v", err)
-		}
-	}
-
-	return nil
 }

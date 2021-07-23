@@ -16,11 +16,12 @@ package common
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
-	"golang.org/x/mod/modfile"
 	"io/fs"
 	"io/ioutil"
 	"path/filepath"
+
+	"github.com/spf13/viper"
+	"golang.org/x/mod/modfile"
 )
 
 const (
@@ -55,25 +56,6 @@ func NewModuleVersioning(versioningFilename string, repoRoot string) (ModuleVers
 	modPathMap, err := vCfg.BuildModulePathMap(repoRoot)
 	if err != nil {
 		return ModuleVersioning{}, fmt.Errorf("Error building module path map for NewModuleVersioning: %v", err)
-	}
-
-	return ModuleVersioning{
-		ModSetMap:  modSetMap,
-		ModPathMap: modPathMap,
-		ModInfoMap: modInfoMap,
-	}, nil
-}
-
-// MockModuleVersioning creates a ModuleVersioning struct for testing purposes.
-func MockModuleVersioning(modSetMap ModuleSetMap, modPathMap ModulePathMap) (ModuleVersioning, error) {
-	vCfg := versionConfig{
-		ModuleSets:      modSetMap,
-		ExcludedModules: []ModulePath{},
-	}
-
-	modInfoMap, err := vCfg.buildModuleMap()
-	if err != nil {
-		return ModuleVersioning{}, fmt.Errorf("error building module map: %v", err)
 	}
 
 	return ModuleVersioning{
@@ -121,30 +103,6 @@ func NewModuleSetRelease(versioningFilename, modSetToUpdate, repoRoot string) (M
 		TagNames:         tagNames,
 	}, nil
 
-}
-
-// MockModuleSetRelease creates a ModuleSetRelease struct for testing purposes.
-func MockModuleSetRelease(modSetMap ModuleSetMap, modPathMap ModulePathMap, modSetToUpdate string, repoRoot string) (ModuleSetRelease, error) {
-	modVersioning, err := MockModuleVersioning(modSetMap, modPathMap)
-	if err != nil {
-		return ModuleSetRelease{}, fmt.Errorf("error getting MockModuleVersioning: %v", err)
-	}
-
-	modSet := modSetMap[modSetToUpdate]
-
-	// get tag names of mods to update
-	tagNames, err := modulePathsToTagNames(
-		modSet.Modules,
-		modPathMap,
-		repoRoot,
-	)
-
-	return ModuleSetRelease{
-		ModuleVersioning: modVersioning,
-		ModSetName:       modSetToUpdate,
-		ModSet:           modSet,
-		TagNames:         tagNames,
-	}, nil
 }
 
 // ModSetVersion gets the version of the module set to update.
