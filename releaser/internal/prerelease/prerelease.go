@@ -16,15 +16,12 @@ package prerelease
 
 import (
 	"fmt"
-	"github.com/go-git/go-git/v5/storage/memory"
 	"io/ioutil"
 	"log"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
-
-	"github.com/go-git/go-git/v5"
 
 	"go.opentelemetry.io/build-tools/releaser/internal/common"
 )
@@ -82,7 +79,6 @@ func RunPrerelease(versioningFile, moduleSetName, fromExistingBranch string, ski
 
 type prerelease struct {
 	common.ModuleSetRelease
-	Repo git.Repository
 }
 
 func newPrerelease(versioningFilename, modSetToUpdate, repoRoot string) (prerelease, error) {
@@ -91,13 +87,8 @@ func newPrerelease(versioningFilename, modSetToUpdate, repoRoot string) (prerele
 		log.Fatalf("Error creating new prerelease struct: %v", err)
 	}
 
-	repo := r, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
-		URL: "https://"
-	})
-
 	return prerelease{
 		ModuleSetRelease: modRelease,
-		Repo: repo,
 	}, nil
 }
 
@@ -106,11 +97,11 @@ func newPrerelease(versioningFilename, modSetToUpdate, repoRoot string) (prerele
 func (p prerelease) verifyGitTagsDoNotAlreadyExist() error {
 	modFullTags := p.ModuleFullTagNames()
 
-	//cmd := exec.Command("git", "tag")
-	//output, err := cmd.Output()
-	//if err != nil {
-	//	return fmt.Errorf("could not execute git tag: %v", err)
-	//}
+	cmd := exec.Command("git", "tag")
+	output, err := cmd.Output()
+	if err != nil {
+		return fmt.Errorf("could not execute git tag: %v", err)
+	}
 
 	existingTags := map[string]bool{}
 
