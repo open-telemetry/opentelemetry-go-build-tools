@@ -48,6 +48,13 @@ func TestIsStableVersion(t *testing.T) {
 }
 
 func TestChangeToRepoRoot(t *testing.T) {
+	origDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal("finding working dir:", err)
+	}
+
+	defer os.Chdir(origDir)
+
 	expected, _ := filepath.Abs("../../../")
 
 	actual, err := ChangeToRepoRoot()
