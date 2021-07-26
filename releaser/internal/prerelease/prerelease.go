@@ -95,7 +95,7 @@ func newPrerelease(versioningFilename, modSetToUpdate, repoRoot string) (prerele
 // verifyGitTagsDoNotAlreadyExist checks if Git tags have already been created that match the specific module tag name
 // and version number for the modules being updated. If the tag already exists, an error is returned.
 func (p prerelease) verifyGitTagsDoNotAlreadyExist() error {
-	modFullTags := p.ModuleFullTagNames()
+	modFullTags := p.ModuleSetRelease.ModuleFullTagNames()
 
 	cmd := exec.Command("git", "tag")
 	output, err := cmd.Output()
@@ -132,7 +132,7 @@ func (p prerelease) verifyWorkingTreeClean() error {
 }
 
 func (p prerelease) createPrereleaseBranch(fromExistingBranch string) error {
-	branchNameElements := []string{"pre_release", p.ModSetName, p.ModSetVersion()}
+	branchNameElements := []string{"pre_release", p.ModuleSetRelease.ModSetName, p.ModuleSetRelease.ModSetVersion()}
 	branchName := strings.Join(branchNameElements, "_")
 	fmt.Printf("git checkout -b %v %v\n", branchName, fromExistingBranch)
 	cmd := exec.Command("git", "checkout", "-b", branchName, fromExistingBranch)
@@ -162,7 +162,7 @@ func (p prerelease) runMakeLint() error {
 }
 
 func (p prerelease) commitChanges(skipMake bool) error {
-	commitMessage := "Prepare for versions " + p.ModSetVersion()
+	commitMessage := "Prepare for versions " + p.ModuleSetRelease.ModSetVersion()
 
 	// add changes to git
 	cmd := exec.Command("git", "add", ".")
@@ -207,14 +207,14 @@ func (p prerelease) updateGoModVersions(modFilePath common.ModuleFilePath) error
 		panic(err)
 	}
 
-	for _, modPath := range p.ModSetPaths() {
+	for _, modPath := range p.ModuleSetRelease.ModSetPaths() {
 		oldVersionRegex := filePathToRegex(string(modPath)) + common.SemverRegex
 		r, err := regexp.Compile(oldVersionRegex)
 		if err != nil {
 			return fmt.Errorf("error compiling regex: %v", err)
 		}
 
-		newModVersionString := string(modPath) + " " + p.ModSetVersion()
+		newModVersionString := string(modPath) + " " + p.ModuleSetRelease.ModSetVersion()
 
 		newGoModFile = r.ReplaceAll(newGoModFile, []byte(newModVersionString))
 	}
@@ -229,7 +229,7 @@ func (p prerelease) updateGoModVersions(modFilePath common.ModuleFilePath) error
 // for the modules given in newModPaths.
 func (p prerelease) updateAllGoModFiles() error {
 	fmt.Println("Updating all module versions in go.mod files...")
-	for _, modFilePath := range p.ModPathMap {
+	for _, modFilePath := range p.ModuleSetRelease.ModPathMap {
 		if err := p.updateGoModVersions(modFilePath); err != nil {
 			return fmt.Errorf("could not update module versions in file %v: %v", modFilePath, err)
 		}
