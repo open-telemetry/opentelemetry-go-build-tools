@@ -24,13 +24,13 @@ type errGitTagAlreadyExistsSlice struct {
 }
 
 func (e *errGitTagAlreadyExistsSlice) Error() string {
-	var s []string
+	var errorStrings []string
 
 	for _, err := range e.errors {
-		s = append(s, err.Error())
+		errorStrings = append(errorStrings, err.Error())
 	}
 
-	return strings.Join(s, "\n")
+	return strings.Join(errorStrings, "\n")
 }
 
 type errGitTagAlreadyExists struct {
