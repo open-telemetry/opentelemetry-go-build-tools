@@ -16,7 +16,6 @@ package prerelease
 
 import (
 	"fmt"
-	"github.com/go-git/go-git/v5"
 	"io/ioutil"
 	"log"
 	"os/exec"
@@ -24,14 +23,15 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 
+	tools "go.opentelemetry.io/build-tools"
 	"go.opentelemetry.io/build-tools/releaser/internal/common"
 )
 
 func RunPrerelease(versioningFile string, moduleSetName string, skipMake bool) {
-
-	repoRoot, err := common.ChangeToRepoRoot()
+	repoRoot, err := tools.FindRepoRoot()
 	if err != nil {
 		log.Fatalf("unable to change to repo root: %v", err)
 	}
