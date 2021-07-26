@@ -135,14 +135,20 @@ func (p prerelease) verifyGitTagsDoNotAlreadyExist() error {
 	return nil
 }
 
-// verifyWorkingTreeClean checks if the working tree is clean (i.e. running 'git diff --exit-code' gives exit code 0).
-// If the working tree is not clean, the git diff output is printed, and an error is returned.
+// verifyWorkingTreeClean returns nil if the working tree is clean or an error if not.
 func (p prerelease) verifyWorkingTreeClean() error {
-	cmd := exec.Command("git", "diff", "--exit-code")
-	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("working tree is not clean, can't proceed with the release process:\n\n%v",
-			string(output),
-		)
+	worktree, err := p.ModuleSetRelease.Repo.Worktree()
+	if err != nil {
+		return fmt.Errorf("could not get worktree: %v", err)
+	}
+
+	status, err := worktree.Status()
+	if err != nil {
+		return fmt.Errorf("could not get worktree status: %v", err)
+	}
+
+	if !status.IsClean() {
+		return &errWorkingTreeNotClean{}
 	}
 
 	return nil

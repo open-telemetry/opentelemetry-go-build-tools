@@ -40,3 +40,9 @@ type errGitTagAlreadyExists struct {
 func (e *errGitTagAlreadyExists) Error() string {
 	return fmt.Sprintf("git tag %v already exists", e.gitTag)
 }
+
+type errWorkingTreeNotClean struct{}
+
+func (e *errWorkingTreeNotClean) Error() string {
+	return fmt.Sprintf("working tree not clean")
+}
