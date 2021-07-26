@@ -105,7 +105,7 @@ func getFullCommitHash(hash string) (string, error) {
 }
 
 func (t tagger) deleteModuleSetTags() error {
-	modFullTagsToDelete := t.ModuleFullTagNames()
+	modFullTagsToDelete := t.ModuleSetRelease.ModuleFullTagNames()
 
 	if err := t.deleteTags(modFullTagsToDelete); err != nil {
 		return fmt.Errorf("unable to delete module tags: %v", err)
@@ -128,7 +128,7 @@ func (t tagger) deleteTags(modFullTags []string) error {
 }
 
 func (t tagger) tagAllModules() error {
-	modFullTags := t.ModuleFullTagNames()
+	modFullTags := t.ModuleSetRelease.ModuleFullTagNames()
 
 	var addedFullTags []string
 

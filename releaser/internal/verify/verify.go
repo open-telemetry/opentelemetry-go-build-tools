@@ -104,8 +104,8 @@ func getDependencies(modVersioning common.ModuleVersioning) (dependencyMap, erro
 // verifyAllModulesInSet checks that every module (as defined by a go.mod file) is contained in exactly
 // one module set, unless it is excluded.
 func (v verification) verifyAllModulesInSet() error {
-	for modPath, modFilePath := range v.ModPathMap {
-		if _, exists := v.ModInfoMap[modPath]; !exists {
+	for modPath, modFilePath := range v.ModuleVersioning.ModPathMap {
+		if _, exists := v.ModuleVersioning.ModInfoMap[modPath]; !exists {
 			return &errModuleNotInSet{
 				modPath:     modPath,
 				modFilePath: modFilePath,
@@ -113,8 +113,8 @@ func (v verification) verifyAllModulesInSet() error {
 		}
 	}
 
-	for modPath, modInfo := range v.ModInfoMap {
-		if _, exists := v.ModPathMap[modPath]; !exists {
+	for modPath, modInfo := range v.ModuleVersioning.ModInfoMap {
+		if _, exists := v.ModuleVersioning.ModPathMap[modPath]; !exists {
 			return &errModuleNotInRepo{
 				modPath:    modPath,
 				modSetName: modInfo.ModuleSetName,
@@ -133,7 +133,7 @@ func (v verification) verifyVersions() error {
 	// with the same non-zero major version.
 	setMajorVersions := make(map[string][]string)
 
-	for modSetName, modSet := range v.ModSetMap {
+	for modSetName, modSet := range v.ModuleVersioning.ModSetMap {
 		// Check that module set versions conform to semver semantics
 		if !semver.IsValid(modSet.Version) {
 			return &errInvalidVersion{
@@ -168,12 +168,12 @@ func (v verification) verifyVersions() error {
 func (v verification) verifyDependencies() {
 	for modPath, modDeps := range v.dependencies {
 		// check if module is stable
-		modVersion := v.ModInfoMap[modPath].Version
+		modVersion := v.ModuleVersioning.ModInfoMap[modPath].Version
 		if common.IsStableVersion(modVersion) {
 
 			for _, depPath := range modDeps {
 				// check if dependency is on an unstable module
-				depVersion := v.ModInfoMap[depPath].Version
+				depVersion := v.ModuleVersioning.ModInfoMap[depPath].Version
 				if !common.IsStableVersion(depVersion) {
 					log.Println(
 						&errDependency{

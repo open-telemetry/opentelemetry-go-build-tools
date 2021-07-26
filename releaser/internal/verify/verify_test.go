@@ -210,9 +210,9 @@ func TestNewVerification(t *testing.T) {
 				require.NoError(t, err)
 			}
 			assert.IsType(t, verification{}, actual)
-			assert.Equal(t, tc.expectedModuleSetMap, actual.ModSetMap)
-			assert.Equal(t, tc.expectedModulePathMap, actual.ModPathMap)
-			assert.Equal(t, tc.expectedModuleInfoMap, actual.ModInfoMap)
+			assert.Equal(t, tc.expectedModuleSetMap, actual.ModuleVersioning.ModSetMap)
+			assert.Equal(t, tc.expectedModulePathMap, actual.ModuleVersioning.ModPathMap)
+			assert.Equal(t, tc.expectedModuleInfoMap, actual.ModuleVersioning.ModInfoMap)
 		})
 	}
 }
