@@ -140,7 +140,7 @@ func (p prerelease) verifyGitTagsDoNotAlreadyExist() error {
 func (p prerelease) verifyWorkingTreeClean() error {
 	worktree, err := p.ModuleSetRelease.Repo.Worktree()
 	if err != nil {
-		return fmt.Errorf("could not get worktree: %v", err)
+		return &errGetWorktreeFailed{reason: err}
 	}
 
 	status, err := worktree.Status()
@@ -160,6 +160,9 @@ func (p prerelease) createPrereleaseBranch() error {
 	branchName := strings.Join(branchNameElements, "_")
 
 	worktree, err := p.ModuleSetRelease.Repo.Worktree()
+	if err != nil {
+		return &errGetWorktreeFailed{reason: err}
+	}
 
 	checkoutOptions := &git.CheckoutOptions{
 		Branch: plumbing.ReferenceName(branchName),

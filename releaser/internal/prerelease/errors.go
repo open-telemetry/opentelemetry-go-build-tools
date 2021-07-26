@@ -33,6 +33,14 @@ func (e *errGitTagAlreadyExistsSlice) Error() string {
 	return strings.Join(errorStrings, "\n")
 }
 
+type errGetWorktreeFailed struct {
+	reason error
+}
+
+func (e *errGetWorktreeFailed) Error() string {
+	return fmt.Sprintf("failed to get worktree: %v", e.reason)
+}
+
 type errGitTagAlreadyExists struct {
 	gitTag string
 }
