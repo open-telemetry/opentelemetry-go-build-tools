@@ -23,7 +23,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 
 	"go.opentelemetry.io/build-tools/releaser/internal/common"
@@ -82,7 +81,6 @@ func RunPrerelease(versioningFile, moduleSetName, fromExistingBranch string, ski
 
 type prerelease struct {
 	common.ModuleSetRelease
-	Repo git.Repository
 }
 
 func newPrerelease(versioningFilename, modSetToUpdate, repoRoot string) (prerelease, error) {
@@ -91,14 +89,8 @@ func newPrerelease(versioningFilename, modSetToUpdate, repoRoot string) (prerele
 		return prerelease{}, fmt.Errorf("error creating new prerelease struct: %v", err)
 	}
 
-	repo, err := git.PlainOpen(repoRoot)
-	if err != nil {
-		return prerelease{}, fmt.Errorf("error getting git.Repository from repo root dir %v: %v", repoRoot, err)
-	}
-
 	return prerelease{
 		ModuleSetRelease: modRelease,
-		Repo: *repo,
 	}, nil
 }
 
@@ -113,7 +105,7 @@ func (p prerelease) verifyGitTagsDoNotAlreadyExist() error {
 		newTags[newFullTag] = true
 	}
 
-	existingTags, err := p.Repo.Tags()
+	existingTags, err := p.ModuleSetRelease.Repo.Tags()
 	if err != nil {
 		return fmt.Errorf("error getting repo tags: %v", err)
 	}

@@ -16,6 +16,7 @@ package common
 
 import (
 	"fmt"
+	"github.com/go-git/go-git/v5"
 	"io/fs"
 	"io/ioutil"
 	"path/filepath"
@@ -71,6 +72,7 @@ type ModuleSetRelease struct {
 	ModSetName string
 	ModSet     ModuleSet
 	TagNames   []ModuleTagName
+	Repo       *git.Repository
 }
 
 // NewModuleSetRelease returns a ModuleSetRelease struct by specifying a specific set of modules to update.
@@ -96,11 +98,17 @@ func NewModuleSetRelease(versioningFilename, modSetToUpdate, repoRoot string) (M
 		return ModuleSetRelease{}, fmt.Errorf("could not retrieve tag names from module paths: %v", err)
 	}
 
+	repo, err := git.PlainOpen(repoRoot)
+	if err != nil {
+		return ModuleSetRelease{}, fmt.Errorf("error getting git.Repository from repo root dir %v: %v", repoRoot, err)
+	}
+
 	return ModuleSetRelease{
 		ModuleVersioning: modVersioning,
 		ModSetName:       modSetToUpdate,
 		ModSet:           modSet,
 		TagNames:         tagNames,
+		Repo: 			  repo,
 	}, nil
 
 }
