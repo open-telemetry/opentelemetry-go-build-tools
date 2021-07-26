@@ -64,20 +64,23 @@ func RunPrerelease(versioningFile string, moduleSetName string, skipMake bool) {
 	}
 
 	if skipMake {
-		fmt.Println("Skipping 'make lint'...")
+		log.Println("Skipping 'make lint' and 'make ci'")
 	} else {
 		if err = p.runMakeLint(); err != nil {
 			log.Fatalf("runMakeLint failed: %v", err)
 		}
+		if err = p.runMakeCI(); err != nil {
+			log.Fatalf("runMakeCI failed: %v", err)
+		}
 	}
 
-	if err = p.commitChanges(skipMake); err != nil {
+	if err = p.commitChanges(); err != nil {
 		log.Fatalf("commitChanges failed: %v", err)
 	}
 
-	fmt.Println("\nPrerelease finished successfully. Now run the following to verify the changes:")
-	fmt.Println("\ngit diff main")
-	fmt.Println("\nThen, push the changes to upstream.")
+	log.Println("\nPrerelease finished successfully. Now run the following to verify the changes:")
+	log.Println("\ngit diff main")
+	log.Println("\nThen, push the changes to upstream.")
 }
 
 type prerelease struct {
@@ -189,7 +192,7 @@ func (p prerelease) updateVersionGo() error {
 
 // runMakeLint runs 'make lint' to automatically update go.sum files.
 func (p prerelease) runMakeLint() error {
-	fmt.Println("Updating go.sum with 'make lint'...")
+	log.Println("Updating go.sum with 'make lint'")
 
 	cmd := exec.Command("make", "lint")
 	if output, err := cmd.CombinedOutput(); err != nil {
@@ -199,35 +202,40 @@ func (p prerelease) runMakeLint() error {
 	return nil
 }
 
-func (p prerelease) commitChanges(skipMake bool) error {
-	commitMessage := "Prepare for versions " + p.ModuleSetRelease.ModSetVersion()
+func (p prerelease) runMakeCI() error {
+	log.Println("Running 'make ci'")
 
-	// make ci
-	if skipMake {
-		fmt.Println("Skipping 'make ci'...")
-	} else {
-		fmt.Println("Running 'make ci'...")
-		cmd := exec.Command("make", "ci")
-		if output, err := cmd.CombinedOutput(); err != nil {
-			return fmt.Errorf("'make ci' failed: %v (%v)", string(output), err)
-		}
+	cmd := exec.Command("make", "ci")
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("'make ci' failed: %v (%v)", string(output), err)
 	}
+
+	return nil
+}
+
+func (p prerelease) commitChanges() error {
+	commitMessage := "Prepare for version " + p.ModuleSetRelease.ModSetVersion()
 
 	// commit changes to git
-	fmt.Printf("Commit changes to git with message '%v'...\n", commitMessage)
-	cmd = exec.Command("git", "commit", "-m", commitMessage)
-	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("git commit failed: %v (%v)", string(output), err)
-	}
+	log.Printf("Committing changes to git with message '%v'\n", commitMessage)
 
-	// get hash of new commit
-	cmd = exec.Command("git", "log", `--pretty=format:"%h"`, "-1")
-	output, err := cmd.Output()
+	worktree, err := p.ModuleSetRelease.Repo.Worktree()
 	if err != nil {
-		fmt.Println("WARNING: could not automatically get last commit hash.")
+		return &errGetWorktreeFailed{reason: err}
 	}
 
-	fmt.Printf("Commit successful. Hash of commit: %s\n", output)
+	commitOptions := &git.CommitOptions{}
+
+	if err = commitOptions.Validate(p.Repo); err != nil {
+		return fmt.Errorf("commit options are invalid: %v", err)
+	}
+
+	hash, err := worktree.Commit(commitMessage, commitOptions)
+	if err != nil {
+		return fmt.Errorf("could not commit changes to git: %v", err)
+	}
+
+	log.Printf("Commit successful. Hash of commit: %s\n", hash)
 
 	return nil
 }
@@ -238,7 +246,7 @@ func (p prerelease) gitAddFile(modFilePath common.ModuleFilePath) error {
 		return &errGetWorktreeFailed{reason: err}
 	}
 
-	log.Printf("git add %s", string(modFilePath))
+	log.Printf("git add %s", modFilePath)
 	if _, err = worktree.Add(string(modFilePath)); err != nil {
 		return &errGitAddFailed{reason: err}
 	}
@@ -275,7 +283,7 @@ func (p prerelease) updateGoModVersions(modFilePath common.ModuleFilePath) error
 // updateAllGoModFiles updates ALL modules' requires sections to use the newVersion number
 // for the modules given in newModPaths.
 func (p prerelease) updateAllGoModFiles() error {
-	fmt.Println("Updating all module versions in go.mod files...")
+	log.Println("Updating all module versions in go.mod files...")
 	for _, modFilePath := range p.ModuleSetRelease.ModPathMap {
 		if err := p.updateGoModVersions(modFilePath); err != nil {
 			return fmt.Errorf("could not update module versions in file %v: %v", modFilePath, err)
