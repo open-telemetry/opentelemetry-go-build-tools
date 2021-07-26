@@ -116,7 +116,7 @@ func (p prerelease) verifyGitTagsDoNotAlreadyExist() error {
 
 	var errors []errGitTagAlreadyExists
 
-	existingTags.ForEach(func (ref *plumbing.Reference) error {
+	existingTags.ForEach(func(ref *plumbing.Reference) error {
 		tagObj, err := p.Repo.TagObject(ref.Hash())
 		if err != nil {
 			return fmt.Errorf("error retrieving tag object: %v", err)
@@ -170,7 +170,7 @@ func (p prerelease) createPrereleaseBranch() error {
 	checkoutOptions := &git.CheckoutOptions{
 		Branch: plumbing.ReferenceName(branchName),
 		Create: true,
-		Keep: true,
+		Keep:   true,
 	}
 
 	if err = checkoutOptions.Validate(); err != nil {
