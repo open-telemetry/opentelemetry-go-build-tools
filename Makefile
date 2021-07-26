@@ -39,9 +39,6 @@ $(TOOLS)/%: | $(TOOLS)
 	cd $(TOOLS_MOD_DIR) && \
 	$(GO) build -o $@ $(PACKAGE)
 
-SEMCONVGEN = $(TOOLS)/semconv-gen
-$(TOOLS)/semconv-gen: PACKAGE=go.opentelemetry.io/build-tools/semconvgen
-
 GOLANGCI_LINT = $(TOOLS)/golangci-lint
 $(TOOLS)/golangci-lint: PACKAGE=github.com/golangci/golangci-lint/cmd/golangci-lint
 
@@ -54,7 +51,7 @@ $(TOOLS)/stringer: PACKAGE=golang.org/x/tools/cmd/stringer
 $(TOOLS)/gojq: PACKAGE=github.com/itchyny/gojq/cmd/gojq
 
 .PHONY: tools
-tools: $(GOLANGCI_LINT) $(MISSPELL) $(STRINGER) $(TOOLS)/gojq $(SEMCONVGEN)
+tools: $(GOLANGCI_LINT) $(MISSPELL) $(STRINGER) $(TOOLS)/gojq
 
 
 # Build
