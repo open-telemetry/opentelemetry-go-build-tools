@@ -17,9 +17,6 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"os"
-	"os/exec"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -27,7 +24,6 @@ import (
 )
 
 var (
-	fromExistingBranch string
 	skipMake           bool
 )
 
@@ -45,7 +41,7 @@ var prereleaseCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Using versioning file", versioningFile)
 
-		prerelease.RunPrerelease(versioningFile, moduleSetName, fromExistingBranch, skipMake)
+		prerelease.RunPrerelease(versioningFile, moduleSetName, skipMake)
 	},
 }
 
@@ -55,29 +51,8 @@ func init() {
 
 	rootCmd.AddCommand(prereleaseCmd)
 
-	defaultFromExistingBranch, err := getDefaultFromExistingBranch()
-	if err != nil {
-		log.Fatalf("could not fetch default fromExistingBranch: %v", err)
-		os.Exit(1)
-	}
-
-	prereleaseCmd.Flags().StringVarP(&fromExistingBranch, "from-existing-branch", "f", defaultFromExistingBranch,
-		"Name of existing branch from which to base the pre-release branch. If unspecified, defaults to current branch.",
-	)
-
 	prereleaseCmd.Flags().BoolVarP(&skipMake, "skip-make", "s", false,
 		"Specify this flag to skip the 'make lint' and 'make ci' steps. "+
 			"To be used for debugging purposes. Should not be skipped during actual release.",
 	)
-}
-
-func getDefaultFromExistingBranch() (string, error) {
-	// get current branch
-	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
-	output, err := cmd.Output()
-	if err != nil {
-		return "", fmt.Errorf("could not get current branch: %v", err)
-	}
-
-	return strings.TrimSpace(string(output)), nil
 }

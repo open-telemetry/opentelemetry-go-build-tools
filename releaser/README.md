@@ -6,9 +6,10 @@ for sets of Go Modules, so that different sets may be versioned separately.
 
 ## Specify Module Sets and Versions
 
-To specify sets of modules whose versions will be incremented in lockstep, the
-`versions.yaml` file must be manually edited between versions. When creating a
-`versions.yaml` file...
+First, ensure that you check out a branch from which you will begin your
+commits. To specify sets of modules whose versions will be incremented in
+lockstep, the `versions.yaml` file must be manually edited between versions.
+When creating a or editing a `versions.yaml` file...
 
 * For each module set, give it a name and specify its version and modules it
   includes.
@@ -66,13 +67,14 @@ the `verify` subcommand:
     * A warning will be printed for each dependency of a stable module on an
       unstable module.
 
-## Prepare a pre-release commit
+## Prepare a prerelease commit
 
 Update `go.mod` for all modules to depend on the specified module set's new
-release.
+release using the prerelease subcommand. A new "prerelease" branch will be
+created and keeps local changes from your current branch.
 
-1. Run the pre-release script. It creates a branch
-   `pre_release_<module set name>_<new version>` that will contain all release changes.
+1. Run the pre-release script. It creates a branch `prerelease_<module set
+   name>_<new version>` that will contain all release changes.
 
     ```sh
     ./releaser prerelease --module-set-name <name>
@@ -84,9 +86,6 @@ release.
         * **versioning-file (optional):** Path to versioning file that contains
           definitions of all module sets. If unspecified will default to
           (RepoRoot)/versions.yaml.
-        * **from-existing-branch (optional):** Name of existing branch from
-          which to base the pre-release branch. If unspecified, defaults to
-          current branch.
         * **skip-make (boolean flag):** Specify this flag to skip the 'make
           lint' and 'make ci' steps. To be used for debugging purposes. Should
           not be skipped during actual release.

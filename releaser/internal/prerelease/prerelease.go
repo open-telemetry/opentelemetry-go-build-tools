@@ -16,6 +16,7 @@ package prerelease
 
 import (
 	"fmt"
+	"github.com/go-git/go-git/v5"
 	"io/ioutil"
 	"log"
 	"os/exec"
@@ -28,7 +29,7 @@ import (
 	"go.opentelemetry.io/build-tools/releaser/internal/common"
 )
 
-func RunPrerelease(versioningFile, moduleSetName, fromExistingBranch string, skipMake bool) {
+func RunPrerelease(versioningFile string, moduleSetName string, skipMake bool) {
 
 	repoRoot, err := common.ChangeToRepoRoot()
 	if err != nil {
@@ -48,7 +49,7 @@ func RunPrerelease(versioningFile, moduleSetName, fromExistingBranch string, ski
 		log.Fatalf("verifyWorkingTreeClean failed: %v", err)
 	}
 
-	if err = p.createPrereleaseBranch(fromExistingBranch); err != nil {
+	if err = p.createPrereleaseBranch(); err != nil {
 		log.Fatalf("createPrereleaseBranch failed: %v", err)
 	}
 
@@ -154,14 +155,25 @@ func (p prerelease) verifyWorkingTreeClean() error {
 	return nil
 }
 
-func (p prerelease) createPrereleaseBranch(fromExistingBranch string) error {
-	branchNameElements := []string{"pre_release", p.ModuleSetRelease.ModSetName, p.ModuleSetRelease.ModSetVersion()}
+func (p prerelease) createPrereleaseBranch() error {
+	branchNameElements := []string{"prerelease", p.ModuleSetRelease.ModSetName, p.ModuleSetRelease.ModSetVersion()}
 	branchName := strings.Join(branchNameElements, "_")
-	fmt.Printf("git checkout -b %v %v\n", branchName, fromExistingBranch)
-	cmd := exec.Command("git", "checkout", "-b", branchName, fromExistingBranch)
 
-	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("could not create new branch %v: %v (%v)", branchName, string(output), err)
+	worktree, err := p.ModuleSetRelease.Repo.Worktree()
+
+	checkoutOptions := &git.CheckoutOptions{
+		Branch: plumbing.ReferenceName(branchName),
+		Create: true,
+		Keep: true,
+	}
+
+	if err = checkoutOptions.Validate(); err != nil {
+		return fmt.Errorf("branch checkout options are invalid: %v", err)
+	}
+
+	log.Printf("git checkout -b %v\n", branchName)
+	if err = worktree.Checkout(checkoutOptions); err != nil {
+		return fmt.Errorf("could not check out new branch: %v", err)
 	}
 
 	return nil
