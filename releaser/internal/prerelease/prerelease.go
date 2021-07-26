@@ -202,18 +202,12 @@ func (p prerelease) runMakeLint() error {
 func (p prerelease) commitChanges(skipMake bool) error {
 	commitMessage := "Prepare for versions " + p.ModuleSetRelease.ModSetVersion()
 
-	// add changes to git
-	cmd := exec.Command("git", "add", ".")
-	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("'git add .' failed: %v (%v)", string(output), err)
-	}
-
 	// make ci
 	if skipMake {
 		fmt.Println("Skipping 'make ci'...")
 	} else {
 		fmt.Println("Running 'make ci'...")
-		cmd = exec.Command("make", "ci")
+		cmd := exec.Command("make", "ci")
 		if output, err := cmd.CombinedOutput(); err != nil {
 			return fmt.Errorf("'make ci' failed: %v (%v)", string(output), err)
 		}
@@ -226,6 +220,7 @@ func (p prerelease) commitChanges(skipMake bool) error {
 		return fmt.Errorf("git commit failed: %v (%v)", string(output), err)
 	}
 
+	// get hash of new commit
 	cmd = exec.Command("git", "log", `--pretty=format:"%h"`, "-1")
 	output, err := cmd.Output()
 	if err != nil {
@@ -233,6 +228,20 @@ func (p prerelease) commitChanges(skipMake bool) error {
 	}
 
 	fmt.Printf("Commit successful. Hash of commit: %s\n", output)
+
+	return nil
+}
+
+func (p prerelease) gitAddFile(modFilePath common.ModuleFilePath) error {
+	worktree, err := p.ModuleSetRelease.Repo.Worktree()
+	if err != nil {
+		return &errGetWorktreeFailed{reason: err}
+	}
+
+	log.Printf("git add %s", string(modFilePath))
+	if _, err = worktree.Add(string(modFilePath)); err != nil {
+		return &errGitAddFailed{reason: err}
+	}
 
 	return nil
 }
@@ -270,6 +279,9 @@ func (p prerelease) updateAllGoModFiles() error {
 	for _, modFilePath := range p.ModuleSetRelease.ModPathMap {
 		if err := p.updateGoModVersions(modFilePath); err != nil {
 			return fmt.Errorf("could not update module versions in file %v: %v", modFilePath, err)
+		}
+		if err := p.gitAddFile(modFilePath); err != nil {
+			return fmt.Errorf("error adding file to git: %v", err)
 		}
 	}
 	return nil

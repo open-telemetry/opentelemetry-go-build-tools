@@ -54,3 +54,11 @@ type errWorkingTreeNotClean struct{}
 func (e *errWorkingTreeNotClean) Error() string {
 	return fmt.Sprintf("working tree not clean")
 }
+
+type errGitAddFailed struct {
+	reason error
+}
+
+func (e *errGitAddFailed) Error() string {
+	return fmt.Sprintf("failed to git add file: %v", e.reason)
+}
