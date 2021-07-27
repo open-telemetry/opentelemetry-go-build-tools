@@ -26,7 +26,7 @@ import (
 	"go.opentelemetry.io/build-tools/releaser/internal/common"
 )
 
-func RunVerify(versioningFile string) {
+func Run(versioningFile string) {
 
 	repoRoot, err := tools.FindRepoRoot()
 	if err != nil {

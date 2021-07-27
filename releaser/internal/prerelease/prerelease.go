@@ -26,7 +26,7 @@ import (
 	"go.opentelemetry.io/build-tools/releaser/internal/common"
 )
 
-func RunPrerelease(versioningFile, moduleSetName, fromExistingBranch string, skipMake bool) {
+func Run(versioningFile, moduleSetName, fromExistingBranch string, skipMake bool) {
 
 	repoRoot, err := common.ChangeToRepoRoot()
 	if err != nil {

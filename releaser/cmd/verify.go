@@ -45,7 +45,7 @@ var verifyCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Using versioning file", versioningFile)
 
-		verify.RunVerify(versioningFile)
+		verify.Run(versioningFile)
 	},
 }
 
