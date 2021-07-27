@@ -23,13 +23,10 @@ import (
 )
 
 func TestFindRepoRoot(t *testing.T) {
-	// prepare
-	expected, _ := filepath.Abs("./")
+	expected, err := filepath.Abs("./")
+	require.NoError(t, err)
 
-	// test
 	actual, err := FindRepoRoot()
-
-	// verify
 	require.NoError(t, err)
 	assert.Equal(t, expected, actual)
 }
