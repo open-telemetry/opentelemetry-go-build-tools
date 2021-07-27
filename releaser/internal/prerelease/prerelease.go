@@ -35,6 +35,7 @@ func RunPrerelease(versioningFile string, moduleSetName string, skipMake bool) {
 	if err != nil {
 		log.Fatalf("unable to change to repo root: %v", err)
 	}
+	log.Printf("Using repo with root at %s\n", repoRoot)
 
 	p, err := newPrerelease(versioningFile, moduleSetName, repoRoot)
 	if err != nil {
@@ -101,7 +102,7 @@ func newPrerelease(versioningFilename, modSetToUpdate, repoRoot string) (prerele
 // verifyGitTagsDoNotAlreadyExist checks if Git tags have already been created that match the specific module tag name
 // and version number for the modules being updated. If the tag already exists, an error is returned.
 func (p prerelease) verifyGitTagsDoNotAlreadyExist() error {
-	var newTags map[string]bool
+	newTags := make(map[string]bool)
 
 	modFullTags := p.ModuleSetRelease.ModuleFullTagNames()
 
