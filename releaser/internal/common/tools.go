@@ -38,7 +38,10 @@ func ChangeToRepoRoot() (string, error) {
 	}
 
 	log.Println("Changing to root directory...")
-	os.Chdir(repoRoot)
+	err = os.Chdir(repoRoot)
+	if err != nil {
+		return "", fmt.Errorf("unable to change to repo root: %v", err)
+	}
 
 	return repoRoot, nil
 }

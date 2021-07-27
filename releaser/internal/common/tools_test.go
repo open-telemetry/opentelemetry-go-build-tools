@@ -53,7 +53,12 @@ func TestChangeToRepoRoot(t *testing.T) {
 		t.Fatal("finding working dir:", err)
 	}
 
-	defer os.Chdir(origDir)
+	defer func(dir string) {
+		err := os.Chdir(dir)
+		if err != nil {
+			t.Fatal("error changing back to original dir:", err)
+		}
+	}(origDir)
 
 	expected, _ := filepath.Abs("../../../")
 
@@ -64,7 +69,7 @@ func TestChangeToRepoRoot(t *testing.T) {
 
 	newDir, err := os.Getwd()
 	if err != nil {
-		t.Logf("could not get current working directory: %v", err)
+		t.Fatal("could not get current working directory:", err)
 	}
 	assert.Equal(t, expected, newDir)
 }

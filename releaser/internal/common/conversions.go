@@ -57,7 +57,7 @@ func modulePathsToFilePaths(modPaths []ModulePath, modPathMap ModulePathMap) ([]
 
 	for _, modPath := range modPaths {
 		if _, exists := modPathMap[modPath]; !exists {
-			return []ModuleFilePath{}, fmt.Errorf("could not find module path %v in path map.", modPath)
+			return []ModuleFilePath{}, fmt.Errorf("could not find module path %v in path map", modPath)
 		}
 		modFilePaths = append(modFilePaths, modPathMap[modPath])
 	}

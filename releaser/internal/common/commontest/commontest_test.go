@@ -89,7 +89,12 @@ func TestWriteGoModFiles(t *testing.T) {
 		t.Fatal("creating temp dir:", err)
 	}
 
-	defer os.RemoveAll(tmpRootDir)
+	defer func(dir string) {
+		err := os.RemoveAll(dir)
+		if err != nil {
+			t.Fatalf("error removing dir %v: %v", dir, err)
+		}
+	}(tmpRootDir)
 
 	modFiles := map[common.ModuleFilePath][]byte{
 		common.ModuleFilePath(filepath.Join(tmpRootDir, "test", "test1", "go.mod")): []byte("module \"go.opentelemetry.io/test/test1\"\n\ngo 1.16\n\n" +

@@ -41,22 +41,22 @@ type ModuleVersioning struct {
 func NewModuleVersioning(versioningFilename string, repoRoot string) (ModuleVersioning, error) {
 	vCfg, err := readVersioningFile(versioningFilename)
 	if err != nil {
-		return ModuleVersioning{}, fmt.Errorf("Error reading versioning file %v: %v", versioningFilename, err)
+		return ModuleVersioning{}, fmt.Errorf("error reading versioning file %v: %v", versioningFilename, err)
 	}
 
 	modSetMap, err := vCfg.buildModuleSetsMap()
 	if err != nil {
-		return ModuleVersioning{}, fmt.Errorf("Error building module set map for NewModuleVersioning: %v", err)
+		return ModuleVersioning{}, fmt.Errorf("error building module set map for NewModuleVersioning: %v", err)
 	}
 
 	modInfoMap, err := vCfg.buildModuleMap()
 	if err != nil {
-		return ModuleVersioning{}, fmt.Errorf("Error building module info map for NewModuleVersioning: %v", err)
+		return ModuleVersioning{}, fmt.Errorf("error building module info map for NewModuleVersioning: %v", err)
 	}
 
 	modPathMap, err := vCfg.BuildModulePathMap(repoRoot)
 	if err != nil {
-		return ModuleVersioning{}, fmt.Errorf("Error building module path map for NewModuleVersioning: %v", err)
+		return ModuleVersioning{}, fmt.Errorf("error building module path map for NewModuleVersioning: %v", err)
 	}
 
 	return ModuleVersioning{
@@ -216,13 +216,13 @@ func (versionCfg versionConfig) buildModuleMap() (ModuleInfoMap, error) {
 		for _, modPath := range moduleSet.Modules {
 			// Check if module has already been added to the map
 			if _, exists := modMap[modPath]; exists {
-				return nil, fmt.Errorf("Module %v exists more than once. Exists in sets %v and %v.",
+				return nil, fmt.Errorf("module %v exists more than once (exists in sets %v and %v)",
 					modPath, modMap[modPath].ModuleSetName, setName)
 			}
 
 			// Check if module is in excluded modules section
 			if versionCfg.shouldExcludeModule(modPath) {
-				return nil, fmt.Errorf("Module %v is an excluded module and should not be versioned.", modPath)
+				return nil, fmt.Errorf("module %v is an excluded module and should not be versioned", modPath)
 			}
 			modMap[modPath] = ModuleInfo{setName, moduleSet.Version}
 		}
@@ -274,14 +274,14 @@ func (versionCfg versionConfig) BuildModulePathMap(root string) (ModulePathMap, 
 			modFilePath := ModuleFilePath(filePath)
 
 			excludedModules := versionCfg.getExcludedModules()
-			if _, shouldExclude := excludedModules[ModulePath(modPath)]; !shouldExclude {
+			if _, shouldExclude := excludedModules[modPath]; !shouldExclude {
 				modPathMap[modPath] = modFilePath
 			}
 		}
 		return nil
 	}
 
-	if err := filepath.Walk(string(root), findGoMod); err != nil {
+	if err := filepath.Walk(root, findGoMod); err != nil {
 		return nil, err
 	}
 

@@ -31,7 +31,7 @@ func MockModuleVersioning(modSetMap common.ModuleSetMap, modPathMap common.Modul
 		for _, modPath := range moduleSet.Modules {
 			// Check if module has already been added to the map
 			if _, exists := modInfoMap[modPath]; exists {
-				return common.ModuleVersioning{}, fmt.Errorf("Module %v exists more than once. Exists in sets %v and %v.",
+				return common.ModuleVersioning{}, fmt.Errorf("module %v exists more than once (exists in sets %v and %v)",
 					modPath, modInfoMap[modPath].ModuleSetName, setName)
 			}
 
@@ -76,7 +76,10 @@ func WriteGoModFiles(modFiles map[common.ModuleFilePath][]byte) error {
 
 	for modFilePath, file := range modFiles {
 		path := filepath.Dir(string(modFilePath))
-		os.MkdirAll(path, perm)
+		err := os.MkdirAll(path, perm)
+		if err != nil {
+			return fmt.Errorf("error calling os.MkdirAll(%v, %v): %v", path, perm, err)
+		}
 
 		if err := ioutil.WriteFile(string(modFilePath), file, perm); err != nil {
 			return fmt.Errorf("could not write temporary mod file %v", err)
