@@ -30,7 +30,7 @@ import (
 	"go.opentelemetry.io/build-tools/releaser/internal/common"
 )
 
-func RunPrerelease(versioningFile string, moduleSetName string, skipMake bool) {
+func Run(versioningFile string, moduleSetName string, skipMake bool) {
 	repoRoot, err := tools.FindRepoRoot()
 	if err != nil {
 		log.Fatalf("unable to change to repo root: %v", err)

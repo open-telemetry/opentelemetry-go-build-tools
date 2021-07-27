@@ -23,7 +23,7 @@ import (
 	"go.opentelemetry.io/build-tools/releaser/internal/common"
 )
 
-func RunTag(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags bool) {
+func Run(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags bool) {
 
 	repoRoot, err := common.ChangeToRepoRoot()
 	if err != nil {

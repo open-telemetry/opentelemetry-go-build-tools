@@ -44,7 +44,7 @@ var tagCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Using versioning file", versioningFile)
 
-		tag.RunTag(versioningFile, moduleSetName, commitHash, deleteModuleSetTags)
+		tag.Run(versioningFile, moduleSetName, commitHash, deleteModuleSetTags)
 	},
 }
 
