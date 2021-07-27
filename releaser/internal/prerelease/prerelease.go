@@ -117,7 +117,7 @@ func (p prerelease) verifyGitTagsDoNotAlreadyExist() error {
 
 	var errors []errGitTagAlreadyExists
 
-	existingTags.ForEach(func(ref *plumbing.Reference) error {
+	_ = existingTags.ForEach(func(ref *plumbing.Reference) error {
 		tagObj, err := p.Repo.TagObject(ref.Hash())
 		if err != nil {
 			return fmt.Errorf("error retrieving tag object: %v", err)
@@ -174,10 +174,6 @@ func (p prerelease) createPrereleaseBranch() error {
 		Keep:   true,
 	}
 
-	if err = checkoutOptions.Validate(); err != nil {
-		return fmt.Errorf("branch checkout options are invalid: %v", err)
-	}
-
 	log.Printf("git checkout -b %v\n", branchName)
 	if err = worktree.Checkout(checkoutOptions); err != nil {
 		return fmt.Errorf("could not check out new branch: %v", err)
@@ -227,10 +223,6 @@ func (p prerelease) commitChanges() error {
 
 	commitOptions := &git.CommitOptions{}
 
-	if err = commitOptions.Validate(p.Repo); err != nil {
-		return fmt.Errorf("commit options are invalid: %v", err)
-	}
-
 	hash, err := worktree.Commit(commitMessage, commitOptions)
 	if err != nil {
 		return fmt.Errorf("could not commit changes to git: %v", err)
@@ -276,7 +268,10 @@ func (p prerelease) updateGoModVersions(modFilePath common.ModuleFilePath) error
 	}
 
 	// once all module versions have been updated, overwrite the go.mod file
-	ioutil.WriteFile(string(modFilePath), newGoModFile, 0644)
+	err = ioutil.WriteFile(string(modFilePath), newGoModFile, 0644)
+	if err != nil {
+		return fmt.Errorf("error writing file: %v", err)
+	}
 
 	return nil
 }
