@@ -42,7 +42,7 @@ func TestNewModuleVersioning(t *testing.T) {
 		t.Fatal("creating temp dir:", err)
 	}
 
-	defer os.RemoveAll(tmpRootDir)
+	defer removeAll(t, tmpRootDir)
 
 	modFiles := map[ModuleFilePath][]byte{
 		ModuleFilePath(filepath.Join(tmpRootDir, "test", "test1", "go.mod")): []byte("module \"go.opentelemetry.io/test/test1\"\n\ngo 1.16\n\n" +
@@ -435,7 +435,7 @@ func TestBuildModulePathMap(t *testing.T) {
 		t.Fatal("creating temp dir:", err)
 	}
 
-	defer os.RemoveAll(tmpRootDir)
+	defer removeAll(t, tmpRootDir)
 
 	modFiles := map[ModuleFilePath][]byte{
 		ModuleFilePath(filepath.Join(tmpRootDir, "test", "test1", "go.mod")): []byte("module \"go.opentelemetry.io/test/test1\"\n\ngo 1.16\n\n" +
@@ -468,7 +468,10 @@ func writeGoModFiles(modFiles map[ModuleFilePath][]byte) error {
 
 	for modFilePath, file := range modFiles {
 		path := filepath.Dir(string(modFilePath))
-		os.MkdirAll(path, perm)
+		err := os.MkdirAll(path, perm)
+		if err != nil {
+			return fmt.Errorf("error calling os.MkdirAll(%v, %v): %v", path, perm, err)
+		}
 
 		if err := ioutil.WriteFile(string(modFilePath), file, perm); err != nil {
 			return fmt.Errorf("could not write temporary mod file %v", err)
@@ -484,7 +487,7 @@ func TestWriteGoModFiles(t *testing.T) {
 		t.Fatal("creating temp dir:", err)
 	}
 
-	defer os.RemoveAll(tmpRootDir)
+	defer removeAll(t, tmpRootDir)
 
 	modFiles := map[ModuleFilePath][]byte{
 		ModuleFilePath(filepath.Join(tmpRootDir, "test", "test1", "go.mod")): []byte("module \"go.opentelemetry.io/test/test1\"\n\ngo 1.16\n\n" +
@@ -504,5 +507,12 @@ func TestWriteGoModFiles(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.Equal(t, expectedModFile, actual)
+	}
+}
+
+func removeAll(t *testing.T, dir string) {
+	err := os.RemoveAll(dir)
+	if err != nil {
+		t.Fatalf("error removing dir %v: %v", dir, err)
 	}
 }
