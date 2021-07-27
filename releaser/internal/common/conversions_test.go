@@ -68,7 +68,7 @@ func TestModulePathsToTagNames(t *testing.T) {
 		repoRootTag,
 	}
 
-	actual, err := modulePathsToTagNames(modPaths, modPathMap, repoRoot)
+	actual, err := ModulePathsToTagNames(modPaths, modPathMap, repoRoot)
 
 	require.NoError(t, err)
 	assert.Equal(t, expected, actual)

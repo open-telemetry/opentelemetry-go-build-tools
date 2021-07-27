@@ -16,6 +16,7 @@ package verify
 
 import (
 	"bytes"
+	"go.opentelemetry.io/build-tools/releaser/internal/common/commontest"
 	"io/ioutil"
 	"log"
 	"os"
@@ -51,7 +52,7 @@ func captureOutput(f func()) string {
 
 // MockVerification creates a verification struct for testing purposes.
 func MockVerification(modSetMap common.ModuleSetMap, modPathMap common.ModulePathMap, dependencies dependencyMap) verification {
-	modVersioning, err := common.MockModuleVersioning(modSetMap, modPathMap)
+	modVersioning, err := commontest.MockModuleVersioning(modSetMap, modPathMap)
 	if err != nil {
 		log.Printf("error getting MockModuleVersioning: %v", err)
 		return verification{}
@@ -136,7 +137,7 @@ func TestNewVerification(t *testing.T) {
 		common.ModuleFilePath(filepath.Join(tmpRootDir, "test", "test2", "go.mod")): []byte("module \"go.opentelemetry.io/test/testexcluded\"\n\ngo 1.16\n"),
 	}
 
-	if err := common.WriteGoModFiles(modFiles); err != nil {
+	if err := commontest.WriteGoModFiles(modFiles); err != nil {
 		t.Fatal("could not create go mod file tree", err)
 	}
 
@@ -255,10 +256,10 @@ func TestGetDependencies(t *testing.T) {
 			")"),
 	}
 
-	if err := common.WriteGoModFiles(modFiles); err != nil {
+	if err := commontest.WriteGoModFiles(modFiles); err != nil {
 		t.Fatal("could not create go mod file tree", err)
 	}
-	modVersioning, _ := common.MockModuleVersioning(
+	modVersioning, _ := commontest.MockModuleVersioning(
 		common.ModuleSetMap{
 			"mod-set-1": common.ModuleSet{
 				Version: "v1.2.3-RC1+meta",

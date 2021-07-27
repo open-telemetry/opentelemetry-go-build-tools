@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package common
+package commontest
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -23,44 +22,50 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"go.opentelemetry.io/build-tools/releaser/internal/common"
+)
+
+const (
+	testDataDir = "./test_data"
 )
 
 func TestMockModuleVersioning(t *testing.T) {
-	modSetMap := ModuleSetMap{
-		"mod-set-1": ModuleSet{
+	modSetMap := common.ModuleSetMap{
+		"mod-set-1": common.ModuleSet{
 			Version: "v1.2.3-RC1+meta",
-			Modules: []ModulePath{
+			Modules: []common.ModulePath{
 				"go.opentelemetry.io/test/test1",
 				"go.opentelemetry.io/test/test2",
 			},
 		},
-		"mod-set-2": ModuleSet{
+		"mod-set-2": common.ModuleSet{
 			Version: "v0.1.0",
-			Modules: []ModulePath{
+			Modules: []common.ModulePath{
 				"go.opentelemetry.io/test3",
 			},
 		},
 	}
 
-	modPathMap := ModulePathMap{
+	modPathMap := common.ModulePathMap{
 		"go.opentelemetry.io/test/test1": "root/path/to/mod/test/test1/go.mod",
 		"go.opentelemetry.io/test/test2": "root/path/to/mod/test/test2/go.mod",
 		"go.opentelemetry.io/test3":      "root/test3/go.mod",
 	}
 
-	expected := ModuleVersioning{
+	expected := common.ModuleVersioning{
 		ModSetMap:  modSetMap,
 		ModPathMap: modPathMap,
-		ModInfoMap: ModuleInfoMap{
-			"go.opentelemetry.io/test/test1": ModuleInfo{
+		ModInfoMap: common.ModuleInfoMap{
+			"go.opentelemetry.io/test/test1": common.ModuleInfo{
 				ModuleSetName: "mod-set-1",
 				Version:       "v1.2.3-RC1+meta",
 			},
-			"go.opentelemetry.io/test/test2": ModuleInfo{
+			"go.opentelemetry.io/test/test2": common.ModuleInfo{
 				ModuleSetName: "mod-set-1",
 				Version:       "v1.2.3-RC1+meta",
 			},
-			"go.opentelemetry.io/test3": ModuleInfo{
+			"go.opentelemetry.io/test3": common.ModuleInfo{
 				ModuleSetName: "mod-set-2",
 				Version:       "v0.1.0",
 			},
@@ -74,7 +79,11 @@ func TestMockModuleVersioning(t *testing.T) {
 }
 
 func TestWriteGoModFiles(t *testing.T) {
-	fmt.Println(filepath.Abs(testDataDir))
+	err := os.MkdirAll(testDataDir, os.ModePerm)
+	if err != nil {
+		t.Fatalf("could not create testDataDir: %v", err)
+	}
+
 	tmpRootDir, err := os.MkdirTemp(testDataDir, "NewModuleVersioning")
 	if err != nil {
 		t.Fatal("creating temp dir:", err)
@@ -82,12 +91,12 @@ func TestWriteGoModFiles(t *testing.T) {
 
 	defer os.RemoveAll(tmpRootDir)
 
-	modFiles := map[ModuleFilePath][]byte{
-		ModuleFilePath(filepath.Join(tmpRootDir, "test", "test1", "go.mod")): []byte("module \"go.opentelemetry.io/test/test1\"\n\ngo 1.16\n\n" +
+	modFiles := map[common.ModuleFilePath][]byte{
+		common.ModuleFilePath(filepath.Join(tmpRootDir, "test", "test1", "go.mod")): []byte("module \"go.opentelemetry.io/test/test1\"\n\ngo 1.16\n\n" +
 			"require (\n\t\"go.opentelemetry.io/testroot/v2\" v2.0.0\n)\n"),
-		ModuleFilePath(filepath.Join(tmpRootDir, "test", "go.mod")):          []byte("module go.opentelemetry.io/test3\n\ngo 1.16\n"),
-		ModuleFilePath(filepath.Join(tmpRootDir, "go.mod")):                  []byte("module go.opentelemetry.io/testroot/v2\n\ngo 1.16\n"),
-		ModuleFilePath(filepath.Join(tmpRootDir, "test", "test2", "go.mod")): []byte("module \"go.opentelemetry.io/test/testexcluded\"\n\ngo 1.16\n"),
+		common.ModuleFilePath(filepath.Join(tmpRootDir, "test", "go.mod")):          []byte("module go.opentelemetry.io/test3\n\ngo 1.16\n"),
+		common.ModuleFilePath(filepath.Join(tmpRootDir, "go.mod")):                  []byte("module go.opentelemetry.io/testroot/v2\n\ngo 1.16\n"),
+		common.ModuleFilePath(filepath.Join(tmpRootDir, "test", "test2", "go.mod")): []byte("module \"go.opentelemetry.io/test/testexcluded\"\n\ngo 1.16\n"),
 	}
 
 	if err := WriteGoModFiles(modFiles); err != nil {
