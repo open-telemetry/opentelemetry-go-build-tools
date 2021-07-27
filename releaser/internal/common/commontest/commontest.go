@@ -12,28 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package common
+package commontest
 
 import (
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"go.opentelemetry.io/build-tools/releaser/internal/common"
 )
 
 // MockModuleVersioning creates a ModuleVersioning struct for testing purposes.
-func MockModuleVersioning(modSetMap ModuleSetMap, modPathMap ModulePathMap) (ModuleVersioning, error) {
-	vCfg := versionConfig{
-		ModuleSets:      modSetMap,
-		ExcludedModules: []ModulePath{},
+func MockModuleVersioning(modSetMap common.ModuleSetMap, modPathMap common.ModulePathMap) (common.ModuleVersioning, error) {
+	modInfoMap := make(common.ModuleInfoMap)
+
+	for setName, moduleSet := range modSetMap {
+		for _, modPath := range moduleSet.Modules {
+			// Check if module has already been added to the map
+			if _, exists := modInfoMap[modPath]; exists {
+				return common.ModuleVersioning{}, fmt.Errorf("Module %v exists more than once. Exists in sets %v and %v.",
+					modPath, modInfoMap[modPath].ModuleSetName, setName)
+			}
+
+			modInfoMap[modPath] = common.ModuleInfo{ModuleSetName: setName, Version: moduleSet.Version}
+		}
 	}
 
-	modInfoMap, err := vCfg.buildModuleMap()
-	if err != nil {
-		return ModuleVersioning{}, fmt.Errorf("error building module map: %v", err)
-	}
-
-	return ModuleVersioning{
+	return common.ModuleVersioning{
 		ModSetMap:  modSetMap,
 		ModPathMap: modPathMap,
 		ModInfoMap: modInfoMap,
@@ -41,22 +47,22 @@ func MockModuleVersioning(modSetMap ModuleSetMap, modPathMap ModulePathMap) (Mod
 }
 
 // MockModuleSetRelease creates a ModuleSetRelease struct for testing purposes.
-func MockModuleSetRelease(modSetMap ModuleSetMap, modPathMap ModulePathMap, modSetToUpdate string, repoRoot string) (ModuleSetRelease, error) {
+func MockModuleSetRelease(modSetMap common.ModuleSetMap, modPathMap common.ModulePathMap, modSetToUpdate string, repoRoot string) (common.ModuleSetRelease, error) {
 	modVersioning, err := MockModuleVersioning(modSetMap, modPathMap)
 	if err != nil {
-		return ModuleSetRelease{}, fmt.Errorf("error getting MockModuleVersioning: %v", err)
+		return common.ModuleSetRelease{}, fmt.Errorf("error getting MockModuleVersioning: %v", err)
 	}
 
 	modSet := modSetMap[modSetToUpdate]
 
 	// get tag names of mods to update
-	tagNames, err := modulePathsToTagNames(
+	tagNames, err := common.ModulePathsToTagNames(
 		modSet.Modules,
 		modPathMap,
 		repoRoot,
 	)
 
-	return ModuleSetRelease{
+	return common.ModuleSetRelease{
 		ModuleVersioning: modVersioning,
 		ModSetName:       modSetToUpdate,
 		ModSet:           modSet,
@@ -65,7 +71,7 @@ func MockModuleSetRelease(modSetMap ModuleSetMap, modPathMap ModulePathMap, modS
 }
 
 // WriteGoModFiles is a helper function to dynamically write go.mod files used for testing.
-func WriteGoModFiles(modFiles map[ModuleFilePath][]byte) error {
+func WriteGoModFiles(modFiles map[common.ModuleFilePath][]byte) error {
 	perm := os.FileMode(0700)
 
 	for modFilePath, file := range modFiles {

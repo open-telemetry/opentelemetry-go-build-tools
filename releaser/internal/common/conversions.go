@@ -36,8 +36,8 @@ func combineModuleTagNamesAndVersion(modTagNames []ModuleTagName, version string
 	return modFullTags
 }
 
-// modulePathsToFilePaths returns a list of tag names from a list of module's import paths.
-func modulePathsToTagNames(modPaths []ModulePath, modPathMap ModulePathMap, repoRoot string) ([]ModuleTagName, error) {
+// ModulePathsToTagNames returns a list of tag names from a list of module's import paths.
+func ModulePathsToTagNames(modPaths []ModulePath, modPathMap ModulePathMap, repoRoot string) ([]ModuleTagName, error) {
 	modFilePaths, err := modulePathsToFilePaths(modPaths, modPathMap)
 	if err != nil {
 		return nil, fmt.Errorf("could not convert module paths to file paths: %v", err)

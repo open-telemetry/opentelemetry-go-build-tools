@@ -89,7 +89,7 @@ func NewModuleSetRelease(versioningFilename, modSetToUpdate, repoRoot string) (M
 	}
 
 	// get tag names of mods to update
-	tagNames, err := modulePathsToTagNames(
+	tagNames, err := ModulePathsToTagNames(
 		modSet.Modules,
 		modVersioning.ModPathMap,
 		repoRoot,
@@ -211,10 +211,9 @@ func (versionCfg versionConfig) buildModuleSetsMap() (ModuleSetMap, error) {
 // by creating and "reversing" a ModuleSetsMap.
 func (versionCfg versionConfig) buildModuleMap() (ModuleInfoMap, error) {
 	modMap := make(ModuleInfoMap)
-	var modPath ModulePath
 
 	for setName, moduleSet := range versionCfg.ModuleSets {
-		for _, modPath = range moduleSet.Modules {
+		for _, modPath := range moduleSet.Modules {
 			// Check if module has already been added to the map
 			if _, exists := modMap[modPath]; exists {
 				return nil, fmt.Errorf("Module %v exists more than once. Exists in sets %v and %v.",

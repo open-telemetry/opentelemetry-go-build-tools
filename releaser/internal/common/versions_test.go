@@ -15,6 +15,7 @@
 package common
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -51,7 +52,7 @@ func TestNewModuleVersioning(t *testing.T) {
 		ModuleFilePath(filepath.Join(tmpRootDir, "test", "test2", "go.mod")): []byte("module \"go.opentelemetry.io/test/testexcluded\"\n\ngo 1.16\n"),
 	}
 
-	if err := WriteGoModFiles(modFiles); err != nil {
+	if err := writeGoModFiles(modFiles); err != nil {
 		t.Fatal("could not create go mod file tree", err)
 	}
 
@@ -444,7 +445,7 @@ func TestBuildModulePathMap(t *testing.T) {
 		ModuleFilePath(filepath.Join(tmpRootDir, "test", "test2", "go.mod")): []byte("module \"go.opentelemetry.io/test/testexcluded\"\n\ngo 1.16\n"),
 	}
 
-	if err := WriteGoModFiles(modFiles); err != nil {
+	if err := writeGoModFiles(modFiles); err != nil {
 		t.Fatal("could not create go mod file tree", err)
 	}
 
@@ -458,4 +459,50 @@ func TestBuildModulePathMap(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Equal(t, expected, actual)
+}
+
+// writeGoModFiles is a helper function to dynamically write go.mod files used for testing.
+// This func is duplicated from the commontest package to avoid a cyclic dependency.
+func writeGoModFiles(modFiles map[ModuleFilePath][]byte) error {
+	perm := os.FileMode(0700)
+
+	for modFilePath, file := range modFiles {
+		path := filepath.Dir(string(modFilePath))
+		os.MkdirAll(path, perm)
+
+		if err := ioutil.WriteFile(string(modFilePath), file, perm); err != nil {
+			return fmt.Errorf("could not write temporary mod file %v", err)
+		}
+	}
+
+	return nil
+}
+
+func TestWriteGoModFiles(t *testing.T) {
+	tmpRootDir, err := os.MkdirTemp(testDataDir, "NewModuleVersioning")
+	if err != nil {
+		t.Fatal("creating temp dir:", err)
+	}
+
+	defer os.RemoveAll(tmpRootDir)
+
+	modFiles := map[ModuleFilePath][]byte{
+		ModuleFilePath(filepath.Join(tmpRootDir, "test", "test1", "go.mod")): []byte("module \"go.opentelemetry.io/test/test1\"\n\ngo 1.16\n\n" +
+			"require (\n\t\"go.opentelemetry.io/testroot/v2\" v2.0.0\n)\n"),
+		ModuleFilePath(filepath.Join(tmpRootDir, "test", "go.mod")):          []byte("module go.opentelemetry.io/test3\n\ngo 1.16\n"),
+		ModuleFilePath(filepath.Join(tmpRootDir, "go.mod")):                  []byte("module go.opentelemetry.io/testroot/v2\n\ngo 1.16\n"),
+		ModuleFilePath(filepath.Join(tmpRootDir, "test", "test2", "go.mod")): []byte("module \"go.opentelemetry.io/test/testexcluded\"\n\ngo 1.16\n"),
+	}
+
+	if err := writeGoModFiles(modFiles); err != nil {
+		t.Fatal("could not create go mod file tree", err)
+	}
+
+	// check all mod files have been written correctly
+	for modPath, expectedModFile := range modFiles {
+		actual, err := ioutil.ReadFile(string(modPath))
+
+		require.NoError(t, err)
+		assert.Equal(t, expectedModFile, actual)
+	}
 }
