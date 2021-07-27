@@ -12,6 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package versions provides helper functions for reading and parsing Module versioning
+// Package common provides helper functions for reading and parsing Module versioning
 // files, as well as common functions used by multiple commands in the Cobra application.
 package common
