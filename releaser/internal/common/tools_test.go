@@ -15,12 +15,9 @@
 package common
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestIsStableVersion(t *testing.T) {
@@ -45,31 +42,4 @@ func TestIsStableVersion(t *testing.T) {
 
 		assert.Equal(t, tc.Expected, actual)
 	}
-}
-
-func TestChangeToRepoRoot(t *testing.T) {
-	origDir, err := os.Getwd()
-	if err != nil {
-		t.Fatal("finding working dir:", err)
-	}
-
-	defer func(dir string) {
-		err := os.Chdir(dir)
-		if err != nil {
-			t.Fatal("error changing back to original dir:", err)
-		}
-	}(origDir)
-
-	expected, _ := filepath.Abs("../../../")
-
-	actual, err := ChangeToRepoRoot()
-
-	require.NoError(t, err)
-	assert.Equal(t, expected, actual)
-
-	newDir, err := os.Getwd()
-	if err != nil {
-		t.Fatal("could not get current working directory:", err)
-	}
-	assert.Equal(t, expected, newDir)
 }
