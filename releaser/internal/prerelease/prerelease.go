@@ -42,8 +42,8 @@ func Run(versioningFile string, moduleSetName string, skipMake bool) {
 		log.Fatalf("Error creating new prerelease struct: %v", err)
 	}
 
-	if err = p.verifyGitTagsDoNotAlreadyExist(); err != nil {
-		log.Fatalf("verifyGitTagsDoNotAlreadyExist failed: %v", err)
+	if err = p.ModuleSetRelease.VerifyGitTagsDoNotAlreadyExist(); err != nil {
+		log.Fatalf("VerifyGitTagsDoNotAlreadyExist failed: %v", err)
 	}
 
 	if err = p.verifyWorkingTreeClean(); err != nil {
@@ -97,47 +97,6 @@ func newPrerelease(versioningFilename, modSetToUpdate, repoRoot string) (prerele
 	return prerelease{
 		ModuleSetRelease: modRelease,
 	}, nil
-}
-
-// verifyGitTagsDoNotAlreadyExist checks if Git tags have already been created that match the specific module tag name
-// and version number for the modules being updated. If the tag already exists, an error is returned.
-func (p prerelease) verifyGitTagsDoNotAlreadyExist() error {
-	newTags := make(map[string]bool)
-
-	modFullTags := p.ModuleSetRelease.ModuleFullTagNames()
-
-	for _, newFullTag := range modFullTags {
-		newTags[newFullTag] = true
-	}
-
-	existingTags, err := p.ModuleSetRelease.Repo.Tags()
-	if err != nil {
-		return fmt.Errorf("error getting repo tags: %v", err)
-	}
-
-	var errors []errGitTagAlreadyExists
-
-	_ = existingTags.ForEach(func(ref *plumbing.Reference) error {
-		tagObj, err := p.Repo.TagObject(ref.Hash())
-		if err != nil {
-			return fmt.Errorf("error retrieving tag object: %v", err)
-		}
-		if _, exists := newTags[tagObj.Name]; exists {
-			errors = append(errors, errGitTagAlreadyExists{
-				gitTag: tagObj.Name,
-			})
-		}
-
-		return nil
-	})
-
-	if len(errors) > 0 {
-		return &errGitTagAlreadyExistsSlice{
-			errors: errors,
-		}
-	}
-
-	return nil
 }
 
 // verifyWorkingTreeClean returns nil if the working tree is clean or an error if not.

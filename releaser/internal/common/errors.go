@@ -12,22 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package prerelease
+package common
 
 import (
 	"fmt"
+	"strings"
 )
 
-type errGetWorktreeFailed struct {
-	reason error
+type ErrGitTagsAlreadyExists struct {
+	tagNames []string
 }
 
-func (e *errGetWorktreeFailed) Error() string {
-	return fmt.Sprintf("failed to get worktree: %v", e.reason)
-}
-
-type errWorkingTreeNotClean struct{}
-
-func (e *errWorkingTreeNotClean) Error() string {
-	return "working tree not clean"
+func (e *ErrGitTagsAlreadyExists) Error() string {
+	return fmt.Sprintf("some git tags already exist:\n%s", strings.Join(e.tagNames, "\n"))
 }

@@ -17,6 +17,7 @@ package common
 import (
 	"fmt"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"io/fs"
 	"io/ioutil"
 	"path/filepath"
@@ -131,6 +132,48 @@ func (modRelease ModuleSetRelease) ModSetTagNames() []ModuleTagName {
 // ModuleFullTagNames gets the full tag names (including the version) of all modules in the module set to update.
 func (modRelease ModuleSetRelease) ModuleFullTagNames() []string {
 	return combineModuleTagNamesAndVersion(modRelease.ModSetTagNames(), modRelease.ModSetVersion())
+}
+
+// VerifyGitTagsDoNotAlreadyExist checks if Git tags have already been created that match the specific module tag name
+// and version number for the modules being updated. If the tag already exists, an error is returned.
+func (modRelease ModuleSetRelease) VerifyGitTagsDoNotAlreadyExist() error {
+	newTags := make(map[string]bool)
+
+	modFullTags := modRelease.ModuleFullTagNames()
+
+	for _, newFullTag := range modFullTags {
+		newTags[newFullTag] = true
+	}
+
+	existingTags, err := modRelease.Repo.Tags()
+	if err != nil {
+		return fmt.Errorf("error getting repo tags: %v", err)
+	}
+
+	var existingGitTagNames []string
+
+	err = existingTags.ForEach(func(ref *plumbing.Reference) error {
+		tagObj, err := modRelease.Repo.TagObject(ref.Hash())
+		if err != nil {
+			return fmt.Errorf("error retrieving tag object: %v", err)
+		}
+		if _, exists := newTags[tagObj.Name]; exists {
+			existingGitTagNames = append(existingGitTagNames, tagObj.Name)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("could not check all git tags: %v", err)
+	}
+
+	if len(existingGitTagNames) > 0 {
+		return &ErrGitTagsAlreadyExists{
+			tagNames: existingGitTagNames,
+		}
+	}
+
+	return nil
 }
 
 // versionConfig is needed to parse the versions.yaml file with viper.
