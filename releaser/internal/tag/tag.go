@@ -16,16 +16,17 @@ package tag
 
 import (
 	"fmt"
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"log"
-	"os/exec"
-	"strings"
 
+	tools "go.opentelemetry.io/build-tools"
 	"go.opentelemetry.io/build-tools/releaser/internal/common"
 )
 
 func Run(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags bool) {
 
-	repoRoot, err := common.ChangeToRepoRoot()
+	repoRoot, err := tools.FindRepoRoot()
 	if err != nil {
 		log.Fatalf("unable to change to repo root: %v", err)
 	}
@@ -53,7 +54,7 @@ func Run(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags b
 
 type tagger struct {
 	common.ModuleSetRelease
-	CommitHash string
+	CommitHash plumbing.Hash
 }
 
 func newTagger(versioningFilename, modSetToUpdate, repoRoot, hash string, deleteModuleSetTags bool) (tagger, error) {
@@ -62,11 +63,20 @@ func newTagger(versioningFilename, modSetToUpdate, repoRoot, hash string, delete
 		return tagger{}, fmt.Errorf("error creating prerelease struct: %v", err)
 	}
 
-	var fullCommitHash string
-	if !deleteModuleSetTags {
-		fullCommitHash, err = getFullCommitHash(hash)
-		if err != nil {
+	fullCommitHash, err := getFullCommitHash(hash, modRelease.Repo)
+	if err != nil {
 			return tagger{}, fmt.Errorf("could not get full commit hash of given hash %v: %v", hash, err)
+		}
+
+	modFullTagNames := modRelease.ModuleFullTagNames()
+
+	if deleteModuleSetTags {
+		if err = verifyTagsOnCommit(modFullTagNames, modRelease.Repo, fullCommitHash); err != nil {
+			return tagger{}, fmt.Errorf("verifyTagsOnCommit failed: %v", err)
+		}
+	} else {
+		if err = modRelease.VerifyGitTagsDoNotAlreadyExist(); err != nil {
+			return tagger{}, fmt.Errorf("VerifyGitTagsDoNotAlreadyExist failed: %v", err)
 		}
 	}
 
@@ -76,32 +86,52 @@ func newTagger(versioningFilename, modSetToUpdate, repoRoot, hash string, delete
 	}, nil
 }
 
-func getFullCommitHash(hash string) (string, error) {
-	fmt.Printf("git rev-parse --quiet --verify %v\n", hash)
-	cmd := exec.Command("git", "rev-parse", "--quiet", "--verify", hash)
+func verifyTagsOnCommit(modFullTagNames []string, repo *git.Repository, targetCommitHash plumbing.Hash) error {
+	var tagsNotOnCommit []string
 
-	// output stores the complete SHA1 of the commit hash
-	output, err := cmd.Output()
+	for _, tagName := range modFullTagNames {
+		tagRef, tagRefErr := repo.Tag(tagName)
+
+		switch tagRefErr {
+		case nil:
+			tagObj, tagObjErr := repo.TagObject(tagRef.Hash())
+			if tagObjErr != nil {
+				return fmt.Errorf("unable to get tag object: %v", tagObjErr)
+			}
+
+			tagCommit, tagCommitErr := tagObj.Commit()
+			if tagCommitErr != nil {
+				return fmt.Errorf("could not get tag object commit: %v", tagCommitErr)
+			}
+
+			if targetCommitHash != tagCommit.Hash {
+				tagsNotOnCommit = append(tagsNotOnCommit, tagName)
+			}
+
+		case git.ErrTagNotFound:
+			continue
+		default:
+			return fmt.Errorf("unable to fetch git tag ref for %v: %v", tagName, tagRefErr)
+		}
+	}
+
+	if len(tagsNotOnCommit) > 0 {
+		return &errGitTagsNotOnCommit{
+			commitHash: targetCommitHash,
+			tagNames: tagsNotOnCommit,
+		}
+	}
+
+	return nil
+}
+
+func getFullCommitHash(hash string, repo *git.Repository) (plumbing.Hash, error) {
+	fullHash, err := repo.ResolveRevision(plumbing.Revision(hash))
 	if err != nil {
-		return "", fmt.Errorf("could not retrieve commit hash %v: %v", hash, err)
-	}
-	if output == nil || len(output) == 0 {
-		return "", fmt.Errorf("commit hash not found with 'git rev-parse --quiet --verify %v'", hash)
+		return plumbing.ZeroHash, fmt.Errorf("error getting full hash: %v", err)
 	}
 
-	SHA := strings.TrimSpace(string(output))
-
-	cmd = exec.Command("git", "merge-base", SHA, "HEAD")
-	// output should match SHA
-	output, err = cmd.Output()
-	if err != nil {
-		return "", fmt.Errorf("command 'git merge-base %v HEAD' failed: %v", SHA, err)
-	}
-	if strings.TrimSpace(string(output)) != SHA {
-		return "", fmt.Errorf("commit %v (complete SHA: %v) not found on this branch", hash, SHA)
-	}
-
-	return SHA, nil
+	return *fullHash, nil
 }
 
 func (t tagger) deleteModuleSetTags() error {
@@ -118,10 +148,10 @@ func (t tagger) deleteModuleSetTags() error {
 // created tags if the new module tagging fails.
 func (t tagger) deleteTags(modFullTags []string) error {
 	for _, modFullTag := range modFullTags {
-		fmt.Printf("Deleting tag %v\n", modFullTag)
-		cmd := exec.Command("git", "tag", "-d", modFullTag)
-		if output, err := cmd.CombinedOutput(); err != nil {
-			return fmt.Errorf("could not delete tag %v:\n%v (%v)", modFullTag, string(output), err)
+		log.Printf("Deleting tag %v\n", modFullTag)
+
+		if err := t.ModuleSetRelease.Repo.DeleteTag(modFullTag); err != nil {
+			return fmt.Errorf("could not delete tag %v: %v", modFullTag, err)
 		}
 	}
 	return nil
@@ -130,25 +160,32 @@ func (t tagger) deleteTags(modFullTags []string) error {
 func (t tagger) tagAllModules() error {
 	modFullTags := t.ModuleSetRelease.ModuleFullTagNames()
 
+	tagMessage := fmt.Sprintf("Module set %v, Version %v",
+		t.ModuleSetRelease.ModSetName, t.ModuleSetRelease.ModSetVersion())
+
 	var addedFullTags []string
 
-	fmt.Printf("Tagging commit %v:\n", t.CommitHash)
+	log.Printf("Tagging commit %s:\n", t.CommitHash)
 
 	for _, newFullTag := range modFullTags {
-		fmt.Printf("%v\n", newFullTag)
+		log.Printf("%v\n", newFullTag)
 
-		cmd := exec.Command("git", "tag", "-a", newFullTag, "-s", "-m", "Version "+newFullTag, t.CommitHash)
-		if output, err := cmd.CombinedOutput(); err != nil {
-			fmt.Println("error creating a tag, removing all newly created tags...")
+		_, err := t.ModuleSetRelease.Repo.CreateTag(newFullTag, t.CommitHash, &git.CreateTagOptions{
+			Message: tagMessage,
+		})
+
+		if err != nil {
+			log.Println("error creating a tag, removing all newly created tags...")
 
 			// remove newly created tags to prevent inconsistencies
 			if delTagsErr := t.deleteTags(addedFullTags); delTagsErr != nil {
-				return fmt.Errorf("git tag failed for %v:\n%v (%v).\nCould not remove all tags: %v",
-					newFullTag, string(output), err, delTagsErr,
+				return fmt.Errorf("git tag failed for %v: %v\n" +
+					"During handling of the above error, failed to not remove all tags: %v",
+					newFullTag, err, delTagsErr,
 				)
 			}
 
-			return fmt.Errorf("git tag failed for %v:\n%v (%v)", newFullTag, string(output), err)
+			return fmt.Errorf("git tag failed for %v: %v", newFullTag, err)
 		}
 
 		addedFullTags = append(addedFullTags, newFullTag)
