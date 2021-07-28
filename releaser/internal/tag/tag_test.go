@@ -14,6 +14,26 @@
 
 package tag
 
+//func TestNewTagger(t *testing.T) {
+//
+//}
+
+//func TestVerifyTagsOnCommit(t *testing.T) {
+//
+//}
+
 //func TestGetFullCommitHash(t *testing.T) {
+//
+//}
+
+//func TestDeleteModuleSetTags(t *testing.T) {
+//
+//}
+
+//func TestDeleteTags(t *testing.T) {
+//
+//}
+
+//func TestTagAllModules(t *testing.T) {
 //
 //}
