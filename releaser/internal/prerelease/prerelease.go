@@ -168,8 +168,10 @@ func (p prerelease) createPrereleaseBranch() error {
 		return &errGetWorktreeFailed{reason: err}
 	}
 
+	branchRefName := plumbing.NewBranchReferenceName(branchName)
+
 	checkoutOptions := &git.CheckoutOptions{
-		Branch: plumbing.ReferenceName(branchName),
+		Branch: branchRefName,
 		Create: true,
 		Keep:   true,
 	}
@@ -211,7 +213,7 @@ func (p prerelease) runMakeCI() error {
 }
 
 func (p prerelease) commitChanges() error {
-	commitMessage := "Prepare for version " + p.ModuleSetRelease.ModSetVersion()
+	commitMessage := fmt.Sprintf("Prepare %v for version %v", p.ModuleSetRelease.ModSetName, p.ModuleSetRelease.ModSetVersion())
 
 	// commit changes to git
 	log.Printf("Committing changes to git with message '%v'\n", commitMessage)
@@ -221,7 +223,9 @@ func (p prerelease) commitChanges() error {
 		return &errGetWorktreeFailed{reason: err}
 	}
 
-	commitOptions := &git.CommitOptions{}
+	commitOptions := &git.CommitOptions{
+		All: true,
+	}
 
 	hash, err := worktree.Commit(commitMessage, commitOptions)
 	if err != nil {
@@ -229,20 +233,6 @@ func (p prerelease) commitChanges() error {
 	}
 
 	log.Printf("Commit successful. Hash of commit: %s\n", hash)
-
-	return nil
-}
-
-func (p prerelease) gitAddFile(modFilePath common.ModuleFilePath) error {
-	worktree, err := p.ModuleSetRelease.Repo.Worktree()
-	if err != nil {
-		return &errGetWorktreeFailed{reason: err}
-	}
-
-	log.Printf("git add %s", modFilePath)
-	if _, err = worktree.Add(string(modFilePath)); err != nil {
-		return &errGitAddFailed{reason: err}
-	}
 
 	return nil
 }
@@ -283,9 +273,6 @@ func (p prerelease) updateAllGoModFiles() error {
 	for _, modFilePath := range p.ModuleSetRelease.ModPathMap {
 		if err := p.updateGoModVersions(modFilePath); err != nil {
 			return fmt.Errorf("could not update module versions in file %v: %v", modFilePath, err)
-		}
-		if err := p.gitAddFile(modFilePath); err != nil {
-			return fmt.Errorf("error adding file to git: %v", err)
 		}
 	}
 	return nil
