@@ -109,7 +109,7 @@ func NewModuleSetRelease(versioningFilename, modSetToUpdate, repoRoot string) (M
 		ModSetName:       modSetToUpdate,
 		ModSet:           modSet,
 		TagNames:         tagNames,
-		Repo: 			  repo,
+		Repo:             repo,
 	}, nil
 
 }

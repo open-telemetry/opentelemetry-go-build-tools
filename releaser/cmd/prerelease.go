@@ -24,7 +24,7 @@ import (
 )
 
 var (
-	skipMake           bool
+	skipMake bool
 )
 
 // prereleaseCmd represents the prerelease command

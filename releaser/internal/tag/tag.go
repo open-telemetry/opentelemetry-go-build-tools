@@ -16,9 +16,10 @@ package tag
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
-	"log"
 
 	tools "go.opentelemetry.io/build-tools"
 	"go.opentelemetry.io/build-tools/releaser/internal/common"
@@ -65,8 +66,8 @@ func newTagger(versioningFilename, modSetToUpdate, repoRoot, hash string, delete
 
 	fullCommitHash, err := getFullCommitHash(hash, modRelease.Repo)
 	if err != nil {
-			return tagger{}, fmt.Errorf("could not get full commit hash of given hash %v: %v", hash, err)
-		}
+		return tagger{}, fmt.Errorf("could not get full commit hash of given hash %v: %v", hash, err)
+	}
 
 	modFullTagNames := modRelease.ModuleFullTagNames()
 
@@ -118,7 +119,7 @@ func verifyTagsOnCommit(modFullTagNames []string, repo *git.Repository, targetCo
 	if len(tagsNotOnCommit) > 0 {
 		return &errGitTagsNotOnCommit{
 			commitHash: targetCommitHash,
-			tagNames: tagsNotOnCommit,
+			tagNames:   tagsNotOnCommit,
 		}
 	}
 
@@ -179,7 +180,7 @@ func (t tagger) tagAllModules() error {
 
 			// remove newly created tags to prevent inconsistencies
 			if delTagsErr := t.deleteTags(addedFullTags); delTagsErr != nil {
-				return fmt.Errorf("git tag failed for %v: %v\n" +
+				return fmt.Errorf("git tag failed for %v: %v\n"+
 					"During handling of the above error, failed to not remove all tags: %v",
 					newFullTag, err, delTagsErr,
 				)

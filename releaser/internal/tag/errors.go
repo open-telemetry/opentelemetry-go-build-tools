@@ -21,8 +21,8 @@ import (
 )
 
 type errGitTagsNotOnCommit struct {
-	commitHash 	 plumbing.Hash
-	tagNames []string
+	commitHash plumbing.Hash
+	tagNames   []string
 }
 
 func (e *errGitTagsNotOnCommit) Error() string {
