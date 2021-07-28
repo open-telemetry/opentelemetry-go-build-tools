@@ -16,8 +16,9 @@ package tag
 
 import (
 	"fmt"
-	"github.com/go-git/go-git/v5/plumbing"
 	"strings"
+
+	"github.com/go-git/go-git/v5/plumbing"
 )
 
 type errGitTagsNotOnCommit struct {

@@ -15,16 +15,18 @@
 package prerelease
 
 import (
-	"github.com/stretchr/testify/assert"
 	"log"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"go.opentelemetry.io/build-tools/releaser/internal/common"
+	"go.opentelemetry.io/build-tools/releaser/internal/common/commontest"
 )
 
 // MockPrerelease creates a prerelease struct for testing purposes.
 func MockPrerelease(modSetMap common.ModuleSetMap, modPathMap common.ModulePathMap, modSetToUpdate string, repoRoot string) prerelease {
-	modSetRelease, err := common.MockModuleSetRelease(modSetMap, modPathMap, modSetToUpdate, repoRoot)
+	modSetRelease, err := commontest.MockModuleSetRelease(modSetMap, modPathMap, modSetToUpdate, repoRoot)
 	if err != nil {
 		log.Printf("error getting MockModuleVersioning: %v", err)
 		return prerelease{}

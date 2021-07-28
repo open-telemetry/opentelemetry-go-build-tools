@@ -16,7 +16,6 @@ package verify
 
 import (
 	"bytes"
-	"go.opentelemetry.io/build-tools/releaser/internal/common/commontest"
 	"io/ioutil"
 	"log"
 	"os"
@@ -27,6 +26,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"go.opentelemetry.io/build-tools/releaser/internal/common"
+	"go.opentelemetry.io/build-tools/releaser/internal/common/commontest"
 )
 
 const (

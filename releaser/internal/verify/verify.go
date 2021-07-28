@@ -16,10 +16,10 @@ package verify
 
 import (
 	"fmt"
-	"golang.org/x/mod/modfile"
 	"io/ioutil"
 	"log"
 
+	"golang.org/x/mod/modfile"
 	"golang.org/x/mod/semver"
 
 	tools "go.opentelemetry.io/build-tools"
