@@ -44,6 +44,7 @@ func main() {
 	flag.StringVarP(&cfg.containerImage, "container", "c", "otel/semconvgen", "Container image ID")
 	flag.StringVarP(&cfg.outputFilename, "filename", "f", "", "Filename for templated output. If not specified 'basename(inputPath).go' will be used.")
 	flag.StringVarP(&cfg.templateFilename, "template", "t", "template.j2", "Template filename")
+	flag.StringVarP(&cfg.templateParameters, "parameters", "p", "", "List of key=value pairs separated by comma. These values are fed into the template as-is.")
 	flag.Parse()
 
 	cfg, err := validateConfig(cfg)
@@ -70,12 +71,13 @@ func main() {
 }
 
 type config struct {
-	inputPath        string
-	outputPath       string
-	outputFilename   string
-	templateFilename string
-	containerImage   string
-	specVersion      string
+	inputPath          string
+	outputPath         string
+	outputFilename     string
+	templateFilename   string
+	templateParameters string
+	containerImage     string
+	specVersion        string
 }
 
 func validateConfig(cfg config) (config, error) {
@@ -162,6 +164,7 @@ func render(cfg config) error {
 		"code",
 		"--template", path.Join("/data", path.Base(cfg.templateFilename)),
 		"--output", path.Join("/data/output", path.Base(cfg.outputFilename)),
+		"--parameters", cfg.templateParameters,
 	)
 	err = cmd.Run()
 	if err != nil {
