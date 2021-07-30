@@ -44,6 +44,7 @@ func main() {
 	flag.StringVarP(&cfg.containerImage, "container", "c", "otel/semconvgen", "Container image ID")
 	flag.StringVarP(&cfg.outputFilename, "filename", "f", "", "Filename for templated output. If not specified 'basename(inputPath).go' will be used.")
 	flag.StringVarP(&cfg.templateFilename, "template", "t", "template.j2", "Template filename")
+	flag.StringVarP(&cfg.templateParameters, "parameters", "p", "", "List of key=value pairs separated by comma. These values are fed into the template as-is.")
 	flag.Parse()
 
 	cfg, err := validateConfig(cfg)
@@ -70,12 +71,13 @@ func main() {
 }
 
 type config struct {
-	inputPath        string
-	outputPath       string
-	outputFilename   string
-	templateFilename string
-	containerImage   string
-	specVersion      string
+	inputPath          string
+	outputPath         string
+	outputFilename     string
+	templateFilename   string
+	templateParameters string
+	containerImage     string
+	specVersion        string
 }
 
 func validateConfig(cfg config) (config, error) {
@@ -155,17 +157,22 @@ func render(cfg config) error {
 		return fmt.Errorf("unable to copy template to temp directory: %w", err)
 	}
 
-	cmd := exec.Command("docker", "run", "--rm",
+	args := []string{
+		"run", "--rm",
 		"-v", fmt.Sprintf("%s:/data", tmpDir),
 		cfg.containerImage,
 		"--yaml-root", path.Join("/data/input/semantic_conventions/", path.Base(cfg.inputPath)),
 		"code",
 		"--template", path.Join("/data", path.Base(cfg.templateFilename)),
 		"--output", path.Join("/data/output", path.Base(cfg.outputFilename)),
-	)
-	err = cmd.Run()
+	}
+	if cfg.templateParameters != "" {
+		args = append(args, "--parameters", cfg.templateParameters)
+	}
+	cmd := exec.Command("docker", args...)
+	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("unable to render template: %w", err)
+		return fmt.Errorf("unable to render template: %w\n%s", err, out)
 	}
 
 	err = os.MkdirAll(cfg.outputPath, 0700)
