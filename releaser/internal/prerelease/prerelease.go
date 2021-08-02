@@ -219,9 +219,8 @@ func (p prerelease) updateGoModVersions(modFilePath common.ModuleFilePath) error
 	}
 
 	// once all module versions have been updated, overwrite the go.mod file
-	err = ioutil.WriteFile(string(modFilePath), newGoModFile, 0644)
-	if err != nil {
-		return fmt.Errorf("error writing file: %v", err)
+	if err := ioutil.WriteFile(string(modFilePath), newGoModFile, 0644); err != nil {
+		return fmt.Errorf("error overwriting go.mod file: %v", err)
 	}
 
 	return nil

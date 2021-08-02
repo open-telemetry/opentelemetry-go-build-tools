@@ -51,7 +51,9 @@ func init() {
 	tagCmd.Flags().StringVarP(&commitHash, "commit-hash", "c", "",
 		"Git commit hash to tag.",
 	)
-	tagCmd.MarkFlagRequired("commit-hash")
+	if err := tagCmd.MarkFlagRequired("commit-hash"); err != nil {
+		log.Fatalf("could not mark commit-hash flag as required: %v", err)
+	}
 
 	tagCmd.Flags().BoolVarP(&deleteModuleSetTags, "delete-module-set-tags", "d", false,
 		"Specify this flag to delete all module tags associated with the version listed for the module set in the versioning file. Should only be used to undo recent tagging mistakes.",

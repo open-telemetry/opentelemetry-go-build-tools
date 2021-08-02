@@ -80,11 +80,14 @@ func getDependencies(modVersioning common.ModuleVersioning) (dependencyMap, erro
 	dependencies := make(dependencyMap)
 
 	// Dependencies are defined by the require section of go.mod files.
-	for modPath, _ := range modVersioning.ModInfoMap {
+	for modPath := range modVersioning.ModInfoMap {
 		modFilePath := modVersioning.ModPathMap[modPath]
 		modData, err := ioutil.ReadFile(string(modFilePath))
+		if err != nil {
+			return nil, fmt.Errorf("could not read mod file: %v", err)
+		}
 
-		modFile, err := modfile.Parse("teststring", modData, nil)
+		modFile, err := modfile.Parse("", modData, nil)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse go.mod file at %v: %v", modFilePath, err)
 		}
