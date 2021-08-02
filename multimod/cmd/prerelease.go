@@ -22,7 +22,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"go.opentelemetry.io/build-tools/releaser/internal/prerelease"
+	"go.opentelemetry.io/build-tools/multimod/internal/prerelease"
 )
 
 var (

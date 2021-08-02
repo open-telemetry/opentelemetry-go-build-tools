@@ -23,7 +23,7 @@ import (
 	"regexp"
 	"strings"
 
-	"go.opentelemetry.io/build-tools/releaser/internal/common"
+	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
 
 func Run(versioningFile, moduleSetName, fromExistingBranch string, skipMake bool) {

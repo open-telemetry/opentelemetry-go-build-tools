@@ -1,4 +1,4 @@
-# Go Module Releaser
+# Go MultiMod Releaser
 
 This Go Cobra app adds versioning support for repos containing multiple Go
 Modules. Specifically, this app allows for repo maintainers to specify versions
@@ -22,7 +22,7 @@ file](./docs/versions-example.yaml).
 
 ## Creating the app binary
 
-TODO: switch to automatically pulling newest version of `releaser` app binary.
+TODO: switch to automatically pulling newest version of `multimod` app binary.
 
 This section describes the current process used for building the Cobra app
 binary, but the process will be updated soon to automatically fetch the most
@@ -32,19 +32,19 @@ To build the binary, simply use the following commands:
 
 ```sh
 # from the opentelemetry-go-build-tools repo root
-cd releaser
-go build -o releaser main.go
+cd multimod
+go build -o multimod main.go
 ```
 
 ## Verify Module Versioning
 
-Once changes have been completed to the `versions.yaml` file, and the `releaser`
+Once changes have been completed to the `versions.yaml` file, and the `multimod`
 file is within the target repo, verify that the versioning is correct by running
 the `verify` subcommand:
 
 ```sh
 # within the target repo
-./releaser verify
+./multimod verify
 ```
 
 * The script is called with the following parameters:
@@ -75,7 +75,7 @@ release.
    `pre_release_<module set name>_<new version>` that will contain all release changes.
 
     ```sh
-    ./releaser prerelease --module-set-name <name>
+    ./multimod prerelease --module-set-name <name>
     ```
 
     * The script is called with the following parameters:
@@ -120,7 +120,7 @@ commit will be found in your currently checked out branch.
    in which case the script will attempt to find and print the full SHA1 hash.
 
     ```sh
-    ./releaser tag --module-set-name <name> --commit-hash <hash>
+    ./multimod tag --module-set-name <name> --commit-hash <hash>
     ```
 
 2. Push tags for ALL updated modules to the upstream remote (not your fork),
@@ -140,7 +140,7 @@ command will not allow you to delete tags that already exist in the upstream
 remote.
 
 ```sh
-./releaser tag --module-set-name <name> --delete-module-set-tags
+./multimod tag --module-set-name <name> --delete-module-set-tags
 ```
 
 ## Release

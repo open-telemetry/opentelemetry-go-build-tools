@@ -48,7 +48,7 @@ updates:
       interval: weekly
   -
     package-ecosystem: gomod
-    directory: /releaser
+    directory: /multimod
     labels:
       - dependencies
       - go

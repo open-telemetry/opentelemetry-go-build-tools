@@ -20,7 +20,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"go.opentelemetry.io/build-tools/releaser/internal/common"
+	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
 
 // MockModuleVersioning creates a ModuleVersioning struct for testing purposes.
