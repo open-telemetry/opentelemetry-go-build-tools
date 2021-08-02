@@ -79,10 +79,15 @@ func newVerification(versioningFilename, repoRoot string) (verification, error) 
 func getDependencies(modVersioning common.ModuleVersioning) (dependencyMap, error) {
 	dependencies := make(dependencyMap)
 
+	log.Println(modVersioning.ModSetMap)
+	log.Println(modVersioning.ModPathMap)
+	log.Println(modVersioning.ModInfoMap)
+
 	// Dependencies are defined by the require section of go.mod files.
 	for modPath := range modVersioning.ModInfoMap {
 		modFilePath := modVersioning.ModPathMap[modPath]
 		modData, err := ioutil.ReadFile(string(modFilePath))
+		log.Println(modPath, string(modFilePath))
 		if err != nil {
 			return nil, fmt.Errorf("could not read mod file: %v", err)
 		}

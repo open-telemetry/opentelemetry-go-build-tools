@@ -132,9 +132,10 @@ func TestNewVerification(t *testing.T) {
 	modFiles := map[common.ModuleFilePath][]byte{
 		common.ModuleFilePath(filepath.Join(tmpRootDir, "test", "test1", "go.mod")): []byte("module \"go.opentelemetry.io/test/test1\"\n\ngo 1.16\n\n" +
 			"require (\n\t\"go.opentelemetry.io/testroot/v2\" v2.0.0\n)\n"),
+		common.ModuleFilePath(filepath.Join(tmpRootDir, "test", "test2", "go.mod")): []byte("module \"go.opentelemetry.io/test/test2\"\n\ngo 1.16\n"),
 		common.ModuleFilePath(filepath.Join(tmpRootDir, "test", "go.mod")):          []byte("module go.opentelemetry.io/test3\n\ngo 1.16\n"),
 		common.ModuleFilePath(filepath.Join(tmpRootDir, "go.mod")):                  []byte("module go.opentelemetry.io/testroot/v2\n\ngo 1.16\n"),
-		common.ModuleFilePath(filepath.Join(tmpRootDir, "test", "test2", "go.mod")): []byte("module \"go.opentelemetry.io/test/testexcluded\"\n\ngo 1.16\n"),
+		common.ModuleFilePath(filepath.Join(tmpRootDir, "excluded", "go.mod")): []byte("module \"go.opentelemetry.io/test/testexcluded\"\n\ngo 1.16\n"),
 	}
 
 	if err := commontest.WriteGoModFiles(modFiles); err != nil {
@@ -172,6 +173,7 @@ func TestNewVerification(t *testing.T) {
 			},
 			expectedModulePathMap: common.ModulePathMap{
 				"go.opentelemetry.io/test/test1":  common.ModuleFilePath(filepath.Join(tmpRootDir, "test", "test1", "go.mod")),
+				"go.opentelemetry.io/test/test2":  common.ModuleFilePath(filepath.Join(tmpRootDir, "test", "test2", "go.mod")),
 				"go.opentelemetry.io/test3":       common.ModuleFilePath(filepath.Join(tmpRootDir, "test", "go.mod")),
 				"go.opentelemetry.io/testroot/v2": common.ModuleFilePath(filepath.Join(tmpRootDir, "go.mod")),
 			},
