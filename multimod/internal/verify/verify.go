@@ -23,7 +23,7 @@ import (
 	"golang.org/x/mod/semver"
 
 	tools "go.opentelemetry.io/build-tools"
-	"go.opentelemetry.io/build-tools/releaser/internal/common"
+	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
 
 func Run(versioningFile string) {

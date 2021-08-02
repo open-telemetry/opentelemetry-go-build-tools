@@ -50,77 +50,6 @@ func captureOutput(f func()) string {
 	return buf.String()
 }
 
-//// MockVerification creates a verification struct for testing purposes.
-//func MockVerification(modSetMap common.ModuleSetMap, modPathMap common.ModulePathMap, dependencies dependencyMap) verification {
-//	modVersioning, err := commontest.MockModuleVersioning(modSetMap, modPathMap)
-//	if err != nil {
-//		log.Printf("error getting MockModuleVersioning: %v", err)
-//		return verification{}
-//	}
-//
-//	return verification{
-//		ModuleVersioning: modVersioning,
-//		dependencies:     dependencies,
-//	}
-//}
-
-// Positive-only test
-//func TestMockVerification(t *testing.T) {
-//	modSetMap := common.ModuleSetMap{
-//		"mod-set-1": common.ModuleSet{
-//			Version: "v1.2.3-RC1+meta",
-//			Modules: []common.ModulePath{
-//				"go.opentelemetry.io/test/test1",
-//				"go.opentelemetry.io/test/test2",
-//			},
-//		},
-//		"mod-set-2": common.ModuleSet{
-//			Version: "v0.1.0",
-//			Modules: []common.ModulePath{
-//				"go.opentelemetry.io/test3",
-//			},
-//		},
-//	}
-//
-//	modPathMap := common.ModulePathMap{
-//		"go.opentelemetry.io/test/test1": "root/path/to/mod/test/test1/go.mod",
-//		"go.opentelemetry.io/test/test2": "root/path/to/mod/test/test2/go.mod",
-//		"go.opentelemetry.io/test3":      "root/test3/go.mod",
-//	}
-//
-//	depMap := dependencyMap{
-//		"go.opentelemetry.io/test/test1": []common.ModulePath{"go.opentelemetry.io/test/test2"},
-//		"go.opentelemetry.io/test3":      []common.ModulePath{"go.opentelemetry.io/test/test1"},
-//	}
-//
-//	expected := verification{
-//		ModuleVersioning: common.ModuleVersioning{
-//			ModSetMap:  modSetMap,
-//			ModPathMap: modPathMap,
-//			ModInfoMap: common.ModuleInfoMap{
-//				"go.opentelemetry.io/test/test1": common.ModuleInfo{
-//					ModuleSetName: "mod-set-1",
-//					Version:       "v1.2.3-RC1+meta",
-//				},
-//				"go.opentelemetry.io/test/test2": common.ModuleInfo{
-//					ModuleSetName: "mod-set-1",
-//					Version:       "v1.2.3-RC1+meta",
-//				},
-//				"go.opentelemetry.io/test3": common.ModuleInfo{
-//					ModuleSetName: "mod-set-2",
-//					Version:       "v0.1.0",
-//				},
-//			},
-//		},
-//		dependencies: depMap,
-//	}
-//
-//	actual := MockVerification(modSetMap, modPathMap, depMap)
-//
-//	assert.IsType(t, verification{}, actual)
-//	assert.Equal(t, expected, actual)
-//}
-
 func TestNewVerification(t *testing.T) {
 	tmpRootDir, err := os.MkdirTemp(testDataDir, "NewVerification")
 	if err != nil {
@@ -231,28 +160,28 @@ func TestGetDependencies(t *testing.T) {
 		filepath.Join(tmpRootDir, "test", "test1", "go.mod"): []byte("module go.opentelemetry.io/build-tools/releaser/internal/verify/test/test1\n\n" +
 			"go 1.16\n\n" +
 			"require (\n\t" +
-			"go.opentelemetry.io/build-tools/releaser/internal/verify/test/test2 v1.2.3-RC1+meta\n\t" +
-			"go.opentelemetry.io/build-tools/releaser/internal/verify/test3 v0.1.0\n" +
+			"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test2 v1.2.3-RC1+meta\n\t" +
+			"go.opentelemetry.io/build-tools/multimod/internal/verify/test3 v0.1.0\n" +
 			")"),
 		filepath.Join(tmpRootDir, "test", "go.mod"): []byte("module go.opentelemetry.io/build-tools/releaser/internal/verify/test3\n\n" +
 			"go 1.16\n\n" +
 			"require (\n\t" +
-			"go.opentelemetry.io/build-tools/releaser/internal/verify/test/test1 v1.2.3-RC1+meta\n\t" +
-			"go.opentelemetry.io/build-tools/releaser/internal/verify/test/test2 v1.2.3-RC1+meta\n\n" +
+			"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test1 v1.2.3-RC1+meta\n\t" +
+			"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test2 v1.2.3-RC1+meta\n\n" +
 			")"),
 		filepath.Join(tmpRootDir, "go.mod"): []byte("module go.opentelemetry.io/build-tools/releaser/internal/verify/testroot\n\n" +
 			"go 1.16\n\n" +
 			"require (\n\t" +
-			"go.opentelemetry.io/build-tools/releaser/internal/verify/test/test1 v1.2.3-RC1+meta\n\t" +
-			"go.opentelemetry.io/build-tools/releaser/internal/verify/test/test2 v1.2.3-RC1+meta\n\t" +
-			"go.opentelemetry.io/build-tools/releaser/internal/verify/test3 v0.1.0\n" +
+			"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test1 v1.2.3-RC1+meta\n\t" +
+			"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test2 v1.2.3-RC1+meta\n\t" +
+			"go.opentelemetry.io/build-tools/multimod/internal/verify/test3 v0.1.0\n" +
 			")"),
 		filepath.Join(tmpRootDir, "test", "test2", "go.mod"): []byte("module go.opentelemetry.io/build-tools/releaser/internal/verify/test/test2\n\n" +
 			"go 1.16\n\n" +
 			"require (\n\t" +
-			"go.opentelemetry.io/build-tools/releaser/internal/verify/test/test1 v1.2.3-RC1+meta\n\t" +
-			"go.opentelemetry.io/build-tools/releaser/internal/verify/test3 v0.1.0\n\t" +
-			"go.opentelemetry.io/build-tools/releaser/internal/verify/testroot v0.2.0\n" +
+			"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test1 v1.2.3-RC1+meta\n\t" +
+			"go.opentelemetry.io/build-tools/multimod/internal/verify/test3 v0.1.0\n\t" +
+			"go.opentelemetry.io/build-tools/multimod/internal/verify/testroot v0.2.0\n" +
 			")"),
 	}
 
@@ -265,23 +194,23 @@ func TestGetDependencies(t *testing.T) {
 	)
 
 	expected := dependencyMap{
-		"go.opentelemetry.io/build-tools/releaser/internal/verify/test/test1": []common.ModulePath{
-			"go.opentelemetry.io/build-tools/releaser/internal/verify/test/test2",
-			"go.opentelemetry.io/build-tools/releaser/internal/verify/test3",
+		"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test1": []common.ModulePath{
+			"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test2",
+			"go.opentelemetry.io/build-tools/multimod/internal/verify/test3",
 		},
-		"go.opentelemetry.io/build-tools/releaser/internal/verify/test/test2": []common.ModulePath{
-			"go.opentelemetry.io/build-tools/releaser/internal/verify/test/test1",
-			"go.opentelemetry.io/build-tools/releaser/internal/verify/test3",
-			"go.opentelemetry.io/build-tools/releaser/internal/verify/testroot",
+		"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test2": []common.ModulePath{
+			"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test1",
+			"go.opentelemetry.io/build-tools/multimod/internal/verify/test3",
+			"go.opentelemetry.io/build-tools/multimod/internal/verify/testroot",
 		},
-		"go.opentelemetry.io/build-tools/releaser/internal/verify/test3": []common.ModulePath{
-			"go.opentelemetry.io/build-tools/releaser/internal/verify/test/test1",
-			"go.opentelemetry.io/build-tools/releaser/internal/verify/test/test2",
+		"go.opentelemetry.io/build-tools/multimod/internal/verify/test3": []common.ModulePath{
+			"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test1",
+			"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test2",
 		},
-		"go.opentelemetry.io/build-tools/releaser/internal/verify/testroot": []common.ModulePath{
-			"go.opentelemetry.io/build-tools/releaser/internal/verify/test/test1",
-			"go.opentelemetry.io/build-tools/releaser/internal/verify/test/test2",
-			"go.opentelemetry.io/build-tools/releaser/internal/verify/test3",
+		"go.opentelemetry.io/build-tools/multimod/internal/verify/testroot": []common.ModulePath{
+			"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test1",
+			"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test2",
+			"go.opentelemetry.io/build-tools/multimod/internal/verify/test3",
 		},
 	}
 

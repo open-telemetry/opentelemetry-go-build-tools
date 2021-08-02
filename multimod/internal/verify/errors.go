@@ -17,7 +17,7 @@ package verify
 import (
 	"fmt"
 
-	"go.opentelemetry.io/build-tools/releaser/internal/common"
+	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
 
 type errModuleNotInSet struct {
