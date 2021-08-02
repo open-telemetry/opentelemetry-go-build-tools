@@ -30,7 +30,7 @@ import (
 	"go.opentelemetry.io/build-tools/releaser/internal/common"
 )
 
-func Run(versioningFile string, moduleSetName string, skipMake bool) {
+func Run(versioningFile string, moduleSetName string, skipMake bool, noCommit bool) {
 	repoRoot, err := tools.FindRepoRoot()
 	if err != nil {
 		log.Fatalf("unable to change to repo root: %v", err)
@@ -74,9 +74,11 @@ func Run(versioningFile string, moduleSetName string, skipMake bool) {
 			log.Fatalf("runMakeCI failed: %v", err)
 		}
 	}
-
-	if err = p.commitChanges(); err != nil {
-		log.Fatalf("commitChanges failed: %v", err)
+	
+	if noCommit {
+		if err = p.commitChanges(); err != nil {
+			log.Fatalf("commitChanges failed: %v", err)
+		}
 	}
 
 	log.Println("\nPrerelease finished successfully. Now run the following to verify the changes:")

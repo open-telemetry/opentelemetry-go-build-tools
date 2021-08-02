@@ -25,6 +25,7 @@ import (
 
 var (
 	skipMake bool
+	noCommit bool
 )
 
 // prereleaseCmd represents the prerelease command
@@ -41,7 +42,7 @@ var prereleaseCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Using versioning file", versioningFile)
 
-		prerelease.Run(versioningFile, moduleSetName, skipMake)
+		prerelease.Run(versioningFile, moduleSetName, skipMake, noCommit)
 	},
 }
 
@@ -54,5 +55,10 @@ func init() {
 	prereleaseCmd.Flags().BoolVarP(&skipMake, "skip-make", "s", false,
 		"Specify this flag to skip the 'make lint' and 'make ci' steps. "+
 			"To be used for debugging purposes. Should not be skipped during actual release.",
+	)
+
+	prereleaseCmd.Flags().BoolVarP(&noCommit, "no-commit", "n", false,
+		"Specify this flag to disable automatic committing at the end of the script. " +
+		"Note that any changes made are not staged and must be added manually before committing.",
 	)
 }
