@@ -40,7 +40,14 @@ var verifyCmd = &cobra.Command{
 `,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		flags := cmd.InheritedFlags()
-		flags.SetAnnotation("module-set-name", cobra.BashCompOneRequiredFlag, []string{"false"})
+		if err := flags.SetAnnotation(
+			"module-set-name",
+			cobra.BashCompOneRequiredFlag,
+			[]string{"false"},
+		); err != nil {
+			log.Fatalf("could not set module-set-name as not required flag: %v", err)
+		}
+
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Using versioning file", versioningFile)

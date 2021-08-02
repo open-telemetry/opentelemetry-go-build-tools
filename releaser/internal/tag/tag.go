@@ -85,7 +85,7 @@ func getFullCommitHash(hash string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("could not retrieve commit hash %v: %v", hash, err)
 	}
-	if output == nil || len(output) == 0 {
+	if len(output) == 0 {
 		return "", fmt.Errorf("commit hash not found with 'git rev-parse --quiet --verify %v'", hash)
 	}
 

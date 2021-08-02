@@ -17,7 +17,6 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"os"
 	"os/exec"
 	"strings"
 
@@ -58,7 +57,6 @@ func init() {
 	defaultFromExistingBranch, err := getDefaultFromExistingBranch()
 	if err != nil {
 		log.Fatalf("could not fetch default fromExistingBranch: %v", err)
-		os.Exit(1)
 	}
 
 	prereleaseCmd.Flags().StringVarP(&fromExistingBranch, "from-existing-branch", "f", defaultFromExistingBranch,

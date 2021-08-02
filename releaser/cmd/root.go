@@ -24,7 +24,6 @@ import (
 )
 
 var (
-	cfgFile        string
 	moduleSetName  string
 	versioningFile string
 )
@@ -48,7 +47,7 @@ func init() {
 
 	repoRoot, err := tools.FindRepoRoot()
 	if err != nil {
-		log.Fatalf("Could not find repo root: %v", err)
+		log.Fatalf("could not find repo root: %v", err)
 	}
 	versioningFile = filepath.Join(repoRoot,
 		fmt.Sprintf("%v.%v", defaultVersionsConfigName, defaultVersionsConfigType))
@@ -60,5 +59,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&moduleSetName, "module-set-name", "m", "",
 		"Name of module set whose version is being changed. Must be listed in the module set versioning YAML.",
 	)
-	rootCmd.MarkPersistentFlagRequired("module-set-name")
+	if err := rootCmd.MarkPersistentFlagRequired("module-set-name"); err != nil {
+		log.Fatalf("could not mark module-set-name flag as required: %v", err)
+	}
 }

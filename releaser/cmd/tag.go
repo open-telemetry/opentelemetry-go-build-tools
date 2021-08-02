@@ -38,7 +38,13 @@ var tagCmd = &cobra.Command{
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if deleteModuleSetTags {
 			// do not require commit-hash flag if deleting module set tags
-			cmd.Flags().SetAnnotation("commit-hash", cobra.BashCompOneRequiredFlag, []string{"false"})
+			if err := cmd.Flags().SetAnnotation(
+				"commit-hash",
+				cobra.BashCompOneRequiredFlag,
+				[]string{"false"},
+			); err != nil {
+				log.Fatalf("could not set commit-hash as not required flag: %v", err)
+			}
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -57,7 +63,9 @@ func init() {
 	tagCmd.Flags().StringVarP(&commitHash, "commit-hash", "c", "",
 		"Git commit hash to tag.",
 	)
-	tagCmd.MarkFlagRequired("commit-hash")
+	if err := tagCmd.MarkFlagRequired("commit-hash"); err != nil {
+		log.Fatalf("could not mark commit-hash flag as required: %v", err)
+	}
 
 	tagCmd.Flags().BoolVarP(&deleteModuleSetTags, "delete-module-set-tags", "d", false,
 		"Specify this flag to delete all module tags associated with the version listed for the module set in the versioning file. Should only be used to undo recent tagging mistakes.",

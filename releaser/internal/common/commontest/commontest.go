@@ -61,6 +61,9 @@ func MockModuleSetRelease(modSetMap common.ModuleSetMap, modPathMap common.Modul
 		modPathMap,
 		repoRoot,
 	)
+	if err != nil {
+		return common.ModuleSetRelease{}, fmt.Errorf("get getting tag names from ModulePathsToTagNames(): %v", err)
+	}
 
 	return common.ModuleSetRelease{
 		ModuleVersioning: modVersioning,
