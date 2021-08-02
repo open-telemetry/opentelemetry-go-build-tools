@@ -23,12 +23,14 @@ import (
 	"go.opentelemetry.io/build-tools/releaser/internal/common"
 )
 
-func Run(versioningFile string, moduleSetName string, skipMake bool, noCommit bool) {
+func Run(versioningFile string, moduleSetNames []string, allModuleSets bool, skipMake bool, noCommit bool) {
 	repoRoot, err := tools.FindRepoRoot()
 	if err != nil {
 		log.Fatalf("unable to find repo root: %v", err)
 	}
 	log.Printf("Using repo with root at %s\n", repoRoot)
+
+	moduleSetName := moduleSetNames[0]
 
 	p, err := newPrerelease(versioningFile, moduleSetName, repoRoot)
 	if err != nil {

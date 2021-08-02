@@ -24,8 +24,9 @@ import (
 )
 
 var (
-	skipMake bool
+	allModuleSets bool
 	noCommit bool
+	skipMake bool
 )
 
 // prereleaseCmd represents the prerelease command
@@ -39,10 +40,22 @@ var prereleaseCmd = &cobra.Command{
 - Updates module versions in all go.mod files.
 - 'make lint' and 'make ci' are called
 - Adds and commits changes to Git`,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		if allModuleSets {
+			// do not require commit-hash flag if deleting module set tags
+			if err := cmd.Flags().SetAnnotation(
+				"all-module-sets",
+				cobra.BashCompOneRequiredFlag,
+				[]string{"false"},
+			); err != nil {
+				log.Fatalf("could not set all-module-sets flag as not required flag: %v", err)
+			}
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Using versioning file", versioningFile)
 
-		prerelease.Run(versioningFile, moduleSetName, skipMake, noCommit)
+		prerelease.Run(versioningFile, moduleSetNames, allModuleSets, noCommit, skipMake)
 	},
 }
 
@@ -52,13 +65,17 @@ func init() {
 
 	rootCmd.AddCommand(prereleaseCmd)
 
-	prereleaseCmd.Flags().BoolVarP(&skipMake, "skip-make", "s", false,
-		"Specify this flag to skip the 'make lint' and 'make ci' steps. "+
-			"To be used for debugging purposes. Should not be skipped during actual release.",
+	prereleaseCmd.Flags().BoolVarP(&allModuleSets, "all-module-sets", "a", false,
+		"Specify this flag to update versions of modules in all sets listed in the versioning file.",
 	)
 
 	prereleaseCmd.Flags().BoolVarP(&noCommit, "no-commit", "n", false,
 		"Specify this flag to disable automatic committing at the end of the script. " +
 		"Note that any changes made are not staged and must be added manually before committing.",
+	)
+
+	prereleaseCmd.Flags().BoolVarP(&skipMake, "skip-make", "s", false,
+		"Specify this flag to skip the 'make lint' and 'make ci' steps. "+
+			"To be used for debugging purposes. Should not be skipped during actual release.",
 	)
 }
