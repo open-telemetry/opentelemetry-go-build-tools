@@ -26,3 +26,17 @@ type ErrGitTagsAlreadyExists struct {
 func (e *ErrGitTagsAlreadyExists) Error() string {
 	return fmt.Sprintf("some git tags already exist:\n%s", strings.Join(e.tagNames, "\n"))
 }
+
+type errGetWorktreeFailed struct {
+	reason error
+}
+
+func (e *errGetWorktreeFailed) Error() string {
+	return fmt.Sprintf("failed to get worktree: %v", e.reason)
+}
+
+type errWorkingTreeNotClean struct{}
+
+func (e *errWorkingTreeNotClean) Error() string {
+	return "working tree not clean"
+}

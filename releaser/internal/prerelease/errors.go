@@ -13,21 +13,3 @@
 // limitations under the License.
 
 package prerelease
-
-import (
-	"fmt"
-)
-
-type errGetWorktreeFailed struct {
-	reason error
-}
-
-func (e *errGetWorktreeFailed) Error() string {
-	return fmt.Sprintf("failed to get worktree: %v", e.reason)
-}
-
-type errWorkingTreeNotClean struct{}
-
-func (e *errWorkingTreeNotClean) Error() string {
-	return "working tree not clean"
-}
