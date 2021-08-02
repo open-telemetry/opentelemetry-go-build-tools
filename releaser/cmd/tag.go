@@ -32,7 +32,7 @@ var (
 var tagCmd = &cobra.Command{
 	Use:   "tag",
 	Short: "Applies Git tags to specified commit",
-	Long: `Tagging script to add Git tags to a specified commit hash created by prerelease script:
+	Long: `Tag script to add Git tags to a specified commit hash created by prerelease script:
 - Creates new Git tags for all modules being updated.
 - If tagging fails in the middle of the script, the recently created tags will be deleted.`,
 	Run: func(cmd *cobra.Command, args []string) {
