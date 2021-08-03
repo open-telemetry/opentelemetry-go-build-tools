@@ -25,6 +25,7 @@ import (
 
 var (
 	allModuleSets bool
+	moduleSetNames []string
 	noCommit bool
 	skipMake bool
 )
@@ -44,11 +45,11 @@ var prereleaseCmd = &cobra.Command{
 		if allModuleSets {
 			// do not require commit-hash flag if deleting module set tags
 			if err := cmd.Flags().SetAnnotation(
-				"all-module-sets",
+				"module-set-names",
 				cobra.BashCompOneRequiredFlag,
 				[]string{"false"},
 			); err != nil {
-				log.Fatalf("could not set all-module-sets flag as not required flag: %v", err)
+				log.Fatalf("could not set module-set-names flag as not required flag: %v", err)
 			}
 		}
 	},
@@ -69,13 +70,25 @@ func init() {
 		"Specify this flag to update versions of modules in all sets listed in the versioning file.",
 	)
 
+	prereleaseCmd.Flags().StringSliceVarP(&moduleSetNames, "module-set-names", "m", nil,
+		"Names of module set whose version is being changed. " +
+			"Each name be listed in the module set versioning YAML. " +
+			"To specify multiple module sets, specify set names as comma-separated values." +
+			"For example: --module-set-names=\"mod-set-1,mod-set-2\"",
+	)
+	if err := prereleaseCmd.MarkFlagRequired("module-set-names"); err != nil {
+		log.Fatalf("could not mark module-set-names flag as required: %v", err)
+	}
+
 	prereleaseCmd.Flags().BoolVarP(&noCommit, "no-commit", "n", false,
 		"Specify this flag to disable automatic committing at the end of the script. " +
-		"Note that any changes made are not staged and must be added manually before committing.",
+		"Note that any changes made are not staged and must be added manually before committing. " +
+		"As an example, use this flag when wanting to make more modifications before committing ",
 	)
 
 	prereleaseCmd.Flags().BoolVarP(&skipMake, "skip-make", "s", false,
 		"Specify this flag to skip the 'make lint' and 'make ci' steps. "+
 			"To be used for debugging purposes. Should not be skipped during actual release.",
 	)
+
 }

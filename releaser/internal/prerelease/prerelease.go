@@ -16,6 +16,7 @@ package prerelease
 
 import (
 	"fmt"
+	"github.com/go-git/go-git/v5"
 	"log"
 	"strings"
 
@@ -30,56 +31,90 @@ func Run(versioningFile string, moduleSetNames []string, allModuleSets bool, ski
 	}
 	log.Printf("Using repo with root at %s\n", repoRoot)
 
-	moduleSetName := moduleSetNames[0]
-
-	p, err := newPrerelease(versioningFile, moduleSetName, repoRoot)
-	if err != nil {
-		log.Fatalf("Error creating new prerelease struct: %v", err)
-	}
-
-	if err = p.ModuleSetRelease.VerifyGitTagsDoNotAlreadyExist(); err != nil {
-		log.Fatalf("VerifyGitTagsDoNotAlreadyExist failed: %v", err)
-	}
-
-	if err = common.VerifyWorkingTreeClean(p.ModuleSetRelease.Repo); err != nil {
-		log.Fatalf("verifyWorkingTreeClean failed: %v", err)
-	}
-
-	branchNameElements := []string{"prerelease", p.ModuleSetRelease.ModSetName, p.ModuleSetRelease.ModSetVersion()}
-	branchName := strings.Join(branchNameElements, "_")
-
-	if err = common.CreateGitBranch(branchName, p.ModuleSetRelease.Repo); err != nil {
-		log.Fatalf("createPrereleaseBranch failed: %v", err)
-	}
-
-	// TODO: this function currently does nothing, but could be updated to add version.go files
-	//  to directories.
-	if err = p.updateVersionGo(); err != nil {
-		log.Fatalf("updateVersionGo failed: %v", err)
-	}
-
-	if err = p.updateAllGoModFiles(); err != nil {
-		log.Fatalf("updateAllGoModFiles failed: %v", err)
-	}
-
-	if skipMake {
-		log.Println("Skipping 'make lint' and 'make ci'")
-	} else {
-	}
-	
-	if noCommit {
-		log.Println("Changes have not been added nor committed.")
-	} else {
-		if err = p.commitChanges(); err != nil {
-			log.Fatalf("commitChanges failed: %v", err)
+	if allModuleSets {
+		moduleSetNames, err = getAllModuleSetNames(versioningFile, repoRoot)
+		if err != nil {
+			log.Fatal("could not automatically get all module set names:", err)
 		}
 	}
 
-	log.Println("\nPrerelease finished successfully. Now run the following to verify the changes:")
-	log.Println("\ngit diff main")
-	log.Println("\nThen, push the changes to upstream.")
+	repo, err := git.PlainOpen(repoRoot)
+	if err != nil {
+		log.Fatalf("could not open repo at %v: %v", repoRoot, err)
+	}
+
+	if err = common.VerifyWorkingTreeClean(repo); err != nil {
+		log.Fatal("verifyWorkingTreeClean failed:", err)
+	}
+
+	tempCleanBranchName := "tempCleanBranch"
+
+	// cleanBranchRefName is a clean branch to switch to after each module set is updated
+	cleanBranchRefName, err := common.CheckoutNewGitBranch(tempCleanBranchName, repo)
+
+	for _, moduleSetName := range moduleSetNames {
+		p, err := newPrerelease(versioningFile, moduleSetName, repoRoot)
+		if err != nil {
+			log.Fatal("Error creating new prerelease struct:", err)
+		}
+
+		if err = p.ModuleSetRelease.VerifyGitTagsDoNotAlreadyExist(repo); err != nil {
+			log.Fatal("VerifyGitTagsDoNotAlreadyExist failed:", err)
+		}
+
+		branchNameElements := []string{"prerelease", p.ModuleSetRelease.ModSetName, p.ModuleSetRelease.ModSetVersion()}
+		branchName := strings.Join(branchNameElements, "_")
+
+		if _, err = common.CheckoutNewGitBranch(branchName, repo); err != nil {
+			log.Fatal("createPrereleaseBranch failed:", err)
+		}
+
+		// TODO: this function currently does nothing, but could be updated to add version.go files
+		//  to directories.
+		if err = p.updateVersionGo(); err != nil {
+			log.Fatal("updateVersionGo failed:", err)
+		}
+
+		if err = p.updateAllGoModFiles(); err != nil {
+			log.Fatal("updateAllGoModFiles failed:", err)
+		}
+
+		if skipMake {
+			log.Println("Skipping 'make lint' and 'make ci'")
+		} else {
+		}
+
+		if noCommit {
+			log.Printf("Changes have not been added nor committed. Changes made in branch %v\n", branchName)
+		} else {
+			if err = p.commitChanges(repo); err != nil {
+				log.Fatal("commitChanges failed:", err)
+			}
+		}
+
+		// return to clean branch
+		err = common.CheckoutExistingGitBranch(cleanBranchRefName, repo)
+		if err != nil {
+			log.Fatal("unable to checkout clean")
+		}
+	}
+
+	// delete temporary clean branch
+	log.Printf("git branch -D %v\n", tempCleanBranchName)
+	err = repo.Storer.RemoveReference(cleanBranchRefName)
+	if err != nil {
+		log.Fatalf("could not delete temporary clean branch %v: %v", tempCleanBranchName, err)
+	}
+
+	log.Println(`
+Prerelease finished successfully. Now run the following to verify the changes:
+
+git diff main
+
+Then, if necessary, commit changes and push to upstream/make a pull request.`)
 }
 
+// prerelease holds fields needed to update one module set at a time.
 type prerelease struct {
 	common.ModuleSetRelease
 }
@@ -93,6 +128,21 @@ func newPrerelease(versioningFilename, modSetToUpdate, repoRoot string) (prerele
 	return prerelease{
 		ModuleSetRelease: modRelease,
 	}, nil
+}
+
+func getAllModuleSetNames(versioningFile string, repoRoot string) ([]string, error) {
+	modVersioning, err := common.NewModuleVersioning(versioningFile, repoRoot)
+	if err != nil {
+		return nil, fmt.Errorf("call failed to NewModuleVersioning: %v", err)
+	}
+
+	var modSetNames []string
+
+	for modSetName := range modVersioning.ModSetMap {
+		modSetNames = append(modSetNames, modSetName)
+	}
+
+	return modSetNames, nil
 }
 
 // TODO: updateVersionGo may be implemented to update any hard-coded values within version.go files as needed.
@@ -120,12 +170,12 @@ func (p prerelease) updateAllGoModFiles() error {
 	return nil
 }
 
-func (p prerelease) commitChanges() error {
+func (p prerelease) commitChanges(repo *git.Repository) error {
 	commitMessage := fmt.Sprintf(
 		"Prepare %v for version %v",
 		p.ModuleSetRelease.ModSetName,
 		p.ModuleSetRelease.ModSetVersion(),
 	)
 
-	return common.CommitChanges(commitMessage, p.ModuleSetRelease.Repo)
+	return common.CommitChanges(commitMessage, repo)
 }

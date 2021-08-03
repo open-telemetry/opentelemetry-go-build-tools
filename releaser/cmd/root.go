@@ -24,7 +24,6 @@ import (
 )
 
 var (
-	moduleSetNames []string
 	versioningFile string
 )
 
@@ -55,14 +54,4 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&versioningFile, "versioning-file", "v", versioningFile,
 		"Path to versioning file that contains definitions of all module sets. "+
 			"If unspecified, defaults to versions.yaml in the Git repo root.")
-
-	rootCmd.PersistentFlags().StringSliceVarP(&moduleSetNames, "module-set-names", "m", nil,
-		"Names of module set whose version is being changed. " +
-		"Each name be listed in the module set versioning YAML. " +
-		"To specify multiple module sets, specify set names as comma-separated values." +
-		"For example: --module-set-names=\"mod-set-1,mod-set-2\"",
-	)
-	if err := rootCmd.MarkPersistentFlagRequired("module-set-names"); err != nil {
-		log.Fatalf("could not mark module-set-names flag as required: %v", err)
-	}
 }

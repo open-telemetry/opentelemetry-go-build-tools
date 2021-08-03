@@ -45,10 +45,30 @@ func CommitChanges(commitMessage string, repo *git.Repository) error {
 	return nil
 }
 
-func CreateGitBranch(branchName string, repo *git.Repository) error {
+func CheckoutExistingGitBranch(branchRefName plumbing.ReferenceName, repo *git.Repository) error {
 	worktree, err := repo.Worktree()
 	if err != nil {
 		return &errGetWorktreeFailed{reason: err}
+	}
+
+	checkoutOptions := &git.CheckoutOptions{
+		Branch: branchRefName,
+		Create: false,
+		Keep:   false,
+	}
+
+	log.Printf("git checkout %v\n", branchRefName)
+	if err = worktree.Checkout(checkoutOptions); err != nil {
+		return fmt.Errorf("could not check out new branch: %v", err)
+	}
+
+	return nil
+}
+
+func CheckoutNewGitBranch(branchName string, repo *git.Repository) (plumbing.ReferenceName, error) {
+	worktree, err := repo.Worktree()
+	if err != nil {
+		return "", &errGetWorktreeFailed{reason: err}
 	}
 
 	branchRefName := plumbing.NewBranchReferenceName(branchName)
@@ -61,10 +81,10 @@ func CreateGitBranch(branchName string, repo *git.Repository) error {
 
 	log.Printf("git checkout -b %v\n", branchName)
 	if err = worktree.Checkout(checkoutOptions); err != nil {
-		return fmt.Errorf("could not check out new branch: %v", err)
+		return "", fmt.Errorf("could not check out new branch: %v", err)
 	}
 
-	return nil
+	return branchRefName, nil
 }
 
 func GetWorktree(repo *git.Repository) (*git.Worktree, error) {

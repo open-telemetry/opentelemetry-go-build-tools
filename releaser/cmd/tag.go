@@ -26,6 +26,7 @@ import (
 var (
 	commitHash          string
 	deleteModuleSetTags bool
+	moduleSetName       string
 )
 
 // tagCmd represents the tag command

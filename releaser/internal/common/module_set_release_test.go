@@ -47,7 +47,7 @@ func TestNewModuleSetRelease(t *testing.T) {
 	}
 
 	// initialize temporary local git repository
-	expectedRepo, err := git.PlainInit(tmpRootDir, true)
+	_, err = git.PlainInit(tmpRootDir, true)
 	if err != nil {
 		t.Fatal("could not initialize temp git repo:", err)
 	}
@@ -160,7 +160,6 @@ func TestNewModuleSetRelease(t *testing.T) {
 
 				assert.IsType(t, ModuleSetRelease{}, actual)
 				assert.Equal(t, tc.expectedTagNames[expectedModSetName], actual.TagNames)
-				assert.Equal(t, expectedRepo, actual.Repo)
 				assert.Equal(t, expectedModSet, actual.ModSet)
 				assert.Equal(t, expectedModSetName, actual.ModSetName)
 
@@ -168,7 +167,6 @@ func TestNewModuleSetRelease(t *testing.T) {
 				assert.Equal(t, tc.expectedFullTagNames[expectedModSetName], actual.ModuleFullTagNames())
 				assert.Equal(t, tc.expectedModSetVersions[expectedModSetName], actual.ModSetVersion())
 				assert.Equal(t, tc.expectedModSetPaths[expectedModSetName], actual.ModSetPaths())
-
 			}
 		})
 	}
@@ -268,7 +266,10 @@ func TestVerifyGitTagsDoNotAlreadyExist(t *testing.T) {
 			modSetRelease, err := NewModuleSetRelease(versioningFilename, tc.modSetName, repoRoot)
 			require.NoError(t, err)
 
-			actual := modSetRelease.VerifyGitTagsDoNotAlreadyExist()
+			repo, err := git.PlainOpen(repoRoot)
+			require.NoError(t, err)
+
+			actual := modSetRelease.VerifyGitTagsDoNotAlreadyExist(repo)
 			assert.Equal(t, tc.expectedError, actual)
 		})
 	}

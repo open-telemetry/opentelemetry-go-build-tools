@@ -28,7 +28,6 @@ type ModuleSetRelease struct {
 	ModSetName string
 	ModSet     ModuleSet
 	TagNames   []ModuleTagName
-	Repo       *git.Repository
 }
 
 // NewModuleSetRelease returns a ModuleSetRelease struct by specifying a specific set of modules to update.
@@ -59,17 +58,11 @@ func NewModuleSetRelease(versioningFilename, modSetToUpdate, repoRoot string) (M
 		return ModuleSetRelease{}, fmt.Errorf("could not retrieve tag names from module paths: %v", err)
 	}
 
-	repo, err := git.PlainOpen(repoRoot)
-	if err != nil {
-		return ModuleSetRelease{}, fmt.Errorf("error getting git.Repository from repo root dir %v: %v", repoRoot, err)
-	}
-
 	return ModuleSetRelease{
 		ModuleVersioning: modVersioning,
 		ModSetName:       modSetToUpdate,
 		ModSet:           modSet,
 		TagNames:         tagNames,
-		Repo:             repo,
 	}, nil
 
 }
@@ -91,7 +84,7 @@ func (modRelease ModuleSetRelease) ModuleFullTagNames() []string {
 
 // VerifyGitTagsDoNotAlreadyExist checks if Git tags have already been created that match the specific module tag name
 // and version number for the modules being updated. If the tag already exists, an error is returned.
-func (modRelease ModuleSetRelease) VerifyGitTagsDoNotAlreadyExist() error {
+func (modRelease ModuleSetRelease) VerifyGitTagsDoNotAlreadyExist(repo *git.Repository) error {
 	newTags := make(map[string]bool)
 
 	modFullTags := modRelease.ModuleFullTagNames()
@@ -100,7 +93,7 @@ func (modRelease ModuleSetRelease) VerifyGitTagsDoNotAlreadyExist() error {
 		newTags[newFullTag] = true
 	}
 
-	existingTags, err := modRelease.Repo.Tags()
+	existingTags, err := repo.Tags()
 	if err != nil {
 		return fmt.Errorf("error getting repo tags: %v", err)
 	}
@@ -108,7 +101,7 @@ func (modRelease ModuleSetRelease) VerifyGitTagsDoNotAlreadyExist() error {
 	var existingGitTagNames []string
 
 	err = existingTags.ForEach(func(ref *plumbing.Reference) error {
-		tagObj, err := modRelease.Repo.TagObject(ref.Hash())
+		tagObj, err := repo.TagObject(ref.Hash())
 		if err != nil {
 			return fmt.Errorf("error retrieving tag object: %v", err)
 		}
