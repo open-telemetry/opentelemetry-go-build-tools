@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -32,30 +31,21 @@ func IsStableVersion(v string) bool {
 	return semver.Compare(semver.Major(v), "v1") >= 0
 }
 
-// RunMakeLint runs 'make lint' to automatically update go.sum files.
-func RunMakeLint() error {
-	log.Println("Updating go.sum with 'make lint'")
-
-	cmd := exec.Command("make", "lint")
-	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("'make lint' failed: %v (%v)", string(output), err)
+// GetAllModuleSetNames returns the name of all module sets given in a versioningFile.
+func GetAllModuleSetNames(versioningFile string, repoRoot string) ([]string, error) {
+	modVersioning, err := NewModuleVersioning(versioningFile, repoRoot)
+	if err != nil {
+		return nil, fmt.Errorf("call failed to NewModuleVersioning: %v", err)
 	}
 
-	return nil
-}
+	var modSetNames []string
 
-// RunMakeCI runs 'make ci' to build tools needed for CI as defined by the Makefile.
-func RunMakeCI() error {
-	log.Println("Running 'make ci'")
-
-	cmd := exec.Command("make", "ci")
-	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("'make ci' failed: %v (%v)", string(output), err)
+	for modSetName := range modVersioning.ModSetMap {
+		modSetNames = append(modSetNames, modSetName)
 	}
 
-	return nil
+	return modSetNames, nil
 }
-
 
 // UpdateGoModVersions updates one go.mod file, given by modFilePath, by updating all modules listed in
 // newModPaths to use the newVersion given.
@@ -89,9 +79,9 @@ func UpdateGoModVersions(modFilePath ModuleFilePath, newModPaths []ModulePath, n
 	return nil
 }
 
-// UpdateAllGoModFiles updates the go.mod files in modFilePaths by updating all modules listed in
+// UpdateGoModFiles updates the go.mod files in modFilePaths by updating all modules listed in
 // newModPaths to use the newVersion given.
-func UpdateAllGoModFiles(modFilePaths []ModuleFilePath, newModPaths []ModulePath, newVersion string) error {
+func UpdateGoModFiles(modFilePaths []ModuleFilePath, newModPaths []ModulePath, newVersion string) error {
 	log.Println("Updating all module versions in go.mod files...")
 	for _, modFilePath := range modFilePaths {
 		if err := UpdateGoModVersions(

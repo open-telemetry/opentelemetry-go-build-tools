@@ -26,7 +26,6 @@ import (
 var (
 	allModuleSets bool
 	moduleSetNames []string
-	noCommit bool
 	skipMake bool
 )
 
@@ -57,7 +56,7 @@ var prereleaseCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Using versioning file", versioningFile)
 
-		prerelease.Run(versioningFile, moduleSetNames, allModuleSets, noCommit, skipMake)
+		prerelease.Run(versioningFile, moduleSetNames, allModuleSets, skipMake)
 	},
 }
 
@@ -80,16 +79,8 @@ func init() {
 	if err := prereleaseCmd.MarkFlagRequired("module-set-names"); err != nil {
 		log.Fatalf("could not mark module-set-names flag as required: %v", err)
 	}
-
-	prereleaseCmd.Flags().BoolVarP(&noCommit, "no-commit", "n", false,
-		"Specify this flag to disable automatic committing at the end of the script. " +
-		"Note that any changes made are not staged and must be added manually before committing. " +
-		"As an example, use this flag when wanting to make more modifications before committing ",
-	)
-
 	prereleaseCmd.Flags().BoolVarP(&skipMake, "skip-make", "s", false,
 		"Specify this flag to skip the 'make lint' and 'make ci' steps. "+
 			"To be used for debugging purposes. Should not be skipped during actual release.",
 	)
-
 }

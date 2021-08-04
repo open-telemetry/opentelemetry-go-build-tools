@@ -16,13 +16,40 @@ package common
 
 import (
 	"fmt"
-	"log"
-
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"log"
 )
 
-func CommitChanges(commitMessage string, repo *git.Repository) error {
+func CommitChangesToNewBranch(branchName string, commitMessage string, repo *git.Repository) error {
+	// save reference to current head in storage
+	origRef, err := repo.Head()
+	if err != nil {
+		return fmt.Errorf("could not get repo head: %v", err)
+	}
+
+	if err = repo.Storer.SetReference(origRef); err != nil {
+		return fmt.Errorf("could not store original head ref")
+	}
+
+	if _, err = CheckoutNewGitBranch(branchName, repo); err != nil {
+		return fmt.Errorf("createPrereleaseBranch failed: %v", err)
+	}
+
+	if err = commitChanges(commitMessage, repo); err != nil {
+		return fmt.Errorf("could not commit changes: %v", err)
+	}
+
+	// return to original branch
+	err = CheckoutExistingGitBranch(origRef.Name(), repo)
+	if err != nil {
+		log.Fatal("unable to checkout original branch")
+	}
+
+	return err
+}
+
+func commitChanges(commitMessage string, repo *git.Repository) error {
 	// commit changes to git
 	log.Printf("Committing changes to git with message '%v'\n", commitMessage)
 
