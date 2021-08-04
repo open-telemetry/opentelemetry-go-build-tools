@@ -16,15 +16,20 @@ package cmd
 
 import (
 	"fmt"
+	"log"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
+
+	"go.opentelemetry.io/build-tools/releaser/internal/sync"
 )
 
 var (
-	allModuleSets_sync bool
-	moduleSetNames_sync []string
-	noCommit_sync bool
-	skipMake_sync bool
+	otherVersioningFile string
+	otherRepoRoot string
+	allModuleSetsSync bool
+	moduleSetNamesSync []string
+	skipMakeSync bool
 )
 
 // syncCmd represents the sync command
@@ -38,12 +43,46 @@ var syncCmd = &cobra.Command{
 - Attempts to call go mod tidy on the files.
 - Adds and commits changes to Git branch`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("sync called")
+		fmt.Println("Using versioning file", versioningFile)
+
+		sync.Run(versioningFile, otherVersioningFile, otherRepoRoot, moduleSetNamesSync, allModuleSetsSync, skipMakeSync)
 	},
 }
 
 func init() {
+	// Plain log output, no timestamps.
+	log.SetFlags(0)
+
 	rootCmd.AddCommand(syncCmd)
 
+	syncCmd.Flags().StringVarP(&otherRepoRoot, "other-repo-root", "o", "",
+		"Path to other versioning file that contains all module set versions to sync.")
+	if err := syncCmd.MarkFlagRequired("other-repo-root"); err != nil {
+		log.Fatalf("could not mark other-repo-root flag as required: %v", err)
+	}
 
+	otherVersioningFileDefault := filepath.Join(otherRepoRoot,
+		fmt.Sprintf("%v.%v", defaultVersionsConfigName, defaultVersionsConfigType))
+	syncCmd.Flags().StringVar(&otherVersioningFile, "other-versioning-file", otherVersioningFileDefault,
+		"Path to other versioning file that contains all module set versions to sync." +
+		"If unspecified, defaults to versions.yaml in the other Git repo root.")
+
+	syncCmd.Flags().BoolVarP(&allModuleSetsSync, "all-module-sets", "a", false,
+		"Specify this flag to update versions of modules in all sets listed in the versioning file.",
+	)
+
+	syncCmd.Flags().StringSliceVarP(&moduleSetNamesSync, "module-set-names", "m", nil,
+		"Names of module set whose version is being changed. " +
+			"Each name be listed in the module set versioning YAML. " +
+			"To specify multiple module sets, specify set names as comma-separated values." +
+			"For example: --module-set-names=\"mod-set-1,mod-set-2\"",
+	)
+	if err := syncCmd.MarkFlagRequired("module-set-names"); err != nil {
+		log.Fatalf("could not mark module-set-names flag as required: %v", err)
+	}
+
+	syncCmd.Flags().BoolVarP(&skipMakeSync, "skip-make", "s", false,
+		"Specify this flag to skip the 'make lint' and 'make ci' steps. "+
+			"To be used for debugging purposes. Should not be skipped during actual release.",
+	)
 }
