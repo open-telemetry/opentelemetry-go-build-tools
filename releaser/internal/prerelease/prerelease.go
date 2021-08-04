@@ -65,10 +65,10 @@ func Run(versioningFile string, moduleSetNames []string, allModuleSets bool, ski
 			log.Fatal(err)
 		}
 		if modSetUpToDate {
-			log.Printf("Git tags already exist for module set %v. Skipping...\n", p.ModuleSetRelease.ModSetName)
+			log.Println("Module set already up to date (git tags already exist). Skipping...")
 			continue
 		} else {
-			log.Printf("Updating versions for module set %v...\n", p.ModuleSetRelease.ModSetName)
+			log.Println("Updating versions for module set...")
 		}
 
 		if err = p.updateAllVersionGo(); err != nil {
@@ -82,6 +82,7 @@ func Run(versioningFile string, moduleSetNames []string, allModuleSets bool, ski
 		if skipModTidy {
 			log.Println("Skipping go mod tidy...")
 		} else {
+			common.RunGoModTidy(p.ModuleVersioning.ModPathMap)
 		}
 
 		if err = p.commitChangesToNewBranch(repo); err != nil {
@@ -171,9 +172,9 @@ func updateVersionGoFile(filePath string, newVersion string) error {
 // updateAllGoModFiles updates ALL modules' requires sections to use the newVersion number
 // for the modules given in newModPaths.
 func (p prerelease) updateAllGoModFiles() error {
-	modFilePaths := make([]common.ModuleFilePath, 0, len(p.ModuleSetRelease.ModPathMap))
+	modFilePaths := make([]common.ModuleFilePath, 0, len(p.ModuleSetRelease.ModuleVersioning.ModPathMap))
 
-	for _, filePath := range p.ModuleSetRelease.ModPathMap {
+	for _, filePath := range p.ModuleSetRelease.ModuleVersioning.ModPathMap {
 		modFilePaths = append(modFilePaths, filePath)
 	}
 
