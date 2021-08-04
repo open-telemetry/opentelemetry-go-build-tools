@@ -56,7 +56,7 @@ func Run(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags b
 type tagger struct {
 	common.ModuleSetRelease
 	CommitHash plumbing.Hash
-	Repo *git.Repository
+	Repo       *git.Repository
 }
 
 func newTagger(versioningFilename, modSetToUpdate, repoRoot, hash string, deleteModuleSetTags bool) (tagger, error) {
@@ -90,7 +90,7 @@ func newTagger(versioningFilename, modSetToUpdate, repoRoot, hash string, delete
 	return tagger{
 		ModuleSetRelease: modRelease,
 		CommitHash:       fullCommitHash,
-		Repo:			  repo,
+		Repo:             repo,
 	}, nil
 }
 
