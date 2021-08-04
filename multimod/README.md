@@ -87,8 +87,8 @@ release.
         * **from-existing-branch (optional):** Name of existing branch from
           which to base the pre-release branch. If unspecified, defaults to
           current branch.
-        * **skip-go-mod-tidy (boolean flag):** Specify this flag to skip the 
-          'go mod tidy' step. To be used for debugging purposes. Should not be 
+        * **skip-go-mod-tidy (boolean flag):** Specify this flag to skip the
+          'go mod tidy' step. To be used for debugging purposes. Should not be
           skipped during actual releases.
 
 2. Verify the changes.
