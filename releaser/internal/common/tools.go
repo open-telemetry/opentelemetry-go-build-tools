@@ -100,3 +100,7 @@ func filePathToRegex(fpath string) string {
 	replacedSlashes := strings.Replace(quotedMeta, string(filepath.Separator), `\/`, -1)
 	return replacedSlashes
 }
+
+func RunGoModTidy(modPathMap ModulePathMap) error {
+	return nil
+}
