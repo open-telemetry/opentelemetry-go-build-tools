@@ -16,11 +16,7 @@ package sync
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
-	"os"
-	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/go-git/go-git/v5"
@@ -29,97 +25,64 @@ import (
 	"go.opentelemetry.io/build-tools/releaser/internal/common"
 )
 
-func Run(versioningFile string, moduleSetNames []string, allModuleSets bool, noCommit bool, skipMake bool) {
-	repoRoot, err := tools.FindRepoRoot()
+func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot string, otherModuleSetNames []string, allModuleSets bool, skipModTidy bool) {
+	myRepoRoot, err := tools.FindRepoRoot()
 	if err != nil {
 		log.Fatalf("unable to find repo root: %v", err)
 	}
-	log.Printf("Using repo with root at %s\n\n", repoRoot)
+	log.Printf("Using repo with root at %s\n\n", myRepoRoot)
 
 	if allModuleSets {
-		moduleSetNames, err = getAllModuleSetNames(versioningFile, repoRoot)
+		otherModuleSetNames, err = common.GetAllModuleSetNames(otherVersioningFile, otherRepoRoot)
 		if err != nil {
 			log.Fatal("could not automatically get all module set names:", err)
 		}
 	}
 
-	repo, err := git.PlainOpen(repoRoot)
+	repo, err := git.PlainOpen(myRepoRoot)
 	if err != nil {
-		log.Fatalf("could not open repo at %v: %v", repoRoot, err)
+		log.Fatalf("could not open repo at %v: %v", myRepoRoot, err)
 	}
 
-	//if err = common.VerifyWorkingTreeClean(repo); err != nil {
-	//	log.Fatal("verifyWorkingTreeClean failed:", err)
-	//}
-
-	//tempCleanBranchName := "tempCleanBranch"
-
-	// cleanBranchRefName is a clean branch to switch to after each module set is updated
-	//cleanBranchRefName, err := common.CheckoutNewGitBranch(tempCleanBranchName, repo)
-
-	// save reference to current head in storage
-	ref, err := repo.Head()
-	if err != nil {
-		log.Fatal("could not get repo head: ", err)
+	if err = common.VerifyWorkingTreeClean(repo); err != nil {
+		log.Fatal("VerifyWorkingTreeClean failed:", err)
 	}
-	err = repo.Storer.SetReference(ref)
 
-
-	for _, moduleSetName := range moduleSetNames {
-		p, err := newPrerelease(versioningFile, moduleSetName, repoRoot)
+	for _, moduleSetName := range otherModuleSetNames {
+		s, err := newSync(myVersioningFile, otherVersioningFile, moduleSetName, myRepoRoot, otherRepoRoot)
 		if err != nil {
-			log.Fatal("Error creating new prerelease struct:", err)
+			log.Fatal("Error creating new sync struct:", err)
 		}
 
 		log.Printf("===== Module Set: %v =====\n", moduleSetName)
 
-		err = p.ModuleSetRelease.CheckGitTagsAlreadyExist(repo)
-		switch err.(type) {
-		case *common.ErrGitTagsAlreadyExist:
-			log.Printf("Git tags already exist for module set %v. Skipping...\n", moduleSetName)
+		if err = s.updateAllGoModFiles(); err != nil {
+			log.Fatal("updateAllGoModFiles failed:", err)
+		}
+
+		modSetUpToDate, err := s.checkModuleSetUpToDate(repo)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if modSetUpToDate {
+			log.Println("Module set already up to date. Skipping...")
 			continue
-		case nil:
-			log.Printf("Updating versions for module set %v...\n", moduleSetName)
-		case *common.ErrInconsistentGitTagsExist:
-			log.Fatalf("cannot proceed with inconsistently tagged module set %v: %v", moduleSetName, err)
-		default:
-			log.Fatal("unhandled error:", err)
+		} else {
+			log.Println("Updating versions for module set...")
 		}
 
-			branchNameElements := []string{"prerelease", p.ModuleSetRelease.ModSetName, p.ModuleSetRelease.ModSetVersion()}
-			branchName := strings.Join(branchNameElements, "_")
-
-			if _, err = common.CheckoutNewGitBranch(branchName, repo); err != nil {
-				log.Fatal("createPrereleaseBranch failed:", err)
-			}
-
-			if err = p.updateAllVersionGo(); err != nil {
-				log.Fatal("updateVersionGo failed:", err)
-			}
-
-			if err = p.updateAllGoModFiles(); err != nil {
-				log.Fatal("updateAllGoModFiles failed:", err)
-			}
-
-			if skipMake {
-				log.Println("Skipping 'make lint' and 'make ci'")
-			} else {
-			}
-
-			if noCommit {
-				log.Printf("Changes have not been added nor committed. Changes made in branch %v\n", branchName)
-			} else {
-				if err = p.commitChanges(repo); err != nil {
-					log.Fatal("commitChanges failed:", err)
-				}
-			}
-
-			// return to clean branch
-			err = common.CheckoutExistingGitBranch(ref.Name(), repo)
-			if err != nil {
-				log.Fatal("unable to checkout original branch")
+		if skipModTidy {
+			log.Println("Skipping go mod tidy...")
+		} else {
+			if err := common.RunGoModTidy(s.MyModuleVersioning.ModPathMap); err != nil {
+				log.Printf("WARNING: failed to run 'go mod tidy': %v\n", err)
 			}
 		}
+
+		if err = s.commitChangesToNewBranch(repo); err != nil {
+			log.Fatal("commitChangesToNewBranch failed:", err)
+		}
+	}
 
 	log.Println(`=========
 Prerelease finished successfully. Now run the following to verify the changes:
@@ -127,107 +90,41 @@ Prerelease finished successfully. Now run the following to verify the changes:
 git diff main
 
 Then, if necessary, commit changes and push to upstream/make a pull request.`)
-	}
-
-// prerelease holds fields needed to update one module set at a time.
-type prerelease struct {
-	common.ModuleSetRelease
 }
 
-func newPrerelease(versioningFilename, modSetToUpdate, repoRoot string) (prerelease, error) {
-	modRelease, err := common.NewModuleSetRelease(versioningFilename, modSetToUpdate, repoRoot)
+// sync holds fields needed to update one module set at a time.
+type sync struct {
+	OtherModuleSetRelease common.ModuleSetRelease
+	MyModuleVersioning    common.ModuleVersioning
+}
+
+func newSync(myVersioningFilename, otherVersioningFilename, modSetToUpdate, myRepoRoot string, otherRepoRoot string) (sync, error) {
+	otherModRelease, err := common.NewModuleSetRelease(otherVersioningFilename, modSetToUpdate, otherRepoRoot)
 	if err != nil {
-		return prerelease{}, fmt.Errorf("error creating new prerelease struct: %v", err)
+		return sync{}, fmt.Errorf("error creating new sync struct: %v", err)
 	}
 
-	return prerelease{
-		ModuleSetRelease: modRelease,
+	myModVersioning, err := common.NewModuleVersioning(myVersioningFilename, myRepoRoot)
+
+	return sync{
+		OtherModuleSetRelease: otherModRelease,
+		MyModuleVersioning:    myModVersioning,
 	}, nil
-}
-
-func getAllModuleSetNames(versioningFile string, repoRoot string) ([]string, error) {
-	modVersioning, err := common.NewModuleVersioning(versioningFile, repoRoot)
-	if err != nil {
-		return nil, fmt.Errorf("call failed to NewModuleVersioning: %v", err)
-	}
-
-	var modSetNames []string
-
-	for modSetName := range modVersioning.ModSetMap {
-		modSetNames = append(modSetNames, modSetName)
-	}
-
-	return modSetNames, nil
-}
-
-// updateAllVersionGo updates the version.go file containing a hardcoded semver version string
-// for modules within a set, if the file exists.
-func (p prerelease) updateAllVersionGo() error {
-	for _, modPath := range p.ModuleSetRelease.ModSetPaths() {
-		modFilePath := p.ModuleSetRelease.ModuleVersioning.ModPathMap[modPath]
-
-		versionGoFilePath := filepath.Dir(string(modFilePath))
-		versionGoFilePath = filepath.Join(versionGoFilePath, "version.go")
-
-		// check if version.go file exists
-		if _, err := os.Stat(versionGoFilePath); err == nil {
-			if updateErr := updateVersionGoFile(versionGoFilePath, p.ModuleSetRelease.ModSetVersion()); updateErr != nil {
-				return fmt.Errorf("could not update %v: %v", versionGoFilePath, err)
-			}
-		} else if os.IsNotExist(err) {
-			continue
-		} else {
-			return fmt.Errorf("could not check existance of %v: %v", versionGoFilePath, err)
-		}
-
-	}
-	return nil
-}
-
-// updateVersionGoFile updates one version.go file.
-// TODO: use the ast package to ensure that correct string is replaced.
-func updateVersionGoFile(filePath string, newVersion string) error {
-	if !strings.HasSuffix(filePath, "version.go") {
-		return fmt.Errorf("cannot update file passed that does not end with version.go")
-	}
-	log.Printf("... Updating file %v\n", filePath)
-
-	newVersionGoFile, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		panic(err)
-	}
-
-	oldVersionRegex := common.SemverRegexNumberOnly
-	r, err := regexp.Compile(oldVersionRegex)
-	if err != nil {
-		return fmt.Errorf("error compiling regex: %v", err)
-	}
-
-	newVersionNumberOnly := strings.TrimPrefix(newVersion, "v")
-
-	newVersionGoFile = r.ReplaceAll(newVersionGoFile, []byte(newVersionNumberOnly))
-
-	// overwrite the version.go file
-	if err := ioutil.WriteFile(filePath, newVersionGoFile, 0644); err != nil {
-		return fmt.Errorf("error overwriting go.mod file: %v", err)
-	}
-
-	return nil
 }
 
 // updateAllGoModFiles updates ALL modules' requires sections to use the newVersion number
 // for the modules given in newModPaths.
-func (p prerelease) updateAllGoModFiles() error {
-	modFilePaths := make([]common.ModuleFilePath, 0, len(p.ModuleSetRelease.ModPathMap))
+func (s sync) updateAllGoModFiles() error {
+	modFilePaths := make([]common.ModuleFilePath, 0, len(s.MyModuleVersioning.ModPathMap))
 
-	for _, filePath := range p.ModuleSetRelease.ModPathMap {
+	for _, filePath := range s.MyModuleVersioning.ModPathMap {
 		modFilePaths = append(modFilePaths, filePath)
 	}
 
-	if err := common.UpdateAllGoModFiles(
+	if err := common.UpdateGoModFiles(
 		modFilePaths,
-		p.ModuleSetRelease.ModSetPaths(),
-		p.ModuleSetRelease.ModSetVersion(),
+		s.OtherModuleSetRelease.ModSetPaths(),
+		s.OtherModuleSetRelease.ModSetVersion(),
 	); err != nil {
 		return fmt.Errorf("could not update all go mod files: %v", err)
 	}
@@ -235,21 +132,33 @@ func (p prerelease) updateAllGoModFiles() error {
 	return nil
 }
 
-func (p prerelease) commitChanges(repo *git.Repository) error {
+func (s sync) commitChangesToNewBranch(repo *git.Repository) error {
+	branchNameElements := []string{"sync", s.OtherModuleSetRelease.ModSetName, s.OtherModuleSetRelease.ModSetVersion()}
+	branchName := strings.Join(branchNameElements, "_")
+
 	commitMessage := fmt.Sprintf(
-		"Prepare %v for version %v",
-		p.ModuleSetRelease.ModSetName,
-		p.ModuleSetRelease.ModSetVersion(),
+		"Sync repo to use %v with version %v",
+		s.OtherModuleSetRelease.ModSetName,
+		s.OtherModuleSetRelease.ModSetVersion(),
 	)
 
-	return common.CommitChanges(commitMessage, repo)
+	return common.CommitChangesToNewBranch(branchName, commitMessage, repo)
 }
 
-//func deleteTempBranch(repo *git.Repository) error {
-//	// delete temporary clean branch
-//	log.Printf("git branch -D %v\n", tempCleanBranchName)
-//	err := repo.Storer.RemoveReference(cleanBranchRefName)
-//	if err != nil {
-//		log.Fatalf("could not delete temporary branch %v: %v", tempCleanBranchName, err)
-//	}
-//}
+func (s sync) checkModuleSetUpToDate(repo *git.Repository) (bool, error) {
+	worktree, err := common.GetWorktree(repo)
+	if err != nil {
+		return false, err
+	}
+
+	status, err := worktree.Status()
+	if err != nil {
+		return false, fmt.Errorf("could not get worktree status: %v", err)
+	}
+
+	if status.IsClean() {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
