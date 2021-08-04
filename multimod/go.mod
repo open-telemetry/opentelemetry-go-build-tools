@@ -11,3 +11,5 @@ require (
 	golang.org/x/mod v0.4.2
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
+
+replace go.opentelemetry.io/build-tools => ../
