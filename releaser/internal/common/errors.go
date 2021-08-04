@@ -19,12 +19,20 @@ import (
 	"strings"
 )
 
-type ErrGitTagsAlreadyExists struct {
+type ErrGitTagsAlreadyExist struct {
 	tagNames []string
 }
 
-func (e *ErrGitTagsAlreadyExists) Error() string {
-	return fmt.Sprintf("some git tags already exist:\n%s", strings.Join(e.tagNames, "\n"))
+func (e *ErrGitTagsAlreadyExist) Error() string {
+	return fmt.Sprintf("all git tags checked already exist:\n%s", strings.Join(e.tagNames, "\n"))
+}
+
+type ErrInconsistentGitTagsExist struct {
+	tagNames []string
+}
+
+func (e *ErrInconsistentGitTagsExist) Error() string {
+	return fmt.Sprintf("git tags inconsistent for module set (some but not all tags in module set):\n%s", strings.Join(e.tagNames, "\n"))
 }
 
 type errGetWorktreeFailed struct {

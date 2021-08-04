@@ -82,8 +82,8 @@ func newTagger(versioningFilename, modSetToUpdate, repoRoot, hash string, delete
 			return tagger{}, fmt.Errorf("verifyTagsOnCommit failed: %v", err)
 		}
 	} else {
-		if err = modRelease.VerifyGitTagsDoNotAlreadyExist(repo); err != nil {
-			return tagger{}, fmt.Errorf("VerifyGitTagsDoNotAlreadyExist failed: %v", err)
+		if err = modRelease.CheckGitTagsAlreadyExist(repo); err != nil {
+			return tagger{}, fmt.Errorf("CheckGitTagsAlreadyExist failed: %v", err)
 		}
 	}
 

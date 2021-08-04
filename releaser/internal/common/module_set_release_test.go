@@ -173,7 +173,7 @@ func TestNewModuleSetRelease(t *testing.T) {
 }
 
 func TestVerifyGitTagsDoNotAlreadyExist(t *testing.T) {
-	tmpRootDir, err := os.MkdirTemp(testDataDir, "VerifyGitTagsDoNotAlreadyExist")
+	tmpRootDir, err := os.MkdirTemp(testDataDir, "CheckGitTagsAlreadyExist")
 	if err != nil {
 		t.Fatal("error creating temp dir:", err)
 	}
@@ -238,7 +238,7 @@ func TestVerifyGitTagsDoNotAlreadyExist(t *testing.T) {
 		{
 			name:       "multiple git tags exist",
 			modSetName: "mod-set-1",
-			expectedError: &ErrGitTagsAlreadyExists{
+			expectedError: &ErrGitTagsAlreadyExist{
 				tagNames: []string{
 					"test/test1/v1.2.3-RC1+meta",
 					"test/test4/v1.2.3-RC1+meta",
@@ -253,7 +253,7 @@ func TestVerifyGitTagsDoNotAlreadyExist(t *testing.T) {
 		{
 			name:       "root git tag exists",
 			modSetName: "mod-set-3",
-			expectedError: &ErrGitTagsAlreadyExists{
+			expectedError: &ErrGitTagsAlreadyExist{
 				tagNames: []string{
 					"v2.2.2",
 				},
@@ -269,7 +269,7 @@ func TestVerifyGitTagsDoNotAlreadyExist(t *testing.T) {
 			repo, err := git.PlainOpen(repoRoot)
 			require.NoError(t, err)
 
-			actual := modSetRelease.VerifyGitTagsDoNotAlreadyExist(repo)
+			actual := modSetRelease.CheckGitTagsAlreadyExist(repo)
 			assert.Equal(t, tc.expectedError, actual)
 		})
 	}

@@ -16,6 +16,7 @@ package common
 
 import (
 	"fmt"
+	"log"
 	"path/filepath"
 
 	"github.com/go-git/go-git/v5"
@@ -82,9 +83,9 @@ func (modRelease ModuleSetRelease) ModuleFullTagNames() []string {
 	return combineModuleTagNamesAndVersion(modRelease.TagNames, modRelease.ModSetVersion())
 }
 
-// VerifyGitTagsDoNotAlreadyExist checks if Git tags have already been created that match the specific module tag name
+// CheckGitTagsAlreadyExist checks if Git tags have already been created that match the specific module tag name
 // and version number for the modules being updated. If the tag already exists, an error is returned.
-func (modRelease ModuleSetRelease) VerifyGitTagsDoNotAlreadyExist(repo *git.Repository) error {
+func (modRelease ModuleSetRelease) CheckGitTagsAlreadyExist(repo *git.Repository) error {
 	newTags := make(map[string]bool)
 
 	modFullTags := modRelease.ModuleFullTagNames()
@@ -99,11 +100,14 @@ func (modRelease ModuleSetRelease) VerifyGitTagsDoNotAlreadyExist(repo *git.Repo
 	}
 
 	var existingGitTagNames []string
+	var gitTagObjectsNotFound []string
 
 	err = existingTags.ForEach(func(ref *plumbing.Reference) error {
 		tagObj, err := repo.TagObject(ref.Hash())
+
 		if err != nil {
-			return fmt.Errorf("error retrieving tag object: %v", err)
+			gitTagObjectsNotFound = append(gitTagObjectsNotFound, ref.Name().String())
+			return nil
 		}
 		if _, exists := newTags[tagObj.Name]; exists {
 			existingGitTagNames = append(existingGitTagNames, tagObj.Name)
@@ -115,8 +119,19 @@ func (modRelease ModuleSetRelease) VerifyGitTagsDoNotAlreadyExist(repo *git.Repo
 		return fmt.Errorf("could not check all git tags: %v", err)
 	}
 
-	if len(existingGitTagNames) > 0 {
-		return &ErrGitTagsAlreadyExists{
+	if len(gitTagObjectsNotFound) > 0 {
+		log.Printf("WARNING: could not retrieve tag objects in CheckGitTagsAlreadyExist for tags %v: %v\n", gitTagObjectsNotFound, err)
+	}
+
+	switch len(existingGitTagNames) {
+	case len(newTags):
+		return &ErrGitTagsAlreadyExist{
+			tagNames: existingGitTagNames,
+		}
+	case 0:
+		return nil
+	default:
+		return &ErrInconsistentGitTagsExist{
 			tagNames: existingGitTagNames,
 		}
 	}

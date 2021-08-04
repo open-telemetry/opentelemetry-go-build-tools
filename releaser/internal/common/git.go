@@ -79,7 +79,7 @@ func CheckoutNewGitBranch(branchName string, repo *git.Repository) (plumbing.Ref
 		Keep:   true,
 	}
 
-	log.Printf("git checkout -b %v\n", branchName)
+	log.Printf("git branch %v\n", branchName)
 	if err = worktree.Checkout(checkoutOptions); err != nil {
 		return "", fmt.Errorf("could not check out new branch: %v", err)
 	}

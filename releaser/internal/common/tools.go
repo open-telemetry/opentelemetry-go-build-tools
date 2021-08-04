@@ -57,7 +57,7 @@ func RunMakeCI() error {
 }
 
 
-// UpdateGoModVersions updates the one go.mod file, modFilePath, by updating all modules listed in
+// UpdateGoModVersions updates one go.mod file, given by modFilePath, by updating all modules listed in
 // newModPaths to use the newVersion given.
 func UpdateGoModVersions(modFilePath ModuleFilePath, newModPaths []ModulePath, newVersion string) error {
 	if !strings.HasSuffix(string(modFilePath), "go.mod") {
@@ -70,7 +70,7 @@ func UpdateGoModVersions(modFilePath ModuleFilePath, newModPaths []ModulePath, n
 	}
 
 	for _, modPath := range newModPaths {
-		oldVersionRegex := filePathToRegex(string(modPath)) + SemverRegex
+		oldVersionRegex := filePathToRegex(string(modPath)) + `\s+` + SemverRegex
 		r, err := regexp.Compile(oldVersionRegex)
 		if err != nil {
 			return fmt.Errorf("error compiling regex: %v", err)
