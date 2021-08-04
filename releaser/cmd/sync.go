@@ -20,17 +20,23 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	allModuleSets_sync bool
+	moduleSetNames_sync []string
+	noCommit_sync bool
+	skipMake_sync bool
+)
+
 // syncCmd represents the sync command
 var syncCmd = &cobra.Command{
 	Use:   "sync",
 	Short: "Syncs the versions of a repo's dependencies",
 	Long: `Updates version numbers of :
-- Checks that Git tags do not already exist for the new module set version.
 - Checks that the working tree is clean.
-- Switches to a new branch called pre_release_<module set name>_<new version>.
+- Switches to a new branch called prerelease_<module set name>_<new version>.
 - Updates module versions in all go.mod files.
-- 'make lint' and 'make ci' are called
-- Adds and commits changes to Git`,
+- Attempts to call go mod tidy on the files.
+- Adds and commits changes to Git branch`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("sync called")
 	},
@@ -39,13 +45,5 @@ var syncCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(syncCmd)
 
-	// Here you will define your flags and configuration settings.
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// syncCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// syncCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

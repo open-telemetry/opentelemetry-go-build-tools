@@ -35,12 +35,13 @@ var prereleaseCmd = &cobra.Command{
 	Use:   "prerelease",
 	Short: "Prepares files for new version release",
 	Long: `Updates version numbers and commits to a new branch for release:
-- Checks that Git tags do not already exist for the new module set version.
 - Checks that the working tree is clean.
-- Switches to a new branch called pre_release_<module set name>_<new version>.
+- Checks that Git tags do not already exist for the new module set version.
+- Switches to a new branch called prerelease_<module set name>_<new version>.
+- Updates version.go files, if they exist.
 - Updates module versions in all go.mod files.
-- 'make lint' and 'make ci' are called
-- Adds and commits changes to Git`,
+- Attempts to call go mod tidy on the files.
+- Adds and commits changes to Git branch`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if allModuleSets {
 			// do not require commit-hash flag if deleting module set tags
