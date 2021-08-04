@@ -49,7 +49,7 @@ the `verify` subcommand:
 
 * The script is called with the following parameters:
   * **versioning-file (optional):** Path to versioning file that contains
-    definitions of all module sets. If unspecified, will default to
+    definitions of all module sets. If unspecified, defaults to
     \<RepoRoot\>/versions.yaml.
 * The following verifications are performed:
   * `verifyAllModulesInSet` checks that every module (as defined by a `go.mod`
@@ -60,7 +60,7 @@ the `verify` subcommand:
   * `verifyDependencies` checks if any stable modules depend on unstable
     modules.
     * The stability of a given module is defined by its version in the
-      `version.yaml` file (`v1` and above is stable, `v0` is unstable).
+      `version.yaml` file (versions `v1` and above are stable, `v0` is unstable).
     * A dependency is defined by the "require" section of the module's `go.mod`
       file (in the current branch).
     * A warning will be printed for each dependency of a stable module on an
@@ -82,7 +82,7 @@ release.
         * **module-set-name (required):** Name of module set whose version is
           being changed. Must be listed in the module set versioning YAML.
         * **versioning-file (optional):** Path to versioning file that contains
-          definitions of all module sets. If unspecified will default to
+          definitions of all module sets. If unspecified, defaults to
           (RepoRoot)/versions.yaml.
         * **from-existing-branch (optional):** Name of existing branch from
           which to base the pre-release branch. If unspecified, defaults to
@@ -100,10 +100,8 @@ release.
    This should have changed the version for all modules listed in `go.mod` files
    to be `<new version>`.
 
-3. Update the repo's Changelog to move new changes to the new version's section.
-
-4. Push the changes to upstream and create a Pull Request on GitHub. Be sure to
    include the curated changes from the Changelog in the description.
+   example, any linting steps would be done here.
 
 ## Tag the new release commit
 
@@ -121,6 +119,7 @@ commit will be found in your currently checked out branch.
 
     ```sh
     ./multimod tag --module-set-name <name> --commit-hash <hash>
+    multimod tag --module-set-name <name> --commit-hash <hash>
     ```
 
 2. Push tags for ALL updated modules to the upstream remote (not your fork),
@@ -140,12 +139,12 @@ command will not allow you to delete tags that already exist in the upstream
 remote.
 
 ```sh
-./multimod tag --module-set-name <name> --delete-module-set-tags
+multimod tag --module-set-name <name> --delete-module-set-tags
 ```
 
 ## Release
 
-Finally create a Release for the new `<new tag>` on GitHub. The release body
+Finally, create a Release for the new `<new tag>` on GitHub. The release body
 should include all the release notes from the Changelog for this release.
 
 The standard releasing process for the repo should then be followed.
