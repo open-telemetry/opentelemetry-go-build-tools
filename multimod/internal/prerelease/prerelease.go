@@ -26,7 +26,7 @@ import (
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
 
-func Run(versioningFile, moduleSetName, fromExistingBranch string, skipMake bool) {
+func Run(versioningFile, moduleSetName, fromExistingBranch string, skipGoModTidy bool) {
 
 	repoRoot, err := common.ChangeToRepoRoot()
 	if err != nil {
@@ -60,15 +60,15 @@ func Run(versioningFile, moduleSetName, fromExistingBranch string, skipMake bool
 		log.Fatalf("updateAllGoModFiles failed: %v", err)
 	}
 
-	if skipMake {
-		fmt.Println("Skipping 'make lint'...")
+	if skipGoModTidy {
+		fmt.Println("Skipping 'go mod tidy'...")
 	} else {
-		if err = p.runMakeLint(); err != nil {
-			log.Fatalf("runMakeLint failed: %v", err)
+		if err = p.runGoModTidy(); err != nil {
+			log.Fatalf("runGoModTidy failed: %v", err)
 		}
 	}
 
-	if err = p.commitChanges(skipMake); err != nil {
+	if err = p.commitChanges(); err != nil {
 		log.Fatalf("commitChanges failed: %v", err)
 	}
 
@@ -149,36 +149,28 @@ func (p prerelease) updateVersionGo() error {
 	return nil
 }
 
-// runMakeLint runs 'make lint' to automatically update go.sum files.
-func (p prerelease) runMakeLint() error {
-	fmt.Println("Updating go.sum with 'make lint'...")
-
-	cmd := exec.Command("make", "lint")
-	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("'make lint' failed: %v (%v)", string(output), err)
-	}
+// runGoModTidy runs 'go mod tidy' at all module directories to automatically update go.mod and go.sum files.
+// TODO: implement runGoModTidy
+func (p prerelease) runGoModTidy() error {
+	//for _, modFilePath := range p.ModuleSetRelease.ModuleVersioning.ModPathMap {
+	//	cmd := exec.Command("go", "mod", "tidy")
+	//	cmd.Dir = string(modFilePath)
+	//
+	//	if output, err := cmd.CombinedOutput(); err != nil {
+	//		return fmt.Errorf("'go mod tidy' failed: %v (%v)", string(output), err)
+	//	}
+	//}
 
 	return nil
 }
 
-func (p prerelease) commitChanges(skipMake bool) error {
+func (p prerelease) commitChanges() error {
 	commitMessage := "Prepare for versions " + p.ModuleSetRelease.ModSetVersion()
 
 	// add changes to git
 	cmd := exec.Command("git", "add", ".")
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("'git add .' failed: %v (%v)", string(output), err)
-	}
-
-	// make ci
-	if skipMake {
-		fmt.Println("Skipping 'make ci'...")
-	} else {
-		fmt.Println("Running 'make ci'...")
-		cmd = exec.Command("make", "ci")
-		if output, err := cmd.CombinedOutput(); err != nil {
-			return fmt.Errorf("'make ci' failed: %v (%v)", string(output), err)
-		}
 	}
 
 	// commit changes to git

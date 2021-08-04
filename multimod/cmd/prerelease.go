@@ -27,7 +27,7 @@ import (
 
 var (
 	fromExistingBranch string
-	skipMake           bool
+	skipGoModTidy      bool
 )
 
 // prereleaseCmd represents the prerelease command
@@ -44,7 +44,7 @@ var prereleaseCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Using versioning file", versioningFile)
 
-		prerelease.Run(versioningFile, moduleSetName, fromExistingBranch, skipMake)
+		prerelease.Run(versioningFile, moduleSetName, fromExistingBranch, skipGoModTidy)
 	},
 }
 
@@ -63,8 +63,8 @@ func init() {
 		"Name of existing branch from which to base the pre-release branch. If unspecified, defaults to current branch.",
 	)
 
-	prereleaseCmd.Flags().BoolVarP(&skipMake, "skip-make", "s", false,
-		"Specify this flag to skip the 'make lint' and 'make ci' steps. "+
+	prereleaseCmd.Flags().BoolVarP(&skipGoModTidy, "skip-go-mod-tidy", "s", false,
+		"Specify this flag to skip calling 'go mod tidy'. "+
 			"To be used for debugging purposes. Should not be skipped during actual release.",
 	)
 }
