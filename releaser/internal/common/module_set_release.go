@@ -16,7 +16,6 @@ package common
 
 import (
 	"fmt"
-	"log"
 	"path/filepath"
 
 	"github.com/go-git/go-git/v5"
@@ -100,27 +99,18 @@ func (modRelease ModuleSetRelease) CheckGitTagsAlreadyExist(repo *git.Repository
 	}
 
 	var existingGitTagNames []string
-	var gitTagObjectsNotFound []string
 
 	err = existingTags.ForEach(func(ref *plumbing.Reference) error {
-		tagObj, err := repo.TagObject(ref.Hash())
+		existingTagName := ref.Name().Short()
 
-		if err != nil {
-			gitTagObjectsNotFound = append(gitTagObjectsNotFound, ref.Name().String())
-			return nil
-		}
-		if _, exists := newTags[tagObj.Name]; exists {
-			existingGitTagNames = append(existingGitTagNames, tagObj.Name)
+		if _, exists := newTags[existingTagName]; exists {
+			existingGitTagNames = append(existingGitTagNames, existingTagName)
 		}
 
 		return nil
 	})
 	if err != nil {
 		return fmt.Errorf("could not check all git tags: %v", err)
-	}
-
-	if len(gitTagObjectsNotFound) > 0 {
-		log.Printf("WARNING: could not retrieve tag objects in CheckGitTagsAlreadyExist for tags %v: %v\n", gitTagObjectsNotFound, err)
 	}
 
 	switch len(existingGitTagNames) {
