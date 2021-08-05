@@ -119,7 +119,6 @@ commit will be found in your currently checked out branch.
 
     ```sh
     ./multimod tag --module-set-name <name> --commit-hash <hash>
-    multimod tag --module-set-name <name> --commit-hash <hash>
     ```
 
 2. Push tags for ALL updated modules to the upstream remote (not your fork),
@@ -139,7 +138,7 @@ command will not allow you to delete tags that already exist in the upstream
 remote.
 
 ```sh
-multimod tag --module-set-name <name> --delete-module-set-tags
+./multimod tag --module-set-name <name> --delete-module-set-tags
 ```
 
 ## Release
