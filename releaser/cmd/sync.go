@@ -56,7 +56,7 @@ func init() {
 	rootCmd.AddCommand(syncCmd)
 
 	syncCmd.Flags().StringVarP(&otherRepoRoot, "other-repo-root", "o", "",
-		"Path to other versioning file that contains all module set versions to sync.")
+		"File path of other repository root whose modules' versions need to be updated.")
 	if err := syncCmd.MarkFlagRequired("other-repo-root"); err != nil {
 		log.Fatalf("could not mark other-repo-root flag as required: %v", err)
 	}
@@ -64,7 +64,7 @@ func init() {
 	otherVersioningFileDefault := filepath.Join(otherRepoRoot,
 		fmt.Sprintf("%v.%v", defaultVersionsConfigName, defaultVersionsConfigType))
 	syncCmd.Flags().StringVar(&otherVersioningFile, "other-versioning-file", otherVersioningFileDefault,
-		"Path to other versioning file that contains all module set versions to sync." +
+		"Path to other versioning file that contains all module set versions to sync. " +
 		"If unspecified, defaults to versions.yaml in the other Git repo root.")
 
 	syncCmd.Flags().BoolVarP(&allModuleSetsSync, "all-module-sets", "a", false,
