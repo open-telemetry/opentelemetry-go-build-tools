@@ -46,16 +46,18 @@ func Run(versioningFile string) {
 		log.Fatalf("verifyVersions failed: %v", err)
 	}
 
-	v.verifyDependencies()
+	if err = v.verifyDependencies(); err != nil {
+		log.Fatalf("verifyDependencies failed: %v", err)
+	}
 
 	log.Println("PASS: Module sets successfully verified.")
 }
 
 type verification struct {
 	common.ModuleVersioning
-	dependencies dependencyMap
 }
 
+// dependencyMap keeps track of all modules' dependencies.
 type dependencyMap map[common.ModulePath][]common.ModulePath
 
 func newVerification(versioningFilename, repoRoot string) (verification, error) {
@@ -64,19 +66,14 @@ func newVerification(versioningFilename, repoRoot string) (verification, error) 
 		return verification{}, fmt.Errorf("call to NewModuleVersioning failed: %v\n", err)
 	}
 
-	dependencies, err := getDependencies(modVersioning)
-	if err != nil {
-		return verification{}, fmt.Errorf("could not get dependencies: %v\n", err)
-	}
-
 	return verification{
 		ModuleVersioning: modVersioning,
-		dependencies:     dependencies,
 	}, nil
 }
 
 // getDependencies returns a map of each module's dependencies on other modules within the same repo.
-func getDependencies(modVersioning common.ModuleVersioning) (dependencyMap, error) {
+func (v verification) getDependencies() (dependencyMap, error) {
+	modVersioning := v.ModuleVersioning
 	dependencies := make(dependencyMap)
 
 	// Dependencies are defined by the require section of go.mod files.
@@ -153,12 +150,19 @@ func (v verification) verifyVersions() error {
 	}
 
 	// Check that no more than one module exists for any given non-zero major version
+	var versionErrors []*errMultipleSetSameVersion
 	for majorVersion, modSetNames := range setMajorVersions {
 		if len(modSetNames) > 1 {
-			return &errMultipleSetSameVersion{
+			versionErrors = append(versionErrors, &errMultipleSetSameVersion{
 				modSetNames:   modSetNames,
 				modSetVersion: majorVersion,
-			}
+			})
+		}
+	}
+
+	if len(versionErrors) > 0 {
+		return &errMultipleSetSameVersionSlice{
+			errs: versionErrors,
 		}
 	}
 
@@ -168,8 +172,13 @@ func (v verification) verifyVersions() error {
 }
 
 // verifyDependencies checks that dependencies between modules conform to versioning semantics.
-func (v verification) verifyDependencies() {
-	for modPath, modDeps := range v.dependencies {
+func (v verification) verifyDependencies() error {
+	dependencies, err := v.getDependencies()
+	if err != nil {
+		return fmt.Errorf("could not get dependencies of module versioning: %v", err)
+	}
+
+	for modPath, modDeps := range dependencies {
 		// check if module is stable
 		modVersion := v.ModuleVersioning.ModInfoMap[modPath].Version
 		if common.IsStableVersion(modVersion) {
@@ -192,4 +201,5 @@ func (v verification) verifyDependencies() {
 	}
 
 	log.Println("Finished checking all stable modules' dependencies.")
+	return nil
 }
