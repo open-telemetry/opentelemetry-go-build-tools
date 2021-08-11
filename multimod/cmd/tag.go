@@ -26,13 +26,14 @@ import (
 var (
 	commitHash          string
 	deleteModuleSetTags bool
+	moduleSetName       string
 )
 
 // tagCmd represents the tag command
 var tagCmd = &cobra.Command{
 	Use:   "tag",
 	Short: "Applies Git tags to specified commit",
-	Long: `Tagging script to add Git tags to a specified commit hash created by prerelease script:
+	Long: `Tag script to add Git tags to a specified commit hash created by prerelease script:
 - Creates new Git tags for all modules being updated.
 - If tagging fails in the middle of the script, the recently created tags will be deleted.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
@@ -65,6 +66,14 @@ func init() {
 	)
 	if err := tagCmd.MarkFlagRequired("commit-hash"); err != nil {
 		log.Fatalf("could not mark commit-hash flag as required: %v", err)
+	}
+
+	tagCmd.Flags().StringVarP(&moduleSetName, "module-set-name", "m", "",
+		"Name of module set being tagged. " +
+			"Name must be listed in the module set versioning YAML. ",
+	)
+	if err := tagCmd.MarkFlagRequired("module-set-name"); err != nil {
+		log.Fatalf("could not mark module-set-name flag as required: %v", err)
 	}
 
 	tagCmd.Flags().BoolVarP(&deleteModuleSetTags, "delete-module-set-tags", "d", false,
