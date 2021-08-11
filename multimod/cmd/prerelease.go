@@ -44,7 +44,7 @@ var prereleaseCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Using versioning file", versioningFile)
 
-		prerelease.Run(versioningFile, moduleSetName, fromExistingBranch, skipGoModTidy)
+		prerelease.Run(versioningFile, moduleSetName, skipGoModTidy)
 	},
 }
 

@@ -15,11 +15,15 @@
 package common
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
+
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"go.opentelemetry.io/build-tools/multimod/internal/common/commontest"
 )
@@ -42,6 +46,12 @@ func TestNewModuleSetRelease(t *testing.T) {
 
 	if err := commontest.WriteTempFiles(modFiles); err != nil {
 		t.Fatal("could not create go mod file tree", err)
+	}
+
+	// initialize temporary local git repository
+	_, err = git.PlainInit(tmpRootDir, true)
+	if err != nil {
+		t.Fatal("could not initialize temp git repo:", err)
 	}
 
 	testCases := []struct {
@@ -160,6 +170,116 @@ func TestNewModuleSetRelease(t *testing.T) {
 				assert.Equal(t, tc.expectedModSetVersions[expectedModSetName], actual.ModSetVersion())
 				assert.Equal(t, tc.expectedModSetPaths[expectedModSetName], actual.ModSetPaths())
 			}
+		})
+	}
+}
+
+func TestCheckGitTagsAlreadyExist(t *testing.T) {
+	tmpRootDir, err := os.MkdirTemp(testDataDir, "CheckGitTagsAlreadyExist")
+	if err != nil {
+		t.Fatal("error creating temp dir:", err)
+	}
+
+	defer commontest.RemoveAll(t, tmpRootDir)
+
+	modFiles := map[string][]byte{
+		filepath.Join(tmpRootDir, "test", "test1", "go.mod"): []byte("module \"go.opentelemetry.io/test/test1\"\n\ngo 1.16\n\n" +
+			"require (\n\t\"go.opentelemetry.io/testroot/v2\" v2.0.0\n)\n"),
+		filepath.Join(tmpRootDir, "test", "test4", "go.mod"): []byte("module \"go.opentelemetry.io/test/test4\"\n\ngo 1.16\n\n" +
+			"require (\n\t\"go.opentelemetry.io/testroot/v2\" v2.0.0\n)\n"),
+		filepath.Join(tmpRootDir, "test", "go.mod"):          []byte("module go.opentelemetry.io/test3\n\ngo 1.16\n"),
+		filepath.Join(tmpRootDir, "go.mod"):                  []byte("module go.opentelemetry.io/testroot/v2\n\ngo 1.16\n"),
+		filepath.Join(tmpRootDir, "test", "test2", "go.mod"): []byte("module \"go.opentelemetry.io/test/testexcluded\"\n\ngo 1.16\n"),
+	}
+
+	if err := commontest.WriteTempFiles(modFiles); err != nil {
+		t.Fatal("could not create go mod file tree", err)
+	}
+
+	versioningFilename := filepath.Join(testDataDir, "verify_git_tags_do_not_already_exist/versions_valid.yaml")
+	repoRoot := tmpRootDir
+
+	// initialize temporary local git repository
+	repo, err := git.PlainInit(tmpRootDir, false)
+	if err != nil {
+		t.Fatal("could not initialize temp git repo:", err)
+	}
+
+	worktree, err := repo.Worktree()
+	if err != nil {
+		t.Fatal("could not get repo worktree:", err)
+	}
+
+	commitHash, err := worktree.Commit("test commit", &git.CommitOptions{
+		Author: &object.Signature{
+			Name:  "test_author",
+			Email: "test_email",
+			When:  time.Now(),
+		},
+	})
+	if err != nil {
+		t.Fatal("could not commit to worktree:", err)
+	}
+
+	// create new tags in repo
+	for _, tag := range []string{
+		"test/test1/v1.2.3-RC1+meta",
+		"test/test4/v1.2.3-RC1+meta",
+		"v2.2.2",
+		"test/test4/v1.0.0-previousVersion",
+		"test/test5/v1.0.0-modNotExist",
+		"v1.0.0-previousVersion",
+	} {
+		_, err = repo.CreateTag(tag, commitHash, &git.CreateTagOptions{
+			Message: tag,
+			Tagger:  commontest.TestAuthor,
+		})
+		if err != nil {
+			t.Fatal("error creating tag:", err)
+		}
+	}
+
+	testCases := []struct {
+		name          string
+		modSetName    string
+		expectedError error
+	}{
+		{
+			name:       "multiple git tags exist",
+			modSetName: "mod-set-1",
+			expectedError: &ErrGitTagsAlreadyExist{
+				tagNames: []string{
+					"test/test1/v1.2.3-RC1+meta",
+					"test/test4/v1.2.3-RC1+meta",
+				},
+			},
+		},
+		{
+			name:          "git tags do not exist",
+			modSetName:    "mod-set-2",
+			expectedError: nil,
+		},
+		{
+			name:       "root git tag exists",
+			modSetName: "mod-set-3",
+			expectedError: &ErrGitTagsAlreadyExist{
+				tagNames: []string{
+					"v2.2.2",
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			modSetRelease, err := NewModuleSetRelease(versioningFilename, tc.modSetName, repoRoot)
+			require.NoError(t, err)
+
+			repo, err := git.PlainOpen(repoRoot)
+			require.NoError(t, err)
+
+			actual := modSetRelease.CheckGitTagsAlreadyExist(repo)
+			assert.Equal(t, tc.expectedError, actual)
 		})
 	}
 }
