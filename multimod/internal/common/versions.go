@@ -25,8 +25,9 @@ import (
 )
 
 const (
-	repoRootTag = ModuleTagName("REPOROOTTAG")
-	SemverRegex = `\s+v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?`
+	repoRootTag           = ModuleTagName("REPOROOTTAG")
+	SemverRegexNumberOnly = `(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?`
+	SemverRegex           = `v` + SemverRegexNumberOnly
 )
 
 // ModuleVersioning holds info about modules listed in a versioning file.
