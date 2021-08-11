@@ -26,7 +26,7 @@ func TestCombineModuleTagNamesAndVersion(t *testing.T) {
 		"tag1",
 		"tag2",
 		"another/tag3",
-		repoRootTag,
+		RepoRootTag,
 	}
 
 	version := "v1.2.3-RC1+meta-RC1"
@@ -65,7 +65,7 @@ func TestModulePathsToTagNames(t *testing.T) {
 		"path/to/mod/test/test1",
 		"path/to/mod/test/test2",
 		"test3",
-		repoRootTag,
+		RepoRootTag,
 	}
 
 	actual, err := ModulePathsToTagNames(modPaths, modPathMap, repoRoot)
@@ -152,7 +152,7 @@ func TestModuleFilePathToTagName(t *testing.T) {
 			name:        "go mod file in root",
 			ModFilePath: "root/go.mod",
 			ShouldError: false,
-			Expected:    repoRootTag,
+			Expected:    RepoRootTag,
 		},
 		{
 			name:        "no go mod in path",
@@ -203,7 +203,7 @@ func TestModuleFilePathsToTagNames(t *testing.T) {
 				"path/to/mod/test/test1",
 				"path/to/mod/test/test2",
 				"test3",
-				repoRootTag,
+				RepoRootTag,
 			},
 		},
 		{
