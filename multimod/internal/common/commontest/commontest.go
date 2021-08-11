@@ -20,6 +20,17 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
+
+	"github.com/go-git/go-git/v5/plumbing/object"
+)
+
+var (
+	TestAuthor = &object.Signature{
+		Name: "test_author",
+		Email: "test_email",
+		When: time.Now(),
+	}
 )
 
 // WriteTempFiles is a helper function to dynamically write files such as go.mod or version.go used for testing.
