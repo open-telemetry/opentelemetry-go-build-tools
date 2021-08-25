@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
+	"path/filepath"
 
 	"golang.org/x/mod/semver"
 
@@ -44,4 +46,18 @@ func ChangeToRepoRoot() (string, error) {
 	}
 
 	return repoRoot, nil
+}
+
+// RunGoModTidy takes a ModulePathMap and runs "go mod tidy" at each module file path.
+func RunGoModTidy(modPathMap ModulePathMap) error {
+	for _, modFilePath := range modPathMap {
+		cmd := exec.Command("go", "mod", "tidy")
+		cmd.Dir = filepath.Dir(string(modFilePath))
+
+		if out, err := cmd.CombinedOutput(); err != nil {
+			return fmt.Errorf("go mod tidy failed: %v\n%v", string(out), err)
+		}
+	}
+
+	return nil
 }

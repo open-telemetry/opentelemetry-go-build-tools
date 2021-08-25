@@ -63,7 +63,7 @@ func Run(versioningFile, moduleSetName, fromExistingBranch string, skipGoModTidy
 	if skipGoModTidy {
 		fmt.Println("Skipping 'go mod tidy'...")
 	} else {
-		if err = p.runGoModTidy(); err != nil {
+		if err = common.RunGoModTidy(p.ModuleSetRelease.ModuleVersioning.ModPathMap); err != nil {
 			log.Fatalf("runGoModTidy failed: %v", err)
 		}
 	}
@@ -146,21 +146,6 @@ func (p prerelease) createPrereleaseBranch(fromExistingBranch string) error {
 
 // TODO: updateVersionGo may be implemented to update any hard-coded values within version.go files as needed.
 func (p prerelease) updateVersionGo() error {
-	return nil
-}
-
-// runGoModTidy runs 'go mod tidy' at all module directories to automatically update go.mod and go.sum files.
-// TODO: implement runGoModTidy
-func (p prerelease) runGoModTidy() error {
-	//for _, modFilePath := range p.ModuleSetRelease.ModuleVersioning.ModPathMap {
-	//	cmd := exec.Command("go", "mod", "tidy")
-	//	cmd.Dir = string(modFilePath)
-	//
-	//	if output, err := cmd.CombinedOutput(); err != nil {
-	//		return fmt.Errorf("'go mod tidy' failed: %v (%v)", string(output), err)
-	//	}
-	//}
-
 	return nil
 }
 
