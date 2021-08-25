@@ -185,7 +185,7 @@ func (p prerelease) updateGoModVersions(modFilePath common.ModuleFilePath) error
 	}
 
 	for _, modPath := range p.ModuleSetRelease.ModSetPaths() {
-		oldVersionRegex := filePathToRegex(string(modPath)) + common.SemverRegex
+		oldVersionRegex := `(?m:` + filePathToRegex(string(modPath)) + common.SemverRegex + `$)`
 		r, err := regexp.Compile(oldVersionRegex)
 		if err != nil {
 			return fmt.Errorf("error compiling regex: %v", err)
