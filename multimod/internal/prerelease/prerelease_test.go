@@ -61,6 +61,31 @@ require (
 )
 `),
 		},
+		{
+			name: "1.17 style",
+			input: []byte(`module test
+go 1.17
+
+require (
+	bar.baz/quux v0.1.2
+)
+
+require (
+	foo.bar/baz v1.2.3 // indirect
+)
+`),
+			expected: []byte(`module test
+go 1.17
+
+require (
+	bar.baz/quux v0.1.2
+)
+
+require (
+	foo.bar/baz v1.2.4 // indirect
+)
+`),
+		},
 	} {
 		t.Run(s.name, func(t *testing.T) {
 			got, err := replaceModVersion("foo.bar/baz", "v1.2.4", s.input)
