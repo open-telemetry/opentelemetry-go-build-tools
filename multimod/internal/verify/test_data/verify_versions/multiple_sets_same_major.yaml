@@ -13,10 +13,29 @@
 # limitations under the License.
 
 module-sets:
-  - should-not-have-front-dash:
-    version: v1.0.0
+  mod-set-1:
+    version: v1.2.3-RC1+meta
     modules:
       - go.opentelemetry.io/test/test1
-      - go.opentelemetry.io/test/test2
+  mod-set-2:
+    version: v0.1.0
+    modules:
+      - go.opentelemetry.io/test2
+  mod-set-3:
+    version: v1.0.0
+    modules:
+      - go.opentelemetry.io/test4
+  mod-set-4:
+    version: v1.9.9
+    modules:
+      - go.opentelemetry.io/test5
+  mod-set-5:
+    version: v2.1.2
+    modules:
+      - go.opentelemetry.io/test6
+  mod-set-6:
+    version: v2.1.2
+    modules:
+      - go.opentelemetry.io/test7
 excluded-modules:
-  - go.opentelemetry.io/excluded1
+  - go.opentelemetry.io/test/testexcluded

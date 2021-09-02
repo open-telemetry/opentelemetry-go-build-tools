@@ -10,3 +10,5 @@ coverage.*
 
 semconvgen/semconvgen
 multimod/multimod
+checkdoc/checkdoc
+issuegenerator/issuegenerator
