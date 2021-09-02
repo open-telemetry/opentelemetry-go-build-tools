@@ -17,7 +17,6 @@ package sync
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/go-git/go-git/v5"
 
@@ -77,10 +76,6 @@ func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot stri
 			if err := common.RunGoModTidy(s.MyModuleVersioning.ModPathMap); err != nil {
 				log.Printf("WARNING: failed to run 'go mod tidy': %v\n", err)
 			}
-		}
-
-		if err = s.commitChangesToNewBranch(repo); err != nil {
-			log.Fatalf("commitChangesToNewBranch failed: %v", err)
 		}
 	}
 
@@ -153,23 +148,4 @@ func checkModuleSetUpToDate(repo *git.Repository) (bool, error) {
 	} else {
 		return false, nil
 	}
-}
-
-func (s sync) commitChangesToNewBranch(repo *git.Repository) error {
-	branchNameElements := []string{"sync", s.OtherModuleSetName, s.OtherModuleSet.Version}
-	branchName := strings.Join(branchNameElements, "_")
-
-	commitMessage := fmt.Sprintf(
-		"Sync repo to use %v with version %v",
-		s.OtherModuleSetName,
-		s.OtherModuleSet.Version,
-	)
-
-	hash, err := common.CommitChangesToNewBranch(branchName, commitMessage, repo, nil)
-	if err != nil {
-		return err
-	}
-	log.Printf("Commit successful. Hash of commit: %s\n", hash)
-
-	return nil
 }

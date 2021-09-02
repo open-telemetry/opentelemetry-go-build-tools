@@ -42,9 +42,25 @@ var syncCmd = &cobra.Command{
 - Updates module versions in all go.mod files.
 - Attempts to call go mod tidy on the files.
 - Adds and commits changes to Git branch`,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		if allModuleSetsSync {
+			// do not require module set names if operating on all module sets
+			if err := cmd.Flags().SetAnnotation(
+				"module-set-names",
+				cobra.BashCompOneRequiredFlag,
+				[]string{"false"},
+			); err != nil {
+				log.Fatalf("could not set module-set-names flag as not required flag: %v", err)
+			}
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Using versioning file", versioningFile)
 
+		if otherVersioningFile == "" {
+			otherVersioningFile = filepath.Join(otherRepoRoot,
+				fmt.Sprintf("%v.%v", defaultVersionsConfigName, defaultVersionsConfigType))
+		}
 		sync.Run(versioningFile, otherVersioningFile, otherRepoRoot, moduleSetNamesSync, allModuleSetsSync, skipGoModTidySync)
 	},
 }
@@ -61,9 +77,7 @@ func init() {
 		log.Fatalf("could not mark other-repo-root flag as required: %v", err)
 	}
 
-	otherVersioningFileDefault := filepath.Join(otherRepoRoot,
-		fmt.Sprintf("%v.%v", defaultVersionsConfigName, defaultVersionsConfigType))
-	syncCmd.Flags().StringVar(&otherVersioningFile, "other-versioning-file", otherVersioningFileDefault,
+	syncCmd.Flags().StringVar(&otherVersioningFile, "other-versioning-file", "",
 		"Path to other versioning file that contains all module set versions to sync. "+
 			"If unspecified, defaults to versions.yaml in the other Git repo root.")
 
