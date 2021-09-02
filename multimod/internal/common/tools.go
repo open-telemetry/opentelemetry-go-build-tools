@@ -80,15 +80,10 @@ func updateGoModVersions(modFilePath ModuleFilePath, newModPaths []ModulePath, n
 	}
 
 	for _, modPath := range newModPaths {
-		oldVersionRegex := filePathToRegex(string(modPath)) + `\s+` + SemverRegex
-		r, err := regexp.Compile(oldVersionRegex)
+		newGoModFile, err = replaceModVersion(modPath, newVersion, newGoModFile)
 		if err != nil {
-			return fmt.Errorf("error compiling regex: %v", err)
+			return err
 		}
-
-		newModVersionString := string(modPath) + " " + newVersion
-
-		newGoModFile = r.ReplaceAll(newGoModFile, []byte(newModVersionString))
 	}
 
 	// once all module versions have been updated, overwrite the go.mod file
@@ -97,6 +92,20 @@ func updateGoModVersions(modFilePath ModuleFilePath, newModPaths []ModulePath, n
 	}
 
 	return nil
+}
+
+func replaceModVersion(modPath ModulePath, version string, newGoModFile []byte) ([]byte, error) {
+	oldVersionRegex := `(?m:` + filePathToRegex(string(modPath)) + `\s+` + SemverRegex + `(\s*\/\/\s*indirect\s*?)?$)`
+	r, err := regexp.Compile(oldVersionRegex)
+	if err != nil {
+		return nil, fmt.Errorf("error compiling regex: %v", err)
+	}
+
+	newModVersionString := string(modPath) + " " + version
+
+	// ${6} is the capture group that has " // indirect" if it was present in the original
+	newGoModFile = r.ReplaceAll(newGoModFile, []byte(newModVersionString+"${6}"))
+	return newGoModFile, nil
 }
 
 // UpdateGoModFiles updates the go.mod files in modFilePaths by updating all modules listed in
