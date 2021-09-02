@@ -43,7 +43,7 @@ var prereleaseCmd = &cobra.Command{
 - Adds and commits changes to Git branch`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if allModuleSets {
-			// do not require commit-hash flag if deleting module set tags
+			// do not require module set names if operating on all module sets
 			if err := cmd.Flags().SetAnnotation(
 				"module-set-names",
 				cobra.BashCompOneRequiredFlag,
@@ -71,16 +71,16 @@ func init() {
 	)
 
 	prereleaseCmd.Flags().StringSliceVarP(&moduleSetNames, "module-set-names", "m", nil,
-		"Names of module set whose version is being changed. " +
-			"Each name be listed in the module set versioning YAML. " +
-			"To specify multiple module sets, specify set names as comma-separated values." +
+		"Names of module set whose version is being changed. "+
+			"Each name be listed in the module set versioning YAML. "+
+			"To specify multiple module sets, specify set names as comma-separated values."+
 			"For example: --module-set-names=\"mod-set-1,mod-set-2\"",
 	)
 	if err := prereleaseCmd.MarkFlagRequired("module-set-names"); err != nil {
 		log.Fatalf("could not mark module-set-names flag as required: %v", err)
 	}
 	prereleaseCmd.Flags().BoolVarP(&skipGoModTidy, "skip-go-mod-tidy", "s", false,
-		"Specify this flag to skip the 'make lint' and 'make ci' steps. "+
+		"Specify this flag to skip calling 'go mod tidy'. "+
 			"To be used for debugging purposes. Should not be skipped during actual release.",
 	)
 }

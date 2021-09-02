@@ -26,17 +26,17 @@ import (
 
 var (
 	otherVersioningFile string
-	otherRepoRoot string
-	allModuleSetsSync bool
-	moduleSetNamesSync []string
-	skipGoModTidySync bool
+	otherRepoRoot       string
+	allModuleSetsSync   bool
+	moduleSetNamesSync  []string
+	skipGoModTidySync   bool
 )
 
 // syncCmd represents the sync command
 var syncCmd = &cobra.Command{
 	Use:   "sync",
 	Short: "Syncs the versions of a repo's dependencies",
-	Long: `Updates version numbers of :
+	Long: `Updates version numbers of module sets from another repo:
 - Checks that the working tree is clean.
 - Switches to a new branch called prerelease_<module set name>_<new version>.
 - Updates module versions in all go.mod files.
@@ -64,17 +64,17 @@ func init() {
 	otherVersioningFileDefault := filepath.Join(otherRepoRoot,
 		fmt.Sprintf("%v.%v", defaultVersionsConfigName, defaultVersionsConfigType))
 	syncCmd.Flags().StringVar(&otherVersioningFile, "other-versioning-file", otherVersioningFileDefault,
-		"Path to other versioning file that contains all module set versions to sync. " +
-		"If unspecified, defaults to versions.yaml in the other Git repo root.")
+		"Path to other versioning file that contains all module set versions to sync. "+
+			"If unspecified, defaults to versions.yaml in the other Git repo root.")
 
 	syncCmd.Flags().BoolVarP(&allModuleSetsSync, "all-module-sets", "a", false,
 		"Specify this flag to update versions of modules in all sets listed in the versioning file.",
 	)
 
 	syncCmd.Flags().StringSliceVarP(&moduleSetNamesSync, "module-set-names", "m", nil,
-		"Names of module set whose version is being changed. " +
-			"Each name be listed in the module set versioning YAML. " +
-			"To specify multiple module sets, specify set names as comma-separated values." +
+		"Names of module set whose version is being changed. "+
+			"Each name be listed in the module set versioning YAML. "+
+			"To specify multiple module sets, specify set names as comma-separated values."+
 			"For example: --module-set-names=\"mod-set-1,mod-set-2\"",
 	)
 	if err := syncCmd.MarkFlagRequired("module-set-names"); err != nil {
@@ -82,7 +82,7 @@ func init() {
 	}
 
 	syncCmd.Flags().BoolVarP(&skipGoModTidySync, "skip-go-mod-tidy", "s", false,
-		"Specify this flag to skip the 'make lint' and 'make ci' steps. "+
+		"Specify this flag to skip invoking `go mod tidy`. "+
 			"To be used for debugging purposes. Should not be skipped during actual release.",
 	)
 }
