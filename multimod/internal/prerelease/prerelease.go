@@ -143,11 +143,6 @@ func (p prerelease) createPrereleaseBranch(fromExistingBranch string) error {
 	return nil
 }
 
-// TODO: updateVersionGo may be implemented to update any hard-coded values within version.go files as needed.
-func (p prerelease) updateVersionGo() error {
-	return nil
-}
-
 func (p prerelease) commitChanges() error {
 	commitMessage := "Prepare for versions " + p.ModuleSetRelease.ModSetVersion()
 
