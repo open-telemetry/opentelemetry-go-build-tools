@@ -16,11 +16,12 @@ package tag
 
 import (
 	"fmt"
-	"github.com/go-git/go-git/v5/plumbing/object"
 	"log"
+	"os/exec"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
 
 	tools "go.opentelemetry.io/build-tools"
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
@@ -181,9 +182,17 @@ func (t tagger) tagAllModules(customTagger *object.Signature) error {
 
 		var err error
 		if customTagger == nil {
-			_, err = t.Repo.CreateTag(newFullTag, t.CommitHash, &git.CreateTagOptions{
-				Message: tagMessage,
-			})
+			// TODO: figure out how to use go-git and gpg-agent without needing to have decrypted private key material
+			cfg, err2 := t.Repo.Config()
+			if err2 != nil {
+				err = fmt.Errorf("unable to load repo config: %w", err2)
+			}
+			cmd := exec.Command("git", "tag", "-a", "-s", "-m", tagMessage, newFullTag, t.CommitHash.String())
+			cmd.Dir = cfg.Core.Worktree
+			output, err2 := cmd.CombinedOutput()
+			if err2 != nil {
+				err = fmt.Errorf("unable to create tag: %q: %w", string(output), err2)
+			}
 		} else {
 			_, err = t.Repo.CreateTag(newFullTag, t.CommitHash, &git.CreateTagOptions{
 				Message: tagMessage,
