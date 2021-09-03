@@ -16,6 +16,7 @@ package verify
 
 import (
 	"fmt"
+	"strings"
 
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
@@ -45,6 +46,19 @@ type errInvalidVersion struct {
 
 func (e *errInvalidVersion) Error() string {
 	return fmt.Sprintf("Module set %v has invalid version string: %v", e.modSetName, e.modSetVersion)
+}
+
+type errMultipleSetSameVersionSlice struct {
+	errs []*errMultipleSetSameVersion
+}
+
+func (e *errMultipleSetSameVersionSlice) Error() string {
+	var errorStringSlice []string
+	for _, err := range e.errs {
+		errorStringSlice = append(errorStringSlice, err.Error())
+	}
+
+	return strings.Join(errorStringSlice, "\n")
 }
 
 type errMultipleSetSameVersion struct {
