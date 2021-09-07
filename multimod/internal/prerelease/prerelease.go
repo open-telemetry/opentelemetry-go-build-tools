@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -50,10 +51,8 @@ func Run(versioningFile, moduleSetName, fromExistingBranch string, skipGoModTidy
 		log.Fatalf("createPrereleaseBranch failed: %v", err)
 	}
 
-	// TODO: this function currently does nothing, but could be updated to add version.go files
-	//  to directories.
-	if err = p.updateVersionGo(); err != nil {
-		log.Fatalf("updateVersionGo failed: %v", err)
+	if err = p.updateAllVersionGo(); err != nil {
+		log.Fatal("updateAllVersionGo failed:", err)
 	}
 
 	if err = p.updateAllGoModFiles(); err != nil {
@@ -144,11 +143,6 @@ func (p prerelease) createPrereleaseBranch(fromExistingBranch string) error {
 	return nil
 }
 
-// TODO: updateVersionGo may be implemented to update any hard-coded values within version.go files as needed.
-func (p prerelease) updateVersionGo() error {
-	return nil
-}
-
 func (p prerelease) commitChanges() error {
 	commitMessage := "Prepare for versions " + p.ModuleSetRelease.ModSetVersion()
 
@@ -199,8 +193,63 @@ func (p prerelease) updateGoModVersions(modFilePath common.ModuleFilePath) error
 	return nil
 }
 
+// updateAllVersionGo updates the version.go file containing a hardcoded semver version string
+// for modules within a set, if the file exists.
+func (p prerelease) updateAllVersionGo() error {
+	for _, modPath := range p.ModuleSetRelease.ModSetPaths() {
+		modFilePath := p.ModuleSetRelease.ModuleVersioning.ModPathMap[modPath]
+
+		versionGoDir := filepath.Dir(string(modFilePath))
+		versionGoFilePath := filepath.Join(versionGoDir, "version.go")
+
+		// check if version.go file exists
+		if _, err := os.Stat(versionGoFilePath); err == nil {
+			if updateErr := updateVersionGoFile(versionGoFilePath, p.ModuleSetRelease.ModSetVersion()); updateErr != nil {
+				return fmt.Errorf("could not update %v: %v", versionGoFilePath, updateErr)
+			}
+		} else if os.IsNotExist(err) {
+			continue
+		} else {
+			return fmt.Errorf("could not check existance of %v: %v", versionGoFilePath, err)
+		}
+
+	}
+	return nil
+}
+
+// updateVersionGoFile updates one version.go file.
+// TODO: a potential improvement is to use an AST package rather than regex to perform replacement.
+func updateVersionGoFile(filePath string, newVersion string) error {
+	if !strings.HasSuffix(filePath, "version.go") {
+		return fmt.Errorf("cannot update file passed that does not end with version.go")
+	}
+	log.Printf("... Updating file %v\n", filePath)
+
+	newVersionGoFile, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		panic(err)
+	}
+
+	oldVersionRegex := common.SemverRegexNumberOnly
+	r, err := regexp.Compile(oldVersionRegex)
+	if err != nil {
+		return fmt.Errorf("error compiling regex: %v", err)
+	}
+
+	newVersionNumberOnly := strings.TrimPrefix(newVersion, "v")
+
+	newVersionGoFile = r.ReplaceAll(newVersionGoFile, []byte(newVersionNumberOnly))
+
+	// overwrite the version.go file
+	if err := ioutil.WriteFile(filePath, newVersionGoFile, 0644); err != nil {
+		return fmt.Errorf("error overwriting go.mod file: %v", err)
+	}
+
+	return nil
+}
+
 func replaceModVersion(modPath common.ModulePath, version string, newGoModFile []byte) ([]byte, error) {
-	oldVersionRegex := `(?m:` + filePathToRegex(string(modPath)) + common.SemverRegex + `(\s*\/\/\s*indirect\s*?)?$)`
+	oldVersionRegex := `(?m:` + filePathToRegex(string(modPath)) + `\s+` + common.SemverRegex + `(\s*\/\/\s*indirect\s*?)?$)`
 	r, err := regexp.Compile(oldVersionRegex)
 	if err != nil {
 		return nil, fmt.Errorf("error compiling regex: %v", err)
