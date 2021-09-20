@@ -18,37 +18,18 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
 
 	"golang.org/x/mod/semver"
-
-	tools "go.opentelemetry.io/build-tools"
 )
 
 // IsStableVersion returns true if modSet.Version is stable (i.e. version major greater than
 // or equal to v1), else false.
 func IsStableVersion(v string) bool {
 	return semver.Compare(semver.Major(v), "v1") >= 0
-}
-
-// ChangeToRepoRoot changes to the root of the Git repository the script is called from and returns it as a string.
-func ChangeToRepoRoot() (string, error) {
-	repoRoot, err := tools.FindRepoRoot()
-	if err != nil {
-		return "", fmt.Errorf("unable to find repo root: %v", err)
-	}
-
-	log.Println("Changing to root directory...")
-	err = os.Chdir(repoRoot)
-	if err != nil {
-		return "", fmt.Errorf("unable to change to repo root: %v", err)
-	}
-
-	return repoRoot, nil
 }
 
 // GetAllModuleSetNames returns the name of all module sets given in a versioningFile.

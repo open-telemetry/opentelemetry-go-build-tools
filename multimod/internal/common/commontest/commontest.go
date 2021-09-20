@@ -22,6 +22,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
@@ -59,4 +61,28 @@ func RemoveAll(t *testing.T, dir string) {
 	if err != nil {
 		t.Fatalf("error removing dir %v: %v", dir, err)
 	}
+}
+
+func InitNewRepoWithCommit(repoRoot string) (*git.Repository, plumbing.Hash, error) {
+	// initialize temporary local git repository
+	repo, err := git.PlainInit(repoRoot, false)
+	if err != nil {
+		return nil, plumbing.ZeroHash, fmt.Errorf("could not initialize temp git repo: %v", err)
+	}
+
+	worktree, err := repo.Worktree()
+	if err != nil {
+		return nil, plumbing.ZeroHash, err
+	}
+	commitMessage := "test commit"
+
+	commitHash, err := worktree.Commit(commitMessage, &git.CommitOptions{
+		All: true,
+		Author: TestAuthor,
+	})
+	if err != nil {
+		return nil, plumbing.ZeroHash, fmt.Errorf("could not commit changes to git: %v", err)
+	}
+
+	return repo, commitHash, nil
 }
