@@ -48,6 +48,19 @@ func GetAllModuleSetNames(versioningFile string, repoRoot string) ([]string, err
 	return modSetNames, nil
 }
 
+func GetModuleSet(modSetName, versioningFilename string) (ModuleSet, error) {
+	vCfg, err := readVersioningFile(versioningFilename)
+	if err != nil {
+		return ModuleSet{}, fmt.Errorf("error reading versioning file %v: %v", versioningFilename, err)
+	}
+
+	modSetMap, err := vCfg.buildModuleSetsMap()
+	if err != nil {
+		return ModuleSet{}, fmt.Errorf("error building module set map: %v", err)
+	}
+	return modSetMap[modSetName], nil
+}
+
 // updateGoModVersions updates one go.mod file, given by modFilePath, by updating all modules listed in
 // newModPaths to use the newVersion given.
 func updateGoModVersions(modFilePath ModuleFilePath, newModPaths []ModulePath, newVersion string) error {
