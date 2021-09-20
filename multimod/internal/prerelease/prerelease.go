@@ -29,12 +29,19 @@ import (
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
 
-func Run(versioningFile string, moduleSetName string, skipModTidy bool) {
+func Run(versioningFile string, moduleSetNames []string, allModuleSets bool, skipModTidy bool) {
 	repoRoot, err := tools.FindRepoRoot()
 	if err != nil {
 		log.Fatalf("unable to find repo root: %v", err)
 	}
 	log.Printf("Using repo with root at %s\n\n", repoRoot)
+
+	if allModuleSets {
+		moduleSetNames, err = common.GetAllModuleSetNames(versioningFile, repoRoot)
+		if err != nil {
+			log.Fatalf("could not automatically get all module set names: %v", err)
+		}
+	}
 
 	repo, err := git.PlainOpen(repoRoot)
 	if err != nil {
@@ -45,42 +52,44 @@ func Run(versioningFile string, moduleSetName string, skipModTidy bool) {
 		log.Fatalf("VerifyWorkingTreeClean failed: %v", err)
 	}
 
-	p, err := newPrerelease(versioningFile, moduleSetName, repoRoot)
-	if err != nil {
-		log.Fatalf("Error creating new prerelease struct: %v", err)
-	}
-
-	log.Printf("===== Module Set: %v =====\n", moduleSetName)
-
-	modSetUpToDate, err := p.checkModuleSetUpToDate(repo)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if modSetUpToDate {
-		log.Println("Module set already up to date (git tags already exist). Skipping...")
-		return
-	} else {
-		log.Println("Updating versions for module set...")
-	}
-
-	if err = p.updateAllVersionGo(); err != nil {
-		log.Fatalf("updateAllVersionGo failed: %v", err)
-	}
-
-	if err = p.updateAllGoModFiles(); err != nil {
-		log.Fatalf("updateAllGoModFiles failed: %v", err)
-	}
-
-	if skipModTidy {
-		log.Println("Skipping 'go mod tidy'...")
-	} else {
-		if err = common.RunGoModTidy(p.ModuleSetRelease.ModuleVersioning.ModPathMap); err != nil {
-			log.Fatalf("could not run Go Mod Tidy: %v", err)
+	for _, moduleSetName := range moduleSetNames {
+		p, err := newPrerelease(versioningFile, moduleSetName, repoRoot)
+		if err != nil {
+			log.Fatalf("Error creating new prerelease struct: %v", err)
 		}
-	}
 
-	if err = p.commitChangesToNewBranch(repo); err != nil {
-		log.Fatalf("commitChangesToNewBranch failed: %v", err)
+		log.Printf("===== Module Set: %v =====\n", moduleSetName)
+
+		modSetUpToDate, err := p.checkModuleSetUpToDate(repo)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if modSetUpToDate {
+			log.Println("Module set already up to date (git tags already exist). Skipping...")
+			continue
+		} else {
+			log.Println("Updating versions for module set...")
+		}
+
+		if err = p.updateAllVersionGo(); err != nil {
+			log.Fatalf("updateAllVersionGo failed: %v", err)
+		}
+
+		if err = p.updateAllGoModFiles(); err != nil {
+			log.Fatalf("updateAllGoModFiles failed: %v", err)
+		}
+
+		if skipModTidy {
+			log.Println("Skipping 'go mod tidy'...")
+		} else {
+			if err = common.RunGoModTidy(p.ModuleSetRelease.ModuleVersioning.ModPathMap); err != nil {
+				log.Fatal("could not run Go Mod Tidy: ", err)
+			}
+		}
+
+		if err = p.commitChangesToNewBranch(repo); err != nil {
+			log.Fatalf("commitChangesToNewBranch failed: %v", err)
+		}
 	}
 
 	log.Println(`=========

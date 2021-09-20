@@ -51,6 +51,22 @@ func ChangeToRepoRoot() (string, error) {
 	return repoRoot, nil
 }
 
+// GetAllModuleSetNames returns the name of all module sets given in a versioningFile.
+func GetAllModuleSetNames(versioningFile string, repoRoot string) ([]string, error) {
+	modVersioning, err := NewModuleVersioning(versioningFile, repoRoot)
+	if err != nil {
+		return nil, fmt.Errorf("call failed to NewModuleVersioning: %v", err)
+	}
+
+	var modSetNames []string
+
+	for modSetName := range modVersioning.ModSetMap {
+		modSetNames = append(modSetNames, modSetName)
+	}
+
+	return modSetNames, nil
+}
+
 // updateGoModVersions updates one go.mod file, given by modFilePath, by updating all modules listed in
 // newModPaths to use the newVersion given.
 func updateGoModVersions(modFilePath ModuleFilePath, newModPaths []ModulePath, newVersion string) error {

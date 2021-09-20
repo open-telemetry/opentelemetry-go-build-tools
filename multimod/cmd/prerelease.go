@@ -17,8 +17,6 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"os/exec"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -26,8 +24,9 @@ import (
 )
 
 var (
-	fromExistingBranch string
-	skipGoModTidy      bool
+	allModuleSets  bool
+	moduleSetNames []string
+	skipGoModTidy  bool
 )
 
 // prereleaseCmd represents the prerelease command
@@ -35,16 +34,29 @@ var prereleaseCmd = &cobra.Command{
 	Use:   "prerelease",
 	Short: "Prepares files for new version release",
 	Long: `Updates version numbers and commits to a new branch for release:
-- Checks that Git tags do not already exist for the new module set version.
 - Checks that the working tree is clean.
-- Switches to a new branch called pre_release_<module set name>_<new version>.
+- Checks that Git tags do not already exist for the new module set version.
+- Switches to a new branch called prerelease_<module set name>_<new version>.
+- Updates version.go files, if they exist.
 - Updates module versions in all go.mod files.
-- 'make lint' and 'make ci' are called
-- Adds and commits changes to Git`,
+- Attempts to call 'go mod tidy' in the directory of each modified go.mod file.
+- Adds and commits changes to Git branch`,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		if allModuleSets {
+			// do not require module set names if operating on all module sets
+			if err := cmd.Flags().SetAnnotation(
+				"module-set-names",
+				cobra.BashCompOneRequiredFlag,
+				[]string{"false"},
+			); err != nil {
+				log.Fatalf("could not set module-set-names flag as not required flag: %v", err)
+			}
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Using versioning file", versioningFile)
 
-		prerelease.Run(versioningFile, moduleSetName, skipGoModTidy)
+		prerelease.Run(versioningFile, moduleSetNames, allModuleSets, skipGoModTidy)
 	},
 }
 
@@ -54,28 +66,21 @@ func init() {
 
 	rootCmd.AddCommand(prereleaseCmd)
 
-	defaultFromExistingBranch, err := getDefaultFromExistingBranch()
-	if err != nil {
-		log.Fatalf("could not fetch default fromExistingBranch: %v", err)
-	}
-
-	prereleaseCmd.Flags().StringVarP(&fromExistingBranch, "from-existing-branch", "f", defaultFromExistingBranch,
-		"Name of existing branch from which to base the pre-release branch. If unspecified, defaults to current branch.",
+	prereleaseCmd.Flags().BoolVarP(&allModuleSets, "all-module-sets", "a", false,
+		"Specify this flag to update versions of modules in all sets listed in the versioning file.",
 	)
 
+	prereleaseCmd.Flags().StringSliceVarP(&moduleSetNames, "module-set-names", "m", nil,
+		"Names of module set whose version is being changed. "+
+			"Each name be listed in the module set versioning YAML. "+
+			"To specify multiple module sets, specify set names as comma-separated values."+
+			"For example: --module-set-names=\"mod-set-1,mod-set-2\"",
+	)
+	if err := prereleaseCmd.MarkFlagRequired("module-set-names"); err != nil {
+		log.Fatalf("could not mark module-set-names flag as required: %v", err)
+	}
 	prereleaseCmd.Flags().BoolVarP(&skipGoModTidy, "skip-go-mod-tidy", "s", false,
 		"Specify this flag to skip calling 'go mod tidy'. "+
 			"To be used for debugging purposes. Should not be skipped during actual release.",
 	)
-}
-
-func getDefaultFromExistingBranch() (string, error) {
-	// get current branch
-	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
-	output, err := cmd.Output()
-	if err != nil {
-		return "", fmt.Errorf("could not get current branch: %v", err)
-	}
-
-	return strings.TrimSpace(string(output)), nil
 }

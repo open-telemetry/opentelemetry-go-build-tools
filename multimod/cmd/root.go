@@ -24,7 +24,6 @@ import (
 )
 
 var (
-	moduleSetName  string
 	versioningFile string
 )
 
@@ -57,15 +56,7 @@ func init() {
 
 	versioningFileDefault := filepath.Join(repoRoot,
 		fmt.Sprintf("%v.%v", defaultVersionsConfigName, defaultVersionsConfigType))
-
 	rootCmd.PersistentFlags().StringVarP(&versioningFile, "versioning-file", "v", versioningFileDefault,
 		"Path to versioning file that contains definitions of all module sets. "+
 			"If unspecified, defaults to versions.yaml in the Git repo root.")
-
-	rootCmd.PersistentFlags().StringVarP(&moduleSetName, "module-set-name", "m", "",
-		"Name of module set whose version is being changed. Must be listed in the module set versioning YAML.",
-	)
-	if err := rootCmd.MarkPersistentFlagRequired("module-set-name"); err != nil {
-		log.Fatalf("could not mark module-set-name flag as required: %v", err)
-	}
 }
