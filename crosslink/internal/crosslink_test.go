@@ -1,4 +1,4 @@
-package main
+package crosslink
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	testDataDir, _ = filepath.Abs("./test_data")
+	testDataDir, _ = filepath.Abs("../test_data")
 )
 
 // WriteTempFiles is a helper function to dynamically write files such as go.mod or version.go used for testing.
@@ -53,14 +53,14 @@ func TestExecuteSimple(t *testing.T) {
 		filepath.Join(tmpRootDir, "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
 			"go 1.17\n\n" +
 			"require (\n\t" +
-			"go.opentelemetry.io/build-tools/crosslink/testA v1.0.0\n" +
+			"go.opentelemetry.io/build-tools/crosslink/testroot/testA v1.0.0\n" +
 			")"),
-		filepath.Join(tmpRootDir, "testA", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testA\n\n" +
+		filepath.Join(tmpRootDir, "testA", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot/testA\n\n" +
 			"go 1.17\n\n" +
 			"require (\n\t" +
-			"go.opentelemetry.io/build-tools/crosslink/testB v1.0.0\n" +
+			"go.opentelemetry.io/build-tools/crosslink/testroot/testB v1.0.0\n" +
 			")"),
-		filepath.Join(tmpRootDir, "testB", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testB\n\n" +
+		filepath.Join(tmpRootDir, "testB", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot/testB\n\n" +
 			"go 1.17\n\n"),
 	}
 
@@ -68,42 +68,49 @@ func TestExecuteSimple(t *testing.T) {
 		t.Fatalf("Error writing mod files: %v", err)
 	}
 
-	err = Execute(tmpRootDir)
+	err = executeCrosslink(tmpRootDir)
 
 	if assert.NoError(t, err, "error message on execution %s") {
 		modFilesExpected := map[string][]byte{
 			filepath.Join(tmpRootDir, "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
 				"go 1.17\n\n" +
 				"require (\n\t" +
-				"go.opentelemetry.io/build-tools/crosslink/testA v1.0.0\n" +
+				"go.opentelemetry.io/build-tools/crosslink/testroot/testA v1.0.0\n" +
 				")\n" +
-				"replace (\n\t" +
-				" go.opentelemetry.io/build-tools/crosslink/testA => ./testA\n\t" +
-				" go.opentelemetry.io/build-tools/crosslink/testB => ./testB\n" +
-				")"),
-			filepath.Join(tmpRootDir, "testA", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testA\n\n" +
+				"replace go.opentelemetry.io/build-tools/crosslink/testroot/testA => ./testA\n\n" +
+				"replace go.opentelemetry.io/build-tools/crosslink/testroot/testB => ./testB"),
+			filepath.Join(tmpRootDir, "testA", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot/testA\n\n" +
 				"go 1.17\n\n" +
 				"require (\n\t" +
-				"go.opentelemetry.io/build-tools/crosslink/testB v1.0.0\n" +
+				"go.opentelemetry.io/build-tools/crosslink/testroot/testB v1.0.0\n" +
 				")\n" +
-				"replace (\n\t" +
-				" go.opentelemetry.io/build-tools/crosslink/testB => ./testB\n" +
-				")"),
-			filepath.Join(tmpRootDir, "testB", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testB\n\n" +
+				"replace go.opentelemetry.io/build-tools/crosslink/testroot/testB => ../testB"),
+			filepath.Join(tmpRootDir, "testB", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot/testB\n\n" +
 				"go 1.17\n\n"),
 		}
 
-		for modFilePath, modFileOriginal := range modFiles {
-			original, err := modfile.Parse("go.mod", modFileOriginal, nil)
+		for modFilePath, modFilesExpected := range modFilesExpected {
+			modFileActual, err := os.ReadFile(modFilePath)
+
+			if err != nil {
+				t.Fatalf("error reading actual mod files: %v", err)
+			}
+
+			actual, err := modfile.Parse("go.mod", modFileActual, nil)
 			if err != nil {
 				t.Fatalf("error decoding original mod files: %v", err)
 			}
+			actual.Cleanup()
 
-			expected, err := modfile.Parse("go.mod", modFilesExpected[modFilePath], nil)
+			expected, err := modfile.Parse("go.mod", modFilesExpected, nil)
 			if err != nil {
 				t.Fatalf("error decoding expected mod file: %v", err)
 			}
-			assert.Equal(t, original, expected, "The two mod files should be equal")
+			expected.Cleanup()
+
+			assert.Equal(t, len(actual.Replace), len(expected.Replace))
+			// do some assertion magic with go-cmp to comapre replace fields
+			// and ignore syntax line positioning garbage we do not care about.
 		}
 	}
 
@@ -115,5 +122,10 @@ func TestExecuteSimple(t *testing.T) {
 // ./b/go.mod requires on root which needs replace statements for root and a
 
 func TestExecuteCyclic(t *testing.T) {
+
+}
+
+// test prune
+func TestExecutePrune(t *testing.T) {
 
 }
