@@ -1,7 +1,6 @@
 package crosslink
 
 import (
-	"container/list"
 	"fmt"
 	"io/fs"
 	"io/ioutil"
@@ -12,10 +11,6 @@ import (
 	tools "go.opentelemetry.io/build-tools"
 	"golang.org/x/mod/modfile"
 )
-
-/*
-	TODO: Convert list to slice
-*/
 
 func Crosslink(rootPath string) {
 	var err error
@@ -100,7 +95,7 @@ func buildDepedencyGraph(rootPath string) (map[string]moduleInfo, error) {
 	for _, modInfo := range moduleMap {
 		// reqStack contains a list of module paths that are required to have local replace statements
 		// reqStack should only contain intra-repository modules
-		reqStack := list.New()
+		reqStack := make([]string, 0)
 		// set is type map[string]struct{} and has standard set capabilties.
 		alreadyInsertedRepSet := make(map[string]struct{})
 
@@ -115,16 +110,17 @@ func buildDepedencyGraph(rootPath string) (map[string]moduleInfo, error) {
 			// store all modules requirements for use when pruning
 			// modInfo.moduleRequirements[req.Mod.Path] = struct{}{}
 			if strings.Contains(req.Mod.Path, rootModule) {
-				reqStack.PushBack(req.Mod.Path)
+				reqStack = append(reqStack, req.Mod.Path)
 				alreadyInsertedRepSet[req.Mod.Path] = struct{}{}
 			}
 		}
 
 		// iterate through stack adding replace directives and transitive requirements as needed
 		// if the replace directive already exists for the module path then ensure that it is pointing to the write location
-		for reqStack.Len() > 0 {
-			reqModule := reqStack.Front().Value.(string)
-			reqStack.Remove(reqStack.Front())
+		for len(reqStack) > 0 {
+			var reqModule string
+
+			reqModule, reqStack = reqStack[len(reqStack)-1], reqStack[:len(reqStack)-1]
 
 			modInfo.requiredReplaceStatements[reqModule] = struct{}{}
 
@@ -137,7 +133,7 @@ func buildDepedencyGraph(rootPath string) (map[string]moduleInfo, error) {
 				}
 				for _, transReq := range m.Require {
 					if _, ok := alreadyInsertedRepSet[transReq.Mod.Path]; strings.Contains(transReq.Mod.Path, rootModule) && !ok {
-						reqStack.PushBack(transReq.Mod.Path)
+						reqStack = append(reqStack, transReq.Mod.Path)
 						alreadyInsertedRepSet[transReq.Mod.Path] = struct{}{}
 					}
 				}
