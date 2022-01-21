@@ -24,6 +24,7 @@ var rootCmd = &cobra.Command{
 	mulitple go modules. Crosslink automatically inserts replace directives into go.mod files
 	for all intra-repository dependencies including transitive dependencies.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		// probably need to handle errors here if they get funneled up
 		cl.Crosslink(root)
 	},
 }

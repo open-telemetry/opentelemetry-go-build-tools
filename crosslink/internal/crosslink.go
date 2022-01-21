@@ -13,6 +13,11 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
+/*
+	TODO: Remove set
+	TODO: Convert list to slice
+*/
+
 func Crosslink(rootPath string) {
 	var err error
 	if rootPath == "" {
@@ -25,7 +30,16 @@ func Crosslink(rootPath string) {
 	if _, err := os.Stat(filepath.Join(rootPath, "go.mod")); err != nil {
 		panic("Invalid root directory, could not locate go.mod file")
 	}
-	executeCrosslink(rootPath)
+	graph, err := buildDepedencyGraph(rootPath)
+	if err != nil {
+		// unsure if we should return the errors up and out or panic here
+		panic(fmt.Sprintf("failed to build dependency graph: %v", err))
+	}
+
+	err = insertReplace(rootPath, graph)
+	if err != nil {
+		panic(fmt.Sprintf("failed to insert replace statements: %v", err))
+	}
 
 }
 
@@ -63,13 +77,23 @@ func NewSet() *Set {
 type moduleInfo struct {
 	moduleFilePath string
 	moduleContents []byte
+	// should probably be a set for easy access
+	requiredReplaceStatements map[string]struct{}
+	// may be neccessary for pruning if naming convention is not enforced. Need to think on it.
+	// transform moduleContents Require field into k,v store for easy access.
+	//moduleRequirements map[string]struct{}
 	//could possibly add some type of caching for transitive requirements
 }
 
-func executeCrosslink(rootPath string) error {
-	// module map is a key,value store of module name -> moduleInfo struct
-	moduleMap := make(map[string]moduleInfo)
+func newModuleInfo() *moduleInfo {
+	var mi moduleInfo
+	mi.requiredReplaceStatements = make(map[string]struct{})
+	//mi.moduleRequirements = make(map[string]struct{})
+	return &mi
+}
 
+func buildDepedencyGraph(rootPath string) (map[string]moduleInfo, error) {
+	moduleMap := make(map[string]moduleInfo)
 	goModFunc := func(filePath string, info fs.FileInfo, err error) error {
 		if err != nil {
 			fmt.Printf("Warning: file could not be read during filepath.Walk: %v", err)
@@ -83,25 +107,29 @@ func executeCrosslink(rootPath string) error {
 				return err
 			}
 
-			moduleMap[modfile.ModulePath(modFile)] = moduleInfo{moduleFilePath: filePath, moduleContents: modFile}
+			modInfo := newModuleInfo()
+			modInfo.moduleContents = modFile
+			modInfo.moduleFilePath = filePath
+
+			// err this may not be right. Unsure if the use of a pointer here is correct
+			moduleMap[modfile.ModulePath(modFile)] = *modInfo
 		}
 		return nil
 	}
-
 	err := filepath.Walk(rootPath, goModFunc)
 	if err != nil {
 		fmt.Printf("error walking root directory: %v", err)
 	}
 
-	// identify what the root module is
+	// identify and read the root module
 	rootModPath := filepath.Join(rootPath, "go.mod")
 	rootModFile, err := os.ReadFile(rootModPath)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	rootModule := modfile.ModulePath(rootModFile)
 
-	for moduleName, modInfo := range moduleMap {
+	for _, modInfo := range moduleMap {
 		// reqStack contains a list of module paths that are required to have local replace statements
 		// reqStack should only contain intra-repository modules
 		reqStack := list.New()
@@ -112,10 +140,12 @@ func executeCrosslink(rootPath string) error {
 		mfParsed, err := modfile.Parse("go.mod", modInfo.moduleContents, nil)
 		if err != nil {
 			// fmt.Printf("Error parsing go.mod file: %v", err)
-			return err
+			return nil, err
 		}
 		// populate initial list of requirements
 		for _, req := range mfParsed.Require {
+			// store all modules requirements for use when pruning
+			// modInfo.moduleRequirements[req.Mod.Path] = struct{}{}
 			if strings.Contains(req.Mod.Path, rootModule) {
 				reqStack.PushBack(req.Mod.Path)
 				alreadyInsertedRepSet.Add(req.Mod.Path)
@@ -128,10 +158,40 @@ func executeCrosslink(rootPath string) error {
 			reqModule := reqStack.Front().Value.(string)
 			reqStack.Remove(reqStack.Front())
 
-			if err != nil {
-				return err
+			modInfo.requiredReplaceStatements[reqModule] = struct{}{}
+
+			// now find all transitive dependencies for the current required module. Only add to stack if they
+			// have not already been added.
+			if value, ok := moduleMap[reqModule]; ok {
+				m, err := modfile.Parse("go.mod", value.moduleContents, nil)
+				if err != nil {
+					return nil, err
+				}
+				for _, transReq := range m.Require {
+					if strings.Contains(transReq.Mod.Path, rootModule) && !alreadyInsertedRepSet.Has(transReq.Mod.Path) {
+						reqStack.PushBack(transReq.Mod.Path)
+						alreadyInsertedRepSet.Add(transReq.Mod.Path)
+					}
+				}
 			}
 
+		}
+	}
+	return moduleMap, nil
+}
+
+// this could be a modeuleInfo method. How to test if it's a method?
+func insertReplace(rootPath string, moduleMap map[string]moduleInfo) error {
+
+	for moduleName, modInfo := range moduleMap {
+		// modfile type that we will work with then write to the mod file in the end
+		mfParsed, err := modfile.Parse("go.mod", modInfo.moduleContents, nil)
+		if err != nil {
+			// fmt.Printf("Error parsing go.mod file: %v", err)
+			return err
+		}
+
+		for reqModule, _ := range modInfo.requiredReplaceStatements {
 			localPath, err := filepath.Rel(moduleName, reqModule)
 			if err != nil {
 				return err
@@ -146,32 +206,32 @@ func executeCrosslink(rootPath string) error {
 			// AddReplace should handle all of these conditions in terms of add and/or verifying
 			// https://cs.opensource.google/go/go/+/master:src/cmd/vendor/golang.org/x/mod/modfile/rule.go;l=1296?q=addReplace
 			// now prune any leftover intra-repository replace statements that are not required
-			// I'm making an assumption here that we will always be leaving the version number blank.
-			// Is this a valid assumption or do I need to handle this?
-			// This may be a valid assumption for the current state otel but is this going to limit the
-			// tools use for outside of OTEL or even future states of OTEL?
 			mfParsed.AddReplace(reqModule, "", localPath, "")
-
-			// now find all transitive dependencies for the current required module. Only add to stack if they
-			// have not already been added.
-			if value, ok := moduleMap[reqModule]; ok {
-				m, err := modfile.Parse("go.mod", value.moduleContents, nil)
-				if err != nil {
-					return err
-				}
-				for _, transReq := range m.Require {
-					if strings.Contains(transReq.Mod.Path, rootModule) && !alreadyInsertedRepSet.Has(transReq.Mod.Path) {
-						reqStack.PushBack(transReq.Mod.Path)
-						alreadyInsertedRepSet.Add(transReq.Mod.Path)
-					}
-				}
-			}
-
 		}
-		// more versioning assumptions
+
+		// identify and read the root module
+		// TODO: DRY
+		rootModPath := filepath.Join(rootPath, "go.mod")
+		rootModFile, err := os.ReadFile(rootModPath)
+		if err != nil {
+			return err
+		}
+		rootModule := modfile.ModulePath(rootModFile)
+
+		// prune
+		// check to see if its intra dependency and no longer presenent
 		for _, rep := range mfParsed.Replace {
-			// check to see if its intra dependency and its not in our inserted set
-			if strings.Contains(rep.Old.Path, rootModule) && !alreadyInsertedRepSet.Has(rep.Old.Path) {
+			// THOUGHTS ON NAMING CONVENTION REQ:
+			// will this cause errors for modules that do not conform to naming conventions?
+			// this may unintentially drop replace statements
+			// will go mod tidy remove replace statements for you?
+			// if not I would want to see if replace is not in the requirements or required replace statements
+			// I believe checking to make sure it's not in the requirements also would alleviate the issue.
+			// Even with the k,v store in mod info does that account for inter-repository replacements. Do those
+			// require transitive replacements that we would drop? This could get messy if we don't enforce the naming convention.
+			// IF IT IS INTRA REPOSITORY (ID'D BY REQ'D REPLACE STATEMENT) AND ITS NOT IN REQUIRED MODULES KV STORE == REMOVE
+			//		This doesn't account for inter repository transitive dependencies on the local machine.
+			if _, ok := modInfo.requiredReplaceStatements[rep.Old.Path]; strings.Contains(rep.Old.Path, rootModule) && !ok {
 				mfParsed.DropReplace(rep.Old.Path, rep.Old.Version)
 			}
 		}
@@ -188,7 +248,6 @@ func executeCrosslink(rootPath string) error {
 		if err != nil {
 			return err
 		}
-
 	}
 
 	return nil
