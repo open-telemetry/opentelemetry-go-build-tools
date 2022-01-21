@@ -14,7 +14,6 @@ import (
 )
 
 /*
-	TODO: Remove set
 	TODO: Convert list to slice
 */
 
@@ -41,37 +40,6 @@ func Crosslink(rootPath string) {
 		panic(fmt.Sprintf("failed to insert replace statements: %v", err))
 	}
 
-}
-
-type Set struct {
-	list map[string]struct{}
-}
-
-func (s *Set) Has(v string) bool {
-	_, ok := s.list[v]
-	return ok
-}
-
-func (s *Set) Add(v string) {
-	s.list[v] = struct{}{}
-}
-
-func (s *Set) Remove(v string) {
-	delete(s.list, v)
-}
-
-func (s *Set) Clear() {
-	s.list = make(map[string]struct{})
-}
-
-func (s *Set) Size() int {
-	return len(s.list)
-}
-
-func NewSet() *Set {
-	s := &Set{}
-	s.list = make(map[string]struct{})
-	return s
 }
 
 type moduleInfo struct {
@@ -134,7 +102,7 @@ func buildDepedencyGraph(rootPath string) (map[string]moduleInfo, error) {
 		// reqStack should only contain intra-repository modules
 		reqStack := list.New()
 		// set is type map[string]struct{} and has standard set capabilties.
-		alreadyInsertedRepSet := NewSet()
+		alreadyInsertedRepSet := make(map[string]struct{})
 
 		// modfile type that we will work with then write to the mod file in the end
 		mfParsed, err := modfile.Parse("go.mod", modInfo.moduleContents, nil)
@@ -148,7 +116,7 @@ func buildDepedencyGraph(rootPath string) (map[string]moduleInfo, error) {
 			// modInfo.moduleRequirements[req.Mod.Path] = struct{}{}
 			if strings.Contains(req.Mod.Path, rootModule) {
 				reqStack.PushBack(req.Mod.Path)
-				alreadyInsertedRepSet.Add(req.Mod.Path)
+				alreadyInsertedRepSet[req.Mod.Path] = struct{}{}
 			}
 		}
 
@@ -168,9 +136,9 @@ func buildDepedencyGraph(rootPath string) (map[string]moduleInfo, error) {
 					return nil, err
 				}
 				for _, transReq := range m.Require {
-					if strings.Contains(transReq.Mod.Path, rootModule) && !alreadyInsertedRepSet.Has(transReq.Mod.Path) {
+					if _, ok := alreadyInsertedRepSet[transReq.Mod.Path]; strings.Contains(transReq.Mod.Path, rootModule) && !ok {
 						reqStack.PushBack(transReq.Mod.Path)
-						alreadyInsertedRepSet.Add(transReq.Mod.Path)
+						alreadyInsertedRepSet[transReq.Mod.Path] = struct{}{}
 					}
 				}
 			}
