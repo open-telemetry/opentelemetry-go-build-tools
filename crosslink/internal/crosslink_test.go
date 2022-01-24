@@ -1,39 +1,21 @@
 package crosslink
 
 import (
-	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	cp "github.com/otiai10/copy"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/mod/modfile"
 )
 
 var (
 	testDataDir, _ = filepath.Abs("../test_data")
+	mockDataDir, _ = filepath.Abs("../mock_test_data")
 )
-
-// WriteTempFiles is a helper function to dynamically write files such as go.mod or version.go used for testing.
-// Duplicated from multimod build tool. Could possible be refactored into root repository common.go
-func writeTempFiles(modFiles map[string][]byte) error {
-	perm := os.FileMode(0700)
-
-	for modFilePath, file := range modFiles {
-		path := filepath.Dir(modFilePath)
-		err := os.MkdirAll(path, perm)
-		if err != nil {
-			return fmt.Errorf("error calling os.MkdirAll(%v, %v): %v", path, perm, err)
-		}
-
-		if err := ioutil.WriteFile(modFilePath, file, perm); err != nil {
-			return fmt.Errorf("could not write temporary file %v", err)
-		}
-	}
-
-	return nil
-}
 
 // simple test case is to create a mock repository with file structure listed below
 // ./go.mod root requires  a which needs to add a replace statement for a and b
@@ -41,37 +23,22 @@ func writeTempFiles(modFiles map[string][]byte) error {
 // ./b/go.mod
 // TODO: add a go.mod that does not match standard naming conventions but is still intra-repository
 func TestExecuteSimple(t *testing.T) {
-	testName := "testExecute"
+	testName := "testSimple"
 
 	tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
 	if err != nil {
 		t.Fatal("creating temp dir:", err)
 	}
 
+	mockDataDir := filepath.Join(mockDataDir, testName)
+	cp.Copy(mockDataDir, tmpRootDir)
+
 	defer os.RemoveAll(tmpRootDir)
 
-	modFiles := map[string][]byte{
-		filepath.Join(tmpRootDir, "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
-			"go 1.17\n\n" +
-			"require (\n\t" +
-			"go.opentelemetry.io/build-tools/crosslink/testroot/testA v1.0.0\n" +
-			")"),
-		filepath.Join(tmpRootDir, "testA", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot/testA\n\n" +
-			"go 1.17\n\n" +
-			"require (\n\t" +
-			"go.opentelemetry.io/build-tools/crosslink/testroot/testB v1.0.0\n" +
-			")"),
-		filepath.Join(tmpRootDir, "testB", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot/testB\n\n" +
-			"go 1.17\n\n"),
-	}
-
-	if err := writeTempFiles(modFiles); err != nil {
-		t.Fatalf("Error writing mod files: %v", err)
-	}
-
-	//err = executeCrosslink(tmpRootDir)
+	assert.NotPanics(t, func() { Crosslink(tmpRootDir) })
 
 	if assert.NoError(t, err, "error message on execution %s") {
+		// a mock_test_data_expected folder could be built instead of building expected files by hand.
 		modFilesExpected := map[string][]byte{
 			filepath.Join(tmpRootDir, "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
 				"go 1.17\n\n" +
@@ -109,9 +76,17 @@ func TestExecuteSimple(t *testing.T) {
 			}
 			expected.Cleanup()
 
-			assert.Equal(t, len(actual.Replace), len(expected.Replace))
-			// do some assertion magic with go-cmp to comapre replace fields
-			// and ignore syntax line positioning garbage we do not care about.
+			// replace structs need to be assorted to avoid flaky fails in test
+			replaceSortFunc := func(x, y *modfile.Replace) bool {
+				return x.Old.Path < y.Old.Path
+			}
+
+			if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(modfile.Replace{}, "Syntax"),
+				cmpopts.IgnoreFields(modfile.File{}, "Require", "Exclude", "Retract", "Syntax"),
+				cmpopts.SortSlices(replaceSortFunc),
+			); diff != "" {
+				t.Errorf("Replace{} mismatch (-want +got):\n%s", diff)
+			}
 		}
 	}
 
