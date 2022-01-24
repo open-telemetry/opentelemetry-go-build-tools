@@ -109,7 +109,8 @@ func buildDepedencyGraph(rootPath string) (map[string]moduleInfo, error) {
 		for _, req := range mfParsed.Require {
 			// store all modules requirements for use when pruning
 			// modInfo.moduleRequirements[req.Mod.Path] = struct{}{}
-			if strings.Contains(req.Mod.Path, rootModule) {
+			// do not add ourselves
+			if strings.Contains(req.Mod.Path, rootModule) && req.Mod.Path != mfParsed.Module.Mod.Path {
 				reqStack = append(reqStack, req.Mod.Path)
 				alreadyInsertedRepSet[req.Mod.Path] = struct{}{}
 			}
@@ -125,14 +126,15 @@ func buildDepedencyGraph(rootPath string) (map[string]moduleInfo, error) {
 			modInfo.requiredReplaceStatements[reqModule] = struct{}{}
 
 			// now find all transitive dependencies for the current required module. Only add to stack if they
-			// have not already been added.
+			// have not already been added and they are not the current module we are working in.
 			if value, ok := moduleMap[reqModule]; ok {
 				m, err := modfile.Parse("go.mod", value.moduleContents, nil)
 				if err != nil {
 					return nil, err
 				}
 				for _, transReq := range m.Require {
-					if _, ok := alreadyInsertedRepSet[transReq.Mod.Path]; strings.Contains(transReq.Mod.Path, rootModule) && !ok {
+					if _, ok := alreadyInsertedRepSet[transReq.Mod.Path]; transReq.Mod.Path != mfParsed.Module.Mod.Path &&
+						strings.Contains(transReq.Mod.Path, rootModule) && !ok {
 						reqStack = append(reqStack, transReq.Mod.Path)
 						alreadyInsertedRepSet[transReq.Mod.Path] = struct{}{}
 					}
