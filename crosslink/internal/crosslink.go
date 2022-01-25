@@ -20,7 +20,7 @@ func Crosslink(rootPath string) {
 			panic("Could not find repo root directory")
 		}
 	}
-	//validate root
+
 	if _, err := os.Stat(filepath.Join(rootPath, "go.mod")); err != nil {
 		panic("Invalid root directory, could not locate go.mod file")
 	}
@@ -57,16 +57,11 @@ type moduleInfo struct {
 	moduleContents []byte
 	// should probably be a set for easy access
 	requiredReplaceStatements map[string]struct{}
-	// may be neccessary for pruning if naming convention is not enforced. Need to think on it.
-	// transform moduleContents Require field into k,v store for easy access.
-	//moduleRequirements map[string]struct{}
-	//could possibly add some type of caching for transitive requirements
 }
 
 func newModuleInfo() *moduleInfo {
 	var mi moduleInfo
 	mi.requiredReplaceStatements = make(map[string]struct{})
-	//mi.moduleRequirements = make(map[string]struct{})
 	return &mi
 }
 
@@ -79,7 +74,6 @@ func buildDepedencyGraph(rootPath string) (map[string]moduleInfo, error) {
 		}
 
 		if filepath.Base(filePath) == "go.mod" {
-			//read file
 			modFile, err := ioutil.ReadFile(filePath)
 			if err != nil {
 				return err
@@ -89,7 +83,6 @@ func buildDepedencyGraph(rootPath string) (map[string]moduleInfo, error) {
 			modInfo.moduleContents = modFile
 			modInfo.moduleFilePath = filePath
 
-			// err this may not be right. Unsure if the use of a pointer here is correct
 			moduleMap[modfile.ModulePath(modFile)] = *modInfo
 		}
 		return nil
@@ -111,20 +104,17 @@ func buildDepedencyGraph(rootPath string) (map[string]moduleInfo, error) {
 		// reqStack contains a list of module paths that are required to have local replace statements
 		// reqStack should only contain intra-repository modules
 		reqStack := make([]string, 0)
-		// set is type map[string]struct{} and has standard set capabilties.
 		alreadyInsertedRepSet := make(map[string]struct{})
 
 		// modfile type that we will work with then write to the mod file in the end
 		mfParsed, err := modfile.Parse("go.mod", modInfo.moduleContents, nil)
 		if err != nil {
-			// fmt.Printf("Error parsing go.mod file: %v", err)
 			return nil, err
 		}
 		// populate initial list of requirements
 		for _, req := range mfParsed.Require {
 			// store all modules requirements for use when pruning
-			// modInfo.moduleRequirements[req.Mod.Path] = struct{}{}
-			// do not add ourselves
+			// do not add current module
 			if strings.Contains(req.Mod.Path, rootModule) && req.Mod.Path != mfParsed.Module.Mod.Path {
 				reqStack = append(reqStack, req.Mod.Path)
 				alreadyInsertedRepSet[req.Mod.Path] = struct{}{}
@@ -132,7 +122,7 @@ func buildDepedencyGraph(rootPath string) (map[string]moduleInfo, error) {
 		}
 
 		// iterate through stack adding replace directives and transitive requirements as needed
-		// if the replace directive already exists for the module path then ensure that it is pointing to the write location
+		// if the replace directive already exists for the module path then ensure that it is pointing to the correct location
 		for len(reqStack) > 0 {
 			var reqModule string
 
@@ -161,13 +151,11 @@ func buildDepedencyGraph(rootPath string) (map[string]moduleInfo, error) {
 	return moduleMap, nil
 }
 
-// this could be a modeuleInfo method. How to test if it's a method?
 func insertReplace(rootPath string, module *moduleInfo) error {
 
 	// modfile type that we will work with then write to the mod file in the end
 	mfParsed, err := modfile.Parse("go.mod", module.moduleContents, nil)
 	if err != nil {
-		// fmt.Printf("Error parsing go.mod file: %v", err)
 		return err
 	}
 
@@ -185,7 +173,6 @@ func insertReplace(rootPath string, module *moduleInfo) error {
 		// see if replace statement already exists for module. Verify if it's the same. If it does not exist then add it.
 		// AddReplace should handle all of these conditions in terms of add and/or verifying
 		// https://cs.opensource.google/go/go/+/master:src/cmd/vendor/golang.org/x/mod/modfile/rule.go;l=1296?q=addReplace
-		// now prune any leftover intra-repository replace statements that are not required
 		mfParsed.AddReplace(reqModule, "", localPath, "")
 	}
 	module.moduleContents, err = mfParsed.Format()
@@ -202,8 +189,7 @@ func pruneReplace(rootPath string, module *moduleInfo) error {
 	if err != nil {
 		return err
 	}
-	// identify and read the root module
-	// TODO: DRY
+
 	rootModPath := filepath.Join(rootPath, "go.mod")
 	rootModFile, err := os.ReadFile(rootModPath)
 	if err != nil {
