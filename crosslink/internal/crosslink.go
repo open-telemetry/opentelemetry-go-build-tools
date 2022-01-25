@@ -12,6 +12,10 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
+// TODO: Print warning if there are modules that were not found in the repository but there are requirements for them in the dependency tree.
+// TODO: Conig for nondestructive vs destructive changes.
+// TODO: Logging to alert user what changes have been made what attempts were made
+
 type moduleInfo struct {
 	moduleFilePath            string
 	moduleContents            []byte
@@ -108,11 +112,22 @@ func buildDepedencyGraph(rootDir string, rootModulePath string) (map[string]modu
 		if err != nil {
 			return nil, err
 		}
+
+		// NOTE: when adding to the stack or writing the replace statements I do not verify that the module exists in the local repository path.
+		// I believe this check should be done to avoid inserting replace statements to local directories that do not exist.
+		// This should maybe be a warning to the user that the replace statement could not be made because the
+		// local repository does not exist in the path.
+		// TODO: Add test case for this
 		// populate initial list of requirements
+		// Modules should only be queued for replacement if they meet the following criteria
+		// 1. They exist within the set of go.mod files discovered during the filepath walk
+		//		- This prevents uneccessary or erroneous replace statements from being added.
+		//		- Crosslink will not make an assumption that a module exists even though it falls under the module path.
+		// 2. They fall under the module path of the root module
+		// 3. They are not the same module that we are currently working with.
 		for _, req := range mfParsed.Require {
-			// store all modules requirements for use when pruning
-			// do not add current module
-			if strings.Contains(req.Mod.Path, rootModulePath) && req.Mod.Path != mfParsed.Module.Mod.Path {
+			if _, existsInPath := moduleMap[req.Mod.Path]; strings.Contains(req.Mod.Path, rootModulePath) &&
+				req.Mod.Path != mfParsed.Module.Mod.Path && existsInPath {
 				reqStack = append(reqStack, req.Mod.Path)
 				alreadyInsertedRepSet[req.Mod.Path] = struct{}{}
 			}
@@ -133,8 +148,11 @@ func buildDepedencyGraph(rootDir string, rootModulePath string) (map[string]modu
 					return nil, err
 				}
 				for _, transReq := range m.Require {
-					if _, ok := alreadyInsertedRepSet[transReq.Mod.Path]; transReq.Mod.Path != mfParsed.Module.Mod.Path &&
-						strings.Contains(transReq.Mod.Path, rootModulePath) && !ok {
+					_, existsInPath := moduleMap[transReq.Mod.Path]
+					_, alreadyInserted := alreadyInsertedRepSet[transReq.Mod.Path]
+					if transReq.Mod.Path != mfParsed.Module.Mod.Path &&
+						strings.Contains(transReq.Mod.Path, rootModulePath) &&
+						!alreadyInserted && existsInPath {
 						reqStack = append(reqStack, transReq.Mod.Path)
 						alreadyInsertedRepSet[transReq.Mod.Path] = struct{}{}
 					}
