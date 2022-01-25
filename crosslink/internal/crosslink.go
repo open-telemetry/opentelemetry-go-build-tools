@@ -24,15 +24,30 @@ func Crosslink(rootPath string) {
 	if _, err := os.Stat(filepath.Join(rootPath, "go.mod")); err != nil {
 		panic("Invalid root directory, could not locate go.mod file")
 	}
+
 	graph, err := buildDepedencyGraph(rootPath)
 	if err != nil {
 		// unsure if we should return the errors up and out or panic here
 		panic(fmt.Sprintf("failed to build dependency graph: %v", err))
 	}
 
-	err = insertReplace(rootPath, graph)
-	if err != nil {
-		panic(fmt.Sprintf("failed to insert replace statements: %v", err))
+	for _, moduleInfo := range graph {
+		err = insertReplace(rootPath, &moduleInfo)
+		if err != nil {
+			panic(fmt.Sprintf("failed to insert replace statements: %v", err))
+		}
+
+		err = pruneReplace(rootPath, &moduleInfo)
+
+		if err != nil {
+			panic(fmt.Sprintf("error pruning replace statements: %v", err))
+		}
+
+		err = writeModules(rootPath, moduleInfo)
+		if err != nil {
+			panic(fmt.Sprintf("error writing go.mod files: %v", err))
+		}
+
 	}
 
 }
@@ -147,73 +162,96 @@ func buildDepedencyGraph(rootPath string) (map[string]moduleInfo, error) {
 }
 
 // this could be a modeuleInfo method. How to test if it's a method?
-func insertReplace(rootPath string, moduleMap map[string]moduleInfo) error {
+func insertReplace(rootPath string, module *moduleInfo) error {
 
-	for moduleName, modInfo := range moduleMap {
-		// modfile type that we will work with then write to the mod file in the end
-		mfParsed, err := modfile.Parse("go.mod", modInfo.moduleContents, nil)
-		if err != nil {
-			// fmt.Printf("Error parsing go.mod file: %v", err)
-			return err
-		}
+	// modfile type that we will work with then write to the mod file in the end
+	mfParsed, err := modfile.Parse("go.mod", module.moduleContents, nil)
+	if err != nil {
+		// fmt.Printf("Error parsing go.mod file: %v", err)
+		return err
+	}
 
-		for reqModule, _ := range modInfo.requiredReplaceStatements {
-			localPath, err := filepath.Rel(moduleName, reqModule)
-			if err != nil {
-				return err
-			}
-			if localPath == "." || localPath == ".." {
-				localPath += "/"
-			} else if !strings.HasPrefix(localPath, "..") {
-				localPath = "./" + localPath
-			}
-
-			// see if replace statement already exists for module. Verify if it's the same. If it does not exist then add it.
-			// AddReplace should handle all of these conditions in terms of add and/or verifying
-			// https://cs.opensource.google/go/go/+/master:src/cmd/vendor/golang.org/x/mod/modfile/rule.go;l=1296?q=addReplace
-			// now prune any leftover intra-repository replace statements that are not required
-			mfParsed.AddReplace(reqModule, "", localPath, "")
-		}
-
-		// identify and read the root module
-		// TODO: DRY
-		rootModPath := filepath.Join(rootPath, "go.mod")
-		rootModFile, err := os.ReadFile(rootModPath)
+	for reqModule, _ := range module.requiredReplaceStatements {
+		localPath, err := filepath.Rel(mfParsed.Module.Mod.Path, reqModule)
 		if err != nil {
 			return err
 		}
-		rootModule := modfile.ModulePath(rootModFile)
-
-		// prune
-		// check to see if its intra dependency and no longer presenent
-		for _, rep := range mfParsed.Replace {
-			// THOUGHTS ON NAMING CONVENTION REQ:
-			// will this cause errors for modules that do not conform to naming conventions?
-			// this may unintentially drop replace statements
-			// will go mod tidy remove replace statements for you?
-			// if not I would want to see if replace is not in the requirements or required replace statements
-			// I believe checking to make sure it's not in the requirements also would alleviate the issue.
-			// Even with the k,v store in mod info does that account for inter-repository replacements. Do those
-			// require transitive replacements that we would drop? This could get messy if we don't enforce the naming convention.
-			// IF IT IS INTRA REPOSITORY (ID'D BY REQ'D REPLACE STATEMENT) AND ITS NOT IN REQUIRED MODULES KV STORE == REMOVE
-			//		This doesn't account for inter repository transitive dependencies on the local machine.
-			if _, ok := modInfo.requiredReplaceStatements[rep.Old.Path]; strings.Contains(rep.Old.Path, rootModule) && !ok {
-				mfParsed.DropReplace(rep.Old.Path, rep.Old.Version)
-			}
+		if localPath == "." || localPath == ".." {
+			localPath += "/"
+		} else if !strings.HasPrefix(localPath, "..") {
+			localPath = "./" + localPath
 		}
 
-		mfParsed.Cleanup()
+		// see if replace statement already exists for module. Verify if it's the same. If it does not exist then add it.
+		// AddReplace should handle all of these conditions in terms of add and/or verifying
+		// https://cs.opensource.google/go/go/+/master:src/cmd/vendor/golang.org/x/mod/modfile/rule.go;l=1296?q=addReplace
+		// now prune any leftover intra-repository replace statements that are not required
+		mfParsed.AddReplace(reqModule, "", localPath, "")
+	}
+	module.moduleContents, err = mfParsed.Format()
+	if err != nil {
+		return err
+	}
 
-		//  now overwrite the existing gomod file
-		gomodFile, err := mfParsed.Format()
-		if err != nil {
-			return err
+	return nil
+}
+
+func pruneReplace(rootPath string, module *moduleInfo) error {
+
+	mfParsed, err := modfile.Parse("go.mod", module.moduleContents, nil)
+	if err != nil {
+		return err
+	}
+	// identify and read the root module
+	// TODO: DRY
+	rootModPath := filepath.Join(rootPath, "go.mod")
+	rootModFile, err := os.ReadFile(rootModPath)
+	if err != nil {
+		return err
+	}
+	rootModule := modfile.ModulePath(rootModFile)
+
+	// prune
+	// check to see if its intra dependency and no longer presenent
+	for _, rep := range mfParsed.Replace {
+		// THOUGHTS ON NAMING CONVENTION REQ:
+		// will this cause errors for modules that do not conform to naming conventions?
+		// this may unintentially drop replace statements
+		// will go mod tidy remove replace statements for you?
+		// if not I would want to see if replace is not in the requirements or required replace statements
+		// I believe checking to make sure it's not in the requirements also would alleviate the issue.
+		// Even with the k,v store in mod info does that account for inter-repository replacements. Do those
+		// require transitive replacements that we would drop? This could get messy if we don't enforce the naming convention.
+		// IF IT IS INTRA REPOSITORY (ID'D BY REQ'D REPLACE STATEMENT) AND ITS NOT IN REQUIRED MODULES KV STORE == REMOVE
+		//		This doesn't account for inter repository transitive dependencies on the local machine.
+		if _, ok := module.requiredReplaceStatements[rep.Old.Path]; strings.Contains(rep.Old.Path, rootModule) && !ok {
+			mfParsed.DropReplace(rep.Old.Path, rep.Old.Version)
 		}
-		//write our updated go.mod file
-		err = os.WriteFile(modInfo.moduleFilePath, gomodFile, 0700)
-		if err != nil {
-			return err
-		}
+	}
+	module.moduleContents, err = mfParsed.Format()
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+func writeModules(rootPath string, module moduleInfo) error {
+
+	mfParsed, err := modfile.Parse("go.mod", module.moduleContents, nil)
+	if err != nil {
+		return err
+	}
+	//  now overwrite the existing gomod file
+	gomodFile, err := mfParsed.Format()
+	if err != nil {
+		return err
+	}
+	//write our updated go.mod file
+	err = os.WriteFile(module.moduleFilePath, gomodFile, 0700)
+	if err != nil {
+		return err
 	}
 
 	return nil
