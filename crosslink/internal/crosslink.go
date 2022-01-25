@@ -37,34 +37,40 @@ func Crosslink(rootPath string) {
 		panic("Invalid root directory, could not locate go.mod file")
 	}
 
-	graph, err := buildDepedencyGraph(rootPath)
+	// identify and read the root module
+	rootModPath := filepath.Join(rootPath, "go.mod")
+	rootModFile, err := os.ReadFile(rootModPath)
+	if err != nil {
+		panic(fmt.Sprintf("Could not read go.mod file in root path: %v", err))
+	}
+	rootModulePath := modfile.ModulePath(rootModFile)
+
+	graph, err := buildDepedencyGraph(rootPath, rootModulePath)
 	if err != nil {
 		// unsure if we should return the errors up and out or panic here
 		panic(fmt.Sprintf("failed to build dependency graph: %v", err))
 	}
 
 	for _, moduleInfo := range graph {
-		err = insertReplace(rootPath, &moduleInfo)
+		err = insertReplace(&moduleInfo)
 		if err != nil {
 			panic(fmt.Sprintf("failed to insert replace statements: %v", err))
 		}
 
-		err = pruneReplace(rootPath, &moduleInfo)
+		err = pruneReplace(rootModulePath, &moduleInfo)
 
 		if err != nil {
 			panic(fmt.Sprintf("error pruning replace statements: %v", err))
 		}
 
-		err = writeModules(rootPath, moduleInfo)
+		err = writeModules(moduleInfo)
 		if err != nil {
 			panic(fmt.Sprintf("error writing go.mod files: %v", err))
 		}
-
 	}
-
 }
 
-func buildDepedencyGraph(rootPath string) (map[string]moduleInfo, error) {
+func buildDepedencyGraph(rootDir string, rootModulePath string) (map[string]moduleInfo, error) {
 	moduleMap := make(map[string]moduleInfo)
 	goModFunc := func(filePath string, info fs.FileInfo, err error) error {
 		if err != nil {
@@ -86,18 +92,10 @@ func buildDepedencyGraph(rootPath string) (map[string]moduleInfo, error) {
 		}
 		return nil
 	}
-	err := filepath.Walk(rootPath, goModFunc)
+	err := filepath.Walk(rootDir, goModFunc)
 	if err != nil {
 		fmt.Printf("error walking root directory: %v", err)
 	}
-
-	// identify and read the root module
-	rootModPath := filepath.Join(rootPath, "go.mod")
-	rootModFile, err := os.ReadFile(rootModPath)
-	if err != nil {
-		return nil, err
-	}
-	rootModule := modfile.ModulePath(rootModFile)
 
 	for _, modInfo := range moduleMap {
 		// reqStack contains a list of module paths that are required to have local replace statements
@@ -114,7 +112,7 @@ func buildDepedencyGraph(rootPath string) (map[string]moduleInfo, error) {
 		for _, req := range mfParsed.Require {
 			// store all modules requirements for use when pruning
 			// do not add current module
-			if strings.Contains(req.Mod.Path, rootModule) && req.Mod.Path != mfParsed.Module.Mod.Path {
+			if strings.Contains(req.Mod.Path, rootModulePath) && req.Mod.Path != mfParsed.Module.Mod.Path {
 				reqStack = append(reqStack, req.Mod.Path)
 				alreadyInsertedRepSet[req.Mod.Path] = struct{}{}
 			}
@@ -124,9 +122,7 @@ func buildDepedencyGraph(rootPath string) (map[string]moduleInfo, error) {
 		// if the replace directive already exists for the module path then ensure that it is pointing to the correct location
 		for len(reqStack) > 0 {
 			var reqModule string
-
 			reqModule, reqStack = reqStack[len(reqStack)-1], reqStack[:len(reqStack)-1]
-
 			modInfo.requiredReplaceStatements[reqModule] = struct{}{}
 
 			// now find all transitive dependencies for the current required module. Only add to stack if they
@@ -138,7 +134,7 @@ func buildDepedencyGraph(rootPath string) (map[string]moduleInfo, error) {
 				}
 				for _, transReq := range m.Require {
 					if _, ok := alreadyInsertedRepSet[transReq.Mod.Path]; transReq.Mod.Path != mfParsed.Module.Mod.Path &&
-						strings.Contains(transReq.Mod.Path, rootModule) && !ok {
+						strings.Contains(transReq.Mod.Path, rootModulePath) && !ok {
 						reqStack = append(reqStack, transReq.Mod.Path)
 						alreadyInsertedRepSet[transReq.Mod.Path] = struct{}{}
 					}
@@ -150,15 +146,14 @@ func buildDepedencyGraph(rootPath string) (map[string]moduleInfo, error) {
 	return moduleMap, nil
 }
 
-func insertReplace(rootPath string, module *moduleInfo) error {
-
+func insertReplace(module *moduleInfo) error {
 	// modfile type that we will work with then write to the mod file in the end
 	mfParsed, err := modfile.Parse("go.mod", module.moduleContents, nil)
 	if err != nil {
 		return err
 	}
 
-	for reqModule, _ := range module.requiredReplaceStatements {
+	for reqModule := range module.requiredReplaceStatements {
 		localPath, err := filepath.Rel(mfParsed.Module.Mod.Path, reqModule)
 		if err != nil {
 			return err
@@ -182,21 +177,12 @@ func insertReplace(rootPath string, module *moduleInfo) error {
 	return nil
 }
 
-func pruneReplace(rootPath string, module *moduleInfo) error {
-
+func pruneReplace(rootModulePath string, module *moduleInfo) error {
 	mfParsed, err := modfile.Parse("go.mod", module.moduleContents, nil)
 	if err != nil {
 		return err
 	}
 
-	rootModPath := filepath.Join(rootPath, "go.mod")
-	rootModFile, err := os.ReadFile(rootModPath)
-	if err != nil {
-		return err
-	}
-	rootModule := modfile.ModulePath(rootModFile)
-
-	// prune
 	// check to see if its intra dependency and no longer presenent
 	for _, rep := range mfParsed.Replace {
 		// THOUGHTS ON NAMING CONVENTION REQ:
@@ -209,7 +195,7 @@ func pruneReplace(rootPath string, module *moduleInfo) error {
 		// require transitive replacements that we would drop? This could get messy if we don't enforce the naming convention.
 		// IF IT IS INTRA REPOSITORY (ID'D BY REQ'D REPLACE STATEMENT) AND ITS NOT IN REQUIRED MODULES KV STORE == REMOVE
 		//		This doesn't account for inter repository transitive dependencies on the local machine.
-		if _, ok := module.requiredReplaceStatements[rep.Old.Path]; strings.Contains(rep.Old.Path, rootModule) && !ok {
+		if _, ok := module.requiredReplaceStatements[rep.Old.Path]; strings.Contains(rep.Old.Path, rootModulePath) && !ok {
 			mfParsed.DropReplace(rep.Old.Path, rep.Old.Version)
 		}
 	}
@@ -219,11 +205,9 @@ func pruneReplace(rootPath string, module *moduleInfo) error {
 	}
 
 	return nil
-
 }
 
-func writeModules(rootPath string, module moduleInfo) error {
-
+func writeModules(module moduleInfo) error {
 	mfParsed, err := modfile.Parse("go.mod", module.moduleContents, nil)
 	if err != nil {
 		return err

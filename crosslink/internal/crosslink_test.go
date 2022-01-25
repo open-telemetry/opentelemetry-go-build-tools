@@ -96,7 +96,6 @@ func TestExecuteSimple(t *testing.T) {
 // ./go.mod requires on a see above
 // ./a/go.mod requires on a see above and also root reference to a due to b's dependency
 // ./b/go.mod requires on root which needs replace statements for root and a
-
 func TestExecuteCyclic(t *testing.T) {
 	testName := "testCyclic"
 
