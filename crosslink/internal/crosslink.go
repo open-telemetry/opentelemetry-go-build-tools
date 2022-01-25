@@ -12,6 +12,18 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
+type moduleInfo struct {
+	moduleFilePath            string
+	moduleContents            []byte
+	requiredReplaceStatements map[string]struct{}
+}
+
+func newModuleInfo() *moduleInfo {
+	var mi moduleInfo
+	mi.requiredReplaceStatements = make(map[string]struct{})
+	return &mi
+}
+
 func Crosslink(rootPath string) {
 	var err error
 	if rootPath == "" {
@@ -50,19 +62,6 @@ func Crosslink(rootPath string) {
 
 	}
 
-}
-
-type moduleInfo struct {
-	moduleFilePath string
-	moduleContents []byte
-	// should probably be a set for easy access
-	requiredReplaceStatements map[string]struct{}
-}
-
-func newModuleInfo() *moduleInfo {
-	var mi moduleInfo
-	mi.requiredReplaceStatements = make(map[string]struct{})
-	return &mi
 }
 
 func buildDepedencyGraph(rootPath string) (map[string]moduleInfo, error) {
