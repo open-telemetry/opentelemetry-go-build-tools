@@ -22,6 +22,14 @@ type moduleInfo struct {
 	requiredReplaceStatements map[string]struct{}
 }
 
+type runConfig struct {
+	rootPath      string
+	verbose       bool
+	excludedPaths []string
+	overwrite     bool
+	prune         bool
+}
+
 func newModuleInfo() *moduleInfo {
 	var mi moduleInfo
 	mi.requiredReplaceStatements = make(map[string]struct{})
