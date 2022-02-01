@@ -6,7 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"log"
+
 	tools "go.opentelemetry.io/build-tools"
+	"go.uber.org/zap"
 	"golang.org/x/mod/modfile"
 )
 
@@ -34,8 +37,16 @@ func newModuleInfo() *moduleInfo {
 	return &mi
 }
 
+var logger *zap.Logger
+
 func Crosslink(rc runConfig) {
 	var err error
+	logger, err = zap.NewProduction()
+	defer logger.Sync()
+	if err != nil {
+		log.Printf("Could not create zap logger: %v", err)
+	}
+
 	if rc.rootPath == "" {
 		rc.rootPath, err = tools.FindRepoRoot()
 		if err != nil {
@@ -109,21 +120,24 @@ func insertReplace(module *moduleInfo, rc runConfig) error {
 		} else if !strings.HasPrefix(localPath, "..") {
 			localPath = "./" + localPath
 		}
-
+		var loggerStr string
 		// see if replace statement already exists for module. Verify if it's the same. If it does not exist then add it.
 		// AddReplace should handle all of these conditions in terms of add and/or verifying
 		// https://cs.opensource.google/go/go/+/master:src/cmd/vendor/golang.org/x/mod/modfile/rule.go;l=1296?q=addReplace
-		if _, exists := containsReplace(mfParsed.Replace, reqModule); exists {
+		if oldReplace, exists := containsReplace(mfParsed.Replace, reqModule); exists {
 			if rc.overwrite {
-				// TODO: log overwriting
+				loggerStr = fmt.Sprintf("Overwriting: Module: %s Old: %s => %s New: %s => %s", mfParsed.Module.Mod.Path, reqModule, oldReplace.New.Path, reqModule, localPath)
 				mfParsed.AddReplace(reqModule, "", localPath, "")
 			} else {
-				// TODO: log cannot replace
+				loggerStr = fmt.Sprintf("Replace already exists: Module: %s : %s => %s \n run with -overwrite flag if update is desired", mfParsed.Module.Mod.Path, reqModule, oldReplace.New.Path)
 			}
 		} else {
 			// does not contain a replace statement. Insert it
-			// TODO:log insert
+			loggerStr = fmt.Sprintf("Inserting replace: Module: %s : %s => %s", mfParsed.Module.Mod.Path, reqModule, localPath)
 			mfParsed.AddReplace(reqModule, "", localPath, "")
+		}
+		if rc.verbose {
+			logger.Sugar().Info(loggerStr)
 		}
 
 	}
@@ -170,6 +184,9 @@ func pruneReplace(rootModulePath string, module *moduleInfo, rc runConfig) error
 		//		This doesn't account for inter repository transitive dependencies on the local machine.
 
 		if _, ok := module.requiredReplaceStatements[rep.Old.Path]; strings.Contains(rep.Old.Path, rootModulePath) && !ok {
+			if rc.verbose {
+				logger.Sugar().Infof("Pruning replace statement: Module %s: %s => %s", mfParsed.Module.Mod.Path, rep.Old.Path, rep.New.Path)
+			}
 			mfParsed.DropReplace(rep.Old.Path, rep.Old.Version)
 		}
 	}
