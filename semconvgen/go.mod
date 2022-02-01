@@ -7,3 +7,5 @@ require (
 	go.opentelemetry.io/build-tools v0.0.0-20210719163622-92017e64f35b
 	golang.org/x/mod v0.5.1
 )
+
+replace go.opentelemetry.io/build-tools => ../

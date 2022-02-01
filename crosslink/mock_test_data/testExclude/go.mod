@@ -8,7 +8,7 @@ require go.opentelemetry.io/build-tools/crosslink/testroot/testA v1.0.0
 replace go.opentelemetry.io/build-tools/crosslink/testroot/testA => ../testA
 
 // included in exclude slice and should be ignored
-//replace go.opentelemetry.io/build-tools/crosslink/testroot/testB => ./testB"
+// replace go.opentelemetry.io/build-tools/crosslink/testroot/testB => ./testB"
 
 // should not be pruned
 replace go.opentelemetry.io/build-tools/excludeme => ../excludeme

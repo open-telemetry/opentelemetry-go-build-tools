@@ -39,7 +39,11 @@ func TestExecuteSimple(t *testing.T) {
 
 	defer os.RemoveAll(tmpRootDir)
 
-	assert.NotPanics(t, func() { Crosslink(tmpRootDir) })
+	config := runConfig{
+		rootPath: tmpRootDir,
+	}
+
+	assert.NotPanics(t, func() { Crosslink(config) })
 
 	if assert.NoError(t, err, "error message on execution %s") {
 		// a mock_test_data_expected folder could be built instead of building expected files by hand.
@@ -113,7 +117,7 @@ func TestExecuteCyclic(t *testing.T) {
 
 	defer os.RemoveAll(tmpRootDir)
 
-	assert.NotPanics(t, func() { Crosslink(tmpRootDir) })
+	assert.NotPanics(t, func() { Crosslink(runConfig{rootPath: tmpRootDir}) })
 
 	if assert.NoError(t, err, "error message on execution %s") {
 		// a mock_test_data_expected folder could be built instead of building expected files by hand.
@@ -189,7 +193,7 @@ func TestOverwrite(t *testing.T) {
 	rc := runConfig{
 		verbose:       true,
 		overwrite:     true,
-		excludedPaths: []string{},
+		excludedPaths: map[string]struct{}{},
 		rootPath:      tmpRootDir,
 	}
 
@@ -263,7 +267,7 @@ func TestNoOverwrite(t *testing.T) {
 	defer os.RemoveAll(tmpRootDir)
 
 	rc := runConfig{
-		excludedPaths: []string{},
+		excludedPaths: map[string]struct{}{},
 		rootPath:      tmpRootDir,
 	}
 
@@ -336,10 +340,10 @@ func TestExclude(t *testing.T) {
 			testCase: "Overwrite off",
 			config: runConfig{
 				prune: true,
-				excludedPaths: []string{
-					"go.opentelemetry.io/build-tools/crosslink/testroot/testB",
-					"go.opentelemetry.io/build-tools/excludeme",
-					"go.opentelemetry.io/build-tools/crosslink/testroot/testA",
+				excludedPaths: map[string]struct{}{
+					"go.opentelemetry.io/build-tools/crosslink/testroot/testB": {},
+					"go.opentelemetry.io/build-tools/excludeme":                {},
+					"go.opentelemetry.io/build-tools/crosslink/testroot/testA": {},
 				},
 			},
 		},
@@ -348,10 +352,10 @@ func TestExclude(t *testing.T) {
 			config: runConfig{
 				overwrite: true,
 				prune:     true,
-				excludedPaths: []string{
-					"go.opentelemetry.io/build-tools/crosslink/testroot/testB",
-					"go.opentelemetry.io/build-tools/excludeme",
-					"go.opentelemetry.io/build-tools/crosslink/testroot/testA",
+				excludedPaths: map[string]struct{}{
+					"go.opentelemetry.io/build-tools/crosslink/testroot/testB": {},
+					"go.opentelemetry.io/build-tools/excludeme":                {},
+					"go.opentelemetry.io/build-tools/crosslink/testroot/testA": {},
 				},
 			},
 		},
@@ -376,8 +380,7 @@ func TestExclude(t *testing.T) {
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testA v1.0.0\n" +
 					")\n" +
 					"replace go.opentelemetry.io/build-tools/crosslink/testroot/testA => ../testA\n\n" +
-					"replace go.opentelemetry.io/build-tools/excludeme => ../excludeme\n\n" +
-					"replace go.opentelemetry.io/build-tools/crosslink/testroot/testB => ./testB"),
+					"replace go.opentelemetry.io/build-tools/excludeme => ../excludeme\n\n"),
 				filepath.Join(tmpRootDir, "testA", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot/testA\n\n" +
 					"go 1.17\n\n" +
 					"require (\n\t" +
@@ -460,7 +463,7 @@ func TestExecutePrune(t *testing.T) {
 		requiredReplaceStatements: mockRequiredReplaceStatements,
 	}
 
-	assert.NoError(t, pruneReplace("go.opentelemetry.io/build-tools/crosslink/testroot", &mockModInfo))
+	assert.NoError(t, pruneReplace("go.opentelemetry.io/build-tools/crosslink/testroot", &mockModInfo, runConfig{prune: true}))
 
 	expectedModFile := []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
 		"go 1.17\n\n" +
