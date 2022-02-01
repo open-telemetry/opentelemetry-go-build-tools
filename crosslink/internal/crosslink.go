@@ -29,6 +29,7 @@ type runConfig struct {
 	excludedPaths map[string]struct{}
 	overwrite     bool
 	prune         bool
+	logger        *zap.Logger
 }
 
 func newModuleInfo() *moduleInfo {
@@ -37,15 +38,22 @@ func newModuleInfo() *moduleInfo {
 	return &mi
 }
 
-var logger *zap.Logger
-
-func Crosslink(rc runConfig) {
-	var err error
-	logger, err = zap.NewProduction()
-	defer logger.Sync()
+func DefaultRunConfig() runConfig {
+	lg, err := zap.NewProduction()
 	if err != nil {
 		log.Printf("Could not create zap logger: %v", err)
 	}
+	ep := make(map[string]struct{})
+	rc := runConfig{
+		logger:        lg,
+		excludedPaths: ep,
+	}
+	return rc
+}
+
+func Crosslink(rc runConfig) {
+	var err error
+	defer rc.logger.Sync()
 
 	if rc.rootPath == "" {
 		rc.rootPath, err = tools.FindRepoRoot()
@@ -108,6 +116,9 @@ func insertReplace(module *moduleInfo, rc runConfig) error {
 	for reqModule := range module.requiredReplaceStatements {
 		// skip excluded
 		if _, exists := rc.excludedPaths[reqModule]; exists {
+			if rc.verbose {
+				rc.logger.Sugar().Infof("Excluded Module %s, ignoring replace", reqModule)
+			}
 			continue
 		}
 
@@ -137,7 +148,7 @@ func insertReplace(module *moduleInfo, rc runConfig) error {
 			mfParsed.AddReplace(reqModule, "", localPath, "")
 		}
 		if rc.verbose {
-			logger.Sugar().Info(loggerStr)
+			rc.logger.Sugar().Info(loggerStr)
 		}
 
 	}
@@ -169,6 +180,9 @@ func pruneReplace(rootModulePath string, module *moduleInfo, rc runConfig) error
 	for _, rep := range mfParsed.Replace {
 		// skip excluded
 		if _, exists := rc.excludedPaths[rep.Old.Path]; exists {
+			if rc.verbose {
+				rc.logger.Sugar().Infof("Excluded Module %s, ignoring prune", rep.Old.Path)
+			}
 			continue
 		}
 
@@ -185,7 +199,7 @@ func pruneReplace(rootModulePath string, module *moduleInfo, rc runConfig) error
 
 		if _, ok := module.requiredReplaceStatements[rep.Old.Path]; strings.Contains(rep.Old.Path, rootModulePath) && !ok {
 			if rc.verbose {
-				logger.Sugar().Infof("Pruning replace statement: Module %s: %s => %s", mfParsed.Module.Mod.Path, rep.Old.Path, rep.New.Path)
+				rc.logger.Sugar().Infof("Pruning replace statement: Module %s: %s => %s", mfParsed.Module.Mod.Path, rep.Old.Path, rep.New.Path)
 			}
 			mfParsed.DropReplace(rep.Old.Path, rep.Old.Version)
 		}

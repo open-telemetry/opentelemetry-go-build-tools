@@ -10,6 +10,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	cp "github.com/otiai10/copy"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 	"golang.org/x/mod/modfile"
 )
 
@@ -17,8 +18,6 @@ var (
 	testDataDir, _ = filepath.Abs("../test_data")
 	mockDataDir, _ = filepath.Abs("../mock_test_data")
 )
-
-// TODO: Test logging when implemented
 
 // simple test case is to create a mock repository with file structure listed below
 // no overwrites will be necceessary and only inserts will be performed
@@ -39,9 +38,8 @@ func TestExecuteSimple(t *testing.T) {
 
 	defer os.RemoveAll(tmpRootDir)
 
-	config := runConfig{
-		rootPath: tmpRootDir,
-	}
+	config := DefaultRunConfig()
+	config.rootPath = tmpRootDir
 
 	assert.NotPanics(t, func() { Crosslink(config) })
 
@@ -117,7 +115,10 @@ func TestExecuteCyclic(t *testing.T) {
 
 	defer os.RemoveAll(tmpRootDir)
 
-	assert.NotPanics(t, func() { Crosslink(runConfig{rootPath: tmpRootDir}) })
+	runConfig := DefaultRunConfig()
+	runConfig.rootPath = tmpRootDir
+
+	assert.NotPanics(t, func() { Crosslink(runConfig) })
 
 	if assert.NoError(t, err, "error message on execution %s") {
 		// a mock_test_data_expected folder could be built instead of building expected files by hand.
@@ -189,12 +190,13 @@ func TestOverwrite(t *testing.T) {
 	cp.Copy(mockDataDir, tmpRootDir)
 
 	defer os.RemoveAll(tmpRootDir)
-
+	lg, _ := zap.NewProduction()
 	rc := runConfig{
 		verbose:       true,
 		overwrite:     true,
 		excludedPaths: map[string]struct{}{},
 		rootPath:      tmpRootDir,
+		logger:        lg,
 	}
 
 	assert.NotPanics(t, func() { Crosslink(rc) })
@@ -265,10 +267,12 @@ func TestNoOverwrite(t *testing.T) {
 	cp.Copy(mockDataDir, tmpRootDir)
 
 	defer os.RemoveAll(tmpRootDir)
-
+	lg, _ := zap.NewProduction()
 	rc := runConfig{
 		excludedPaths: map[string]struct{}{},
 		rootPath:      tmpRootDir,
+		verbose:       true,
+		logger:        lg,
 	}
 
 	assert.NotPanics(t, func() { Crosslink(rc) })
@@ -331,7 +335,7 @@ func TestNoOverwrite(t *testing.T) {
 // Testing exclude functionality for prune, overwrite, and no overwrite.
 func TestExclude(t *testing.T) {
 	testName := "testExclude"
-
+	lg, _ := zap.NewProduction()
 	tests := []struct {
 		testCase string
 		config   runConfig
@@ -345,6 +349,8 @@ func TestExclude(t *testing.T) {
 					"go.opentelemetry.io/build-tools/excludeme":                {},
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testA": {},
 				},
+				verbose: true,
+				logger:  lg,
 			},
 		},
 		{
@@ -357,6 +363,8 @@ func TestExclude(t *testing.T) {
 					"go.opentelemetry.io/build-tools/excludeme":                {},
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testA": {},
 				},
+				logger:  lg,
+				verbose: true,
 			},
 		},
 	}
@@ -462,8 +470,8 @@ func TestExecutePrune(t *testing.T) {
 		moduleContents:            modContents,
 		requiredReplaceStatements: mockRequiredReplaceStatements,
 	}
-
-	assert.NoError(t, pruneReplace("go.opentelemetry.io/build-tools/crosslink/testroot", &mockModInfo, runConfig{prune: true, verbose: true}))
+	lg, _ := zap.NewProduction()
+	assert.NoError(t, pruneReplace("go.opentelemetry.io/build-tools/crosslink/testroot", &mockModInfo, runConfig{prune: true, verbose: true, logger: lg}))
 
 	expectedModFile := []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
 		"go 1.17\n\n" +
