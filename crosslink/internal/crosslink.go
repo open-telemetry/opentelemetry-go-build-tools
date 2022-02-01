@@ -17,19 +17,19 @@ func Crosslink(rc runConfig) {
 	var err error
 	defer rc.logger.Sync()
 
-	if rc.rootPath == "" {
-		rc.rootPath, err = tools.FindRepoRoot()
+	if rc.RootPath == "" {
+		rc.RootPath, err = tools.FindRepoRoot()
 		if err != nil {
 			panic("Could not find repo root directory")
 		}
 	}
 
-	if _, err := os.Stat(filepath.Join(rc.rootPath, "go.mod")); err != nil {
+	if _, err := os.Stat(filepath.Join(rc.RootPath, "go.mod")); err != nil {
 		panic("Invalid root directory, could not locate go.mod file")
 	}
 
 	// identify and read the root module
-	rootModPath := filepath.Join(rc.rootPath, "go.mod")
+	rootModPath := filepath.Join(rc.RootPath, "go.mod")
 	rootModFile, err := os.ReadFile(rootModPath)
 	if err != nil {
 		panic(fmt.Sprintf("Could not read go.mod file in root path: %v", err))
@@ -77,8 +77,8 @@ func insertReplace(module *moduleInfo, rc runConfig) error {
 
 	for reqModule := range module.requiredReplaceStatements {
 		// skip excluded
-		if _, exists := rc.excludedPaths[reqModule]; exists {
-			if rc.verbose {
+		if _, exists := rc.ExcludedPaths[reqModule]; exists {
+			if rc.Verbose {
 				rc.logger.Sugar().Infof("Excluded Module %s, ignoring replace", reqModule)
 			}
 			continue
@@ -98,7 +98,7 @@ func insertReplace(module *moduleInfo, rc runConfig) error {
 		// AddReplace should handle all of these conditions in terms of add and/or verifying
 		// https://cs.opensource.google/go/go/+/master:src/cmd/vendor/golang.org/x/mod/modfile/rule.go;l=1296?q=addReplace
 		if oldReplace, exists := containsReplace(mfParsed.Replace, reqModule); exists {
-			if rc.overwrite {
+			if rc.Overwrite {
 				loggerStr = fmt.Sprintf("Overwriting: Module: %s Old: %s => %s New: %s => %s", mfParsed.Module.Mod.Path, reqModule, oldReplace.New.Path, reqModule, localPath)
 				mfParsed.AddReplace(reqModule, "", localPath, "")
 			} else {
@@ -109,7 +109,7 @@ func insertReplace(module *moduleInfo, rc runConfig) error {
 			loggerStr = fmt.Sprintf("Inserting replace: Module: %s : %s => %s", mfParsed.Module.Mod.Path, reqModule, localPath)
 			mfParsed.AddReplace(reqModule, "", localPath, "")
 		}
-		if rc.verbose {
+		if rc.Verbose {
 			rc.logger.Sugar().Info(loggerStr)
 		}
 

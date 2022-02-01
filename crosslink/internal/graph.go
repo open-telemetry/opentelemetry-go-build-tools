@@ -32,7 +32,7 @@ func buildDepedencyGraph(rc runConfig, rootModulePath string) (map[string]module
 		}
 		return nil
 	}
-	err := filepath.Walk(rc.rootPath, goModFunc)
+	err := filepath.Walk(rc.RootPath, goModFunc)
 	if err != nil {
 		fmt.Printf("error walking root directory: %v", err)
 	}

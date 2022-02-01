@@ -15,19 +15,19 @@ func Prune(rc runConfig) {
 	var err error
 	defer rc.logger.Sync()
 
-	if rc.rootPath == "" {
-		rc.rootPath, err = tools.FindRepoRoot()
+	if rc.RootPath == "" {
+		rc.RootPath, err = tools.FindRepoRoot()
 		if err != nil {
 			panic("Could not find repo root directory")
 		}
 	}
 
-	if _, err := os.Stat(filepath.Join(rc.rootPath, "go.mod")); err != nil {
+	if _, err := os.Stat(filepath.Join(rc.RootPath, "go.mod")); err != nil {
 		panic("Invalid root directory, could not locate go.mod file")
 	}
 
 	// identify and read the root module
-	rootModPath := filepath.Join(rc.rootPath, "go.mod")
+	rootModPath := filepath.Join(rc.RootPath, "go.mod")
 	rootModFile, err := os.ReadFile(rootModPath)
 	if err != nil {
 		panic(fmt.Sprintf("Could not read go.mod file in root path: %v", err))
@@ -62,8 +62,8 @@ func pruneReplace(rootModulePath string, module *moduleInfo, rc runConfig) error
 	// check to see if its intra dependency and no longer presenent
 	for _, rep := range mfParsed.Replace {
 		// skip excluded
-		if _, exists := rc.excludedPaths[rep.Old.Path]; exists {
-			if rc.verbose {
+		if _, exists := rc.ExcludedPaths[rep.Old.Path]; exists {
+			if rc.Verbose {
 				rc.logger.Sugar().Infof("Excluded Module %s, ignoring prune", rep.Old.Path)
 			}
 			continue
@@ -81,7 +81,7 @@ func pruneReplace(rootModulePath string, module *moduleInfo, rc runConfig) error
 		//		This doesn't account for inter repository transitive dependencies on the local machine.
 
 		if _, ok := module.requiredReplaceStatements[rep.Old.Path]; strings.Contains(rep.Old.Path, rootModulePath) && !ok {
-			if rc.verbose {
+			if rc.Verbose {
 				rc.logger.Sugar().Infof("Pruning replace statement: Module %s: %s => %s", mfParsed.Module.Mod.Path, rep.Old.Path, rep.New.Path)
 			}
 			mfParsed.DropReplace(rep.Old.Path, rep.Old.Version)

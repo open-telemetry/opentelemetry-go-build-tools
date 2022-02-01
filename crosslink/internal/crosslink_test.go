@@ -38,7 +38,7 @@ func TestExecuteSimple(t *testing.T) {
 	defer os.RemoveAll(tmpRootDir)
 
 	config := DefaultRunConfig()
-	config.rootPath = tmpRootDir
+	config.RootPath = tmpRootDir
 
 	assert.NotPanics(t, func() { Crosslink(config) })
 
@@ -115,7 +115,7 @@ func TestExecuteCyclic(t *testing.T) {
 	defer os.RemoveAll(tmpRootDir)
 
 	runConfig := DefaultRunConfig()
-	runConfig.rootPath = tmpRootDir
+	runConfig.RootPath = tmpRootDir
 
 	assert.NotPanics(t, func() { Crosslink(runConfig) })
 
@@ -191,10 +191,10 @@ func TestOverwrite(t *testing.T) {
 	defer os.RemoveAll(tmpRootDir)
 	lg, _ := zap.NewProduction()
 	rc := runConfig{
-		verbose:       true,
-		overwrite:     true,
-		excludedPaths: map[string]struct{}{},
-		rootPath:      tmpRootDir,
+		Verbose:       true,
+		Overwrite:     true,
+		ExcludedPaths: map[string]struct{}{},
+		RootPath:      tmpRootDir,
 		logger:        lg,
 	}
 
@@ -268,9 +268,9 @@ func TestNoOverwrite(t *testing.T) {
 	defer os.RemoveAll(tmpRootDir)
 	lg, _ := zap.NewProduction()
 	rc := runConfig{
-		excludedPaths: map[string]struct{}{},
-		rootPath:      tmpRootDir,
-		verbose:       true,
+		ExcludedPaths: map[string]struct{}{},
+		RootPath:      tmpRootDir,
+		Verbose:       true,
 		logger:        lg,
 	}
 
@@ -342,28 +342,28 @@ func TestExclude(t *testing.T) {
 		{
 			testCase: "Overwrite off",
 			config: runConfig{
-				prune: true,
-				excludedPaths: map[string]struct{}{
+				Prune: true,
+				ExcludedPaths: map[string]struct{}{
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testB": {},
 					"go.opentelemetry.io/build-tools/excludeme":                {},
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testA": {},
 				},
-				verbose: true,
+				Verbose: true,
 				logger:  lg,
 			},
 		},
 		{
 			testCase: "Overwrite on",
 			config: runConfig{
-				overwrite: true,
-				prune:     true,
-				excludedPaths: map[string]struct{}{
+				Overwrite: true,
+				Prune:     true,
+				ExcludedPaths: map[string]struct{}{
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testB": {},
 					"go.opentelemetry.io/build-tools/excludeme":                {},
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testA": {},
 				},
 				logger:  lg,
-				verbose: true,
+				Verbose: true,
 			},
 		},
 	}
