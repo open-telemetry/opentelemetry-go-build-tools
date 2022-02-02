@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	testDataDir, _ = filepath.Abs("../test_data")
-	mockDataDir, _ = filepath.Abs("../mock_test_data")
+	testDataDir, _ = filepath.Abs("./test_data")
+	mockDataDir, _ = filepath.Abs("./mock_test_data")
 )
 
 func TestCrosslink(t *testing.T) {
