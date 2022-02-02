@@ -48,7 +48,7 @@ Overwrite gives crosslink permission to update existing replacement paths in add
     crosslink --root=/users/foo/multimodule-go-repo --overwrite
 
 ### –exclude
-Exclude is a set of go modules that crosslink will ignore when replacing or pruning. It is expected that a list of comma separated values will be provided in one or multiple calls to exclude.
+Exclude is a set of go modules that crosslink will ignore when replacing or pruning. It is expected that a list of comma separated values will be provided in one or multiple calls to exclude. Excluded module names should be the old value in the replacement path. For example, passing `go.foo.io/test` would exclude this replace statement from any operation `replace go.foo.io/test => ./test`.
 
 A single call to exclude
     crosslink --overwrite --exclude=github.com/foo/bar/modA,github.com/foo/bar/modB
