@@ -24,7 +24,6 @@ import (
 
 func Crosslink(rc runConfig) {
 	var err error
-	defer rc.logger.Sync()
 
 	rootModulePath, err := identifyRootModule(rc.RootPath)
 	if err != nil {
@@ -52,6 +51,10 @@ func Crosslink(rc runConfig) {
 		if err != nil {
 			panic(fmt.Sprintf("error writing gomod files: %v", err))
 		}
+	}
+	err = rc.logger.Sync()
+	if err != nil {
+		fmt.Printf("failed to sync logger:  %v", err)
 	}
 }
 
@@ -87,14 +90,20 @@ func insertReplace(module *moduleInfo, rc runConfig) error {
 		if oldReplace, exists := containsReplace(mfParsed.Replace, reqModule); exists {
 			if rc.Overwrite {
 				loggerStr = fmt.Sprintf("Overwriting: Module: %s Old: %s => %s New: %s => %s", mfParsed.Module.Mod.Path, reqModule, oldReplace.New.Path, reqModule, localPath)
-				mfParsed.AddReplace(reqModule, "", localPath, "")
+				err = mfParsed.AddReplace(reqModule, "", localPath, "")
+				if err != nil {
+					rc.logger.Sugar().Errorf("failed to add replace statement %v", err)
+				}
 			} else {
 				loggerStr = fmt.Sprintf("Replace already exists: Module: %s : %s => %s \n run with -overwrite flag if update is desired", mfParsed.Module.Mod.Path, reqModule, oldReplace.New.Path)
 			}
 		} else {
 			// does not contain a replace statement. Insert it
 			loggerStr = fmt.Sprintf("Inserting replace: Module: %s : %s => %s", mfParsed.Module.Mod.Path, reqModule, localPath)
-			mfParsed.AddReplace(reqModule, "", localPath, "")
+			err = mfParsed.AddReplace(reqModule, "", localPath, "")
+			if err != nil {
+				rc.logger.Sugar().Errorf("failed to add replace statement %v", err)
+			}
 		}
 		if rc.Verbose {
 			rc.logger.Sugar().Info(loggerStr)

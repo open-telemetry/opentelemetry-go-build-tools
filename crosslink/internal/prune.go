@@ -22,7 +22,6 @@ import (
 )
 
 func Prune(rc runConfig) {
-	defer rc.logger.Sync()
 	var err error
 
 	rootModulePath, err := identifyRootModule(rc.RootPath)
@@ -47,6 +46,10 @@ func Prune(rc runConfig) {
 			panic(fmt.Sprintf("error writing go.mod files: %v", err))
 		}
 	}
+	err = rc.logger.Sync()
+	if err != nil {
+		fmt.Printf("failed to sync logger:  %v", err)
+	}
 }
 
 func pruneReplace(rootModulePath string, module *moduleInfo, rc runConfig) error {
@@ -69,7 +72,11 @@ func pruneReplace(rootModulePath string, module *moduleInfo, rc runConfig) error
 			if rc.Verbose {
 				rc.logger.Sugar().Infof("Pruning replace statement: Module %s: %s => %s", mfParsed.Module.Mod.Path, rep.Old.Path, rep.New.Path)
 			}
-			mfParsed.DropReplace(rep.Old.Path, rep.Old.Version)
+			err = mfParsed.DropReplace(rep.Old.Path, rep.Old.Version)
+			if err != nil {
+				rc.logger.Sugar().Errorf("error dropping replace statement: %v", err)
+			}
+
 		}
 	}
 	module.moduleContents, err = mfParsed.Format()

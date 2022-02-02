@@ -37,7 +37,10 @@ func TestPrune(t *testing.T) {
 	}
 
 	mockDataDir := filepath.Join(mockDataDir, testName)
-	cp.Copy(mockDataDir, tmpRootDir)
+	err = cp.Copy(mockDataDir, tmpRootDir)
+	if err != nil {
+		t.Errorf("error copying directory: %v", err)
+	}
 
 	err = renameGoMod(tmpRootDir)
 	if err != nil {

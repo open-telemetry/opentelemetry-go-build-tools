@@ -43,7 +43,10 @@ func renameGoMod(fp string) error {
 
 		if filepath.Base(filePath) == "gomod" {
 			dir, _ := filepath.Split(filePath)
-			os.Rename(filePath, filepath.Join(dir, "go.mod"))
+			err = os.Rename(filePath, filepath.Join(dir, "go.mod"))
+			if err != nil {
+				return err
+			}
 		}
 		return nil
 	}
@@ -116,7 +119,10 @@ func TestCrosslink(t *testing.T) {
 			}
 
 			mockDataDir := filepath.Join(mockDataDir, test.testName)
-			cp.Copy(mockDataDir, tmpRootDir)
+			err = cp.Copy(mockDataDir, tmpRootDir)
+			if err != nil {
+				t.Errorf("error copying directory: %v", err)
+			}
 
 			err = renameGoMod(tmpRootDir)
 			if err != nil {
@@ -167,7 +173,6 @@ func TestCrosslink(t *testing.T) {
 
 func TestOverwrite(t *testing.T) {
 	lg, _ := zap.NewProduction()
-	defer lg.Sync()
 
 	tests := []struct {
 		testName string
@@ -235,7 +240,10 @@ func TestOverwrite(t *testing.T) {
 			}
 
 			mockDataDir := filepath.Join(mockDataDir, test.testName)
-			cp.Copy(mockDataDir, tmpRootDir)
+			err = cp.Copy(mockDataDir, tmpRootDir)
+			if err != nil {
+				t.Errorf("error copying directory: %v", err)
+			}
 
 			err = renameGoMod(tmpRootDir)
 			if err != nil {
@@ -285,6 +293,10 @@ func TestOverwrite(t *testing.T) {
 			os.RemoveAll(tmpRootDir)
 		})
 	}
+	err := lg.Sync()
+	if err != nil {
+		fmt.Printf("failed to sync logger:  %v", err)
+	}
 
 }
 
@@ -333,7 +345,10 @@ func TestExclude(t *testing.T) {
 			}
 
 			mockDataDir := filepath.Join(mockDataDir, testName)
-			cp.Copy(mockDataDir, tmpRootDir)
+			err = cp.Copy(mockDataDir, tmpRootDir)
+			if err != nil {
+				t.Errorf("error copying directory: %v", err)
+			}
 
 			err = renameGoMod(tmpRootDir)
 			if err != nil {
