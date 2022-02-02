@@ -9,6 +9,7 @@ Crosslink makes certain assumptions about your repository. Due to these assumpti
    - For example `go.crosslink.io/crosslink/foo` falls under the `go.crosslink.io/crosslink` namespace but `go.crosslink.io/bar` does not. 
    - Root module namespace is defined either by the module that exists in the provided `--root` flag directory or the `go.mod` file located at highest level of the repository. 
 3. Crosslink does not maintain or include version numbers in replace statements. Replace statements are always inserted or overwritten with no version numbers. 
+4. Crosslink allows users to `exclude` modules. Exclude means that crosslink will not perform any replace or pruning operations where the `old path == exclude path`. Operations will still be performed inside modules where `module path == exclude path`.
 
 ## Usage
 ### Latest Release

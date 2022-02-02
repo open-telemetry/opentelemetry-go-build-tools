@@ -23,14 +23,6 @@ func Crosslink(rc runConfig) {
 	}
 
 	for _, moduleInfo := range graph {
-		// do not do anything with excluded
-		// TODO: Readdress what `excluded` means more concretely. Should crosslink ignore
-		// all references to excluded module or only for replacing and pruning?
-		// If an exluded module is named should that stop crosslink from making edits to that go.mod file?
-		//if _, exists := rc.excludedPaths[modName]; exists {
-		//	continue
-		//}
-
 		err = insertReplace(&moduleInfo, rc)
 		if err != nil {
 			panic(fmt.Sprintf("failed to insert replace statements: %v", err))
