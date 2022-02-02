@@ -24,7 +24,7 @@ var (
 // ./a/go.mod a requires  b which needs a replace statement for b
 // ./b/go.mod
 // TODO: add a go.mod that does not match standard naming conventions but is still intra-repository
-func TestExecuteSimple(t *testing.T) {
+func TestSimple(t *testing.T) {
 	testName := "testSimple"
 
 	tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
@@ -101,7 +101,7 @@ func TestExecuteSimple(t *testing.T) {
 // ./go.mod requires on a see above
 // ./a/go.mod requires on a see above and also root reference to a due to b's dependency
 // ./b/go.mod requires on root which needs replace statements for root and a
-func TestExecuteCyclic(t *testing.T) {
+func TestCyclic(t *testing.T) {
 	testName := "testCyclic"
 
 	tmpRootDir, err := os.MkdirTemp(testDataDir, testName)

@@ -13,8 +13,6 @@ import (
 func Prune(rc runConfig) {
 	defer rc.logger.Sync()
 	var err error
-	defer rc.logger.Sync()
-
 	if rc.RootPath == "" {
 		rc.RootPath, err = tools.FindRepoRoot()
 		if err != nil {
@@ -59,7 +57,7 @@ func pruneReplace(rootModulePath string, module *moduleInfo, rc runConfig) error
 		return err
 	}
 
-	// check to see if its intra dependency and no longer presenent
+	// check to see if its intra dependency and no longer present
 	for _, rep := range mfParsed.Replace {
 		// skip excluded
 		if _, exists := rc.ExcludedPaths[rep.Old.Path]; exists {
@@ -68,17 +66,6 @@ func pruneReplace(rootModulePath string, module *moduleInfo, rc runConfig) error
 			}
 			continue
 		}
-
-		// THOUGHTS ON NAMING CONVENTION REQ:
-		// will this cause errors for modules that do not conform to naming conventions?
-		// this may unintentially drop replace statements
-		// will go mod tidy remove replace statements for you?
-		// if not I would want to see if replace is not in the requirements or required replace statements
-		// I believe checking to make sure it's not in the requirements also would alleviate the issue.
-		// Even with the k,v store in mod info does that account for inter-repository replacements. Do those
-		// require transitive replacements that we would drop? This could get messy if we don't enforce the naming convention.
-		// IF IT IS INTRA REPOSITORY (ID'D BY REQ'D REPLACE STATEMENT) AND ITS NOT IN REQUIRED MODULES KV STORE == REMOVE
-		//		This doesn't account for inter repository transitive dependencies on the local machine.
 
 		if _, ok := module.requiredReplaceStatements[rep.Old.Path]; strings.Contains(rep.Old.Path, rootModulePath) && !ok {
 			if rc.Verbose {

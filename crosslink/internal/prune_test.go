@@ -14,7 +14,7 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
-func TestExecutePrune(t *testing.T) {
+func TestPrune(t *testing.T) {
 	testName := "testPrune"
 
 	tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
