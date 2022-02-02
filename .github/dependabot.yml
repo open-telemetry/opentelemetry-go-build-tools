@@ -76,3 +76,14 @@ updates:
     schedule:
       day: sunday
       interval: weekly
+  -
+    package-ecosystem: gomod
+    directory: /crosslink
+    labels:
+      - dependencies
+      - go
+      - "Skip Changelog"
+    schedule:
+      day: sunday
+      interval: weekly
+
