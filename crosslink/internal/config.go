@@ -12,6 +12,12 @@ type moduleInfo struct {
 	requiredReplaceStatements map[string]struct{}
 }
 
+func newModuleInfo() *moduleInfo {
+	var mi moduleInfo
+	mi.requiredReplaceStatements = make(map[string]struct{})
+	return &mi
+}
+
 type runConfig struct {
 	RootPath string
 	Verbose  bool
@@ -20,12 +26,6 @@ type runConfig struct {
 	Overwrite     bool
 	Prune         bool
 	logger        *zap.Logger
-}
-
-func newModuleInfo() *moduleInfo {
-	var mi moduleInfo
-	mi.requiredReplaceStatements = make(map[string]struct{})
-	return &mi
 }
 
 func DefaultRunConfig() runConfig {

@@ -43,11 +43,7 @@ replace go.opentelemetry.io/build-tools/multimod => ../multimod
 // inter repository replace statements should remain
 replace foo.opentelemetery.io/bar => ../bar
 
-// The current repository could contain a testK go.mod file but the user would like to point to a module in a
-// repository outside of the current. 
-// The problem lies in the replacement. If a user manually defined this replace
-// statement crosslink would overwrite it with a replace statement to the intra-repository path. 
-// This could be a direct or transitive dependency.
+// Inter-repository with a transitive dependency. 
 // Not an issue with pruning, this would be an issue with inserting replace statements. Pruning would see
 // that this is in the list of required replace statements and would not remove. 
 replace go.opentelemetry.io/build-tools/crosslink/testroot/testK => ../crosslinkcopy/testK
