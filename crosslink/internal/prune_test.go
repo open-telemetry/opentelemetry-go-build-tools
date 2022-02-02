@@ -25,10 +25,15 @@ func TestPrune(t *testing.T) {
 	mockDataDir := filepath.Join(mockDataDir, testName)
 	cp.Copy(mockDataDir, tmpRootDir)
 
+	err = renameGoMod(tmpRootDir)
+	if err != nil {
+		t.Errorf("error renaming gomod files: %v", err)
+	}
+
 	defer os.RemoveAll(tmpRootDir)
 	modContents, err := ioutil.ReadFile(filepath.Join(tmpRootDir, "go.mod"))
 	if err != nil {
-		t.Errorf("failed to read mock go.mod file: %v", err)
+		t.Errorf("failed to read mock gomod file: %v", err)
 	}
 
 	mockRequiredReplaceStatements := map[string]struct{}{

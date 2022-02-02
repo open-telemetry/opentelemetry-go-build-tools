@@ -36,14 +36,14 @@ func Crosslink(rc runConfig) {
 
 		err = writeModules(moduleInfo)
 		if err != nil {
-			panic(fmt.Sprintf("error writing go.mod files: %v", err))
+			panic(fmt.Sprintf("error writing gomod files: %v", err))
 		}
 	}
 }
 
 func insertReplace(module *moduleInfo, rc runConfig) error {
 	// modfile type that we will work with then write to the mod file in the end
-	mfParsed, err := modfile.Parse("go.mod", module.moduleContents, nil)
+	mfParsed, err := modfile.Parse("gomod", module.moduleContents, nil)
 	if err != nil {
 		return err
 	}

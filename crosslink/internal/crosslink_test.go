@@ -1,6 +1,8 @@
 package crosslink
 
 import (
+	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
@@ -17,6 +19,26 @@ var (
 	testDataDir, _ = filepath.Abs("./test_data")
 	mockDataDir, _ = filepath.Abs("./mock_test_data")
 )
+
+func renameGoMod(fp string) error {
+	renameFunc := func(filePath string, info fs.FileInfo, err error) error {
+		if err != nil {
+			fmt.Printf("Warning: file could not be read during filepath.Walk: %v", err)
+			return nil
+		}
+
+		if filepath.Base(filePath) == "gomod" {
+			dir, _ := filepath.Split(filePath)
+			os.Rename(filePath, filepath.Join(dir, "go.mod"))
+		}
+		return nil
+	}
+	err := filepath.Walk(fp, renameFunc)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 func TestCrosslink(t *testing.T) {
 	tests := []struct {
@@ -81,6 +103,12 @@ func TestCrosslink(t *testing.T) {
 
 			mockDataDir := filepath.Join(mockDataDir, test.testName)
 			cp.Copy(mockDataDir, tmpRootDir)
+
+			err = renameGoMod(tmpRootDir)
+			if err != nil {
+				t.Errorf("error renaming gomod files: %v", err)
+			}
+
 			test.config.RootPath = tmpRootDir
 			assert.NotPanics(t, func() { Crosslink(test.config) })
 
@@ -194,6 +222,12 @@ func TestOverwrite(t *testing.T) {
 
 			mockDataDir := filepath.Join(mockDataDir, test.testName)
 			cp.Copy(mockDataDir, tmpRootDir)
+
+			err = renameGoMod(tmpRootDir)
+			if err != nil {
+				t.Errorf("error renaming gomod files: %v", err)
+			}
+
 			test.config.RootPath = tmpRootDir
 
 			assert.NotPanics(t, func() { Crosslink(test.config) })
@@ -286,6 +320,11 @@ func TestExclude(t *testing.T) {
 
 			mockDataDir := filepath.Join(mockDataDir, testName)
 			cp.Copy(mockDataDir, tmpRootDir)
+
+			err = renameGoMod(tmpRootDir)
+			if err != nil {
+				t.Errorf("error renaming gomod files: %v", err)
+			}
 
 			assert.NotPanics(t, func() { Crosslink(tc.config) })
 			if assert.NoError(t, err, "error message on execution %s") {
