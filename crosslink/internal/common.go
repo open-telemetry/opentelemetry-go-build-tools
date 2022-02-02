@@ -2,7 +2,9 @@ package crosslink
 
 import (
 	"os"
+	"path/filepath"
 
+	tools "go.opentelemetry.io/build-tools"
 	"golang.org/x/mod/modfile"
 )
 
@@ -23,4 +25,27 @@ func writeModules(module moduleInfo) error {
 	}
 
 	return nil
+}
+
+func identifyRootModule(r string) (string, error) {
+	var err error
+	rootPath := r
+	if rootPath == "" {
+		rootPath, err = tools.FindRepoRoot()
+		if err != nil {
+			return "", err
+		}
+	}
+
+	if _, err := os.Stat(filepath.Join(rootPath, "go.mod")); err != nil {
+		return "", err
+	}
+
+	// identify and read the root module
+	rootModPath := filepath.Join(rootPath, "go.mod")
+	rootModFile, err := os.ReadFile(rootModPath)
+	if err != nil {
+		return "", err
+	}
+	return modfile.ModulePath(rootModFile), nil
 }

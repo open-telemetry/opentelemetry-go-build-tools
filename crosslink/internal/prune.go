@@ -2,35 +2,19 @@ package crosslink
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
-	tools "go.opentelemetry.io/build-tools"
 	"golang.org/x/mod/modfile"
 )
 
 func Prune(rc runConfig) {
 	defer rc.logger.Sync()
 	var err error
-	if rc.RootPath == "" {
-		rc.RootPath, err = tools.FindRepoRoot()
-		if err != nil {
-			panic("Could not find repo root directory")
-		}
-	}
 
-	if _, err := os.Stat(filepath.Join(rc.RootPath, "go.mod")); err != nil {
-		panic("Invalid root directory, could not locate go.mod file")
-	}
-
-	// identify and read the root module
-	rootModPath := filepath.Join(rc.RootPath, "go.mod")
-	rootModFile, err := os.ReadFile(rootModPath)
+	rootModulePath, err := identifyRootModule(rc.RootPath)
 	if err != nil {
-		panic(fmt.Sprintf("Could not read go.mod file in root path: %v", err))
+		panic(fmt.Sprintf("failed to identify root module: %v", err))
 	}
-	rootModulePath := modfile.ModulePath(rootModFile)
 
 	graph, err := buildDepedencyGraph(rc, rootModulePath)
 	if err != nil {
