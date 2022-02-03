@@ -16,50 +16,17 @@ package crosslink
 
 import (
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	cp "github.com/otiai10/copy"
+
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	"golang.org/x/mod/modfile"
 )
-
-var (
-	testDataDir, _ = filepath.Abs("./test_data")
-	mockDataDir, _ = filepath.Abs("./mock_test_data")
-)
-
-// the odd naming convention and renaming function is required to avoid dependabot
-// failures. If the mock gomod files were named go.mod by default our precommit
-// dependabot check would fail. Dependabot does not allow us to ignore directories
-// so instead we rename the gomod files to go.mod after directories are copied.
-func renameGoMod(fp string) error {
-	renameFunc := func(filePath string, info fs.FileInfo, err error) error {
-		if err != nil {
-			fmt.Printf("Warning: file could not be read during filepath.Walk: %v", err)
-			return nil
-		}
-
-		if filepath.Base(filePath) == "gomod" {
-			dir, _ := filepath.Split(filePath)
-			err = os.Rename(filePath, filepath.Join(dir, "go.mod"))
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	}
-	err := filepath.Walk(fp, renameFunc)
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
 func TestCrosslink(t *testing.T) {
 	tests := []struct {
@@ -117,15 +84,9 @@ func TestCrosslink(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.testName, func(t *testing.T) {
-			tmpRootDir, err := os.MkdirTemp(testDataDir, test.testName)
+			tmpRootDir, err := createTempTestDir(test.testName)
 			if err != nil {
 				t.Fatal("creating temp dir:", err)
-			}
-
-			mockDataDir := filepath.Join(mockDataDir, test.testName)
-			err = cp.Copy(mockDataDir, tmpRootDir)
-			if err != nil {
-				t.Errorf("error copying directory: %v", err)
 			}
 
 			err = renameGoMod(tmpRootDir)
@@ -238,15 +199,9 @@ func TestOverwrite(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.testName, func(t *testing.T) {
-			tmpRootDir, err := os.MkdirTemp(testDataDir, test.testName)
+			tmpRootDir, err := createTempTestDir(test.testName)
 			if err != nil {
 				t.Fatal("creating temp dir:", err)
-			}
-
-			mockDataDir := filepath.Join(mockDataDir, test.testName)
-			err = cp.Copy(mockDataDir, tmpRootDir)
-			if err != nil {
-				t.Errorf("error copying directory: %v", err)
 			}
 
 			err = renameGoMod(tmpRootDir)
@@ -341,17 +296,11 @@ func TestExclude(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.testCase, func(t *testing.T) {
-			tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
+	for _, test := range tests {
+		t.Run(test.testCase, func(t *testing.T) {
+			tmpRootDir, err := createTempTestDir(testName)
 			if err != nil {
 				t.Fatal("creating temp dir:", err)
-			}
-
-			mockDataDir := filepath.Join(mockDataDir, testName)
-			err = cp.Copy(mockDataDir, tmpRootDir)
-			if err != nil {
-				t.Errorf("error copying directory: %v", err)
 			}
 
 			err = renameGoMod(tmpRootDir)
@@ -359,7 +308,7 @@ func TestExclude(t *testing.T) {
 				t.Errorf("error renaming gomod files: %v", err)
 			}
 
-			assert.NotPanics(t, func() { Crosslink(tc.config) })
+			assert.NotPanics(t, func() { Crosslink(test.config) })
 			if assert.NoError(t, err, "error message on execution %s") {
 				// a mock_test_data_expected folder could be built instead of building expected files by hand.
 				modFilesExpected := map[string][]byte{
@@ -384,7 +333,7 @@ func TestExclude(t *testing.T) {
 					modFileActual, err := os.ReadFile(modFilePath)
 
 					if err != nil {
-						t.Fatalf("TestCase: %s, error reading actual mod files: %v", tc.testCase, err)
+						t.Fatalf("TestCase: %s, error reading actual mod files: %v", test.testCase, err)
 					}
 
 					actual, err := modfile.Parse("go.mod", modFileActual, nil)
@@ -395,7 +344,7 @@ func TestExclude(t *testing.T) {
 
 					expected, err := modfile.Parse("go.mod", modFilesExpected, nil)
 					if err != nil {
-						t.Fatalf("TestCase: %s ,error decoding expected mod file: %v", tc.testCase, err)
+						t.Fatalf("TestCase: %s ,error decoding expected mod file: %v", test.testCase, err)
 					}
 					expected.Cleanup()
 
@@ -408,7 +357,7 @@ func TestExclude(t *testing.T) {
 						cmpopts.IgnoreFields(modfile.File{}, "Require", "Exclude", "Retract", "Syntax"),
 						cmpopts.SortSlices(replaceSortFunc),
 					); diff != "" {
-						t.Errorf("TestCase: %s \n Replace{} mismatch (-want +got):\n%s", tc.testCase, diff)
+						t.Errorf("TestCase: %s \n Replace{} mismatch (-want +got):\n%s", test.testCase, diff)
 					}
 				}
 			}

@@ -22,7 +22,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	cp "github.com/otiai10/copy"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	"golang.org/x/mod/modfile"
@@ -31,15 +30,9 @@ import (
 func TestPrune(t *testing.T) {
 	testName := "testPrune"
 
-	tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
+	tmpRootDir, err := createTempTestDir(testName)
 	if err != nil {
 		t.Fatal("creating temp dir:", err)
-	}
-
-	mockDataDir := filepath.Join(mockDataDir, testName)
-	err = cp.Copy(mockDataDir, tmpRootDir)
-	if err != nil {
-		t.Errorf("error copying directory: %v", err)
 	}
 
 	err = renameGoMod(tmpRootDir)
