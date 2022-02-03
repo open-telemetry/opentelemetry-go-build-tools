@@ -21,6 +21,7 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
+// main entry point for the Prune subcommand.
 func Prune(rc runConfig) {
 	var err error
 
@@ -52,6 +53,7 @@ func Prune(rc runConfig) {
 	}
 }
 
+// pruneReplace removes any extraneous intra-repository replace statements.
 func pruneReplace(rootModulePath string, module *moduleInfo, rc runConfig) error {
 	mfParsed, err := modfile.Parse("go.mod", module.moduleContents, nil)
 	if err != nil {

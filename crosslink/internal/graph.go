@@ -24,6 +24,8 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
+// Creates a dependency graph for all intra-repository go.mod files. Only adds
+// modules that fall under the root module namespace.
 func buildDepedencyGraph(rc runConfig, rootModulePath string) (map[string]moduleInfo, error) {
 	moduleMap := make(map[string]moduleInfo)
 	goModFunc := func(filePath string, info fs.FileInfo, err error) error {
@@ -63,11 +65,6 @@ func buildDepedencyGraph(rc runConfig, rootModulePath string) (map[string]module
 			return nil, err
 		}
 
-		// NOTE: when adding to the stack or writing the replace statements I do not verify that the module exists in the local repository path.
-		// I believe this check should be done to avoid inserting replace statements to local directories that do not exist.
-		// This should maybe be a warning to the user that the replace statement could not be made because the
-		// local repository does not exist in the path.
-		// TODO: Add test case for this
 		// populate initial list of requirements
 		// Modules should only be queued for replacement if they meet the following criteria
 		// 1. They exist within the set of go.mod files discovered during the filepath walk

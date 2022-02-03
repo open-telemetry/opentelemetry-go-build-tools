@@ -33,9 +33,8 @@ func newModuleInfo() *moduleInfo {
 }
 
 type runConfig struct {
-	RootPath string
-	Verbose  bool
-	// TODO: callout excluded path should be original module name not replaced module name. aka go.opentelemetry.io not ../replace
+	RootPath      string
+	Verbose       bool
 	ExcludedPaths map[string]struct{}
 	Overwrite     bool
 	Prune         bool
