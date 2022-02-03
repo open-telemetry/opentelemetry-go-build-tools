@@ -34,6 +34,10 @@ var (
 	mockDataDir, _ = filepath.Abs("./mock_test_data")
 )
 
+// the odd naming convention and renaming function is required to avoid dependabot
+// failures. If the mock gomod files were named go.mod by default our precommit
+// dependabot check would fail. Dependabot does not allow us to ignore directories
+// so instead we rename the gomod files to go.mod after directories are copied.
 func renameGoMod(fp string) error {
 	renameFunc := func(filePath string, info fs.FileInfo, err error) error {
 		if err != nil {
