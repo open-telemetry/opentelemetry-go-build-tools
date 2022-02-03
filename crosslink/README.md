@@ -28,6 +28,12 @@ assumptions the tool maintains contstraints to avoid any undesirable changes.
    `old path == exclude path`. Operations will still be performed inside
    modules where `module path == exclude path`.
 
+`Note:` Crosslink was developed for use in the OpenTelemetry organization.
+See [opentelemetry-go](https://github.com/open-telemetry/opentelemetry-go) and [opentelemetry-collector-contrib](https://github.com/open-telemetry/opentelemetry-collector-contrib) for working 
+examples. If you exerperience a use case that crosslink fails
+too handle properly please open an issue (or even a PR!) highlighting
+the discrepancy. 
+
 ## Usage
 
 ### Latest Release
