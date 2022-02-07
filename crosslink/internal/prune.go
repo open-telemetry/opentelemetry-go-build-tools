@@ -22,7 +22,7 @@ import (
 )
 
 // main entry point for the Prune subcommand.
-func Prune(rc runConfig) {
+func Prune(rc RunConfig) {
 	var err error
 
 	rootModulePath, err := identifyRootModule(rc.RootPath)
@@ -47,14 +47,14 @@ func Prune(rc runConfig) {
 			panic(fmt.Sprintf("error writing go.mod files: %v", err))
 		}
 	}
-	err = rc.logger.Sync()
+	err = rc.Logger.Sync()
 	if err != nil {
 		fmt.Printf("failed to sync logger:  %v", err)
 	}
 }
 
 // pruneReplace removes any extraneous intra-repository replace statements.
-func pruneReplace(rootModulePath string, module *moduleInfo, rc runConfig) error {
+func pruneReplace(rootModulePath string, module *moduleInfo, rc RunConfig) error {
 	mfParsed, err := modfile.Parse("go.mod", module.moduleContents, nil)
 	if err != nil {
 		return err
@@ -65,18 +65,18 @@ func pruneReplace(rootModulePath string, module *moduleInfo, rc runConfig) error
 		// skip excluded
 		if _, exists := rc.ExcludedPaths[rep.Old.Path]; exists {
 			if rc.Verbose {
-				rc.logger.Sugar().Infof("Excluded Module %s, ignoring prune", rep.Old.Path)
+				rc.Logger.Sugar().Infof("Excluded Module %s, ignoring prune", rep.Old.Path)
 			}
 			continue
 		}
 
 		if _, ok := module.requiredReplaceStatements[rep.Old.Path]; strings.Contains(rep.Old.Path, rootModulePath) && !ok {
 			if rc.Verbose {
-				rc.logger.Sugar().Infof("Pruning replace statement: Module %s: %s => %s", mfParsed.Module.Mod.Path, rep.Old.Path, rep.New.Path)
+				rc.Logger.Sugar().Infof("Pruning replace statement: Module %s: %s => %s", mfParsed.Module.Mod.Path, rep.Old.Path, rep.New.Path)
 			}
 			err = mfParsed.DropReplace(rep.Old.Path, rep.Old.Version)
 			if err != nil {
-				rc.logger.Sugar().Errorf("error dropping replace statement: %v", err)
+				rc.Logger.Sugar().Errorf("error dropping replace statement: %v", err)
 			}
 
 		}

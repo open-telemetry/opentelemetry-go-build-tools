@@ -26,29 +26,31 @@ type moduleInfo struct {
 	requiredReplaceStatements map[string]struct{}
 }
 
-func newModuleInfo() *moduleInfo {
-	var mi moduleInfo
-	mi.requiredReplaceStatements = make(map[string]struct{})
-	return &mi
+func newModuleInfo(moduleContents []byte, filePath string) *moduleInfo {
+	return &moduleInfo{
+		requiredReplaceStatements: make(map[string]struct{}),
+		moduleContents:            moduleContents,
+		moduleFilePath:            filePath,
+	}
 }
 
-type runConfig struct {
+type RunConfig struct {
 	RootPath      string
 	Verbose       bool
 	ExcludedPaths map[string]struct{}
 	Overwrite     bool
 	Prune         bool
-	logger        *zap.Logger
+	Logger        *zap.Logger
 }
 
-func DefaultRunConfig() runConfig {
+func DefaultRunConfig() RunConfig {
 	lg, err := zap.NewProduction()
 	if err != nil {
 		log.Printf("Could not create zap logger: %v", err)
 	}
 	ep := make(map[string]struct{})
-	rc := runConfig{
-		logger:        lg,
+	rc := RunConfig{
+		Logger:        lg,
 		ExcludedPaths: ep,
 	}
 	return rc

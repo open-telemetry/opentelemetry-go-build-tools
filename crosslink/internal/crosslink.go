@@ -22,7 +22,7 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
-func Crosslink(rc runConfig) {
+func Crosslink(rc RunConfig) {
 	var err error
 
 	rootModulePath, err := identifyRootModule(rc.RootPath)
@@ -52,13 +52,13 @@ func Crosslink(rc runConfig) {
 			panic(fmt.Sprintf("error writing gomod files: %v", err))
 		}
 	}
-	err = rc.logger.Sync()
+	err = rc.Logger.Sync()
 	if err != nil {
 		fmt.Printf("failed to sync logger:  %v", err)
 	}
 }
 
-func insertReplace(module *moduleInfo, rc runConfig) error {
+func insertReplace(module *moduleInfo, rc RunConfig) error {
 	// modfile type that we will work with then write to the mod file in the end
 	mfParsed, err := modfile.Parse("gomod", module.moduleContents, nil)
 	if err != nil {
@@ -69,7 +69,7 @@ func insertReplace(module *moduleInfo, rc runConfig) error {
 		// skip excluded
 		if _, exists := rc.ExcludedPaths[reqModule]; exists {
 			if rc.Verbose {
-				rc.logger.Sugar().Infof("Excluded Module %s, ignoring replace", reqModule)
+				rc.Logger.Sugar().Infof("Excluded Module %s, ignoring replace", reqModule)
 			}
 			continue
 		}
@@ -92,7 +92,7 @@ func insertReplace(module *moduleInfo, rc runConfig) error {
 				loggerStr = fmt.Sprintf("Overwriting: Module: %s Old: %s => %s New: %s => %s", mfParsed.Module.Mod.Path, reqModule, oldReplace.New.Path, reqModule, localPath)
 				err = mfParsed.AddReplace(reqModule, "", localPath, "")
 				if err != nil {
-					rc.logger.Sugar().Errorf("failed to add replace statement %v", err)
+					rc.Logger.Sugar().Errorf("failed to add replace statement %v", err)
 				}
 			} else {
 				loggerStr = fmt.Sprintf("Replace already exists: Module: %s : %s => %s \n run with -overwrite flag if update is desired", mfParsed.Module.Mod.Path, reqModule, oldReplace.New.Path)
@@ -102,11 +102,11 @@ func insertReplace(module *moduleInfo, rc runConfig) error {
 			loggerStr = fmt.Sprintf("Inserting replace: Module: %s : %s => %s", mfParsed.Module.Mod.Path, reqModule, localPath)
 			err = mfParsed.AddReplace(reqModule, "", localPath, "")
 			if err != nil {
-				rc.logger.Sugar().Errorf("failed to add replace statement %v", err)
+				rc.Logger.Sugar().Errorf("failed to add replace statement %v", err)
 			}
 		}
 		if rc.Verbose {
-			rc.logger.Sugar().Info(loggerStr)
+			rc.Logger.Sugar().Info(loggerStr)
 		}
 
 	}

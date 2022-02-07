@@ -64,7 +64,7 @@ func TestPrune(t *testing.T) {
 		requiredReplaceStatements: mockRequiredReplaceStatements,
 	}
 	lg, _ := zap.NewProduction()
-	assert.NoError(t, pruneReplace("go.opentelemetry.io/build-tools/crosslink/testroot", &mockModInfo, runConfig{Prune: true, Verbose: true, logger: lg}))
+	assert.NoError(t, pruneReplace("go.opentelemetry.io/build-tools/crosslink/testroot", &mockModInfo, RunConfig{Prune: true, Verbose: true, Logger: lg}))
 
 	expectedModFile := []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
 		"go 1.17\n\n" +

@@ -48,6 +48,7 @@ var rootCmd = &cobra.Command{
 		if rc.Overwrite && !vExists {
 			rc.Verbose = true
 		}
+
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		cl.Crosslink(rc)

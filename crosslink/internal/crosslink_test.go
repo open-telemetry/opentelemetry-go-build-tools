@@ -31,7 +31,7 @@ import (
 func TestCrosslink(t *testing.T) {
 	tests := []struct {
 		testName string
-		config   runConfig
+		config   RunConfig
 		expected map[string][]byte
 	}{
 		{
@@ -141,16 +141,16 @@ func TestOverwrite(t *testing.T) {
 
 	tests := []struct {
 		testName string
-		config   runConfig
+		config   RunConfig
 		expected map[string][]byte
 	}{
 		{
 			testName: "testOverwrite",
-			config: runConfig{
+			config: RunConfig{
 				Verbose:       true,
 				Overwrite:     true,
 				ExcludedPaths: map[string]struct{}{},
-				logger:        lg,
+				Logger:        lg,
 			},
 			expected: map[string][]byte{
 				filepath.Join("go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
@@ -172,10 +172,10 @@ func TestOverwrite(t *testing.T) {
 		},
 		{
 			testName: "testNoOverwrite",
-			config: runConfig{
+			config: RunConfig{
 				ExcludedPaths: map[string]struct{}{},
 				Verbose:       true,
-				logger:        lg,
+				Logger:        lg,
 			},
 			expected: map[string][]byte{
 				filepath.Join("go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
@@ -265,11 +265,11 @@ func TestExclude(t *testing.T) {
 	lg, _ := zap.NewProduction()
 	tests := []struct {
 		testCase string
-		config   runConfig
+		config   RunConfig
 	}{
 		{
 			testCase: "Overwrite off",
-			config: runConfig{
+			config: RunConfig{
 				Prune: true,
 				ExcludedPaths: map[string]struct{}{
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testB": {},
@@ -277,12 +277,12 @@ func TestExclude(t *testing.T) {
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testA": {},
 				},
 				Verbose: true,
-				logger:  lg,
+				Logger:  lg,
 			},
 		},
 		{
 			testCase: "Overwrite on",
-			config: runConfig{
+			config: RunConfig{
 				Overwrite: true,
 				Prune:     true,
 				ExcludedPaths: map[string]struct{}{
@@ -290,7 +290,7 @@ func TestExclude(t *testing.T) {
 					"go.opentelemetry.io/build-tools/excludeme":                {},
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testA": {},
 				},
-				logger:  lg,
+				Logger:  lg,
 				Verbose: true,
 			},
 		},
