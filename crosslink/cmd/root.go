@@ -15,11 +15,13 @@
 package cmd
 
 import (
+	"log"
 	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	cl "go.opentelemetry.io/build-tools/crosslink/internal"
+	"go.uber.org/zap"
 )
 
 var (
@@ -47,6 +49,14 @@ var rootCmd = &cobra.Command{
 		})
 		if rc.Overwrite && !vExists {
 			rc.Verbose = true
+		}
+		var err error
+		if rc.Verbose {
+			rc.Logger, err = zap.NewDevelopment()
+			if err != nil {
+				log.Printf("Could not create zap logger: %v", err)
+			}
+
 		}
 
 	},

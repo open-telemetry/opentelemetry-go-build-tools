@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"strings"
 
+	"go.uber.org/zap"
 	"golang.org/x/mod/modfile"
 )
 
@@ -27,26 +28,40 @@ func Prune(rc RunConfig) {
 
 	rootModulePath, err := identifyRootModule(rc.RootPath)
 	if err != nil {
-		panic(fmt.Sprintf("failed to identify root module: %v", err))
+		rc.Logger.Sugar().Panic("Failed to identify root Module",
+			zap.Error(err),
+			zap.Any("run config", rc))
 	}
 
 	graph, err := buildDepedencyGraph(rc, rootModulePath)
 	if err != nil {
-		panic(fmt.Sprintf("failed to build dependency graph: %v", err))
+		rc.Logger.Sugar().Panic("Failed to build dependency graph",
+			zap.Any("Run Config", rc),
+			zap.String("Root Module Path", rootModulePath))
 	}
 
-	for _, moduleInfo := range graph {
+	for moduleName, moduleInfo := range graph {
 		err = pruneReplace(rootModulePath, &moduleInfo, rc)
 
 		if err != nil {
-			panic(fmt.Sprintf("error pruning replace statements: %v", err))
+			rc.Logger.Sugar().Error("Failed to prune replace statements",
+				zap.Error(err),
+				zap.String("Module Name", moduleName),
+				zap.Any("Module Info", moduleInfo),
+				zap.Any("Run config", rc))
+			continue
 		}
 
 		err = writeModule(moduleInfo)
 		if err != nil {
-			panic(fmt.Sprintf("error writing go.mod files: %v", err))
+			rc.Logger.Sugar().Error("Failed to write module",
+				zap.Error(err),
+				zap.String("Module Name", moduleName),
+				zap.Any("Module Info", moduleInfo),
+				zap.Any("Run config", rc))
 		}
 	}
+
 	err = rc.Logger.Sync()
 	if err != nil {
 		fmt.Printf("failed to sync logger:  %v", err)
@@ -57,7 +72,7 @@ func Prune(rc RunConfig) {
 func pruneReplace(rootModulePath string, module *moduleInfo, rc RunConfig) error {
 	mfParsed, err := modfile.Parse("go.mod", module.moduleContents, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("additional info: %w", err)
 	}
 
 	// check to see if its intra dependency and no longer present
@@ -65,25 +80,30 @@ func pruneReplace(rootModulePath string, module *moduleInfo, rc RunConfig) error
 		// skip excluded
 		if _, exists := rc.ExcludedPaths[rep.Old.Path]; exists {
 			if rc.Verbose {
-				rc.Logger.Sugar().Infof("Excluded Module %s, ignoring prune", rep.Old.Path)
+				rc.Logger.Sugar().Debug("Excluded Module, ignoring prune", zap.String("excluded mod", rep.Old.Path))
 			}
 			continue
 		}
 
 		if _, ok := module.requiredReplaceStatements[rep.Old.Path]; strings.Contains(rep.Old.Path, rootModulePath) && !ok {
 			if rc.Verbose {
-				rc.Logger.Sugar().Infof("Pruning replace statement: Module %s: %s => %s", mfParsed.Module.Mod.Path, rep.Old.Path, rep.New.Path)
+				rc.Logger.Sugar().Debug("Pruning replace statement",
+					zap.String("Module", mfParsed.Module.Mod.Path),
+					zap.String("Replace statement", rep.Old.Path+" => "+rep.New.Path))
 			}
 			err = mfParsed.DropReplace(rep.Old.Path, rep.Old.Version)
 			if err != nil {
-				rc.Logger.Sugar().Errorf("error dropping replace statement: %v", err)
+				rc.Logger.Sugar().Error("error dropping replace statement",
+					zap.Error(err),
+					zap.String("Module", mfParsed.Module.Mod.Path),
+					zap.String("Replace statement", rep.Old.Path+" => "+rep.New.Path))
 			}
 
 		}
 	}
 	module.moduleContents, err = mfParsed.Format()
 	if err != nil {
-		return err
+		return fmt.Errorf("additional info: %w", err)
 	}
 
 	return nil

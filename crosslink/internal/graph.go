@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"go.uber.org/zap"
 	"golang.org/x/mod/modfile"
 )
 
@@ -30,14 +31,17 @@ func buildDepedencyGraph(rc RunConfig, rootModulePath string) (map[string]module
 	moduleMap := make(map[string]moduleInfo)
 	goModFunc := func(filePath string, info fs.FileInfo, err error) error {
 		if err != nil {
-			fmt.Printf("Warning: file could not be read during filepath.Walk: %v", err)
+			rc.Logger.Sugar().Error("File could not be read during filePath.Walk",
+				zap.Error(err),
+				zap.String("file path", filePath))
+
 			return nil
 		}
 
 		if filepath.Base(filePath) == "go.mod" {
 			modFile, err := ioutil.ReadFile(filePath)
 			if err != nil {
-				return err
+				return fmt.Errorf("additional info: %w", err)
 			}
 
 			modInfo := newModuleInfo(modFile, filePath)
@@ -46,9 +50,10 @@ func buildDepedencyGraph(rc RunConfig, rootModulePath string) (map[string]module
 		}
 		return nil
 	}
+
 	err := filepath.Walk(rc.RootPath, goModFunc)
 	if err != nil {
-		fmt.Printf("error walking root directory: %v", err)
+		return nil, fmt.Errorf("addtional info: %w", err)
 	}
 
 	for _, modInfo := range moduleMap {
@@ -60,7 +65,7 @@ func buildDepedencyGraph(rc RunConfig, rootModulePath string) (map[string]module
 		// modfile type that we will work with then write to the mod file in the end
 		mfParsed, err := modfile.Parse("go.mod", modInfo.moduleContents, nil)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("addtional info: %w", err)
 		}
 
 		// populate initial list of requirements
@@ -90,7 +95,7 @@ func buildDepedencyGraph(rc RunConfig, rootModulePath string) (map[string]module
 			if value, ok := moduleMap[reqModule]; ok {
 				m, err := modfile.Parse("go.mod", value.moduleContents, nil)
 				if err != nil {
-					return nil, err
+					return nil, fmt.Errorf("addtional info: %w", err)
 				}
 				for _, transReq := range m.Require {
 					_, existsInPath := moduleMap[transReq.Mod.Path]

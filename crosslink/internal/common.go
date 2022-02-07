@@ -15,6 +15,7 @@
 package crosslink
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -25,17 +26,17 @@ import (
 func writeModule(module moduleInfo) error {
 	mfParsed, err := modfile.Parse("go.mod", module.moduleContents, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("additional info: %w", err)
 	}
 	//  now overwrite the existing gomod file
 	gomodFile, err := mfParsed.Format()
 	if err != nil {
-		return err
+		return fmt.Errorf("additional info: %w", err)
 	}
 	//write our updated go.mod file
 	err = os.WriteFile(module.moduleFilePath, gomodFile, 0644)
 	if err != nil {
-		return err
+		return fmt.Errorf("additional info: %w", err)
 	}
 
 	return nil
@@ -50,19 +51,19 @@ func identifyRootModule(r string) (string, error) {
 	if rootPath == "" {
 		rootPath, err = tools.FindRepoRoot()
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("additional info: %w", err)
 		}
 	}
 
 	if _, err := os.Stat(filepath.Join(rootPath, "go.mod")); err != nil {
-		return "", err
+		return "", fmt.Errorf("additional info: %w", err)
 	}
 
 	// identify and read the root module
 	rootModPath := filepath.Join(rootPath, "go.mod")
 	rootModFile, err := os.ReadFile(rootModPath)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("additional info: %w", err)
 	}
 	return modfile.ModulePath(rootModFile), nil
 }

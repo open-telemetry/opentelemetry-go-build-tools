@@ -137,7 +137,7 @@ func TestCrosslink(t *testing.T) {
 }
 
 func TestOverwrite(t *testing.T) {
-	lg, _ := zap.NewProduction()
+	lg, _ := zap.NewDevelopment()
 
 	tests := []struct {
 		testName string
@@ -262,7 +262,7 @@ func TestOverwrite(t *testing.T) {
 // Testing exclude functionality for prune, overwrite, and no overwrite.
 func TestExclude(t *testing.T) {
 	testName := "testExclude"
-	lg, _ := zap.NewProduction()
+	lg, _ := zap.NewDevelopment()
 	tests := []struct {
 		testCase string
 		config   RunConfig
