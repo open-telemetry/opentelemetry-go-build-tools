@@ -42,7 +42,7 @@ func Prune(rc runConfig) {
 			panic(fmt.Sprintf("error pruning replace statements: %v", err))
 		}
 
-		err = writeModules(moduleInfo)
+		err = writeModule(moduleInfo)
 		if err != nil {
 			panic(fmt.Sprintf("error writing go.mod files: %v", err))
 		}
