@@ -43,20 +43,19 @@ func Prune(rc RunConfig) {
 
 	for moduleName, moduleInfo := range graph {
 		err = pruneReplace(rootModulePath, &moduleInfo, rc)
+		logger := rc.Logger.With(zap.String("module", moduleName))
 
 		if err != nil {
-			rc.Logger.Error("Failed to prune replace statements",
+			logger.Error("Failed to prune replace statements",
 				zap.Error(err),
-				zap.String("Module Name", moduleName),
 				zap.Any("Module Info", moduleInfo))
 			continue
 		}
 
 		err = writeModule(moduleInfo)
 		if err != nil {
-			rc.Logger.Error("Failed to write module",
+			logger.Error("Failed to write module",
 				zap.Error(err),
-				zap.String("Module Name", moduleName),
 				zap.Any("Module Info", moduleInfo))
 		}
 	}
