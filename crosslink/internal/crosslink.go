@@ -28,14 +28,14 @@ func Crosslink(rc RunConfig) {
 
 	rootModulePath, err := identifyRootModule(rc.RootPath)
 	if err != nil {
-		rc.Logger.Sugar().Panic("Failed to identify root Module",
+		rc.Logger.Panic("Failed to identify root Module",
 			zap.Error(err),
 			zap.Any("run config", rc))
 	}
 
 	graph, err := buildDepedencyGraph(rc, rootModulePath)
 	if err != nil {
-		rc.Logger.Sugar().Panic("Failed to build dependency graph",
+		rc.Logger.Panic("Failed to build dependency graph",
 			zap.Any("Run Config", rc),
 			zap.String("Root Module Path", rootModulePath))
 	}
@@ -43,7 +43,7 @@ func Crosslink(rc RunConfig) {
 	for moduleName, moduleInfo := range graph {
 		err = insertReplace(&moduleInfo, rc)
 		if err != nil {
-			rc.Logger.Sugar().Error("Failed to insert replace statements",
+			rc.Logger.Error("Failed to insert replace statements",
 				zap.Error(err),
 				zap.String("Module Name", moduleName),
 				zap.Any("Module Info", moduleInfo),
@@ -55,7 +55,7 @@ func Crosslink(rc RunConfig) {
 			err = pruneReplace(rootModulePath, &moduleInfo, rc)
 
 			if err != nil {
-				rc.Logger.Sugar().Error("Failed to prune replace statements",
+				rc.Logger.Error("Failed to prune replace statements",
 					zap.Error(err),
 					zap.String("Module Name", moduleName),
 					zap.Any("Module Info", moduleInfo),
@@ -67,7 +67,7 @@ func Crosslink(rc RunConfig) {
 
 		err = writeModule(moduleInfo)
 		if err != nil {
-			rc.Logger.Sugar().Error("Failed to write module",
+			rc.Logger.Error("Failed to write module",
 				zap.Error(err),
 				zap.String("Module Name", moduleName),
 				zap.Any("Module Info", moduleInfo),
@@ -90,7 +90,7 @@ func insertReplace(module *moduleInfo, rc RunConfig) error {
 	for reqModule := range module.requiredReplaceStatements {
 		// skip excluded
 		if _, exists := rc.ExcludedPaths[reqModule]; exists {
-			rc.Logger.Sugar().Debug("Excluded Module, ignoring replace",
+			rc.Logger.Debug("Excluded Module, ignoring replace",
 				zap.Any("Required Module", reqModule))
 			continue
 		}
@@ -107,7 +107,7 @@ func insertReplace(module *moduleInfo, rc RunConfig) error {
 
 		if oldReplace, exists := containsReplace(mfParsed.Replace, reqModule); exists {
 			if rc.Overwrite {
-				rc.Logger.Sugar().Debug("Overwriting Module",
+				rc.Logger.Debug("Overwriting Module",
 					zap.String("Module", mfParsed.Module.Mod.Path),
 					zap.String("Old Replace", reqModule+" => "+oldReplace.New.Path),
 					zap.String("New Replace", reqModule+" => "+localPath))
@@ -115,24 +115,24 @@ func insertReplace(module *moduleInfo, rc RunConfig) error {
 				err = mfParsed.AddReplace(reqModule, "", localPath, "")
 
 				if err != nil {
-					rc.Logger.Sugar().Error("failed to add replace statement", zap.Error(err),
+					rc.Logger.Error("failed to add replace statement", zap.Error(err),
 						zap.String("Module", mfParsed.Module.Mod.Path),
 						zap.String("Old Replace", reqModule+" => "+oldReplace.New.Path),
 						zap.String("New Replace", reqModule+" => "+localPath))
 				}
 			} else {
-				rc.Logger.Sugar().Debug("Replace statement already exists -run with overwrite to update if desired",
+				rc.Logger.Debug("Replace statement already exists -run with overwrite to update if desired",
 					zap.String("Module", mfParsed.Module.Mod.Path),
 					zap.String("Current Replace", reqModule+" => "+oldReplace.New.Path))
 			}
 		} else {
 			// does not contain a replace statement. Insert it
-			rc.Logger.Sugar().Debug("Inserting Replace Statement",
+			rc.Logger.Debug("Inserting Replace Statement",
 				zap.String("Module", mfParsed.Module.Mod.Path),
 				zap.String("Statement", reqModule+" => "+localPath))
 			err = mfParsed.AddReplace(reqModule, "", localPath, "")
 			if err != nil {
-				rc.Logger.Sugar().Error("Failed to add replace statement", zap.Error(err),
+				rc.Logger.Error("Failed to add replace statement", zap.Error(err),
 					zap.String("Module", mfParsed.Module.Mod.Path),
 					zap.String("Statement", reqModule+" => "+localPath))
 			}

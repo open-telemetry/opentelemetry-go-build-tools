@@ -28,14 +28,14 @@ func Prune(rc RunConfig) {
 
 	rootModulePath, err := identifyRootModule(rc.RootPath)
 	if err != nil {
-		rc.Logger.Sugar().Panic("Failed to identify root Module",
+		rc.Logger.Panic("Failed to identify root Module",
 			zap.Error(err),
 			zap.Any("run config", rc))
 	}
 
 	graph, err := buildDepedencyGraph(rc, rootModulePath)
 	if err != nil {
-		rc.Logger.Sugar().Panic("Failed to build dependency graph",
+		rc.Logger.Panic("Failed to build dependency graph",
 			zap.Any("Run Config", rc),
 			zap.String("Root Module Path", rootModulePath))
 	}
@@ -44,7 +44,7 @@ func Prune(rc RunConfig) {
 		err = pruneReplace(rootModulePath, &moduleInfo, rc)
 
 		if err != nil {
-			rc.Logger.Sugar().Error("Failed to prune replace statements",
+			rc.Logger.Error("Failed to prune replace statements",
 				zap.Error(err),
 				zap.String("Module Name", moduleName),
 				zap.Any("Module Info", moduleInfo),
@@ -54,7 +54,7 @@ func Prune(rc RunConfig) {
 
 		err = writeModule(moduleInfo)
 		if err != nil {
-			rc.Logger.Sugar().Error("Failed to write module",
+			rc.Logger.Error("Failed to write module",
 				zap.Error(err),
 				zap.String("Module Name", moduleName),
 				zap.Any("Module Info", moduleInfo),
@@ -80,20 +80,20 @@ func pruneReplace(rootModulePath string, module *moduleInfo, rc RunConfig) error
 		// skip excluded
 		if _, exists := rc.ExcludedPaths[rep.Old.Path]; exists {
 
-			rc.Logger.Sugar().Debug("Excluded Module, ignoring prune", zap.String("excluded mod", rep.Old.Path))
+			rc.Logger.Debug("Excluded Module, ignoring prune", zap.String("excluded mod", rep.Old.Path))
 
 			continue
 		}
 
 		if _, ok := module.requiredReplaceStatements[rep.Old.Path]; strings.Contains(rep.Old.Path, rootModulePath) && !ok {
 			if rc.Verbose {
-				rc.Logger.Sugar().Debug("Pruning replace statement",
+				rc.Logger.Debug("Pruning replace statement",
 					zap.String("Module", mfParsed.Module.Mod.Path),
 					zap.String("Replace statement", rep.Old.Path+" => "+rep.New.Path))
 			}
 			err = mfParsed.DropReplace(rep.Old.Path, rep.Old.Version)
 			if err != nil {
-				rc.Logger.Sugar().Error("error dropping replace statement",
+				rc.Logger.Error("error dropping replace statement",
 					zap.Error(err),
 					zap.String("Module", mfParsed.Module.Mod.Path),
 					zap.String("Replace statement", rep.Old.Path+" => "+rep.New.Path))

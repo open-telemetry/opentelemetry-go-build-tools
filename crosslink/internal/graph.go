@@ -31,7 +31,7 @@ func buildDepedencyGraph(rc RunConfig, rootModulePath string) (map[string]module
 	moduleMap := make(map[string]moduleInfo)
 	goModFunc := func(filePath string, info fs.FileInfo, err error) error {
 		if err != nil {
-			rc.Logger.Sugar().Error("File could not be read during filePath.Walk",
+			rc.Logger.Error("File could not be read during filePath.Walk",
 				zap.Error(err),
 				zap.String("file path", filePath))
 
