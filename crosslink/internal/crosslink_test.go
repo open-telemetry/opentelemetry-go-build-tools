@@ -396,7 +396,43 @@ func TestExclude(t *testing.T) {
 					}
 				}
 			}
-			os.RemoveAll(tmpRootDir)
 		})
 	}
+}
+
+func TestBadRootPath(t *testing.T) {
+	lg, _ := zap.NewDevelopment()
+	tests := []struct {
+		testName      string
+		mockDir       string
+		setConfigPath bool
+		config        RunConfig
+	}{
+		{
+			testName:      "noGoMod",
+			mockDir:       "noGoMod",
+			setConfigPath: true,
+			config: RunConfig{
+				Logger: lg,
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.testName, func(t *testing.T) {
+			tmpRootDir, err := os.MkdirTemp(testDataDir, test.mockDir)
+			if err != nil {
+				t.Fatalf("Failed to create temp dir %v", err)
+			}
+			if test.setConfigPath {
+				test.config.RootPath = tmpRootDir
+			}
+
+			t.Cleanup(func() { os.RemoveAll(tmpRootDir) })
+
+			assert.Panics(t, func() { Crosslink(test.config) })
+			assert.Panics(t, func() { Prune(test.config) })
+		})
+	}
+
 }
