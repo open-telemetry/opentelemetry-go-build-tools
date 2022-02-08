@@ -71,6 +71,7 @@ func TestPrune(t *testing.T) {
 			if err != nil {
 				t.Fatal("creating temp dir:", err)
 			}
+			t.Cleanup(func() { os.RemoveAll(tmpRootDir) })
 
 			err = renameGoMod(tmpRootDir)
 			if err != nil {
@@ -114,7 +115,7 @@ func TestPrune(t *testing.T) {
 					}
 				}
 			}
-			os.RemoveAll(tmpRootDir)
+
 		})
 	}
 }
@@ -127,12 +128,13 @@ func TestPruneReplace(t *testing.T) {
 		t.Fatal("creating temp dir:", err)
 	}
 
+	t.Cleanup(func() { os.RemoveAll(tmpRootDir) })
+
 	err = renameGoMod(tmpRootDir)
 	if err != nil {
 		t.Errorf("error renaming gomod files: %v", err)
 	}
 
-	defer os.RemoveAll(tmpRootDir)
 	modContents, err := ioutil.ReadFile(filepath.Join(tmpRootDir, "go.mod"))
 	if err != nil {
 		t.Errorf("failed to read mock gomod file: %v", err)

@@ -125,6 +125,7 @@ func TestCrosslink(t *testing.T) {
 			if err != nil {
 				t.Errorf("error renaming gomod files: %v", err)
 			}
+			t.Cleanup(func() { os.RemoveAll(tmpRootDir) })
 
 			test.config.RootPath = tmpRootDir
 			assert.NotPanics(t, func() { Crosslink(test.config) })
@@ -163,7 +164,7 @@ func TestCrosslink(t *testing.T) {
 					}
 				}
 			}
-			os.RemoveAll(tmpRootDir)
+
 		})
 	}
 }
@@ -236,6 +237,8 @@ func TestOverwrite(t *testing.T) {
 				t.Fatal("creating temp dir:", err)
 			}
 
+			t.Cleanup(func() { os.RemoveAll(tmpRootDir) })
+
 			err = renameGoMod(tmpRootDir)
 			if err != nil {
 				t.Errorf("error renaming gomod files: %v", err)
@@ -281,7 +284,6 @@ func TestOverwrite(t *testing.T) {
 				}
 			}
 
-			os.RemoveAll(tmpRootDir)
 		})
 	}
 	err := lg.Sync()
@@ -334,6 +336,7 @@ func TestExclude(t *testing.T) {
 			if err != nil {
 				t.Fatal("creating temp dir:", err)
 			}
+			t.Cleanup(func() { os.RemoveAll(tmpRootDir) })
 
 			err = renameGoMod(tmpRootDir)
 			if err != nil {
