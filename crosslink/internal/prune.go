@@ -26,7 +26,7 @@ import (
 func Prune(rc RunConfig) {
 	var err error
 
-	rc.Logger.Debug("Crosslink run config", zap.Any("Run Config", rc))
+	rc.Logger.Debug("Crosslink run config", zap.Any("run_config", rc))
 
 	rootModulePath, err := identifyRootModule(rc.RootPath)
 	if err != nil {
@@ -37,8 +37,8 @@ func Prune(rc RunConfig) {
 	graph, err := buildDepedencyGraph(rc, rootModulePath)
 	if err != nil {
 		rc.Logger.Panic("Failed to build dependency graph",
-			zap.Any("Run Config", rc),
-			zap.String("Root Module Path", rootModulePath))
+			zap.Any("run_config", rc),
+			zap.String("root_module_path", rootModulePath))
 	}
 
 	for moduleName, moduleInfo := range graph {
@@ -47,16 +47,14 @@ func Prune(rc RunConfig) {
 
 		if err != nil {
 			logger.Error("Failed to prune replace statements",
-				zap.Error(err),
-				zap.Any("Module Info", moduleInfo))
+				zap.Error(err))
 			continue
 		}
 
 		err = writeModule(moduleInfo)
 		if err != nil {
 			logger.Error("Failed to write module",
-				zap.Error(err),
-				zap.Any("Module Info", moduleInfo))
+				zap.Error(err))
 		}
 	}
 
@@ -78,7 +76,7 @@ func pruneReplace(rootModulePath string, module *moduleInfo, rc RunConfig) error
 		// skip excluded
 		if _, exists := rc.ExcludedPaths[rep.Old.Path]; exists {
 
-			rc.Logger.Debug("Excluded Module, ignoring prune", zap.String("excluded mod", rep.Old.Path))
+			rc.Logger.Debug("Excluded Module, ignoring prune", zap.String("excluded_mod", rep.Old.Path))
 
 			continue
 		}
@@ -86,15 +84,15 @@ func pruneReplace(rootModulePath string, module *moduleInfo, rc RunConfig) error
 		if _, ok := module.requiredReplaceStatements[rep.Old.Path]; strings.Contains(rep.Old.Path, rootModulePath) && !ok {
 			if rc.Verbose {
 				rc.Logger.Debug("Pruning replace statement",
-					zap.String("Module", mfParsed.Module.Mod.Path),
-					zap.String("Replace statement", rep.Old.Path+" => "+rep.New.Path))
+					zap.String("module", mfParsed.Module.Mod.Path),
+					zap.String("replace_statement", rep.Old.Path+" => "+rep.New.Path))
 			}
 			err = mfParsed.DropReplace(rep.Old.Path, rep.Old.Version)
 			if err != nil {
 				rc.Logger.Error("error dropping replace statement",
 					zap.Error(err),
-					zap.String("Module", mfParsed.Module.Mod.Path),
-					zap.String("Replace statement", rep.Old.Path+" => "+rep.New.Path))
+					zap.String("module", mfParsed.Module.Mod.Path),
+					zap.String("replace_statement", rep.Old.Path+" => "+rep.New.Path))
 			}
 
 		}
