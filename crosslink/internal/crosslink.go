@@ -26,17 +26,18 @@ import (
 func Crosslink(rc RunConfig) {
 	var err error
 
+	rc.Logger.Debug("Crosslink run config", zap.Any("Run Config", rc))
+
 	rootModulePath, err := identifyRootModule(rc.RootPath)
 	if err != nil {
 		rc.Logger.Panic("Failed to identify root Module",
-			zap.Error(err),
-			zap.Any("run config", rc))
+			zap.Error(err))
 	}
 
 	graph, err := buildDepedencyGraph(rc, rootModulePath)
 	if err != nil {
 		rc.Logger.Panic("Failed to build dependency graph",
-			zap.Any("Run Config", rc),
+			zap.Error(err),
 			zap.String("Root Module Path", rootModulePath))
 	}
 
@@ -46,8 +47,7 @@ func Crosslink(rc RunConfig) {
 			rc.Logger.Error("Failed to insert replace statements",
 				zap.Error(err),
 				zap.String("Module Name", moduleName),
-				zap.Any("Module Info", moduleInfo),
-				zap.Any("Run config", rc))
+				zap.Any("Module Info", moduleInfo))
 			continue
 		}
 
@@ -58,8 +58,7 @@ func Crosslink(rc RunConfig) {
 				rc.Logger.Error("Failed to prune replace statements",
 					zap.Error(err),
 					zap.String("Module Name", moduleName),
-					zap.Any("Module Info", moduleInfo),
-					zap.Any("Run config", rc))
+					zap.Any("Module Info", moduleInfo))
 				continue
 			}
 
@@ -70,8 +69,7 @@ func Crosslink(rc RunConfig) {
 			rc.Logger.Error("Failed to write module",
 				zap.Error(err),
 				zap.String("Module Name", moduleName),
-				zap.Any("Module Info", moduleInfo),
-				zap.Any("Run config", rc))
+				zap.Any("Module Info", moduleInfo))
 		}
 	}
 	err = rc.Logger.Sync()
