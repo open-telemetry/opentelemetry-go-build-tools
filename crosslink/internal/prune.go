@@ -72,7 +72,7 @@ func Prune(rc RunConfig) {
 func pruneReplace(rootModulePath string, module *moduleInfo, rc RunConfig) error {
 	mfParsed, err := modfile.Parse("go.mod", module.moduleContents, nil)
 	if err != nil {
-		return fmt.Errorf("additional info: %w", err)
+		return fmt.Errorf("failed to parse go.mod file: %w", err)
 	}
 
 	// check to see if its intra dependency and no longer present
@@ -103,7 +103,7 @@ func pruneReplace(rootModulePath string, module *moduleInfo, rc RunConfig) error
 	}
 	module.moduleContents, err = mfParsed.Format()
 	if err != nil {
-		return fmt.Errorf("additional info: %w", err)
+		return fmt.Errorf("failed to format go.mod file: %w", err)
 	}
 
 	return nil

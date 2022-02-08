@@ -84,7 +84,7 @@ func insertReplace(module *moduleInfo, rc RunConfig) error {
 	// modfile type that we will work with then write to the mod file in the end
 	mfParsed, err := modfile.Parse("gomod", module.moduleContents, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse go.mod file: %w", err)
 	}
 
 	for reqModule := range module.requiredReplaceStatements {
@@ -97,7 +97,7 @@ func insertReplace(module *moduleInfo, rc RunConfig) error {
 
 		localPath, err := filepath.Rel(mfParsed.Module.Mod.Path, reqModule)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to retrieve relative path: %w", err)
 		}
 		if localPath == "." || localPath == ".." {
 			localPath += "/"
@@ -140,7 +140,7 @@ func insertReplace(module *moduleInfo, rc RunConfig) error {
 	}
 	module.moduleContents, err = mfParsed.Format()
 	if err != nil {
-		return fmt.Errorf("additional info: %w", err)
+		return fmt.Errorf("failed to format go.mod file: %w", err)
 	}
 
 	return nil

@@ -44,14 +44,14 @@ func renameGoMod(fp string) error {
 			dir, _ := filepath.Split(filePath)
 			err = os.Rename(filePath, filepath.Join(dir, "go.mod"))
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to rename go.mod file: %w", err)
 			}
 		}
 		return nil
 	}
 	err := filepath.Walk(fp, renameFunc)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed during file walk: %w", err)
 	}
 	return nil
 }
@@ -61,13 +61,13 @@ func renameGoMod(fp string) error {
 func createTempTestDir(testName string) (string, error) {
 	tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to make temp director: %w", err)
 	}
 
 	mockDataDir := filepath.Join(mockDataDir, testName)
 	err = cp.Copy(mockDataDir, tmpRootDir)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to copy mock data into temp: %w", err)
 	}
 
 	return tmpRootDir, nil
