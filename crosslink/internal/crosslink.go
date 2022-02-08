@@ -51,15 +51,18 @@ func Crosslink(rc RunConfig) {
 			continue
 		}
 
-		err = pruneReplace(rootModulePath, &moduleInfo, rc)
+		if rc.Prune {
+			err = pruneReplace(rootModulePath, &moduleInfo, rc)
 
-		if err != nil {
-			rc.Logger.Sugar().Error("Failed to prune replace statements",
-				zap.Error(err),
-				zap.String("Module Name", moduleName),
-				zap.Any("Module Info", moduleInfo),
-				zap.Any("Run config", rc))
-			continue
+			if err != nil {
+				rc.Logger.Sugar().Error("Failed to prune replace statements",
+					zap.Error(err),
+					zap.String("Module Name", moduleName),
+					zap.Any("Module Info", moduleInfo),
+					zap.Any("Run config", rc))
+				continue
+			}
+
 		}
 
 		err = writeModule(moduleInfo)
