@@ -16,7 +16,10 @@ package cmd
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/assert"
+	cl "go.opentelemetry.io/build-tools/crosslink/internal"
 )
 
 func TestTransform(t *testing.T) {
@@ -51,6 +54,71 @@ func TestTransform(t *testing.T) {
 			for _, val := range test.inputSlice {
 				_, exists := actual[val]
 				assert.True(t, exists)
+			}
+		})
+	}
+}
+
+// Validate run config is valid after pre run.
+func TestPreRun(t *testing.T) {
+	configReset := func() {
+		rc = cl.DefaultRunConfig()
+		rootCmd.SetArgs([]string{})
+	}
+
+	tests := []struct {
+		testName       string
+		args           []string
+		mockConfig     cl.RunConfig
+		expectedConfig cl.RunConfig
+	}{
+		{
+			testName:       "Default Config",
+			args:           []string{},
+			mockConfig:     cl.DefaultRunConfig(),
+			expectedConfig: cl.DefaultRunConfig(),
+		},
+		{
+			testName: "with overwrite",
+			mockConfig: cl.RunConfig{
+				Overwrite: true,
+			},
+			expectedConfig: cl.RunConfig{
+				Overwrite: true,
+				Verbose:   true,
+			},
+			args: []string{"--overwrite"},
+		},
+		{
+			testName: "with overwrite and verbose=false",
+			mockConfig: cl.RunConfig{
+				Overwrite: true,
+				Verbose:   false,
+			},
+			expectedConfig: cl.RunConfig{
+				Overwrite: true,
+				Verbose:   false,
+			},
+			args: []string{"--overwrite", "--verbose=false"},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.testName, func(t *testing.T) {
+			t.Cleanup(configReset)
+
+			err := rootCmd.ParseFlags(test.args)
+			if err != nil {
+				t.Errorf("Failed to parse flags: %v", err)
+			}
+			rootCmd.DebugFlags()
+
+			rc = test.mockConfig
+
+			preRunSetup(rootCmd, nil)
+
+			if diff := cmp.Diff(test.expectedConfig, rc, cmpopts.IgnoreFields(cl.RunConfig{}, "Logger", "ExcludedPaths")); diff != "" {
+				t.Errorf("TestCase: %s \n Replace{} mismatch (-want +got):\n%s", test.testName, diff)
 			}
 		})
 	}

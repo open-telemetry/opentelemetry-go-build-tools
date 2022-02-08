@@ -37,29 +37,7 @@ var rootCmd = &cobra.Command{
 	Crosslink is a tool to assist with go.mod file management for repositories containing
 	mulitple go modules. Crosslink automatically inserts replace directives into go.mod files
 	for all intra-repository dependencies including transitive dependencies.`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		rc.ExcludedPaths = transformExclude(excludeFlags)
-
-		// enable verbosity on overwrite if user has not supplied another value
-		vExists := false
-		cmd.Flags().Visit(func(input *pflag.Flag) {
-			if input.Name == "verbose" {
-				vExists = true
-			}
-		})
-		if rc.Overwrite && !vExists {
-			rc.Verbose = true
-		}
-		var err error
-		if rc.Verbose {
-			rc.Logger, err = zap.NewDevelopment()
-			if err != nil {
-				log.Printf("Could not create zap logger: %v", err)
-			}
-
-		}
-
-	},
+	PersistentPreRun: preRunSetup,
 	Run: func(cmd *cobra.Command, args []string) {
 		cl.Crosslink(rc)
 	},
@@ -90,4 +68,28 @@ func transformExclude(ef []string) map[string]struct{} {
 		output[val] = struct{}{}
 	}
 	return output
+}
+
+func preRunSetup(cmd *cobra.Command, args []string) {
+	rc.ExcludedPaths = transformExclude(excludeFlags)
+
+	// enable verbosity on overwrite if user has not supplied another value
+	vExists := false
+	cmd.Flags().Visit(func(input *pflag.Flag) {
+		if input.Name == "verbose" {
+			vExists = true
+		}
+	})
+	if rc.Overwrite && !vExists {
+		rc.Verbose = true
+	}
+	var err error
+	if rc.Verbose {
+		rc.Logger, err = zap.NewDevelopment()
+		if err != nil {
+			log.Printf("Could not create zap logger: %v", err)
+		}
+
+	}
+
 }
