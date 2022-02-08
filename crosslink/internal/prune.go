@@ -79,9 +79,9 @@ func pruneReplace(rootModulePath string, module *moduleInfo, rc RunConfig) error
 	for _, rep := range mfParsed.Replace {
 		// skip excluded
 		if _, exists := rc.ExcludedPaths[rep.Old.Path]; exists {
-			if rc.Verbose {
-				rc.Logger.Sugar().Debug("Excluded Module, ignoring prune", zap.String("excluded mod", rep.Old.Path))
-			}
+
+			rc.Logger.Sugar().Debug("Excluded Module, ignoring prune", zap.String("excluded mod", rep.Old.Path))
+
 			continue
 		}
 
