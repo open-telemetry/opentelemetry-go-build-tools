@@ -8,3 +8,7 @@ require go.opentelemetry.io/build-tools/crosslink/testroot/testA v1.0.0
 replace go.opentelemetry.io/build-tools/crosslink/testroot/testZ => ./testZ
 
 replace go.opentelemetry.io/build-tools/crosslink/testroot/testY => ./testY
+
+replace go.opentelemetry.io/build-tools/crosslink/testroot/testA => ./testA
+
+replace go.opentelemetry.io/build-tools/crosslink/testroot/testB => ./testB
