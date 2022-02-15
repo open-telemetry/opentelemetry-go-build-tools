@@ -62,7 +62,7 @@ func Crosslink(rc RunConfig) {
 
 		err = writeModule(moduleInfo)
 		if err != nil {
-			rc.Logger.Error("Failed to write module",
+			logger.Error("Failed to write module",
 				zap.Error(err))
 		}
 	}
