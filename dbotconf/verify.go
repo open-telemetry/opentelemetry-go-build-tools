@@ -50,7 +50,7 @@ func configuredUpdates(path string) (map[string]struct{}, error) {
 }
 
 // verify ensures dependabot configuration contains a check for all modules.
-func verify(cmd *cobra.Command, args []string) error {
+func verify(_ *cobra.Command, args []string) error {
 	switch len(args) {
 	case 0:
 		return errors.New("path argument required")
