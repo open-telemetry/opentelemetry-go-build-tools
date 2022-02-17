@@ -54,9 +54,9 @@ func buildConfig() (*dependabotConfig, error) {
 	return c, nil
 }
 
-// generate outputs a generated dependabot configuration for all Go modules
+// runGenerate outputs a generated dependabot configuration for all Go modules
 // contained in the repository.
-func generate(*cobra.Command, []string) error {
+func runGenerate(*cobra.Command, []string) error {
 	c, err := buildConfig()
 	if err != nil {
 		return err

@@ -15,7 +15,7 @@
 package main
 
 import (
-	"log"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -34,22 +34,26 @@ var (
 	generateCmd = &cobra.Command{
 		Use:   "generate",
 		Short: "Generate Dependabot configuration",
-		RunE:  generate,
+		RunE:  runGenerate,
 	}
 
 	verifyCmd = &cobra.Command{
 		Use:   "verify [flags] path",
 		Short: "Verify Dependabot configuration is complete",
 		Long:  "Ensure Dependabot configuration contains update checks for all modules in the repository.",
-		RunE:  verify,
+		RunE:  runVerify,
 	}
 )
 
-func main() {
+func buildAndExecute() error {
 	rootCmd.AddCommand(generateCmd)
 	rootCmd.AddCommand(verifyCmd)
 
-	if err := rootCmd.Execute(); err != nil {
-		log.Fatal(err)
+	return rootCmd.Execute()
+}
+
+func main() {
+	if err := buildAndExecute(); err != nil {
+		os.Exit(1)
 	}
 }
