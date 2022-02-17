@@ -21,14 +21,8 @@ const (
 )
 
 var (
-	weeklySchedule  = schedule{Interval: "weekly", Day: "sunday"}
-	labels          = []string{"dependencies", "actions", "Skip Changelog"}
-	ghActionsUpdate = update{
-		PackageEcosystem: "github-actions",
-		Directory:        "/",
-		Labels:           labels,
-		Schedule:         weeklySchedule,
-	}
+	weeklySchedule = schedule{Interval: "weekly", Day: "sunday"}
+	labels         = []string{"dependencies", "actions", "Skip Changelog"}
 )
 
 type dependabotConfig struct {
