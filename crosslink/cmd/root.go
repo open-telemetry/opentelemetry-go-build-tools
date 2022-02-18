@@ -52,7 +52,7 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&rc.RootPath, "root", "", "path to root directory of multi module repository")
+	rootCmd.PersistentFlags().StringVar(&rc.RootPath, "root", "", "path to root directory of multi-module repository")
 	rootCmd.PersistentFlags().StringSliceVar(&excludeFlags, "exclude", []string{}, "list of comma separated go modules that crosslink will ignore in operations."+
 		"multiple calls of --exclude can be made")
 	rootCmd.PersistentFlags().BoolVarP(&rc.Verbose, "verbose", "v", false, "verbose output")
