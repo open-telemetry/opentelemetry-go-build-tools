@@ -124,5 +124,5 @@ Can be disabled when overwriting.
 
     crosslink --root=/users/foot/multimodule-go-repo --overwrite -v=false
 
-`Quick Tip: Make sure your go.mod files are tracked and committed in a VCS
-before running crosslink.`
+**Quick Tip: Make sure your go.mod files are tracked and committed in a VCS
+before running crosslink.**
