@@ -47,7 +47,7 @@ Crosslink supports the following commands and flags.
 
 ### –-root
 
-Used to provide the path to a directory where a go.mod file must exist. If a
+Used to specify the directory where the root go.mod file exists. If a
 root flag is not provided, crosslink will attempt to find the root directory of
 a git repository using a tool available in the go-build-tools repo. The root
 flag is available to all crosslink subcommands.
