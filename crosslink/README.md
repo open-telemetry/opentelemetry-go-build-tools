@@ -43,7 +43,7 @@ the discrepancy.
 To utilize the latest release of crosslink clone and build the repository and
 use the commands listed below.
 
-Crosslink is built as a Cobra app and supports the following commands and flags.
+Crosslink supports the following commands and flags.
 
 ### –-root
 
