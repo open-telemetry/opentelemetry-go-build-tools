@@ -22,7 +22,7 @@ assumptions the tool maintains constraints to avoid any undesirable changes.
     level of the repository.
 3. Crosslink does not maintain or include version numbers in replace
    statements. Replace statements are always inserted or overwritten with no
-    version numbers.
+   version numbers.
 4. Crosslink allows users to `exclude` modules. Exclude means that crosslink
    will not perform any replace or pruning operations where the
    `old path == exclude path`. Operations will still be performed inside
