@@ -83,7 +83,12 @@ func FindModules(root string) ([]*modfile.File, error) {
 		}
 
 		var b bytes.Buffer
-		io.Copy(&b, f)
+		_, err = io.Copy(&b, f)
+		if err != nil {
+			// Best attempt at cleanup.
+			_ = f.Close()
+			return err
+		}
 		if err = f.Close(); err != nil {
 			return err
 		}
