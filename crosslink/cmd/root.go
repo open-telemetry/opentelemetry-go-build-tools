@@ -33,8 +33,7 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "crosslink",
 	Short: "Automatically insert replace statements for intra-repository dependencies",
-	Long: `
-	Crosslink is a tool to assist with go.mod file management for repositories containing
+	Long: `Crosslink is a tool to assist with go.mod file management for repositories containing
 	multiple go modules. Crosslink automatically inserts replace directives into go.mod files
 	for all intra-repository dependencies including transitive dependencies.`,
 	PersistentPreRun: preRunSetup,
