@@ -7,5 +7,11 @@ require (
 	github.com/gogo/protobuf v1.3.2
 	github.com/golangci/golangci-lint v1.44.0
 	github.com/itchyny/gojq v0.12.6
+	go.opentelemetry.io/build-tools/dbotconf v0.0.0-00010101000000-000000000000
 	golang.org/x/tools v0.1.9
+)
+
+replace (
+	go.opentelemetry.io/build-tools => ../../
+	go.opentelemetry.io/build-tools/dbotconf => ../../dbotconf
 )

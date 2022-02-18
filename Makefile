@@ -48,10 +48,13 @@ $(TOOLS)/misspell: PACKAGE= github.com/client9/misspell/cmd/misspell
 STRINGER = $(TOOLS)/stringer
 $(TOOLS)/stringer: PACKAGE=golang.org/x/tools/cmd/stringer
 
+DBOTCONF = $(TOOLS)/dbotconf
+$(TOOLS)/dbotconf: PACKAGE=go.opentelemetry.io/build-tools/dbotconf
+
 $(TOOLS)/gojq: PACKAGE=github.com/itchyny/gojq/cmd/gojq
 
 .PHONY: tools
-tools: $(GOLANGCI_LINT) $(MISSPELL) $(STRINGER) $(TOOLS)/gojq
+tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(STRINGER) $(TOOLS)/gojq
 
 
 # Build
@@ -134,19 +137,14 @@ license-check:
 	           exit 1; \
 	   fi
 
+DEPENDABOT_CONFIG = .github/dependabot.yml
 .PHONY: dependabot-check
-dependabot-check:
-	@result=$$( \
-		for f in $$( find . -type f -name go.mod -exec dirname {} \; | sed 's/^.//' ); \
-			do grep -q "directory: \+$$f" .github/dependabot.yml \
-			|| echo "$$f"; \
-		done; \
-	); \
-	if [ -n "$$result" ]; then \
-		echo "missing go.mod dependabot check:"; echo "$$result"; \
-		echo "new modules need to be added to the .github/dependabot.yml file"; \
-		exit 1; \
-	fi
+dependabot-check: | $(DBOTCONF)
+	@$(DBOTCONF) verify $(DEPENDABOT_CONFIG) || echo "(run: make dependabot-generate)"
+
+.PHONY: dependabot-generate
+dependabot-generate: | $(DBOTCONF)
+	@$(DBOTCONF) generate > $(DEPENDABOT_CONFIG)
 
 .PHONY: check-clean-work-tree
 check-clean-work-tree:
