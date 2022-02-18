@@ -32,7 +32,7 @@ assumptions the tool maintains constraints to avoid any undesirable changes.
 See [opentelemetry-go](https://github.com/open-telemetry/opentelemetry-go)
 and
 [opentelemetry-collector-contrib](https://github.com/open-telemetry/opentelemetry-collector-contrib)
-for working examples. If you exerperience a use case that crosslink fails
+for working examples. If you experience a use case that crosslink fails
 too handle properly please open an issue (or even a PR!) highlighting
 the discrepancy.
 
