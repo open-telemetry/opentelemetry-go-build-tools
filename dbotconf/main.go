@@ -17,43 +17,11 @@ package main
 import (
 	"os"
 
-	"github.com/spf13/cobra"
+	"go.opentelemetry.io/build-tools/dbotconf/internal"
 )
-
-var (
-	rootCmd = &cobra.Command{
-		Use:   "dbotconf",
-		Short: "Dependabot configuration utility",
-		Long:  "dbotconf manages Dependabot configuration for multi-module Go repositories.",
-		Example: `
-  dbotconf generate > .github/dependabot.yml
-
-  dbotconf verify .github/dependabot.yml`,
-	}
-
-	generateCmd = &cobra.Command{
-		Use:   "generate",
-		Short: "Generate Dependabot configuration",
-		RunE:  runGenerate,
-	}
-
-	verifyCmd = &cobra.Command{
-		Use:   "verify [flags] path",
-		Short: "Verify Dependabot configuration is complete",
-		Long:  "Ensure Dependabot configuration contains update checks for all modules in the repository.",
-		RunE:  runVerify,
-	}
-)
-
-func buildAndExecute() error {
-	rootCmd.AddCommand(generateCmd)
-	rootCmd.AddCommand(verifyCmd)
-
-	return rootCmd.Execute()
-}
 
 func main() {
-	if err := buildAndExecute(); err != nil {
+	if err := internal.BuildAndExecute(); err != nil {
 		os.Exit(1)
 	}
 }
