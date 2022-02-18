@@ -45,9 +45,8 @@ func writeModule(module moduleInfo) error {
 // attempts to identify a go.mod file at the either the path provided
 // or at the root of the git repository. This check will fail if no path is
 // provided and the tool was called outside of a git repository.
-func identifyRootModule(r string) (string, error) {
+func identifyRootModule(rootPath string) (string, error) {
 	var err error
-	rootPath := r
 	if rootPath == "" {
 		rootPath, err = tools.FindRepoRoot()
 		if err != nil {
