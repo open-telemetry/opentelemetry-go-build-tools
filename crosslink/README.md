@@ -9,7 +9,7 @@ that are no longer required within reason (see below).
 ## Rules
 
 Crosslink makes certain assumptions about your repository. Due to these
-assumptions the tool maintains contstraints to avoid any undesirable changes.
+assumptions the tool maintains constraints to avoid any undesirable changes.
 
 1. By default all crosslink actions are non destructive unless specific command
     flags are provided.
