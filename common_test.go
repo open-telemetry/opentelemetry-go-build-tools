@@ -44,7 +44,7 @@ func TestFindModules(t *testing.T) {
 		filepath.Join(root, "c"),
 	}
 	for _, d := range dirs {
-		os.MkdirAll(d, os.ModePerm)
+		require.NoError(t, os.MkdirAll(d, os.ModePerm))
 		goMod := filepath.Join(d, "go.mod")
 		f, err := os.Create(goMod)
 		require.NoError(t, err)
@@ -53,7 +53,7 @@ func TestFindModules(t *testing.T) {
 		require.NoError(t, f.Close())
 	}
 	// Add a non-module dir.
-	os.MkdirAll(filepath.Join(root, "tools"), os.ModePerm)
+	require.NoError(t, os.MkdirAll(filepath.Join(root, "tools"), os.ModePerm))
 
 	got, err := FindModules(root)
 	require.NoError(t, err)
