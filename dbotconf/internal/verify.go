@@ -56,8 +56,8 @@ func configuredUpdates(path string) (map[string]struct{}, error) {
 	return updates, nil
 }
 
-// runVerify ensures dependabot configuration contains a check for all modules.
-func runVerify(_ *cobra.Command, args []string) error {
+// verify ensures dependabot configuration contains a check for all modules.
+func verify(args []string) error {
 	switch len(args) {
 	case 0:
 		return errNotEnoughArg
@@ -93,4 +93,11 @@ func runVerify(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("%w: %s", errMissing, strings.Join(missing, ", "))
 	}
 	return nil
+}
+
+func runVerify(c *cobra.Command, args []string) {
+	if err := verify(args); err != nil {
+		fmt.Printf("%s: %v", c.CommandPath(), err)
+		os.Exit(1)
+	}
 }

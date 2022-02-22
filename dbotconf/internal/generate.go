@@ -58,9 +58,9 @@ func buildConfig(root string, mods []*modfile.File) (*dependabotConfig, error) {
 
 var output io.Writer = os.Stdout
 
-// runGenerate outputs a generated dependabot configuration for all Go modules
+// generate outputs a generated dependabot configuration for all Go modules
 // contained in the repository.
-func runGenerate(*cobra.Command, []string) error {
+func generate() error {
 	root, mods, err := allModsFunc()
 	if err != nil {
 		return err
@@ -73,4 +73,11 @@ func runGenerate(*cobra.Command, []string) error {
 
 	fmt.Fprintln(output, header)
 	return yaml.NewEncoder(output).Encode(c)
+}
+
+func runGenerate(c *cobra.Command, _ []string) {
+	if err := generate(); err != nil {
+		fmt.Printf("%s: %v", c.CommandPath(), err)
+		os.Exit(1)
+	}
 }

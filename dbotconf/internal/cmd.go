@@ -32,14 +32,14 @@ var (
 	generateCmd = &cobra.Command{
 		Use:   "generate",
 		Short: "Generate Dependabot configuration",
-		RunE:  runGenerate,
+		Run:   runGenerate,
 	}
 
 	verifyCmd = &cobra.Command{
 		Use:   "verify [flags] path",
 		Short: "Verify Dependabot configuration is complete",
 		Long:  "Ensure Dependabot configuration contains update checks for all modules in the repository.",
-		RunE:  runVerify,
+		Run:   runVerify,
 	}
 )
 

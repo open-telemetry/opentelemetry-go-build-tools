@@ -30,7 +30,7 @@ func TestRunGenerateHeader(t *testing.T) {
 	var b bytes.Buffer
 	t.Cleanup(func(w io.Writer) func() { return func() { output = w } }(output))
 	output = &b
-	require.NoError(t, runGenerate(nil, nil))
+	require.NoError(t, generate())
 
 	got := b.String()
 	assert.True(t, strings.HasPrefix(got, header), "missing header")
@@ -42,7 +42,7 @@ func TestRunGenerateYAML(t *testing.T) {
 	var b bytes.Buffer
 	t.Cleanup(func(w io.Writer) func() { return func() { output = w } }(output))
 	output = &b
-	require.NoError(t, runGenerate(nil, nil))
+	require.NoError(t, generate())
 
 	var c dependabotConfig
 	assert.NoError(t, yaml.NewDecoder(&b).Decode(&c))
@@ -85,7 +85,7 @@ func TestRunGenerateReturnAllModsError(t *testing.T) {
 	allModsFunc = func() (string, []*modfile.File, error) {
 		return "", []*modfile.File{}, assert.AnError
 	}
-	assert.ErrorIs(t, runGenerate(nil, nil), assert.AnError)
+	assert.ErrorIs(t, generate(), assert.AnError)
 }
 
 func TestRunGenerateReturnBuildConfigError(t *testing.T) {
@@ -102,5 +102,5 @@ func TestRunGenerateReturnBuildConfigError(t *testing.T) {
 	buildConfigFunc = func(string, []*modfile.File) (*dependabotConfig, error) {
 		return nil, assert.AnError
 	}
-	assert.ErrorIs(t, runGenerate(nil, nil), assert.AnError)
+	assert.ErrorIs(t, generate(), assert.AnError)
 }

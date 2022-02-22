@@ -24,8 +24,8 @@ import (
 )
 
 func TestRunVerifyErrors(t *testing.T) {
-	assert.ErrorIs(t, runVerify(nil, nil), errNotEnoughArg)
-	assert.ErrorIs(t, runVerify(nil, []string{"", ""}), errTooManyArg)
+	assert.ErrorIs(t, verify(nil), errNotEnoughArg)
+	assert.ErrorIs(t, verify([]string{"", ""}), errTooManyArg)
 }
 
 func TestRunVerify(t *testing.T) {
@@ -51,7 +51,7 @@ func TestRunVerify(t *testing.T) {
 		}, nil
 	}
 
-	assert.NoError(t, runVerify(nil, []string{""}))
+	assert.NoError(t, verify([]string{""}))
 }
 
 func TestRunVerifyMissing(t *testing.T) {
@@ -71,7 +71,7 @@ func TestRunVerifyMissing(t *testing.T) {
 		return map[string]struct{}{}, nil
 	}
 
-	assert.ErrorIs(t, runVerify(nil, []string{""}), errMissing)
+	assert.ErrorIs(t, verify([]string{""}), errMissing)
 }
 
 func TestRunVerifyReturnAllModsError(t *testing.T) {
@@ -81,7 +81,7 @@ func TestRunVerifyReturnAllModsError(t *testing.T) {
 	allModsFunc = func() (string, []*modfile.File, error) {
 		return "", []*modfile.File{}, assert.AnError
 	}
-	assert.ErrorIs(t, runVerify(nil, []string{""}), assert.AnError)
+	assert.ErrorIs(t, verify([]string{""}), assert.AnError)
 }
 
 func TestRunVerifyReturnConfiguredUpdatesError(t *testing.T) {
@@ -98,7 +98,7 @@ func TestRunVerifyReturnConfiguredUpdatesError(t *testing.T) {
 	configuredUpdatesFunc = func(string) (map[string]struct{}, error) {
 		return map[string]struct{}{}, assert.AnError
 	}
-	assert.ErrorIs(t, runVerify(nil, []string{""}), assert.AnError)
+	assert.ErrorIs(t, verify([]string{""}), assert.AnError)
 }
 
 func TestConfiguredUpdates(t *testing.T) {
