@@ -77,3 +77,30 @@ func TestBuildConfig(t *testing.T) {
 		},
 	}, got)
 }
+
+func TestRunGenerateReturnAllModsError(t *testing.T) {
+	t.Cleanup(func(f func() (string, []*modfile.File, error)) func() {
+		return func() { allModsFunc = f }
+	}(allModsFunc))
+	allModsFunc = func() (string, []*modfile.File, error) {
+		return "", []*modfile.File{}, assert.AnError
+	}
+	assert.ErrorIs(t, runGenerate(nil, nil), assert.AnError)
+}
+
+func TestRunGenerateReturnBuildConfigError(t *testing.T) {
+	t.Cleanup(func(f func() (string, []*modfile.File, error)) func() {
+		return func() { allModsFunc = f }
+	}(allModsFunc))
+	allModsFunc = func() (string, []*modfile.File, error) {
+		return "", []*modfile.File{}, nil
+	}
+
+	t.Cleanup(func(f func(string, []*modfile.File) (*dependabotConfig, error)) func() {
+		return func() { buildConfigFunc = f }
+	}(buildConfigFunc))
+	buildConfigFunc = func(string, []*modfile.File) (*dependabotConfig, error) {
+		return nil, assert.AnError
+	}
+	assert.ErrorIs(t, runGenerate(nil, nil), assert.AnError)
+}

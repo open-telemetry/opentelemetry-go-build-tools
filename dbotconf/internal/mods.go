@@ -22,6 +22,12 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
+// Allow test overrides and validation.
+var (
+	allModsFunc           = allMods
+	configuredUpdatesFunc = configuredUpdates
+)
+
 // allMods returns the repo root and all module files within it.
 func allMods() (string, []*modfile.File, error) {
 	root, err := tools.FindRepoRoot()

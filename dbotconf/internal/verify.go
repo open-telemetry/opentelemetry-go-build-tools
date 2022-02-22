@@ -25,8 +25,10 @@ import (
 )
 
 var (
-	errInvalid = errors.New("invalid dependabot configuration")
-	errMissing = errors.New("missing update check(s)")
+	errInvalid      = errors.New("invalid dependabot configuration")
+	errMissing      = errors.New("missing update check(s)")
+	errNotEnoughArg = errors.New("path argument required")
+	errTooManyArg   = errors.New("only single path argument allowed")
 )
 
 // configuredUpdates returns the set of Go modules dependabot is configured to
@@ -53,15 +55,6 @@ func configuredUpdates(path string) (map[string]struct{}, error) {
 	}
 	return updates, nil
 }
-
-// Allow test overrides and validation.
-var (
-	allModsFunc           = allMods
-	configuredUpdatesFunc = configuredUpdates
-
-	errNotEnoughArg = errors.New("path argument required")
-	errTooManyArg   = errors.New("only single path argument allowed")
-)
 
 // runVerify ensures dependabot configuration contains a check for all modules.
 func runVerify(_ *cobra.Command, args []string) error {
