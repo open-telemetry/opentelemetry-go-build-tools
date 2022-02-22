@@ -24,6 +24,11 @@ import (
 	yaml "gopkg.in/yaml.v3"
 )
 
+var (
+	errInvalid = errors.New("invalid dependabot configuration")
+	errMissing = errors.New("missing update check(s)")
+)
+
 // configuredUpdates returns the set of Go modules dependabot is configured to
 // check updates for.
 func configuredUpdates(path string) (map[string]struct{}, error) {
@@ -36,7 +41,7 @@ func configuredUpdates(path string) (map[string]struct{}, error) {
 
 	var c dependabotConfig
 	if err := yaml.NewDecoder(f).Decode(&c); err != nil {
-		return nil, fmt.Errorf("invalid dependabot configuration: %w", err)
+		return nil, fmt.Errorf("%w: %v", errInvalid, err)
 	}
 
 	updates := make(map[string]struct{})
@@ -49,23 +54,32 @@ func configuredUpdates(path string) (map[string]struct{}, error) {
 	return updates, nil
 }
 
+// Allow test overrides and validation.
+var (
+	allModsFunc           = allMods
+	configuredUpdatesFunc = configuredUpdates
+
+	errNotEnoughArg = errors.New("path argument required")
+	errTooManyArg   = errors.New("only single path argument allowed")
+)
+
 // runVerify ensures dependabot configuration contains a check for all modules.
 func runVerify(_ *cobra.Command, args []string) error {
 	switch len(args) {
 	case 0:
-		return errors.New("path argument required")
+		return errNotEnoughArg
 	case 1:
 		// Valid case.
 	default:
-		return fmt.Errorf("only single path argument allowed, received %v", args)
+		return fmt.Errorf("%w, received %v", errTooManyArg, args)
 	}
 
-	root, mods, err := allMods()
+	root, mods, err := allModsFunc()
 	if err != nil {
 		return err
 	}
 
-	updates, err := configuredUpdates(args[0])
+	updates, err := configuredUpdatesFunc(args[0])
 	if err != nil {
 		return err
 	}
@@ -83,7 +97,7 @@ func runVerify(_ *cobra.Command, args []string) error {
 	}
 
 	if len(missing) > 0 {
-		return fmt.Errorf("missing update check(s): %s", strings.Join(missing, ", "))
+		return fmt.Errorf("%w: %s", errMissing, strings.Join(missing, ", "))
 	}
 	return nil
 }
