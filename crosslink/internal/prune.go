@@ -19,7 +19,6 @@ import (
 	"strings"
 
 	"go.uber.org/zap"
-	"golang.org/x/mod/modfile"
 )
 
 // main entry point for the Prune subcommand.
@@ -66,13 +65,10 @@ func Prune(rc RunConfig) {
 
 // pruneReplace removes any extraneous intra-repository replace statements.
 func pruneReplace(rootModulePath string, module *moduleInfo, rc RunConfig) error {
-	mfParsed, err := modfile.Parse("go.mod", module.moduleContents, nil)
-	if err != nil {
-		return fmt.Errorf("failed to parse go.mod file: %w", err)
-	}
+	modContents := module.moduleContents
 
 	// check to see if its intra dependency and no longer present
-	for _, rep := range mfParsed.Replace {
+	for _, rep := range modContents.Replace {
 		// skip excluded
 		if _, exists := rc.ExcludedPaths[rep.Old.Path]; exists {
 
@@ -84,23 +80,20 @@ func pruneReplace(rootModulePath string, module *moduleInfo, rc RunConfig) error
 		if _, ok := module.requiredReplaceStatements[rep.Old.Path]; strings.Contains(rep.Old.Path, rootModulePath) && !ok {
 			if rc.Verbose {
 				rc.Logger.Debug("Pruning replace statement",
-					zap.String("module", mfParsed.Module.Mod.Path),
+					zap.String("module", modContents.Module.Mod.Path),
 					zap.String("replace_statement", rep.Old.Path+" => "+rep.New.Path))
 			}
-			err = mfParsed.DropReplace(rep.Old.Path, rep.Old.Version)
+			err := modContents.DropReplace(rep.Old.Path, rep.Old.Version)
 			if err != nil {
 				rc.Logger.Error("error dropping replace statement",
 					zap.Error(err),
-					zap.String("module", mfParsed.Module.Mod.Path),
+					zap.String("module", modContents.Module.Mod.Path),
 					zap.String("replace_statement", rep.Old.Path+" => "+rep.New.Path))
 			}
 
 		}
 	}
-	module.moduleContents, err = mfParsed.Format()
-	if err != nil {
-		return fmt.Errorf("failed to format go.mod file: %w", err)
-	}
+	module.moduleContents = modContents
 
 	return nil
 }

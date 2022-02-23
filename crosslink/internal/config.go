@@ -18,19 +18,18 @@ import (
 	"log"
 
 	"go.uber.org/zap"
+	"golang.org/x/mod/modfile"
 )
 
 type moduleInfo struct {
-	moduleFilePath            string
-	moduleContents            []byte
+	moduleContents            modfile.File
 	requiredReplaceStatements map[string]struct{}
 }
 
-func newModuleInfo(moduleContents []byte, filePath string) *moduleInfo {
+func newModuleInfo(moduleContents modfile.File) *moduleInfo {
 	return &moduleInfo{
 		requiredReplaceStatements: make(map[string]struct{}),
 		moduleContents:            moduleContents,
-		moduleFilePath:            filePath,
 	}
 }
 

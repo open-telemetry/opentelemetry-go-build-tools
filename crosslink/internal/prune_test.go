@@ -140,6 +140,11 @@ func TestPruneReplace(t *testing.T) {
 		t.Errorf("failed to read mock gomod file: %v", err)
 	}
 
+	modFile, err := modfile.Parse("go.mod", modContents, nil)
+	if err != nil {
+		t.Errorf("failed to parse mock gomod file: %v", err)
+	}
+
 	mockRequiredReplaceStatements := map[string]struct{}{
 		"go.opentelemetry.io/build-tools/crosslink/testroot/testA": {},
 		"go.opentelemetry.io/build-tools/crosslink/testroot/testB": {},
@@ -152,13 +157,10 @@ func TestPruneReplace(t *testing.T) {
 		"go.opentelemetry.io/build-tools/crosslink/testroot/testK": {},
 	}
 
-	mockModInfo := moduleInfo{
-		moduleFilePath:            tmpRootDir,
-		moduleContents:            modContents,
-		requiredReplaceStatements: mockRequiredReplaceStatements,
-	}
+	mockModInfo := newModuleInfo(*modFile)
+	mockModInfo.requiredReplaceStatements = mockRequiredReplaceStatements
 	lg, _ := zap.NewDevelopment()
-	assert.NoError(t, pruneReplace("go.opentelemetry.io/build-tools/crosslink/testroot", &mockModInfo, RunConfig{Prune: true, Verbose: true, Logger: lg}))
+	assert.NoError(t, pruneReplace("go.opentelemetry.io/build-tools/crosslink/testroot", mockModInfo, RunConfig{Prune: true, Verbose: true, Logger: lg}))
 
 	expectedModFile := []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
 		"go 1.17\n\n" +
@@ -190,10 +192,7 @@ func TestPruneReplace(t *testing.T) {
 	}
 	expModParse.Cleanup()
 
-	actual, err := modfile.Parse("go.mod", mockModInfo.moduleContents, nil)
-	if err != nil {
-		t.Fatalf("error decoding original mod files: %v", err)
-	}
+	actual := mockModInfo.moduleContents
 	actual.Cleanup()
 
 	// replace structs need to be assorted to avoid flaky fails in test
@@ -201,8 +200,8 @@ func TestPruneReplace(t *testing.T) {
 		return x.Old.Path < y.Old.Path
 	}
 
-	if diff := cmp.Diff(expModParse, actual, cmpopts.IgnoreFields(modfile.Replace{}, "Syntax"),
-		cmpopts.IgnoreFields(modfile.File{}, "Require", "Exclude", "Retract", "Syntax"),
+	if diff := cmp.Diff(*expModParse, actual, cmpopts.IgnoreFields(modfile.Replace{}, "Syntax"),
+		cmpopts.IgnoreFields(modfile.File{}, "Require", "Exclude", "Retract", "Syntax", "Module"),
 		cmpopts.SortSlices(replaceSortFunc),
 	); diff != "" {
 		t.Errorf("Replace{} mismatch (-want +got):\n%s", diff)

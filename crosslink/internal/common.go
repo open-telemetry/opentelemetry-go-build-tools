@@ -24,17 +24,14 @@ import (
 )
 
 func writeModule(module moduleInfo) error {
-	mfParsed, err := modfile.Parse("go.mod", module.moduleContents, nil)
-	if err != nil {
-		return fmt.Errorf("failed to parse go.mod file: %w", err)
-	}
+	modContents := module.moduleContents
 	//  now overwrite the existing gomod file
-	gomodFile, err := mfParsed.Format()
+	gomodFile, err := modContents.Format()
 	if err != nil {
 		return fmt.Errorf("failed to format go.mod file: %w", err)
 	}
 	//write our updated go.mod file
-	err = os.WriteFile(module.moduleFilePath, gomodFile, 0644)
+	err = os.WriteFile(modContents.Syntax.Name, gomodFile, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to write go.mod file: %w", err)
 	}

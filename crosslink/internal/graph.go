@@ -44,7 +44,14 @@ func buildDepedencyGraph(rc RunConfig, rootModulePath string) (map[string]module
 				return fmt.Errorf("failed to read file: %w", err)
 			}
 
-			modInfo := newModuleInfo(modFile, filePath)
+			modContents, err := modfile.Parse(filePath, modFile, nil)
+			if err != nil {
+				rc.Logger.Error("Modfile could not be parsed",
+					zap.Error(err),
+					zap.String("file_path", filePath))
+			}
+
+			modInfo := newModuleInfo(*modContents)
 
 			moduleMap[modfile.ModulePath(modFile)] = *modInfo
 		}
@@ -63,10 +70,7 @@ func buildDepedencyGraph(rc RunConfig, rootModulePath string) (map[string]module
 		alreadyInsertedRepSet := make(map[string]struct{})
 
 		// modfile type that we will work with then write to the mod file in the end
-		mfParsed, err := modfile.Parse("go.mod", modInfo.moduleContents, nil)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse go.mod file: %w", err)
-		}
+		modContents := modInfo.moduleContents
 
 		// populate initial list of requirements
 		// Modules should only be queued for replacement if they meet the following criteria
@@ -75,9 +79,9 @@ func buildDepedencyGraph(rc RunConfig, rootModulePath string) (map[string]module
 		//		- Crosslink will not make an assumption that a module exists even though it falls under the module path.
 		// 2. They fall under the module path of the root module
 		// 3. They are not the same module that we are currently working with.
-		for _, req := range mfParsed.Require {
+		for _, req := range modContents.Require {
 			if _, existsInPath := moduleMap[req.Mod.Path]; strings.Contains(req.Mod.Path, rootModulePath) &&
-				req.Mod.Path != mfParsed.Module.Mod.Path && existsInPath {
+				req.Mod.Path != modContents.Module.Mod.Path && existsInPath {
 				reqStack = append(reqStack, req.Mod.Path)
 				alreadyInsertedRepSet[req.Mod.Path] = struct{}{}
 			}
@@ -93,14 +97,14 @@ func buildDepedencyGraph(rc RunConfig, rootModulePath string) (map[string]module
 			// now find all transitive dependencies for the current required module. Only add to stack if they
 			// have not already been added and they are not the current module we are working in.
 			if value, ok := moduleMap[reqModule]; ok {
-				m, err := modfile.Parse("go.mod", value.moduleContents, nil)
+				m := value.moduleContents
 				if err != nil {
 					return nil, fmt.Errorf("failed to parse go.mod file: %w", err)
 				}
 				for _, transReq := range m.Require {
 					_, existsInPath := moduleMap[transReq.Mod.Path]
 					_, alreadyInserted := alreadyInsertedRepSet[transReq.Mod.Path]
-					if transReq.Mod.Path != mfParsed.Module.Mod.Path &&
+					if transReq.Mod.Path != modContents.Module.Mod.Path &&
 						strings.Contains(transReq.Mod.Path, rootModulePath) &&
 						!alreadyInserted && existsInPath {
 						reqStack = append(reqStack, transReq.Mod.Path)

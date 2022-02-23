@@ -74,10 +74,7 @@ func Crosslink(rc RunConfig) {
 
 func insertReplace(module *moduleInfo, rc RunConfig) error {
 	// modfile type that we will work with then write to the mod file in the end
-	mfParsed, err := modfile.Parse("gomod", module.moduleContents, nil)
-	if err != nil {
-		return fmt.Errorf("failed to parse go.mod file: %w", err)
-	}
+	modContents := module.moduleContents
 
 	for reqModule := range module.requiredReplaceStatements {
 		// skip excluded
@@ -87,7 +84,7 @@ func insertReplace(module *moduleInfo, rc RunConfig) error {
 			continue
 		}
 
-		localPath, err := filepath.Rel(mfParsed.Module.Mod.Path, reqModule)
+		localPath, err := filepath.Rel(modContents.Module.Mod.Path, reqModule)
 		if err != nil {
 			return fmt.Errorf("failed to retrieve relative path: %w", err)
 		}
@@ -97,43 +94,40 @@ func insertReplace(module *moduleInfo, rc RunConfig) error {
 			localPath = "./" + localPath
 		}
 
-		if oldReplace, exists := containsReplace(mfParsed.Replace, reqModule); exists {
+		if oldReplace, exists := containsReplace(modContents.Replace, reqModule); exists {
 			if rc.Overwrite {
 				rc.Logger.Debug("Overwriting Module",
-					zap.String("module", mfParsed.Module.Mod.Path),
+					zap.String("module", modContents.Module.Mod.Path),
 					zap.String("old_replace", reqModule+" => "+oldReplace.New.Path),
 					zap.String("new_replace", reqModule+" => "+localPath))
 
-				err = mfParsed.AddReplace(reqModule, "", localPath, "")
+				err = modContents.AddReplace(reqModule, "", localPath, "")
 
 				if err != nil {
 					rc.Logger.Error("failed to add replace statement", zap.Error(err),
-						zap.String("module", mfParsed.Module.Mod.Path),
+						zap.String("module", modContents.Module.Mod.Path),
 						zap.String("old_replace", reqModule+" => "+oldReplace.New.Path),
 						zap.String("new_replace", reqModule+" => "+localPath))
 				}
 			} else {
 				rc.Logger.Debug("Replace statement already exists -run with overwrite to update if desired",
-					zap.String("module", mfParsed.Module.Mod.Path),
+					zap.String("module", modContents.Module.Mod.Path),
 					zap.String("current_replace", reqModule+" => "+oldReplace.New.Path))
 			}
 		} else {
 			// does not contain a replace statement. Insert it
 			rc.Logger.Debug("Inserting Replace Statement",
-				zap.String("module", mfParsed.Module.Mod.Path),
+				zap.String("module", modContents.Module.Mod.Path),
 				zap.String("statement", reqModule+" => "+localPath))
-			err = mfParsed.AddReplace(reqModule, "", localPath, "")
+			err = modContents.AddReplace(reqModule, "", localPath, "")
 			if err != nil {
 				rc.Logger.Error("Failed to add replace statement", zap.Error(err),
-					zap.String("module", mfParsed.Module.Mod.Path),
+					zap.String("module", modContents.Module.Mod.Path),
 					zap.String("statement", reqModule+" => "+localPath))
 			}
 		}
 	}
-	module.moduleContents, err = mfParsed.Format()
-	if err != nil {
-		return fmt.Errorf("failed to format go.mod file: %w", err)
-	}
+	module.moduleContents = modContents
 
 	return nil
 }
