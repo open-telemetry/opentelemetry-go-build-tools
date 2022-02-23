@@ -31,7 +31,3 @@ var pruneCmd = &cobra.Command{
 		cl.Prune(rc)
 	},
 }
-
-func init() {
-	rootCmd.AddCommand(pruneCmd)
-}
