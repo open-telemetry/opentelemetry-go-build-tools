@@ -40,7 +40,7 @@ the discrepancy.
 
 ### Latest Release
 
-To utilize Crosslink install using the `go` command line interface. 
+To utilize Crosslink install using the `go` command line interface.
 
 `go install go.opentelemetry.io/build-tools/crosslink`
 
@@ -48,10 +48,8 @@ Crosslink supports the following commands and flags.
 
 ### –-root
 
-Used to specify the directory where the root go.mod file exists. If a
-root flag is not provided, crosslink will attempt to find the root directory of
-a git repository using a tool available in the go-build-tools repo. The root
-flag is available to all crosslink subcommands.
+Used to provide the path to a directory where a go.mod file must exist. The
+root flag is available to all crosslink subcommands.
 
 **Note: If no --root flag is provided than crosslink attempts to identify a git
 repository in the current or a parent directory. If no git repository exists
@@ -59,12 +57,15 @@ crosslink will panic.**
 
     crosslink --root=/users/foo/multimodule-go-repo
 
-### prune / –-prune
+### prune / –-prune / -p
 
 `CAUTION: DESTRUCTIVE`
 
-The prune command or flag will run the prune action on the current dependency.
-Pruning will remove any dependency replacement statements for intra-repository dependencies that are determined to not be direct or transitive dependencies. Without pruning all intra-repository modules will be added as replace statements. Pruning will only remove go modules that fall under the same module path as the root module. For example,
+Pruning will remove any dependency replacement statements for intra-repository
+dependencies that are determined to not be direct or transitive dependencies.
+Without pruning all intra-repository modules will be added as replace statements.
+Pruning will only remove go modules that fall under the same module path
+as the root module. For example,
 If the root module is named `example.com/foo` and there exists a replace
 statement of `example.com/foo/bar => ./bar` that is not a direct or transitive
 dependency of the current go.mod file, it will be pruned.
@@ -101,15 +102,17 @@ replacement path. For example, passing `example.com/test` would exclude this rep
 statement from any operation `replace example.com/test => ./test`.
 
 A single call to exclude
+
     crosslink --overwrite --exclude=github.com/foo/bar/modA,github.com/foo/bar/modB
 
 Multiple calls to exclude can also be made
 
-    crosslink –prune --exclude=example.com/foo/bar/modA,example.com/foo/bar/modB \
+    crosslink –prune --exclude=example.com/foo/bar/modA, \
+    example.com/foo/bar/modB \
     --exclude=example.com/foo/bar/modC \
     --exclude=example.com/foo/bar/modJ,example.com/modZ
 
-### –-verbose
+### –-verbose / -v
 
 Verbose enables crosslink to log all replace (destructive and non-destructive) and
 pruning operations to the terminal. By default this is disabled but enabled
