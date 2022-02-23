@@ -27,7 +27,7 @@ var pruneCmd = &cobra.Command{
 	go.mod files that are not direct or transitive dependencies for intra-repository modules. 
 	This is a destructive action and will overwrite existing go.mod files. 
 	Prune will not remove modules that fall outside of the root module namespace.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		cl.Prune(rc)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return cl.Prune(rc)
 	},
 }

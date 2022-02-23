@@ -22,22 +22,19 @@ import (
 )
 
 // main entry point for the Prune subcommand.
-func Prune(rc RunConfig) {
+func Prune(rc RunConfig) error {
 	var err error
 
 	rc.Logger.Debug("Crosslink run config", zap.Any("run_config", rc))
 
 	rootModulePath, err := identifyRootModule(rc.RootPath)
 	if err != nil {
-		rc.Logger.Panic("Failed to identify root Module",
-			zap.Error(err))
+		return fmt.Errorf("failed to identify root module: %w", err)
 	}
 
 	graph, err := buildDepedencyGraph(rc, rootModulePath)
 	if err != nil {
-		rc.Logger.Panic("Failed to build dependency graph",
-			zap.Any("run_config", rc),
-			zap.String("root_module_path", rootModulePath))
+		return fmt.Errorf("failed to build dependency graph: %w", err)
 	}
 
 	for moduleName, moduleInfo := range graph {
@@ -61,6 +58,7 @@ func Prune(rc RunConfig) {
 	if err != nil {
 		fmt.Printf("failed to sync logger:  %v", err)
 	}
+	return nil
 }
 
 // pruneReplace removes any extraneous intra-repository replace statements.

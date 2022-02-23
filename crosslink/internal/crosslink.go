@@ -23,22 +23,19 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
-func Crosslink(rc RunConfig) {
+func Crosslink(rc RunConfig) error {
 	var err error
 
 	rc.Logger.Debug("Crosslink run config", zap.Any("run_config", rc))
 
 	rootModulePath, err := identifyRootModule(rc.RootPath)
 	if err != nil {
-		rc.Logger.Panic("Failed to identify root Module",
-			zap.Error(err))
+		return fmt.Errorf("failed to identify root module: %w", err)
 	}
 
 	graph, err := buildDepedencyGraph(rc, rootModulePath)
 	if err != nil {
-		rc.Logger.Panic("Failed to build dependency graph",
-			zap.Error(err),
-			zap.String("root_module_path", rootModulePath))
+		return fmt.Errorf("failed to build dependency graph: %w", err)
 	}
 
 	for moduleName, moduleInfo := range graph {
@@ -70,6 +67,7 @@ func Crosslink(rc RunConfig) {
 	if err != nil {
 		fmt.Printf("failed to sync logger:  %v \n", err)
 	}
+	return nil
 }
 
 func insertReplace(module *moduleInfo, rc RunConfig) error {

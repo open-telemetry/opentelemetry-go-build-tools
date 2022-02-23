@@ -37,8 +37,8 @@ var rootCmd = &cobra.Command{
 	mulitple go modules. Crosslink automatically inserts replace statements into go.mod files
 	for all intra-repository dependencies including transitive dependencies so the local module is used.`,
 	PersistentPreRun: preRunSetup,
-	Run: func(cmd *cobra.Command, args []string) {
-		cl.Crosslink(rc)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return cl.Crosslink(rc)
 	},
 }
 
@@ -47,6 +47,7 @@ var rootCmd = &cobra.Command{
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
+		log.Printf("failed execute: %v", err)
 		os.Exit(1)
 	}
 }
