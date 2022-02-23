@@ -101,6 +101,46 @@ func TestPreRun(t *testing.T) {
 			},
 			args: []string{"--overwrite", "--verbose=false"},
 		},
+		{
+			testName: "with prune exclusive",
+			mockConfig: cl.RunConfig{
+				Prune: true,
+			},
+			expectedConfig: cl.RunConfig{
+				Prune: true,
+			},
+			args: []string{"--prune"},
+		},
+		{
+			testName: "with prune exclusive short",
+			mockConfig: cl.RunConfig{
+				Prune: true,
+			},
+			expectedConfig: cl.RunConfig{
+				Prune: true,
+			},
+			args: []string{"-p"},
+		},
+		{
+			testName: "with verbose exclusive",
+			mockConfig: cl.RunConfig{
+				Verbose: true,
+			},
+			expectedConfig: cl.RunConfig{
+				Verbose: true,
+			},
+			args: []string{"--verbose"},
+		},
+		{
+			testName: "with verbose exclusive short",
+			mockConfig: cl.RunConfig{
+				Verbose: true,
+			},
+			expectedConfig: cl.RunConfig{
+				Verbose: true,
+			},
+			args: []string{"-v"},
+		},
 	}
 
 	for _, test := range tests {
