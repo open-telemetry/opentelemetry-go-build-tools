@@ -40,8 +40,9 @@ the discrepancy.
 
 ### Latest Release
 
-To utilize the latest release of crosslink clone and build the repository and
-use the commands listed below.
+To utilize Crosslink install using the `go` command line interface. 
+
+`go install go.opentelemetry.io/build-tools/crosslink`
 
 Crosslink supports the following commands and flags.
 
