@@ -23,10 +23,10 @@ import (
 var pruneCmd = &cobra.Command{
 	Use:   "prune",
 	Short: "Remove unnecessary replace statements from intra-repository go.mod files",
-	Long: `Prune will analyze and remove any unnecessary replace statements that are still
-	included in the intra-repository go.mod files. This is a destructive action and will overwrite
-	existing go.mod files. Prune will not remove modules that fall outside of the root
-	module namespace.`,
+	Long: `Prune will analyze and remove any uncessary replace statements for intra-repository
+	go.mod files that are not direct or transitive dependencies for intra-repository modules. 
+	This is a destructive action and will overwrite existing go.mod files. 
+	Prune will not remove modules that fall outside of the root module namespace.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		cl.Prune(rc)
 	},
