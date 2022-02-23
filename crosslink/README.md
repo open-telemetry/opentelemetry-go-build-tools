@@ -63,9 +63,7 @@ crosslink will panic.**
 `CAUTION: DESTRUCTIVE`
 
 The prune command or flag will run the prune action on the current dependency.
-Pruning will remove any dependencies that are not in the current
-intra-repository dependency graph. Pruning will only remove go modules that
-fall under the same module path as the root module. For example,
+Pruning will remove any dependency replacement statements for intra-repository dependencies that are determined to not be direct or transitive dependencies. Without pruning all intra-repository modules will be added as replace statements. Pruning will only remove go modules that fall under the same module path as the root module. For example,
 If the root module is named `example.com/foo` and there exists a replace
 statement of `example.com/foo/bar => ./bar` that is not a direct or transitive
 dependency of the current go.mod file, it will be pruned.
@@ -88,7 +86,7 @@ Pruning can also be executed in addition to a standard crosslink replace operati
 
 Overwrite gives crosslink permission to update existing replacement paths
 in addition to adding new ones. If crosslink identifies a direct or
-transitive dependency in the intra-repository graph then it will insert
+transitive dependency in the intra-repository dependency graph then it will insert
 or update the corresponding replace statement for that requirement.
 
     crosslink --root=/users/foo/multimodule-go-repo --overwrite
@@ -106,7 +104,7 @@ A single call to exclude
 
 Multiple calls to exclude can also be made
 
-    crosslink –prune --exclude=example.com/foo/bar/modA,example.com/foo/bar/modB\
+    crosslink –prune --exclude=example.com/foo/bar/modA,example.com/foo/bar/modB \
     --exclude=example.com/foo/bar/modC \
     --exclude=example.com/foo/bar/modJ,example.com/modZ
 
