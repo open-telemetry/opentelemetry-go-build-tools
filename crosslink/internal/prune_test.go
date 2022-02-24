@@ -79,7 +79,7 @@ func TestPrune(t *testing.T) {
 			}
 
 			test.config.RootPath = tmpRootDir
-			assert.NotPanics(t, func() { Prune(test.config) })
+			err = Prune(test.config)
 
 			if assert.NoError(t, err, "error message on execution %s") {
 

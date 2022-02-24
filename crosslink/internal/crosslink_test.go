@@ -128,7 +128,8 @@ func TestCrosslink(t *testing.T) {
 			t.Cleanup(func() { os.RemoveAll(tmpRootDir) })
 
 			test.config.RootPath = tmpRootDir
-			assert.NotPanics(t, func() { Crosslink(test.config) })
+
+			err = Crosslink(test.config)
 
 			if assert.NoError(t, err, "error message on execution %s") {
 
@@ -246,7 +247,7 @@ func TestOverwrite(t *testing.T) {
 
 			test.config.RootPath = tmpRootDir
 
-			assert.NotPanics(t, func() { Crosslink(test.config) })
+			err = Crosslink(test.config)
 
 			if assert.NoError(t, err, "error message on execution %s") {
 				// a mock_test_data_expected folder could be built instead of building expected files by hand.
@@ -343,7 +344,8 @@ func TestExclude(t *testing.T) {
 				t.Errorf("error renaming gomod files: %v", err)
 			}
 
-			assert.NotPanics(t, func() { Crosslink(test.config) })
+			err = Crosslink(test.config)
+
 			if assert.NoError(t, err, "error message on execution %s") {
 				// a mock_test_data_expected folder could be built instead of building expected files by hand.
 				modFilesExpected := map[string][]byte{
@@ -429,9 +431,10 @@ func TestBadRootPath(t *testing.T) {
 			}
 
 			t.Cleanup(func() { os.RemoveAll(tmpRootDir) })
-
-			assert.Panics(t, func() { Crosslink(test.config) })
-			assert.Panics(t, func() { Prune(test.config) })
+			err = Crosslink(test.config)
+			assert.Error(t, err)
+			err = Prune(test.config)
+			assert.Error(t, err)
 		})
 	}
 
