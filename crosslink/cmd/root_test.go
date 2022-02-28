@@ -62,10 +62,9 @@ func TestTransform(t *testing.T) {
 // Validate run config is valid after pre run.
 func TestPreRun(t *testing.T) {
 	configReset := func() {
-		rc = cl.DefaultRunConfig()
-		rootCmd.SetArgs([]string{})
+		comCfg.runConfig = cl.DefaultRunConfig()
+		comCfg.rootCommand.SetArgs([]string{})
 	}
-
 	tests := []struct {
 		testName       string
 		args           []string
@@ -146,18 +145,18 @@ func TestPreRun(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.testName, func(t *testing.T) {
 			t.Cleanup(configReset)
+			comCfg.runConfig = test.mockConfig
 
-			err := rootCmd.ParseFlags(test.args)
+			err := comCfg.rootCommand.ParseFlags(test.args)
 			if err != nil {
 				t.Errorf("Failed to parse flags: %v", err)
 			}
-			rootCmd.DebugFlags()
+			comCfg.rootCommand.DebugFlags()
 
-			rc = test.mockConfig
+			testPreRun := comCfg.rootCommand.PersistentPreRun
+			testPreRun(&comCfg.rootCommand, nil)
 
-			preRunSetup(rootCmd, nil)
-
-			if diff := cmp.Diff(test.expectedConfig, rc, cmpopts.IgnoreFields(cl.RunConfig{}, "Logger", "ExcludedPaths")); diff != "" {
+			if diff := cmp.Diff(test.expectedConfig, comCfg.runConfig, cmpopts.IgnoreFields(cl.RunConfig{}, "Logger", "ExcludedPaths")); diff != "" {
 				t.Errorf("TestCase: %s \n Replace{} mismatch (-want +got):\n%s", test.testName, diff)
 			}
 		})
