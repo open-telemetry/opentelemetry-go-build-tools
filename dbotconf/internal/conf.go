@@ -12,16 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build tools
-// +build tools
+package internal
 
-package tools
-
-import (
-	_ "github.com/client9/misspell/cmd/misspell"
-	_ "github.com/gogo/protobuf/protoc-gen-gogofast"
-	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
-	_ "github.com/itchyny/gojq"
-	_ "go.opentelemetry.io/build-tools/dbotconf"
-	_ "golang.org/x/tools/cmd/stringer"
+const (
+	version2    = 2
+	ghPkgEco    = "github-actions"
+	gomodPkgEco = "gomod"
 )
+
+var (
+	weeklySchedule = schedule{Interval: "weekly", Day: "sunday"}
+	labels         = []string{"dependencies", "actions", "Skip Changelog"}
+)
+
+type dependabotConfig struct {
+	Version int
+	Updates []update
+}
+
+type update struct {
+	PackageEcosystem string `yaml:"package-ecosystem"`
+	Directory        string
+	Labels           []string `yaml:",omitempty"`
+	Schedule         schedule
+}
+
+type schedule struct {
+	Interval string
+	Day      string `yaml:",omitempty"`
+}

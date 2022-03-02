@@ -16,11 +16,16 @@
 package tools
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
+
+	"golang.org/x/mod/modfile"
 )
 
 // FindRepoRoot retrieves the root of the repository containing the current working directory.
@@ -52,4 +57,53 @@ func FindRepoRoot() (string, error) {
 
 		return dir, nil
 	}
+}
+
+// FindModules returns all Go modules in the file tree rooted at root.
+func FindModules(root string) ([]*modfile.File, error) {
+	var results []*modfile.File
+	err := filepath.Walk(root, func(path string, info os.FileInfo, walkErr error) error {
+		if walkErr != nil {
+			// Walk failed to walk into this directory. Stop walking and
+			// signal this error.
+			return walkErr
+		}
+
+		if !info.IsDir() {
+			return nil
+		}
+
+		goMod := filepath.Join(path, "go.mod")
+		f, err := os.Open(goMod)
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+
+		var b bytes.Buffer
+		_, err = io.Copy(&b, f)
+		if err != nil {
+			// Best attempt at cleanup.
+			_ = f.Close()
+			return err
+		}
+		if err = f.Close(); err != nil {
+			return err
+		}
+
+		mFile, err := modfile.Parse(goMod, b.Bytes(), nil)
+		if err != nil {
+			return err
+		}
+		results = append(results, mFile)
+		return nil
+	})
+
+	sort.SliceStable(results, func(i, j int) bool {
+		return filepath.Dir(results[i].Syntax.Name) < filepath.Dir(results[j].Syntax.Name)
+	})
+
+	return results, err
 }
