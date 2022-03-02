@@ -8,8 +8,9 @@ Thumbs.db
 *.so
 coverage.*
 
-semconvgen/semconvgen
-multimod/multimod
 checkdoc/checkdoc
+dbotconf/dbotconf
 issuegenerator/issuegenerator
 crosslink/crosslink
+multimod/multimod
+semconvgen/semconvgen
