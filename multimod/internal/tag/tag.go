@@ -182,11 +182,15 @@ func (t tagger) tagAllModules(customTagger *object.Signature) error {
 
 		var err error
 		if customTagger == nil {
-			// TODO: figure out how to use go-git and gpg-agent without needing to have decrypted private key material
 			cfg, err2 := t.Repo.Config()
 			if err2 != nil {
 				err = fmt.Errorf("unable to load repo config: %w", err2)
+				if cfg == nil || cfg.Core.Worktree == "" {
+					// This is not recoverable, do not panic below.
+					return err
+				}
 			}
+			// TODO: figure out how to use go-git and gpg-agent without needing to have decrypted private key material
 			cmd := exec.Command("git", "tag", "-a", "-s", "-m", tagMessage, newFullTag, t.CommitHash.String())
 			cmd.Dir = cfg.Core.Worktree
 			output, err2 := cmd.CombinedOutput()
