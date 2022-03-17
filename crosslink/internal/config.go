@@ -18,7 +18,20 @@ import (
 	"log"
 
 	"go.uber.org/zap"
+	"golang.org/x/mod/modfile"
 )
+
+type moduleInfo struct {
+	moduleContents            modfile.File
+	requiredReplaceStatements map[string]struct{}
+}
+
+func newModuleInfo(moduleContents modfile.File) *moduleInfo {
+	return &moduleInfo{
+		requiredReplaceStatements: make(map[string]struct{}),
+		moduleContents:            moduleContents,
+	}
+}
 
 type RunConfig struct {
 	RootPath      string

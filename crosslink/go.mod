@@ -11,8 +11,11 @@ require (
 )
 
 require (
+	github.com/otiai10/copy v1.7.0
+	go.opentelemetry.io/build-tools v0.0.0-20220315162859-0719a88c076c
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
+	golang.org/x/mod v0.5.1
 )
 
 replace go.opentelemetry.io/build-tools => ../
