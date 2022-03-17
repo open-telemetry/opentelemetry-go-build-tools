@@ -1,0 +1,14 @@
+module go.opentelemetry.io/build-tools/crosslink/testroot
+
+go 1.17
+
+require go.opentelemetry.io/build-tools/crosslink/testroot/testA v1.0.0
+
+// ensure they do not get pruned if prune flag is not set
+replace go.opentelemetry.io/build-tools/crosslink/testroot/testZ => ./testZ
+
+replace go.opentelemetry.io/build-tools/crosslink/testroot/testY => ./testY
+
+replace go.opentelemetry.io/build-tools/crosslink/testroot/testA => ./testA
+
+replace go.opentelemetry.io/build-tools/crosslink/testroot/testB => ./testB

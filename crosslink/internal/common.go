@@ -47,3 +47,19 @@ func identifyRootModule(rootPath string) (string, error) {
 	}
 	return modfile.ModulePath(rootModFile), nil
 }
+
+func writeModule(module moduleInfo) error {
+	modContents := module.moduleContents
+	//  now overwrite the existing gomod file
+	gomodFile, err := modContents.Format()
+	if err != nil {
+		return fmt.Errorf("failed to format go.mod file: %w", err)
+	}
+	//write our updated go.mod file
+	err = os.WriteFile(modContents.Syntax.Name, gomodFile, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write go.mod file: %w", err)
+	}
+
+	return nil
+}
