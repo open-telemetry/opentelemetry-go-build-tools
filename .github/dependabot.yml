@@ -29,6 +29,15 @@ updates:
       interval: weekly
       day: sunday
   - package-ecosystem: gomod
+    directory: /crosslink
+    labels:
+      - dependencies
+      - go
+      - Skip Changelog
+    schedule:
+      interval: weekly
+      day: sunday
+  - package-ecosystem: gomod
     directory: /dbotconf
     labels:
       - dependencies
