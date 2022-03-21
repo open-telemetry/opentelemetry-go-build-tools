@@ -64,8 +64,7 @@ func (c *commandConfig) buildCommands() {
 		for all intra-repository dependencies including transitive dependencies so the local module is used.`,
 		PersistentPreRun: preRunSetup,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			//return cl.Crosslink(c.runConfig)
-			return nil
+			return cl.Crosslink(c.runConfig)
 		},
 	}
 
@@ -77,8 +76,7 @@ func (c *commandConfig) buildCommands() {
 		This is a destructive action and will overwrite existing go.mod files. 
 		Prune will not remove modules that fall outside of the root module namespace.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			//return cl.Prune(c.runConfig)
-			return nil
+			return cl.Prune(c.runConfig)
 		},
 	}
 	c.rootCommand.AddCommand(&c.pruneCommand)
