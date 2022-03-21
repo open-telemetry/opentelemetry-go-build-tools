@@ -48,7 +48,7 @@ func TestRunGenerateYAML(t *testing.T) {
 	assert.NoError(t, yaml.NewDecoder(&b).Decode(&c))
 }
 
-func newUpdate(pkgEco, dir string) update {
+func newUpdate(pkgEco, dir string, labels []string) update {
 	return update{
 		PackageEcosystem: pkgEco,
 		Directory:        dir,
@@ -70,10 +70,10 @@ func TestBuildConfig(t *testing.T) {
 	assert.Equal(t, &dependabotConfig{
 		Version: version2,
 		Updates: []update{
-			newUpdate(ghPkgEco, "/"),
-			newUpdate(gomodPkgEco, "/"),
-			newUpdate(gomodPkgEco, "/a"),
-			newUpdate(gomodPkgEco, "/b"),
+			newUpdate(ghPkgEco, "/", actionLabels),
+			newUpdate(gomodPkgEco, "/", goLabels),
+			newUpdate(gomodPkgEco, "/a", goLabels),
+			newUpdate(gomodPkgEco, "/b", goLabels),
 		},
 	}, got)
 }

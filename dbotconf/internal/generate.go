@@ -36,7 +36,7 @@ func buildConfig(root string, mods []*modfile.File) (*dependabotConfig, error) {
 		Updates: []update{{
 			PackageEcosystem: ghPkgEco,
 			Directory:        "/",
-			Labels:           labels,
+			Labels:           actionLabels,
 			Schedule:         weeklySchedule,
 		}},
 	}
@@ -49,7 +49,7 @@ func buildConfig(root string, mods []*modfile.File) (*dependabotConfig, error) {
 		c.Updates = append(c.Updates, update{
 			PackageEcosystem: gomodPkgEco,
 			Directory:        local,
-			Labels:           labels,
+			Labels:           goLabels,
 			Schedule:         weeklySchedule,
 		})
 	}
@@ -72,7 +72,9 @@ func generate() error {
 	}
 
 	fmt.Fprintln(output, header)
-	return yaml.NewEncoder(output).Encode(c)
+	encoder := yaml.NewEncoder(output)
+	encoder.SetIndent(2)
+	return encoder.Encode(c)
 }
 
 func runGenerate(c *cobra.Command, _ []string) {
