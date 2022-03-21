@@ -22,7 +22,8 @@ const (
 
 var (
 	weeklySchedule = schedule{Interval: "weekly", Day: "sunday"}
-	labels         = []string{"dependencies", "actions", "Skip Changelog"}
+	actionLabels   = []string{"dependencies", "actions", "Skip Changelog"}
+	goLabels       = []string{"dependencies", "go", "Skip Changelog"}
 )
 
 type dependabotConfig struct {
