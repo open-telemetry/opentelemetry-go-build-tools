@@ -32,7 +32,9 @@ type commandConfig struct {
 }
 
 func newCommandConfig() *commandConfig {
-	c := new(commandConfig)
+	c := &commandConfig{
+		runConfig: cl.DefaultRunConfig(),
+	}
 	preRunSetup := func(cmd *cobra.Command, args []string) {
 		c.runConfig.ExcludedPaths = transformExclude(c.excludeFlags)
 
@@ -81,7 +83,6 @@ func newCommandConfig() *commandConfig {
 		},
 	}
 	c.rootCommand.AddCommand(&c.pruneCommand)
-	c.runConfig = cl.DefaultRunConfig()
 	return c
 }
 
