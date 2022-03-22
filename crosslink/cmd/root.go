@@ -31,7 +31,8 @@ type commandConfig struct {
 	pruneCommand cobra.Command
 }
 
-func (c *commandConfig) buildCommands() {
+func newCommandConfig() *commandConfig {
+	c := new(commandConfig)
 	preRunSetup := func(cmd *cobra.Command, args []string) {
 		c.runConfig.ExcludedPaths = transformExclude(c.excludeFlags)
 
@@ -80,11 +81,12 @@ func (c *commandConfig) buildCommands() {
 		},
 	}
 	c.rootCommand.AddCommand(&c.pruneCommand)
-
+	c.runConfig = cl.DefaultRunConfig()
+	return c
 }
 
 var (
-	comCfg = new(commandConfig)
+	comCfg = newCommandConfig()
 )
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -98,7 +100,6 @@ func Execute() {
 }
 
 func init() {
-	comCfg.buildCommands()
 
 	comCfg.rootCommand.PersistentFlags().StringVar(&comCfg.runConfig.RootPath, "root", "", "path to root directory of multi-module repository")
 	comCfg.rootCommand.PersistentFlags().StringSliceVar(&comCfg.excludeFlags, "exclude", []string{}, "list of comma separated go modules that crosslink will ignore in operations."+
