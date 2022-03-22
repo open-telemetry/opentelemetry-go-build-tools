@@ -14,6 +14,7 @@
 package cmd
 
 import (
+	"os"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -146,8 +147,13 @@ func TestPreRun(t *testing.T) {
 		t.Run(test.testName, func(t *testing.T) {
 			t.Cleanup(configReset)
 			comCfg.runConfig = test.mockConfig
+			cwd, err := os.Getwd()
+			if err != nil {
+				t.Errorf("%e", err)
+			}
+			test.expectedConfig.RootPath = cwd
 
-			err := comCfg.rootCommand.ParseFlags(test.args)
+			err = comCfg.rootCommand.ParseFlags(test.args)
 			if err != nil {
 				t.Errorf("Failed to parse flags: %v", err)
 			}

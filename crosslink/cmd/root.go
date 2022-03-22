@@ -35,8 +35,17 @@ func newCommandConfig() *commandConfig {
 	c := &commandConfig{
 		runConfig: cl.DefaultRunConfig(),
 	}
+
 	preRunSetup := func(cmd *cobra.Command, args []string) {
 		c.runConfig.ExcludedPaths = transformExclude(c.excludeFlags)
+
+		if c.runConfig.RootPath == "" {
+			cwd, err := os.Getwd()
+			if err != nil {
+				log.Printf("Could not get current working directory: %e", err)
+			}
+			c.runConfig.RootPath = cwd
+		}
 
 		// enable verbosity on overwrite if user has not supplied another value
 		vExists := false
