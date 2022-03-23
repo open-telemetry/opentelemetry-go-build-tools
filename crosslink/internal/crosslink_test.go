@@ -344,6 +344,8 @@ func TestExclude(t *testing.T) {
 				t.Errorf("error renaming gomod files: %v", err)
 			}
 
+			test.config.RootPath = tmpRootDir
+
 			err = Crosslink(test.config)
 
 			if assert.NoError(t, err, "error message on execution %s") {

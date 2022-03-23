@@ -15,11 +15,13 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	tools "go.opentelemetry.io/build-tools"
 	cl "go.opentelemetry.io/build-tools/crosslink/internal"
 	"go.uber.org/zap"
 )
@@ -35,8 +37,17 @@ func newCommandConfig() *commandConfig {
 	c := &commandConfig{
 		runConfig: cl.DefaultRunConfig(),
 	}
-	preRunSetup := func(cmd *cobra.Command, args []string) {
+
+	preRunSetup := func(cmd *cobra.Command, args []string) error {
 		c.runConfig.ExcludedPaths = transformExclude(c.excludeFlags)
+
+		if c.runConfig.RootPath == "" {
+			rp, err := tools.FindRepoRoot()
+			if err != nil {
+				return fmt.Errorf("could not find a valid repository: %w", err)
+			}
+			c.runConfig.RootPath = rp
+		}
 
 		// enable verbosity on overwrite if user has not supplied another value
 		vExists := false
@@ -52,10 +63,10 @@ func newCommandConfig() *commandConfig {
 		if c.runConfig.Verbose {
 			c.runConfig.Logger, err = zap.NewDevelopment()
 			if err != nil {
-				log.Printf("Could not create zap logger: %v", err)
+				return fmt.Errorf("could not create zap logger: %w", err)
 			}
-
 		}
+		return nil
 
 	}
 
@@ -65,7 +76,7 @@ func newCommandConfig() *commandConfig {
 		Long: `Crosslink is a tool to assist with go.mod file management for repositories containing
 		mulitple go modules. Crosslink automatically inserts replace statements into go.mod files
 		for all intra-repository dependencies including transitive dependencies so the local module is used.`,
-		PersistentPreRun: preRunSetup,
+		PersistentPreRunE: preRunSetup,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cl.Crosslink(c.runConfig)
 		},
@@ -102,7 +113,8 @@ func Execute() {
 
 func init() {
 
-	comCfg.rootCommand.PersistentFlags().StringVar(&comCfg.runConfig.RootPath, "root", "", "path to root directory of multi-module repository")
+	comCfg.rootCommand.PersistentFlags().StringVar(&comCfg.runConfig.RootPath, "root", "", `path to root directory of multi-module repository. If --root flag is not provided crosslink will attempt to find a
+	git repository in the current or a parent directory.`)
 	comCfg.rootCommand.PersistentFlags().StringSliceVar(&comCfg.excludeFlags, "exclude", []string{}, "list of comma separated go modules that crosslink will ignore in operations."+
 		"multiple calls of --exclude can be made")
 	comCfg.rootCommand.PersistentFlags().BoolVarP(&comCfg.runConfig.Verbose, "verbose", "v", false, "verbose output")
