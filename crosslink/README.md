@@ -53,7 +53,7 @@ root flag is available to all crosslink subcommands.
 
 **Note: If no --root flag is provided than crosslink attempts to identify a git
 repository in the current or a parent directory. If no git repository exists
-crosslink will panic.**
+crosslink will return an error.**
 
     crosslink --root=/users/foo/multimodule-go-repo
 

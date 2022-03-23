@@ -19,21 +19,13 @@ import (
 	"os"
 	"path/filepath"
 
-	tools "go.opentelemetry.io/build-tools"
 	"golang.org/x/mod/modfile"
 )
 
-// attempts to identify a go.mod file at the either the path provided
-// or at the root of the git repository. This check will fail if no path is
-// provided and the tool was called outside of a git repository.
+// Attempts to identify a go module at the root path. If no
+// go.mod file is present an error is returned.
 func identifyRootModule(rootPath string) (string, error) {
 	var err error
-	if rootPath == "" {
-		rootPath, err = tools.FindRepoRoot()
-		if err != nil {
-			return "", fmt.Errorf("failed find a valid .git repository: %w", err)
-		}
-	}
 
 	if _, err := os.Stat(filepath.Join(rootPath, "go.mod")); err != nil {
 		return "", fmt.Errorf("failed to identify go.mod file at root dir: %w", err)

@@ -14,7 +14,7 @@
 package cmd
 
 import (
-	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -147,19 +147,19 @@ func TestPreRun(t *testing.T) {
 		t.Run(test.testName, func(t *testing.T) {
 			t.Cleanup(configReset)
 			comCfg.runConfig = test.mockConfig
-			cwd, err := os.Getwd()
-			if err != nil {
-				t.Errorf("%e", err)
-			}
-			test.expectedConfig.RootPath = cwd
 
+			expectedRootPath, err := filepath.Abs("../../")
+			if err != nil {
+				t.Errorf("could not parse expected root path: %e", err)
+			}
+
+			test.expectedConfig.RootPath = expectedRootPath
 			err = comCfg.rootCommand.ParseFlags(test.args)
 			if err != nil {
 				t.Errorf("Failed to parse flags: %v", err)
 			}
-			comCfg.rootCommand.DebugFlags()
 
-			testPreRun := comCfg.rootCommand.PersistentPreRun
+			testPreRun := comCfg.rootCommand.PersistentPreRunE
 			testPreRun(&comCfg.rootCommand, nil)
 
 			if diff := cmp.Diff(test.expectedConfig, comCfg.runConfig, cmpopts.IgnoreFields(cl.RunConfig{}, "Logger", "ExcludedPaths")); diff != "" {
