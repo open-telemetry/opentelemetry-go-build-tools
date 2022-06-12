@@ -8,7 +8,7 @@ require (
 	github.com/golangci/golangci-lint v1.45.2
 	github.com/itchyny/gojq v0.12.7
 	go.opentelemetry.io/build-tools/dbotconf v0.0.0-20220321164008-b8e03aff061a
-	golang.org/x/tools v0.1.10
+	golang.org/x/tools v0.1.11
 )
 
 replace (
