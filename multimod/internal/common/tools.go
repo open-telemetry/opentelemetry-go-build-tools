@@ -127,7 +127,7 @@ func filePathToRegex(fpath string) string {
 // RunGoModTidy takes a ModulePathMap and runs "go mod tidy" at each module file path.
 func RunGoModTidy(modPathMap ModulePathMap) error {
 	for _, modFilePath := range modPathMap {
-		cmd := exec.Command("go", "mod", "tidy")
+		cmd := exec.Command("go", "mod", "tidy", "-compat=1.17")
 		cmd.Dir = filepath.Dir(string(modFilePath))
 
 		if out, err := cmd.CombinedOutput(); err != nil {
