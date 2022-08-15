@@ -31,7 +31,7 @@ jobs:
     - name: Run linter
       uses: docker://avtodev/markdown-lint:v1
       with:
-        args: ${{needs.changedfiles.outputs.md}}
+        args: -i "/**/testdata" ${{needs.changedfiles.outputs.md}}
 
   check-links:
     runs-on: ubuntu-latest

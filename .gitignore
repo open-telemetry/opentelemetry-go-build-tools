@@ -9,8 +9,9 @@ Thumbs.db
 coverage.*
 
 checkdoc/checkdoc
+chloggen/chloggen
+crosslink/crosslink
 dbotconf/dbotconf
 issuegenerator/issuegenerator
 multimod/multimod
 semconvgen/semconvgen
-crosslink/crosslink
