@@ -1,4 +1,4 @@
-module github.com/open-telemetry/opentelemetry-collector-contrib/cmd/chloggen
+module go.opentelemetry.io/build-tools/chloggen
 
 go 1.17
 
