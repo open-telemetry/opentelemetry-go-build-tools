@@ -16,6 +16,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"runtime"
 )
@@ -44,10 +45,15 @@ func newChlogContext(rootDir string) chlogContext {
 var defaultCtx = newChlogContext(repoRoot())
 
 func repoRoot() string {
-	return filepath.Dir(thisDir())
+	dir, err := os.Getwd()
+	if err != nil {
+		// This is not expected, but just in case
+		fmt.Println("FAIL: Could not determine current working directory")
+	}
+	return dir
 }
 
-func thisDir() string {
+func moduleDir() string {
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		// This is not expected, but just in case

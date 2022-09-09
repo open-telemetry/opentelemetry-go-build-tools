@@ -61,7 +61,7 @@ func generateSummary(version string, entries []*Entry) (string, error) {
 }
 
 func (s summary) String() (string, error) {
-	summaryTmpl := filepath.Join(thisDir(), "summary.tmpl")
+	summaryTmpl := filepath.Join(moduleDir(), "summary.tmpl")
 
 	tmpl := template.Must(
 		template.
