@@ -54,6 +54,9 @@ func main() {
 			fmt.Printf("FAIL: new: %v\n", err)
 			os.Exit(1)
 		}
+		if len(*filename) == 0 {
+			fmt.Printf("FAIL: new: 'filename' is required\n")
+		}
 		if err := initialize(defaultCtx, *filename); err != nil {
 			fmt.Printf("FAIL: new: %v\n", err)
 			os.Exit(1)
@@ -118,7 +121,7 @@ func validate(ctx chlogContext) error {
 			return err
 		}
 	}
-	fmt.Printf("PASS: all files in ./%s/ are valid\n", ctx.unreleasedDir)
+	fmt.Printf("PASS: all files in %s/ are valid\n", ctx.unreleasedDir)
 	return nil
 }
 
