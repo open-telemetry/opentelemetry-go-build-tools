@@ -24,13 +24,13 @@ import (
 	"strings"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 
 	"go.opentelemetry.io/build-tools/internal/repo"
-
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
 
-func Run(versioningFile string, moduleSetNames []string, allModuleSets bool, skipModTidy bool) {
+func Run(versioningFile string, moduleSetNames []string, allModuleSets bool, skipModTidy bool, commitToDifferentBranch bool) {
 	repoRoot, err := repo.FindRoot()
 	if err != nil {
 		log.Fatalf("unable to find repo root: %v", err)
@@ -88,7 +88,7 @@ func Run(versioningFile string, moduleSetNames []string, allModuleSets bool, ski
 			}
 		}
 
-		if err = p.commitChangesToNewBranch(repo); err != nil {
+		if err = commitChanges(p.ModuleSetRelease, commitToDifferentBranch, repo); err != nil {
 			log.Fatalf("commitChangesToNewBranch failed: %v", err)
 		}
 	}
@@ -203,21 +203,21 @@ func (p prerelease) updateAllGoModFiles() error {
 	return nil
 }
 
-func (p prerelease) commitChangesToNewBranch(repo *git.Repository) error {
-	branchNameElements := []string{"prerelease", p.ModuleSetRelease.ModSetName, p.ModuleSetRelease.ModSetVersion()}
-	branchName := strings.Join(branchNameElements, "_")
+func commitChanges(msr common.ModuleSetRelease, commitToDifferentBranch bool, repo *git.Repository) error {
+	commitMessage := fmt.Sprintf("Prepare %v for version %v", msr.ModSetName, msr.ModSetVersion())
 
-	commitMessage := fmt.Sprintf(
-		"Prepare %v for version %v",
-		p.ModuleSetRelease.ModSetName,
-		p.ModuleSetRelease.ModSetVersion(),
-	)
-
-	hash, err := common.CommitChangesToNewBranch(branchName, commitMessage, repo, nil)
+	var hash plumbing.Hash
+	var err error
+	if !commitToDifferentBranch {
+		branchNameElements := []string{"prerelease", msr.ModSetName, msr.ModSetVersion()}
+		branchName := strings.Join(branchNameElements, "_")
+		hash, err = common.CommitChangesToNewBranch(branchName, commitMessage, repo, nil)
+	} else {
+		hash, err = common.CommitChanges(commitMessage, repo, nil)
+	}
 	if err != nil {
 		return err
 	}
 	log.Printf("Commit successful. Hash of commit: %s\n", hash)
-
-	return err
+	return nil
 }
