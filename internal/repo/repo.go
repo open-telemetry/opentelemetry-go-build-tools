@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // Package tools provides helper functions used in multiple build tools.
-package tools
+package repo
 
 import (
 	"bytes"
@@ -28,11 +28,11 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
-// FindRepoRoot retrieves the root of the repository containing the current working directory.
+// FindRoot retrieves the root of the repository containing the current working directory.
 // Beginning at the current working directory (dir), the algorithm checks if joining the ".git"
 // suffix, such as "dir.get", is a valid file. Otherwise, it will continue checking the dir's
 // parent directory until it reaches the repo root or returns an error if it cannot be found.
-func FindRepoRoot() (string, error) {
+func FindRoot() (string, error) {
 	start, err := os.Getwd()
 	if err != nil {
 		return "", err

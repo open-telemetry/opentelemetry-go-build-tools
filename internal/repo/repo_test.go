@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tools
+package repo
 
 import (
 	"fmt"
@@ -27,10 +27,10 @@ import (
 )
 
 func TestFindRepoRoot(t *testing.T) {
-	expected, err := filepath.Abs("./")
+	expected, err := filepath.Abs("./../..")
 	require.NoError(t, err)
 
-	actual, err := FindRepoRoot()
+	actual, err := FindRoot()
 	require.NoError(t, err)
 	assert.Equal(t, expected, actual)
 }

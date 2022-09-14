@@ -24,13 +24,13 @@ import (
 	"strings"
 
 	"github.com/go-git/go-git/v5"
+	"go.opentelemetry.io/build-tools/internal/repo"
 
-	tools "go.opentelemetry.io/build-tools"
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
 
 func Run(versioningFile string, moduleSetNames []string, allModuleSets bool, skipModTidy bool) {
-	repoRoot, err := tools.FindRepoRoot()
+	repoRoot, err := repo.FindRoot()
 	if err != nil {
 		log.Fatalf("unable to find repo root: %v", err)
 	}

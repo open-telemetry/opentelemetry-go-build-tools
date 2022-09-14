@@ -21,9 +21,10 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	tools "go.opentelemetry.io/build-tools"
-	cl "go.opentelemetry.io/build-tools/crosslink/internal"
 	"go.uber.org/zap"
+
+	cl "go.opentelemetry.io/build-tools/crosslink/internal"
+	"go.opentelemetry.io/build-tools/internal/repo"
 )
 
 type commandConfig struct {
@@ -42,7 +43,7 @@ func newCommandConfig() *commandConfig {
 		c.runConfig.ExcludedPaths = transformExclude(c.excludeFlags)
 
 		if c.runConfig.RootPath == "" {
-			rp, err := tools.FindRepoRoot()
+			rp, err := repo.FindRoot()
 			if err != nil {
 				return fmt.Errorf("could not find a valid repository: %w", err)
 			}

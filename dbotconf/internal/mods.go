@@ -18,7 +18,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	tools "go.opentelemetry.io/build-tools"
+	"go.opentelemetry.io/build-tools/internal/repo"
 	"golang.org/x/mod/modfile"
 )
 
@@ -30,7 +30,7 @@ var (
 
 // allMods returns the repo root and all module files within it.
 func allMods() (string, []*modfile.File, error) {
-	root, err := tools.FindRepoRoot()
+	root, err := repo.FindRoot()
 	if err != nil {
 		return "", nil, err
 	}
@@ -38,7 +38,7 @@ func allMods() (string, []*modfile.File, error) {
 	if err != nil {
 		return "", nil, err
 	}
-	mods, err := tools.FindModules(root)
+	mods, err := repo.FindModules(root)
 	if err != nil {
 		return "", nil, err
 	}
