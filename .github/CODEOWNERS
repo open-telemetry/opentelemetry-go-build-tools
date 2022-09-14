@@ -12,6 +12,7 @@
 #  https://help.github.com/en/articles/about-code-owners
 #
 # For anything not explicitly taken by someone else:
+
 * @open-telemetry/go-maintainers @open-telemetry/collector-maintainers
 
-chloggen/ @open-telemetry/collector-contrib-approvers @djaglowski @codeboten
+chloggen/ @open-telemetry/go-maintainers @open-telemetry/collector-maintainers @open-telemetry/collector-contrib-approvers
