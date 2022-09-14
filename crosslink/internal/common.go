@@ -25,14 +25,12 @@ import (
 // Attempts to identify a go module at the root path. If no
 // go.mod file is present an error is returned.
 func identifyRootModule(rootPath string) (string, error) {
-	var err error
-
-	if _, err := os.Stat(filepath.Join(rootPath, "go.mod")); err != nil {
+	rootModPath := filepath.Clean(filepath.Join(rootPath, "go.mod"))
+	if _, err := os.Stat(rootModPath); err != nil {
 		return "", fmt.Errorf("failed to identify go.mod file at root dir: %w", err)
 	}
 
 	// identify and read the root module
-	rootModPath := filepath.Join(rootPath, "go.mod")
 	rootModFile, err := os.ReadFile(rootModPath)
 	if err != nil {
 		return "", fmt.Errorf("failed to read go.mod file at root dir: %w", err)
@@ -40,15 +38,15 @@ func identifyRootModule(rootPath string) (string, error) {
 	return modfile.ModulePath(rootModFile), nil
 }
 
-func writeModule(module moduleInfo) error {
+func writeModule(module *moduleInfo) error {
 	modContents := module.moduleContents
 	//  now overwrite the existing gomod file
 	gomodFile, err := modContents.Format()
 	if err != nil {
 		return fmt.Errorf("failed to format go.mod file: %w", err)
 	}
-	//write our updated go.mod file
-	err = os.WriteFile(modContents.Syntax.Name, gomodFile, 0644)
+	// write our updated go.mod file
+	err = os.WriteFile(modContents.Syntax.Name, gomodFile, 0600)
 	if err != nil {
 		return fmt.Errorf("failed to write go.mod file: %w", err)
 	}

@@ -38,13 +38,13 @@ func checkDocs(projectPath string, relativeComponentsPath string, projectGoModul
 	defaultComponentsFilePath := filepath.Join(projectPath, relativeComponentsPath)
 	_, err := os.Stat(defaultComponentsFilePath)
 	if err != nil {
-		return fmt.Errorf("failed to load file %s: %v", defaultComponentsFilePath, err)
+		return fmt.Errorf("failed to load file %s: %w", defaultComponentsFilePath, err)
 	}
 
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, defaultComponentsFilePath, nil, parser.ImportsOnly)
 	if err != nil {
-		return fmt.Errorf("failed to load imports: %v", err)
+		return fmt.Errorf("failed to load imports: %w", err)
 	}
 
 	importPrefixesToCheck := getImportPrefixesToCheck(projectGoModule)

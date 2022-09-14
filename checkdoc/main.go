@@ -30,15 +30,16 @@ const (
 // The main verifies if README.md and proper documentations for the enabled default components
 // are existed in OpenTelemetry core and contrib repository.
 // Usage in the core repo:
-// checkdoc --project-path path/to/project \
-//			--component-rel-path service/defaultcomponents/defaults.go \
-//			--module-name go.opentelemetry.io/collector
+//
+//	checkdoc --project-path path/to/project \
+//				--component-rel-path service/defaultcomponents/defaults.go \
+//				--module-name go.opentelemetry.io/collector
 //
 // Usage in the contrib repo:
-// checkdoc --project-path path/to/project \
-//			--component-rel-path cmd/otelcontrib/components.go \
-//			--module-name github.com/open-telemetry/opentelemetry-collector-contrib
 //
+//	checkdoc --project-path path/to/project \
+//				--component-rel-path cmd/otelcontrib/components.go \
+//				--module-name github.com/open-telemetry/opentelemetry-collector-contrib
 func main() {
 	projectPath := flag.String(projectPath, "", "specify the project path")
 	componentPath := flag.String(relativeDefaultComponentsPath, "", "specify the relative component path")

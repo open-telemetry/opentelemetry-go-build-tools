@@ -16,8 +16,9 @@ package verify
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
+	"path/filepath"
 
 	"golang.org/x/mod/modfile"
 	"golang.org/x/mod/semver"
@@ -63,7 +64,7 @@ type dependencyMap map[common.ModulePath][]common.ModulePath
 func newVerification(versioningFilename, repoRoot string) (verification, error) {
 	modVersioning, err := common.NewModuleVersioning(versioningFilename, repoRoot)
 	if err != nil {
-		return verification{}, fmt.Errorf("call to NewModuleVersioning failed: %v\n", err)
+		return verification{}, fmt.Errorf("call to NewModuleVersioning failed: %w", err)
 	}
 
 	return verification{
@@ -79,14 +80,14 @@ func (v verification) getDependencies() (dependencyMap, error) {
 	// Dependencies are defined by the require section of go.mod files.
 	for modPath := range modVersioning.ModInfoMap {
 		modFilePath := modVersioning.ModPathMap[modPath]
-		modData, err := ioutil.ReadFile(string(modFilePath))
+		modData, err := os.ReadFile(filepath.Clean(string(modFilePath)))
 		if err != nil {
-			return nil, fmt.Errorf("could not read mod file: %v", err)
+			return nil, fmt.Errorf("could not read mod file: %w", err)
 		}
 
 		modFile, err := modfile.Parse("", modData, nil)
 		if err != nil {
-			return nil, fmt.Errorf("could not parse go.mod file at %v: %v", modFilePath, err)
+			return nil, fmt.Errorf("could not parse go.mod file at %v: %w", modFilePath, err)
 		}
 
 		// get dependencies as defined by the "require" section
@@ -175,7 +176,7 @@ func (v verification) verifyVersions() error {
 func (v verification) verifyDependencies() error {
 	dependencies, err := v.getDependencies()
 	if err != nil {
-		return fmt.Errorf("could not get dependencies of module versioning: %v", err)
+		return fmt.Errorf("could not get dependencies of module versioning: %w", err)
 	}
 
 	for modPath, modDeps := range dependencies {

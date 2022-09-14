@@ -15,9 +15,10 @@
 package common
 
 import (
+	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -36,7 +37,7 @@ func IsStableVersion(v string) bool {
 func GetAllModuleSetNames(versioningFile string, repoRoot string) ([]string, error) {
 	modVersioning, err := NewModuleVersioning(versioningFile, repoRoot)
 	if err != nil {
-		return nil, fmt.Errorf("call failed to NewModuleVersioning: %v", err)
+		return nil, fmt.Errorf("call failed to NewModuleVersioning: %w", err)
 	}
 
 	var modSetNames []string
@@ -51,13 +52,10 @@ func GetAllModuleSetNames(versioningFile string, repoRoot string) ([]string, err
 func GetModuleSet(modSetName, versioningFilename string) (ModuleSet, error) {
 	vCfg, err := readVersioningFile(versioningFilename)
 	if err != nil {
-		return ModuleSet{}, fmt.Errorf("error reading versioning file %v: %v", versioningFilename, err)
+		return ModuleSet{}, fmt.Errorf("error reading versioning file %v: %w", versioningFilename, err)
 	}
 
-	modSetMap, err := vCfg.buildModuleSetsMap()
-	if err != nil {
-		return ModuleSet{}, fmt.Errorf("error building module set map: %v", err)
-	}
+	modSetMap := vCfg.buildModuleSetsMap()
 	return modSetMap[modSetName], nil
 }
 
@@ -65,10 +63,10 @@ func GetModuleSet(modSetName, versioningFilename string) (ModuleSet, error) {
 // newModPaths to use the newVersion given.
 func updateGoModVersions(modFilePath ModuleFilePath, newModPaths []ModulePath, newVersion string) error {
 	if !strings.HasSuffix(string(modFilePath), "go.mod") {
-		return fmt.Errorf("cannot update file passed that does not end with go.mod")
+		return errors.New("cannot update file passed that does not end with go.mod")
 	}
 
-	newGoModFile, err := ioutil.ReadFile(string(modFilePath))
+	newGoModFile, err := os.ReadFile(filepath.Clean(string(modFilePath)))
 	if err != nil {
 		panic(err)
 	}
@@ -81,8 +79,8 @@ func updateGoModVersions(modFilePath ModuleFilePath, newModPaths []ModulePath, n
 	}
 
 	// once all module versions have been updated, overwrite the go.mod file
-	if err := ioutil.WriteFile(string(modFilePath), newGoModFile, 0644); err != nil {
-		return fmt.Errorf("error overwriting go.mod file: %v", err)
+	if err := os.WriteFile(string(modFilePath), newGoModFile, 0600); err != nil {
+		return fmt.Errorf("error overwriting go.mod file: %w", err)
 	}
 
 	return nil
@@ -92,7 +90,7 @@ func replaceModVersion(modPath ModulePath, version string, newGoModFile []byte) 
 	oldVersionRegex := `(?m:` + filePathToRegex(string(modPath)) + `\s+` + SemverRegex + `(\s*\/\/\s*indirect\s*?)?$)`
 	r, err := regexp.Compile(oldVersionRegex)
 	if err != nil {
-		return nil, fmt.Errorf("error compiling regex: %v", err)
+		return nil, fmt.Errorf("error compiling regex: %w", err)
 	}
 
 	newModVersionString := string(modPath) + " " + version
@@ -112,7 +110,7 @@ func UpdateGoModFiles(modFilePaths []ModuleFilePath, newModPaths []ModulePath, n
 			newModPaths,
 			newVersion,
 		); err != nil {
-			return fmt.Errorf("could not update module versions in file %v: %v", modFilePath, err)
+			return fmt.Errorf("could not update module versions in file %v: %w", modFilePath, err)
 		}
 	}
 	return nil
@@ -120,7 +118,7 @@ func UpdateGoModFiles(modFilePaths []ModuleFilePath, newModPaths []ModulePath, n
 
 func filePathToRegex(fpath string) string {
 	quotedMeta := regexp.QuoteMeta(fpath)
-	replacedSlashes := strings.Replace(quotedMeta, string(filepath.Separator), `\/`, -1)
+	replacedSlashes := strings.ReplaceAll(quotedMeta, string(filepath.Separator), `\/`)
 	return replacedSlashes
 }
 
@@ -131,7 +129,7 @@ func RunGoModTidy(modPathMap ModulePathMap) error {
 		cmd.Dir = filepath.Dir(string(modFilePath))
 
 		if out, err := cmd.CombinedOutput(); err != nil {
-			return fmt.Errorf("go mod tidy failed: %v\n%v", string(out), err)
+			return fmt.Errorf("go mod tidy failed [%v]: %w", string(out), err)
 		}
 	}
 

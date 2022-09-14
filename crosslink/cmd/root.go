@@ -75,7 +75,7 @@ func newCommandConfig() *commandConfig {
 		Use:   "crosslink",
 		Short: "Automatically insert replace statements for intra-repository dependencies",
 		Long: `Crosslink is a tool to assist with go.mod file management for repositories containing
-		mulitple go modules. Crosslink automatically inserts replace statements into go.mod files
+		multiple go modules. Crosslink automatically inserts replace statements into go.mod files
 		for all intra-repository dependencies including transitive dependencies so the local module is used.`,
 		PersistentPreRunE: preRunSetup,
 		RunE: func(cmd *cobra.Command, args []string) error {

@@ -16,10 +16,8 @@ package commontest
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
-	"testing"
 	"time"
 
 	"github.com/go-git/go-git/v5"
@@ -29,9 +27,9 @@ import (
 
 var (
 	TestAuthor = &object.Signature{
-		Name: "test_author",
+		Name:  "test_author",
 		Email: "test_email",
-		When: time.Now(),
+		When:  time.Now(),
 	}
 )
 
@@ -41,33 +39,23 @@ func WriteTempFiles(modFiles map[string][]byte) error {
 
 	for modFilePath, file := range modFiles {
 		path := filepath.Dir(modFilePath)
-		err := os.MkdirAll(path, perm)
-		if err != nil {
-			return fmt.Errorf("error calling os.MkdirAll(%v, %v): %v", path, perm, err)
+		if err := os.MkdirAll(path, perm); err != nil {
+			return fmt.Errorf("error calling os.MkdirAll(%v, %v): %w", path, perm, err)
 		}
 
-		if err := ioutil.WriteFile(modFilePath, file, perm); err != nil {
-			return fmt.Errorf("could not write temporary file %v", err)
+		if err := os.WriteFile(modFilePath, file, perm); err != nil {
+			return fmt.Errorf("could not write temporary file %w", err)
 		}
 	}
 
 	return nil
 }
 
-// RemoveAll attempts to remove a directory and all nested subdirectories,
-// taking in a testing instance and providing a Fatal to stop tests if failed.
-func RemoveAll(t *testing.T, dir string) {
-	err := os.RemoveAll(dir)
-	if err != nil {
-		t.Fatalf("error removing dir %v: %v", dir, err)
-	}
-}
-
 func InitNewRepoWithCommit(repoRoot string) (*git.Repository, plumbing.Hash, error) {
 	// initialize temporary local git repository
 	repo, err := git.PlainInit(repoRoot, false)
 	if err != nil {
-		return nil, plumbing.ZeroHash, fmt.Errorf("could not initialize temp git repo: %v", err)
+		return nil, plumbing.ZeroHash, fmt.Errorf("could not initialize temp git repo: %w", err)
 	}
 
 	worktree, err := repo.Worktree()
@@ -77,11 +65,11 @@ func InitNewRepoWithCommit(repoRoot string) (*git.Repository, plumbing.Hash, err
 	commitMessage := "test commit"
 
 	commitHash, err := worktree.Commit(commitMessage, &git.CommitOptions{
-		All: true,
+		All:    true,
 		Author: TestAuthor,
 	})
 	if err != nil {
-		return nil, plumbing.ZeroHash, fmt.Errorf("could not commit changes to git: %v", err)
+		return nil, plumbing.ZeroHash, fmt.Errorf("could not commit changes to git: %w", err)
 	}
 
 	return repo, commitHash, nil

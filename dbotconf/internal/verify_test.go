@@ -45,9 +45,9 @@ func TestRunVerify(t *testing.T) {
 	}(configuredUpdatesFunc))
 	configuredUpdatesFunc = func(string) (map[string]struct{}, error) {
 		return map[string]struct{}{
-			"/":  struct{}{},
-			"/a": struct{}{},
-			"/b": struct{}{},
+			"/":  {},
+			"/a": {},
+			"/b": {},
 		}, nil
 	}
 
@@ -106,9 +106,9 @@ func TestConfiguredUpdates(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, map[string]struct{}{
-		"/":    struct{}{},
-		"/a":   struct{}{},
-		"/a/b": struct{}{},
+		"/":    {},
+		"/a":   {},
+		"/a/b": {},
 	}, updates)
 }
 

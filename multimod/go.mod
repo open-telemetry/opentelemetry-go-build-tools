@@ -1,6 +1,6 @@
 module go.opentelemetry.io/build-tools/multimod
 
-go 1.17
+go 1.18
 
 require (
 	github.com/go-git/go-git/v5 v5.4.2
@@ -8,6 +8,7 @@ require (
 	github.com/spf13/viper v1.12.0
 	github.com/stretchr/testify v1.8.0
 	go.opentelemetry.io/build-tools v0.0.0-20220321164008-b8e03aff061a
+	go.uber.org/multierr v1.6.0
 	golang.org/x/mod v0.5.1
 )
 
@@ -38,6 +39,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.3.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
+	go.uber.org/atomic v1.7.0 // indirect
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect
 	golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2 // indirect
 	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect

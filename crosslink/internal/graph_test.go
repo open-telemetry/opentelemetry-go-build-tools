@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -52,7 +52,7 @@ func TestBuildDependencyGraph(t *testing.T) {
 				"go.opentelemetry.io/build-tools/crosslink/testroot/testA": {
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testB",
 					"go.opentelemetry.io/build-tools/crosslink/testroot"},
-				// b has req on root but not neccessary to write out with current comparison logic
+				// b has req on root but not necessary to write out with current comparison logic
 				"go.opentelemetry.io/build-tools/crosslink/testroot/testB": {
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testA",
 					"go.opentelemetry.io/build-tools/crosslink/testroot"},
@@ -90,7 +90,7 @@ func TestBuildDependencyGraph(t *testing.T) {
 					// verify that the amount of replace statements in module match the amount that are in module.
 					assert.Equal(t, len(expectedReplaceStatements), len(requiredReplaceStatementsActual), fmt.Sprintf("ModFilePath: %v \n Expected: %v \n Actual : %v",
 						modName, expectedReplaceStatements, requiredReplaceStatementsActual))
-					//ensure that they contain the same values
+					// ensure that they contain the same values
 					for _, expectedReplaceStatement := range expectedReplaceStatements {
 
 						if _, contains := requiredReplaceStatementsActual[expectedReplaceStatement]; !contains {

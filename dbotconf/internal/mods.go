@@ -18,8 +18,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go.opentelemetry.io/build-tools/internal/repo"
 	"golang.org/x/mod/modfile"
+
+	"go.opentelemetry.io/build-tools/internal/repo"
 )
 
 // Allow test overrides and validation.

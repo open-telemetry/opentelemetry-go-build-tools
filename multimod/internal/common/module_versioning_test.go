@@ -15,7 +15,6 @@
 package common
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -26,13 +25,7 @@ import (
 )
 
 func TestNewModuleVersioning(t *testing.T) {
-	tmpRootDir, err := os.MkdirTemp(testDataDir, "NewModuleVersioning")
-	if err != nil {
-		t.Fatal("creating temp dir:", err)
-	}
-
-	defer commontest.RemoveAll(t, tmpRootDir)
-
+	tmpRootDir := t.TempDir()
 	modFiles := map[string][]byte{
 		filepath.Join(tmpRootDir, "test", "test1", "go.mod"): []byte("module \"go.opentelemetry.io/test/test1\"\n\ngo 1.16\n\n" +
 			"require (\n\t\"go.opentelemetry.io/testroot/v2\" v2.0.0\n)\n"),
@@ -41,9 +34,7 @@ func TestNewModuleVersioning(t *testing.T) {
 		filepath.Join(tmpRootDir, "test", "test2", "go.mod"): []byte("module \"go.opentelemetry.io/test/testexcluded\"\n\ngo 1.16\n"),
 	}
 
-	if err := commontest.WriteTempFiles(modFiles); err != nil {
-		t.Fatal("could not create go mod file tree", err)
-	}
+	require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
 
 	testCases := []struct {
 		name                  string

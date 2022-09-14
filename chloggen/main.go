@@ -95,7 +95,7 @@ func initialize(ctx chlogContext, filename string) error {
 		return fmt.Errorf("non-yaml extension: %s", ext)
 	}
 
-	templateBytes, err := os.ReadFile(ctx.templateYAML)
+	templateBytes, err := os.ReadFile(filepath.Clean(ctx.templateYAML))
 	if err != nil {
 		return err
 	}
@@ -146,7 +146,7 @@ func update(ctx chlogContext, version string, dry bool) error {
 		return nil
 	}
 
-	oldChlogBytes, err := os.ReadFile(ctx.changelogMD)
+	oldChlogBytes, err := os.ReadFile(filepath.Clean(ctx.changelogMD))
 	if err != nil {
 		return err
 	}
@@ -164,18 +164,11 @@ func update(ctx chlogContext, version string, dry bool) error {
 	chlogBuilder.WriteString(chlogHistory)
 
 	tmpMD := ctx.changelogMD + ".tmp"
-	tmpChlogFile, err := os.Create(tmpMD)
-	if err != nil {
-		return err
-	}
-	if _, err := tmpChlogFile.WriteString(chlogBuilder.String()); err != nil {
-		return err
-	}
-	if err := tmpChlogFile.Close(); err != nil {
+	if err = os.WriteFile(filepath.Clean(tmpMD), []byte(chlogBuilder.String()), 0600); err != nil {
 		return err
 	}
 
-	if err := os.Rename(tmpMD, ctx.changelogMD); err != nil {
+	if err = os.Rename(tmpMD, ctx.changelogMD); err != nil {
 		return err
 	}
 
@@ -196,7 +189,7 @@ func readEntries(ctx chlogContext) ([]*Entry, error) {
 			continue
 		}
 
-		fileBytes, err := os.ReadFile(entryYAML)
+		fileBytes, err := os.ReadFile(filepath.Clean(entryYAML))
 		if err != nil {
 			return nil, err
 		}

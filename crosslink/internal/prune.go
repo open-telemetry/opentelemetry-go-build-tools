@@ -38,14 +38,8 @@ func Prune(rc RunConfig) error {
 	}
 
 	for moduleName, moduleInfo := range graph {
-		err = pruneReplace(rootModulePath, &moduleInfo, rc)
+		pruneReplace(rootModulePath, moduleInfo, rc)
 		logger := rc.Logger.With(zap.String("module", moduleName))
-
-		if err != nil {
-			logger.Error("Failed to prune replace statements",
-				zap.Error(err))
-			continue
-		}
 
 		err = writeModule(moduleInfo)
 		if err != nil {
@@ -62,7 +56,7 @@ func Prune(rc RunConfig) error {
 }
 
 // pruneReplace removes any extraneous intra-repository replace statements.
-func pruneReplace(rootModulePath string, module *moduleInfo, rc RunConfig) error {
+func pruneReplace(rootModulePath string, module *moduleInfo, rc RunConfig) {
 	modContents := module.moduleContents
 
 	// check to see if its intra dependency and no longer present
@@ -92,6 +86,4 @@ func pruneReplace(rootModulePath string, module *moduleInfo, rc RunConfig) error
 		}
 	}
 	module.moduleContents = modContents
-
-	return nil
 }

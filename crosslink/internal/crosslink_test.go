@@ -42,8 +42,8 @@ func TestCrosslink(t *testing.T) {
 			mockDir:  "testSimple",
 			config:   DefaultRunConfig(),
 			expected: map[string][]byte{
-				filepath.Join("go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
-					"go 1.17\n\n" +
+				"go.mod": []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
+					"go 1.18\n\n" +
 					"require (\n\t" +
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testA v1.0.0\n" +
 					")\n" +
@@ -52,13 +52,13 @@ func TestCrosslink(t *testing.T) {
 					"replace go.opentelemetry.io/build-tools/crosslink/testroot/testZ => ./testZ\n\n" +
 					"replace go.opentelemetry.io/build-tools/crosslink/testroot/testB => ./testB"),
 				filepath.Join("testA", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot/testA\n\n" +
-					"go 1.17\n\n" +
+					"go 1.18\n\n" +
 					"require (\n\t" +
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testB v1.0.0\n" +
 					")\n" +
 					"replace go.opentelemetry.io/build-tools/crosslink/testroot/testB => ../testB"),
 				filepath.Join("testB", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot/testB\n\n" +
-					"go 1.17\n\n"),
+					"go 1.18\n\n"),
 			},
 		},
 		{
@@ -66,23 +66,23 @@ func TestCrosslink(t *testing.T) {
 			mockDir:  "testCyclic",
 			config:   DefaultRunConfig(),
 			expected: map[string][]byte{
-				filepath.Join("go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
-					"go 1.17\n\n" +
+				"go.mod": []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
+					"go 1.18\n\n" +
 					"require (\n\t" +
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testA v1.0.0\n" +
 					")\n" +
 					"replace go.opentelemetry.io/build-tools/crosslink/testroot/testA => ./testA\n\n" +
 					"replace go.opentelemetry.io/build-tools/crosslink/testroot/testB => ./testB"),
 				filepath.Join("testA", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot/testA\n\n" +
-					"go 1.17\n\n" +
+					"go 1.18\n\n" +
 					"require (\n\t" +
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testB v1.0.0\n" +
 					")\n" +
 					"replace go.opentelemetry.io/build-tools/crosslink/testroot/testB => ../testB\n\n" +
 					"replace go.opentelemetry.io/build-tools/crosslink/testroot => ../"),
-				// b has req on root but not neccessary to write out with current comparison logic
+				// b has req on root but not necessary to write out with current comparison logic
 				filepath.Join("testB", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot/testB\n\n" +
-					"go 1.17\n\n" +
+					"go 1.18\n\n" +
 					"replace go.opentelemetry.io/build-tools/crosslink/testroot/testA => ../testA\n\n" +
 					"replace go.opentelemetry.io/build-tools/crosslink/testroot => ../\n\n"),
 			},
@@ -95,21 +95,21 @@ func TestCrosslink(t *testing.T) {
 				Logger: lg,
 			},
 			expected: map[string][]byte{
-				filepath.Join("go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
-					"go 1.17\n\n" +
+				"go.mod": []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
+					"go 1.18\n\n" +
 					"require (\n\t" +
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testA v1.0.0\n" +
 					")\n" +
 					"replace go.opentelemetry.io/build-tools/crosslink/testroot/testA => ./testA\n\n" +
 					"replace go.opentelemetry.io/build-tools/crosslink/testroot/testB => ./testB"),
 				filepath.Join("testA", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot/testA\n\n" +
-					"go 1.17\n\n" +
+					"go 1.18\n\n" +
 					"require (\n\t" +
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testB v1.0.0\n" +
 					")\n" +
 					"replace go.opentelemetry.io/build-tools/crosslink/testroot/testB => ../testB"),
 				filepath.Join("testB", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot/testB\n\n" +
-					"go 1.17\n\n"),
+					"go 1.18\n\n"),
 			},
 		},
 	}
@@ -134,7 +134,7 @@ func TestCrosslink(t *testing.T) {
 			if assert.NoError(t, err, "error message on execution %s") {
 
 				for modFilePath, modFilesExpected := range test.expected {
-					modFileActual, err := os.ReadFile(filepath.Join(tmpRootDir, modFilePath))
+					modFileActual, err := os.ReadFile(filepath.Clean(filepath.Join(tmpRootDir, modFilePath)))
 
 					if err != nil {
 						t.Fatalf("error reading actual mod files: %v", err)
@@ -187,21 +187,21 @@ func TestOverwrite(t *testing.T) {
 				Logger:        lg,
 			},
 			expected: map[string][]byte{
-				filepath.Join("go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
-					"go 1.17\n\n" +
+				"go.mod": []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
+					"go 1.18\n\n" +
 					"require (\n\t" +
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testA v1.0.0\n" +
 					")\n" +
 					"replace go.opentelemetry.io/build-tools/crosslink/testroot/testA => ./testA\n\n" +
 					"replace go.opentelemetry.io/build-tools/crosslink/testroot/testB => ./testB"),
 				filepath.Join("testA", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot/testA\n\n" +
-					"go 1.17\n\n" +
+					"go 1.18\n\n" +
 					"require (\n\t" +
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testB v1.0.0\n" +
 					")\n" +
 					"replace go.opentelemetry.io/build-tools/crosslink/testroot/testB => ../testB"),
 				filepath.Join("testB", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot/testB\n\n" +
-					"go 1.17\n\n"),
+					"go 1.18\n\n"),
 			},
 		},
 		{
@@ -212,21 +212,21 @@ func TestOverwrite(t *testing.T) {
 				Logger:        lg,
 			},
 			expected: map[string][]byte{
-				filepath.Join("go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
-					"go 1.17\n\n" +
+				"go.mod": []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
+					"go 1.18\n\n" +
 					"require (\n\t" +
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testA v1.0.0\n" +
 					")\n" +
 					"replace go.opentelemetry.io/build-tools/crosslink/testroot/testA => ../testA\n\n" +
 					"replace go.opentelemetry.io/build-tools/crosslink/testroot/testB => ./testB"),
 				filepath.Join("testA", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot/testA\n\n" +
-					"go 1.17\n\n" +
+					"go 1.18\n\n" +
 					"require (\n\t" +
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testB v1.0.0\n" +
 					")\n" +
 					"replace go.opentelemetry.io/build-tools/crosslink/testroot/testB => ../testB"),
 				filepath.Join("testB", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot/testB\n\n" +
-					"go 1.17\n\n"),
+					"go 1.18\n\n"),
 			},
 		},
 	}
@@ -253,7 +253,7 @@ func TestOverwrite(t *testing.T) {
 				// a mock_test_data_expected folder could be built instead of building expected files by hand.
 
 				for modFilePath, modFilesExpected := range test.expected {
-					modFileActual, err := os.ReadFile(filepath.Join(tmpRootDir, modFilePath))
+					modFileActual, err := os.ReadFile(filepath.Clean(filepath.Join(tmpRootDir, modFilePath)))
 
 					if err != nil {
 						t.Fatalf("error reading actual mod files: %v", err)
@@ -352,24 +352,24 @@ func TestExclude(t *testing.T) {
 				// a mock_test_data_expected folder could be built instead of building expected files by hand.
 				modFilesExpected := map[string][]byte{
 					filepath.Join(tmpRootDir, "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
-						"go 1.17\n\n" +
+						"go 1.18\n\n" +
 						"require (\n\t" +
 						"go.opentelemetry.io/build-tools/crosslink/testroot/testA v1.0.0\n" +
 						")\n" +
 						"replace go.opentelemetry.io/build-tools/crosslink/testroot/testA => ../testA\n\n" +
 						"replace go.opentelemetry.io/build-tools/excludeme => ../excludeme\n\n"),
 					filepath.Join(tmpRootDir, "testA", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot/testA\n\n" +
-						"go 1.17\n\n" +
+						"go 1.18\n\n" +
 						"require (\n\t" +
 						"go.opentelemetry.io/build-tools/crosslink/testroot/testB v1.0.0\n" +
 						")\n" +
 						"replace go.opentelemetry.io/build-tools/crosslink/testroot/testB => ../testB"),
 					filepath.Join(tmpRootDir, "testB", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot/testB\n\n" +
-						"go 1.17\n\n"),
+						"go 1.18\n\n"),
 				}
 
 				for modFilePath, modFilesExpected := range modFilesExpected {
-					modFileActual, err := os.ReadFile(modFilePath)
+					modFileActual, err := os.ReadFile(filepath.Clean(modFilePath))
 
 					if err != nil {
 						t.Fatalf("TestCase: %s, error reading actual mod files: %v", test.testCase, err)

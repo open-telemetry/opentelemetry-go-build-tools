@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,8 +22,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/assert"
-	cl "go.opentelemetry.io/build-tools/crosslink/internal"
 	"go.uber.org/zap"
+
+	cl "go.opentelemetry.io/build-tools/crosslink/internal"
 )
 
 func TestTransform(t *testing.T) {
@@ -51,10 +52,10 @@ func TestTransform(t *testing.T) {
 		t.Run(test.testName, func(t *testing.T) {
 			actual := transformExclude(test.inputSlice)
 
-			//len must match
+			// len must match
 			assert.Len(t, actual, len(test.inputSlice))
 
-			//test for existence
+			// test for existence
 			for _, val := range test.inputSlice {
 				_, exists := actual[val]
 				assert.True(t, exists)
@@ -63,7 +64,7 @@ func TestTransform(t *testing.T) {
 	}
 }
 
-var configReset func() = func() {
+var configReset = func() {
 	comCfg.runConfig = cl.DefaultRunConfig()
 	comCfg.rootCommand.SetArgs([]string{})
 }

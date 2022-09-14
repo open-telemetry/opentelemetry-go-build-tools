@@ -17,7 +17,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -271,7 +271,7 @@ func (rg reportGenerator) getFailedTests() string {
 }
 
 func (rg reportGenerator) handleBadResponses(response *github.Response) {
-	body, _ := ioutil.ReadAll(response.Body)
+	body, _ := io.ReadAll(response.Body)
 	rg.logger.Fatal(
 		"Unexpected response from GitHub",
 		zap.Int("status_code", response.StatusCode),

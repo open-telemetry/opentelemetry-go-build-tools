@@ -17,7 +17,7 @@ package common
 import (
 	"fmt"
 	"io/fs"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/spf13/viper"
@@ -80,11 +80,11 @@ func readVersioningFile(versioningFilename string) (versionConfig, error) {
 	var versionCfg versionConfig
 
 	if err := viper.ReadInConfig(); err != nil {
-		return versionConfig{}, fmt.Errorf("error reading versionsConfig file: %s", err)
+		return versionConfig{}, fmt.Errorf("error reading versionsConfig file: %w", err)
 	}
 
 	if err := viper.Unmarshal(&versionCfg); err != nil {
-		return versionConfig{}, fmt.Errorf("unable to unmarshal versionsConfig: %s", err)
+		return versionConfig{}, fmt.Errorf("unable to unmarshal versionsConfig: %w", err)
 	}
 
 	if viper.ConfigFileUsed() != versioningFilename {
@@ -99,8 +99,8 @@ func readVersioningFile(versioningFilename string) (versionConfig, error) {
 }
 
 // buildModuleSetsMap creates a map with module set names as keys and ModuleSet structs as values.
-func (versionCfg versionConfig) buildModuleSetsMap() (ModuleSetMap, error) {
-	return versionCfg.ModuleSets, nil
+func (versionCfg versionConfig) buildModuleSetsMap() ModuleSetMap {
+	return versionCfg.ModuleSets
 }
 
 // BuildModuleMap creates a map with module paths as keys and their moduleInfo as values
@@ -157,7 +157,7 @@ func (versionCfg versionConfig) BuildModulePathMap(root string) (ModulePathMap, 
 		}
 		if filepath.Base(filePath) == "go.mod" {
 			// read go.mod file into mod []byte
-			mod, err := ioutil.ReadFile(filePath)
+			mod, err := os.ReadFile(filepath.Clean(filePath))
 			if err != nil {
 				return err
 			}
