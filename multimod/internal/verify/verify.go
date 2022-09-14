@@ -22,13 +22,13 @@ import (
 	"golang.org/x/mod/modfile"
 	"golang.org/x/mod/semver"
 
-	tools "go.opentelemetry.io/build-tools"
+	"go.opentelemetry.io/build-tools/internal/repo"
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
 
 func Run(versioningFile string) {
 
-	repoRoot, err := tools.FindRepoRoot()
+	repoRoot, err := repo.FindRoot()
 	if err != nil {
 		log.Fatalf("unable to find repo root: %v", err)
 	}

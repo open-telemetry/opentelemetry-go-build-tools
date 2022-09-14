@@ -20,7 +20,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	tools "go.opentelemetry.io/build-tools"
+	"go.opentelemetry.io/build-tools/internal/repo"
 )
 
 var (
@@ -49,7 +49,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize()
 
-	repoRoot, err := tools.FindRepoRoot()
+	repoRoot, err := repo.FindRoot()
 	if err != nil {
 		log.Fatalf("could not find repo root: %v", err)
 	}

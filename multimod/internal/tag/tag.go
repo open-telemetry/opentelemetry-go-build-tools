@@ -23,13 +23,13 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 
-	tools "go.opentelemetry.io/build-tools"
+	"go.opentelemetry.io/build-tools/internal/repo"
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
 
 func Run(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags bool) {
 
-	repoRoot, err := tools.FindRepoRoot()
+	repoRoot, err := repo.FindRoot()
 	if err != nil {
 		log.Fatalf("unable to change to repo root: %v", err)
 	}
