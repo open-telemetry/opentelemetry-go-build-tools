@@ -15,8 +15,8 @@
 package prerelease
 
 import (
+	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/go-git/go-git/v5"
+
 	"go.opentelemetry.io/build-tools/internal/repo"
 
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
@@ -106,7 +107,7 @@ type prerelease struct {
 func newPrerelease(versioningFilename, modSetToUpdate, repoRoot string) (prerelease, error) {
 	modRelease, err := common.NewModuleSetRelease(versioningFilename, modSetToUpdate, repoRoot)
 	if err != nil {
-		return prerelease{}, fmt.Errorf("error creating new prerelease struct: %v", err)
+		return prerelease{}, fmt.Errorf("error creating new prerelease struct: %w", err)
 	}
 
 	return prerelease{
@@ -116,17 +117,17 @@ func newPrerelease(versioningFilename, modSetToUpdate, repoRoot string) (prerele
 
 func (p prerelease) checkModuleSetUpToDate(repo *git.Repository) (bool, error) {
 	err := p.ModuleSetRelease.CheckGitTagsAlreadyExist(repo)
-
-	switch err.(type) {
-	case *common.ErrGitTagsAlreadyExist:
-		return true, nil
-	case nil:
-		return false, nil
-	case *common.ErrInconsistentGitTagsExist:
-		return false, fmt.Errorf("cannot proceed with inconsistently tagged module set %v: %v", p.ModuleSetRelease.ModSetName, err)
-	default:
-		return false, fmt.Errorf("unhandled error: %v", err)
+	if err != nil {
+		if errors.As(err, &common.ErrGitTagsAlreadyExist{}) {
+			return true, nil
+		}
+		if errors.As(err, &common.ErrInconsistentGitTagsExist{}) {
+			return false, fmt.Errorf("cannot proceed with inconsistently tagged module set %v: %w", p.ModuleSetRelease.ModSetName, err)
+		}
+		return false, fmt.Errorf("unhandled error: %w", err)
 	}
+
+	return false, nil
 }
 
 // updateAllVersionGo updates the version.go file containing a hardcoded semver version string
@@ -139,14 +140,16 @@ func (p prerelease) updateAllVersionGo() error {
 		versionGoFilePath := filepath.Join(versionGoDir, "version.go")
 
 		// check if version.go file exists
-		if _, err := os.Stat(versionGoFilePath); err == nil {
-			if updateErr := updateVersionGoFile(versionGoFilePath, p.ModuleSetRelease.ModSetVersion()); updateErr != nil {
-				return fmt.Errorf("could not update %v: %v", versionGoFilePath, updateErr)
+		_, err := os.Stat(versionGoFilePath)
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			} else {
+				return fmt.Errorf("could not check existence of %v: %w", versionGoFilePath, err)
 			}
-		} else if os.IsNotExist(err) {
-			continue
-		} else {
-			return fmt.Errorf("could not check existance of %v: %v", versionGoFilePath, err)
+		}
+		if err = updateVersionGoFile(versionGoFilePath, p.ModuleSetRelease.ModSetVersion()); err != nil {
+			return fmt.Errorf("could not update %v: %w", versionGoFilePath, err)
 		}
 
 	}
@@ -157,11 +160,11 @@ func (p prerelease) updateAllVersionGo() error {
 // TODO: a potential improvement is to use an AST package rather than regex to perform replacement.
 func updateVersionGoFile(filePath string, newVersion string) error {
 	if !strings.HasSuffix(filePath, "version.go") {
-		return fmt.Errorf("cannot update file passed that does not end with version.go")
+		return errors.New("cannot update file passed that does not end with version.go")
 	}
 	log.Printf("... Updating file %v\n", filePath)
 
-	newVersionGoFile, err := ioutil.ReadFile(filePath)
+	newVersionGoFile, err := os.ReadFile(filepath.Clean(filePath))
 	if err != nil {
 		panic(err)
 	}
@@ -169,7 +172,7 @@ func updateVersionGoFile(filePath string, newVersion string) error {
 	oldVersionRegex := common.SemverRegexNumberOnly
 	r, err := regexp.Compile(oldVersionRegex)
 	if err != nil {
-		return fmt.Errorf("error compiling regex: %v", err)
+		return fmt.Errorf("error compiling regex: %w", err)
 	}
 
 	newVersionNumberOnly := strings.TrimPrefix(newVersion, "v")
@@ -177,8 +180,8 @@ func updateVersionGoFile(filePath string, newVersion string) error {
 	newVersionGoFile = r.ReplaceAll(newVersionGoFile, []byte(newVersionNumberOnly))
 
 	// overwrite the version.go file
-	if err := ioutil.WriteFile(filePath, newVersionGoFile, 0644); err != nil {
-		return fmt.Errorf("error overwriting go.mod file: %v", err)
+	if err := os.WriteFile(filePath, newVersionGoFile, 0600); err != nil {
+		return fmt.Errorf("error overwriting go.mod file: %w", err)
 	}
 
 	return nil
@@ -193,12 +196,8 @@ func (p prerelease) updateAllGoModFiles() error {
 		modFilePaths = append(modFilePaths, filePath)
 	}
 
-	if err := common.UpdateGoModFiles(
-		modFilePaths,
-		p.ModuleSetRelease.ModSetPaths(),
-		p.ModuleSetRelease.ModSetVersion(),
-	); err != nil {
-		return fmt.Errorf("could not update all go mod files: %v", err)
+	if err := common.UpdateGoModFiles(modFilePaths, p.ModuleSetRelease.ModSetPaths(), p.ModuleSetRelease.ModSetVersion()); err != nil {
+		return fmt.Errorf("could not update all go mod files: %w", err)
 	}
 
 	return nil

@@ -15,7 +15,7 @@
 package prerelease
 
 import (
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -35,7 +35,7 @@ var (
 
 // TestMain performs setup for the tests and suppress printing logs.
 func TestMain(m *testing.M) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	os.Exit(m.Run())
 }
 
@@ -43,13 +43,7 @@ func TestNewPrerelease(t *testing.T) {
 	testName := "new_prerelease"
 	versionsYamlDir := filepath.Join(testDataDir, testName)
 
-	tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
-	if err != nil {
-		t.Fatal("error creating temp dir:", err)
-	}
-
-	defer commontest.RemoveAll(t, tmpRootDir)
-
+	tmpRootDir := t.TempDir()
 	modFiles := map[string][]byte{
 		filepath.Join(tmpRootDir, "test", "test1", "go.mod"): []byte("module \"go.opentelemetry.io/test/test1\"\n\ngo 1.16\n\n" +
 			"require (\n\t\"go.opentelemetry.io/testroot/v2\" v2.0.0\n)\n"),
@@ -58,15 +52,11 @@ func TestNewPrerelease(t *testing.T) {
 		filepath.Join(tmpRootDir, "test", "test2", "go.mod"): []byte("module \"go.opentelemetry.io/test/testexcluded\"\n\ngo 1.16\n"),
 	}
 
-	if err := commontest.WriteTempFiles(modFiles); err != nil {
-		t.Fatal("could not create go mod file tree", err)
-	}
+	require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
 
 	// initialize temporary local git repository
-	_, err = git.PlainInit(tmpRootDir, true)
-	if err != nil {
-		t.Fatal("could not initialize temp git repo:", err)
-	}
+	_, err := git.PlainInit(tmpRootDir, true)
+	require.NoError(t, err, "could not initialize temp git repo")
 
 	testCases := []struct {
 		name                   string
@@ -126,14 +116,14 @@ func TestNewPrerelease(t *testing.T) {
 				},
 			},
 			expectedTagNames: map[string][]common.ModuleTagName{
-				"mod-set-1": []common.ModuleTagName{"test/test1"},
-				"mod-set-2": []common.ModuleTagName{"test"},
-				"mod-set-3": []common.ModuleTagName{common.RepoRootTag},
+				"mod-set-1": {"test/test1"},
+				"mod-set-2": {"test"},
+				"mod-set-3": {common.RepoRootTag},
 			},
 			expectedFullTagNames: map[string][]string{
-				"mod-set-1": []string{"test/test1/v1.2.3-RC1+meta"},
-				"mod-set-2": []string{"test/v0.1.0"},
-				"mod-set-3": []string{"v2.2.2"},
+				"mod-set-1": {"test/test1/v1.2.3-RC1+meta"},
+				"mod-set-2": {"test/v0.1.0"},
+				"mod-set-3": {"v2.2.2"},
 			},
 			expectedModSetVersions: map[string]string{
 				"mod-set-1": "v1.2.3-RC1+meta",
@@ -141,9 +131,9 @@ func TestNewPrerelease(t *testing.T) {
 				"mod-set-3": "v2.2.2",
 			},
 			expectedModSetPaths: map[string][]common.ModulePath{
-				"mod-set-1": []common.ModulePath{"go.opentelemetry.io/test/test1"},
-				"mod-set-2": []common.ModulePath{"go.opentelemetry.io/test2"},
-				"mod-set-3": []common.ModulePath{"go.opentelemetry.io/testroot/v2"},
+				"mod-set-1": {"go.opentelemetry.io/test/test1"},
+				"mod-set-2": {"go.opentelemetry.io/test2"},
+				"mod-set-3": {"go.opentelemetry.io/testroot/v2"},
 			},
 		},
 		{
@@ -195,13 +185,7 @@ func TestUpdateAllVersionGo(t *testing.T) {
 
 	versioningFilename := filepath.Join(versionsYamlDir, "versions_valid.yaml")
 
-	tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
-	if err != nil {
-		t.Fatal("error creating temp dir:", err)
-	}
-
-	defer commontest.RemoveAll(t, tmpRootDir)
-
+	tmpRootDir := t.TempDir()
 	modFiles := map[string][]byte{
 		filepath.Join(tmpRootDir, "test", "test1", "go.mod"): []byte("module \"go.opentelemetry.io/test/test1\"\n\ngo 1.16\n\n" +
 			"require (\n\t\"go.opentelemetry.io/testroot/v2\" v2.2.2\n)\n"),
@@ -280,13 +264,8 @@ func TestUpdateAllVersionGo(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if err := commontest.WriteTempFiles(modFiles); err != nil {
-				t.Fatal("could not create go mod file tree", err)
-			}
-
-			if err := commontest.WriteTempFiles(versionGoFiles); err != nil {
-				t.Fatal("could not create version.go file tree", err)
-			}
+			require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
+			require.NoError(t, commontest.WriteTempFiles(versionGoFiles), "could not create version.go file tree")
 
 			p, err := newPrerelease(versioningFilename, tc.modSetName, tmpRootDir)
 			require.NoError(t, err)
@@ -295,7 +274,7 @@ func TestUpdateAllVersionGo(t *testing.T) {
 			require.NoError(t, err)
 
 			for versionGoFilePath, expectedByteOutput := range tc.expectedVersionGoOutputs {
-				actual, err := ioutil.ReadFile(versionGoFilePath)
+				actual, err := os.ReadFile(filepath.Clean(versionGoFilePath))
 				require.NoError(t, err)
 
 				assert.Equal(t, expectedByteOutput, actual)
@@ -337,7 +316,7 @@ func TestUpdateAllGoModFiles(t *testing.T) {
 					"go.opentelemetry.io/build-tools/multimod/internal/prerelease/testroot v0.1.0-shouldBe2\n\t" +
 					"go.opentelemetry.io/other/test2 v0.1.0\n" +
 					")"),
-				filepath.Join("go.mod"): []byte("module go.opentelemetry.io/build-tools/multimod/internal/prerelease/testroot\n\n" +
+				"go.mod": []byte("module go.opentelemetry.io/build-tools/multimod/internal/prerelease/testroot\n\n" +
 					"go 1.16\n\n" +
 					"require (\n\t" +
 					"go.opentelemetry.io/build-tools/multimod/internal/prerelease/test/test1 v1.2.3-RC1+meta\n\t" +
@@ -372,7 +351,7 @@ func TestUpdateAllGoModFiles(t *testing.T) {
 					"go.opentelemetry.io/build-tools/multimod/internal/prerelease/testroot v0.1.0-shouldBe2\n\t" +
 					"go.opentelemetry.io/other/test2 v0.1.0\n" +
 					")"),
-				filepath.Join("go.mod"): []byte("module go.opentelemetry.io/build-tools/multimod/internal/prerelease/testroot\n\n" +
+				"go.mod": []byte("module go.opentelemetry.io/build-tools/multimod/internal/prerelease/testroot\n\n" +
 					"go 1.16\n\n" +
 					"require (\n\t" +
 					"go.opentelemetry.io/build-tools/multimod/internal/prerelease/test/test1 v1.2.3-OLD\n\t" +
@@ -407,7 +386,7 @@ func TestUpdateAllGoModFiles(t *testing.T) {
 					"go.opentelemetry.io/build-tools/multimod/internal/prerelease/testroot v0.2.0\n\t" +
 					"go.opentelemetry.io/other/test2 v0.1.0\n" +
 					")"),
-				filepath.Join("go.mod"): []byte("module go.opentelemetry.io/build-tools/multimod/internal/prerelease/testroot\n\n" +
+				"go.mod": []byte("module go.opentelemetry.io/build-tools/multimod/internal/prerelease/testroot\n\n" +
 					"go 1.16\n\n" +
 					"require (\n\t" +
 					"go.opentelemetry.io/build-tools/multimod/internal/prerelease/test/test1 v1.2.3-OLD\n\t" +
@@ -423,13 +402,7 @@ func TestUpdateAllGoModFiles(t *testing.T) {
 		t.Run(tc.modSetName, func(t *testing.T) {
 			versioningFilename := filepath.Join(versionsYamlDir, "versions_valid.yaml")
 
-			tmpRootDir, err := os.MkdirTemp(testDataDir, testName+tc.modSetName)
-			if err != nil {
-				t.Fatal("creating temp dir:", err)
-			}
-
-			defer os.RemoveAll(tmpRootDir)
-
+			tmpRootDir := t.TempDir()
 			modFiles := map[string][]byte{
 				filepath.Join(tmpRootDir, "test", "test1", "go.mod"): []byte("module go.opentelemetry.io/build-tools/multimod/internal/prerelease/test/test1\n\n" +
 					"go 1.16\n\n" +
@@ -463,9 +436,7 @@ func TestUpdateAllGoModFiles(t *testing.T) {
 					")"),
 			}
 
-			if err := commontest.WriteTempFiles(modFiles); err != nil {
-				t.Fatal("could not create go mod file tree", err)
-			}
+			require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
 
 			p, err := newPrerelease(versioningFilename, tc.modSetName, tmpRootDir)
 			require.NoError(t, err)
@@ -474,7 +445,7 @@ func TestUpdateAllGoModFiles(t *testing.T) {
 			require.NoError(t, err)
 
 			for modFilePathSuffix, expectedByteOutput := range tc.expectedOutputModFiles {
-				actual, err := ioutil.ReadFile(filepath.Join(tmpRootDir, modFilePathSuffix))
+				actual, err := os.ReadFile(filepath.Clean(filepath.Join(tmpRootDir, modFilePathSuffix)))
 				require.NoError(t, err)
 
 				assert.Equal(t, expectedByteOutput, actual)

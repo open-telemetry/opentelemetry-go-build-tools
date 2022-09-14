@@ -15,6 +15,7 @@
 package common
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
@@ -28,20 +29,20 @@ func CommitChangesToNewBranch(branchName string, commitMessage string, repo *git
 	// save reference to current head in storage
 	origRef, err := repo.Head()
 	if err != nil {
-		return plumbing.ZeroHash, fmt.Errorf("could not get repo head: %v", err)
+		return plumbing.ZeroHash, fmt.Errorf("could not get repo head: %w", err)
 	}
 
 	if err = repo.Storer.SetReference(origRef); err != nil {
-		return plumbing.ZeroHash, fmt.Errorf("could not store original head ref")
+		return plumbing.ZeroHash, errors.New("could not store original head ref")
 	}
 
 	if _, err = checkoutNewBranch(branchName, repo); err != nil {
-		return plumbing.ZeroHash, fmt.Errorf("createPrereleaseBranch failed: %v", err)
+		return plumbing.ZeroHash, fmt.Errorf("createPrereleaseBranch failed: %w", err)
 	}
 
 	hash, err := commitChanges(commitMessage, repo, customAuthor)
 	if err != nil {
-		return plumbing.ZeroHash, fmt.Errorf("could not commit changes: %v", err)
+		return plumbing.ZeroHash, fmt.Errorf("could not commit changes: %w", err)
 	}
 
 	// return to original branch
@@ -76,7 +77,7 @@ func commitChanges(commitMessage string, repo *git.Repository, customAuthor *obj
 
 	hash, err := worktree.Commit(commitMessage, commitOptions)
 	if err != nil {
-		return plumbing.ZeroHash, fmt.Errorf("could not commit changes to git: %v", err)
+		return plumbing.ZeroHash, fmt.Errorf("could not commit changes to git: %w", err)
 	}
 
 	return hash, nil
@@ -96,7 +97,7 @@ func checkoutExistingBranch(branchRefName plumbing.ReferenceName, repo *git.Repo
 
 	log.Printf("git checkout %v\n", branchRefName)
 	if err = worktree.Checkout(checkoutOptions); err != nil {
-		return fmt.Errorf("could not check out new branch: %v", err)
+		return fmt.Errorf("could not check out new branch: %w", err)
 	}
 
 	return nil
@@ -118,7 +119,7 @@ func checkoutNewBranch(branchName string, repo *git.Repository) (plumbing.Refere
 
 	log.Printf("git branch %v\n", branchName)
 	if err = worktree.Checkout(checkoutOptions); err != nil {
-		return "", fmt.Errorf("could not check out new branch: %v", err)
+		return "", fmt.Errorf("could not check out new branch: %w", err)
 	}
 
 	return branchRefName, nil
@@ -143,7 +144,7 @@ func VerifyWorkingTreeClean(repo *git.Repository) error {
 
 	status, err := worktree.Status()
 	if err != nil {
-		return fmt.Errorf("could not get worktree status: %v", err)
+		return fmt.Errorf("could not get worktree status: %w", err)
 	}
 
 	if !status.IsClean() {

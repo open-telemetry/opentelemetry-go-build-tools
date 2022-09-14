@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -28,9 +27,12 @@ import (
 	"strings"
 
 	flag "github.com/spf13/pflag"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+
 	"golang.org/x/mod/semver"
 
-	tools "go.opentelemetry.io/build-tools"
+	"go.opentelemetry.io/build-tools/internal/repo"
 )
 
 func main() {
@@ -105,7 +107,7 @@ func validateConfig(cfg config) (config, error) {
 	}
 
 	if !path.IsAbs(cfg.outputPath) {
-		root, err := tools.FindRepoRoot()
+		root, err := repo.FindRoot()
 		if err != nil {
 			return config{}, err
 		}
@@ -152,6 +154,7 @@ func render(cfg config) error {
 	}
 	defer doneFunc()
 
+	// #nosec G204
 	err = exec.Command("cp", cfg.templateFilename, tmpDir).Run()
 	if err != nil {
 		return fmt.Errorf("unable to copy template to temp directory: %w", err)
@@ -169,6 +172,8 @@ func render(cfg config) error {
 	if cfg.templateParameters != "" {
 		args = append(args, "--parameters", cfg.templateParameters)
 	}
+
+	// #nosec G204
 	cmd := exec.Command("docker", args...)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -179,6 +184,8 @@ func render(cfg config) error {
 	if err != nil {
 		return fmt.Errorf("unable to create output directory %s: %w", cfg.outputPath, err)
 	}
+
+	// #nosec G204
 	err = exec.Command("cp", path.Join(tmpDir, "output", path.Base(cfg.outputFilename)), cfg.outputPath).Run()
 	if err != nil {
 		return fmt.Errorf("unable to copy result to target: %w", err)
@@ -206,6 +213,7 @@ func (s semVerSlice) Less(i, j int) bool {
 func findLatestSpecVersion(cfg config) (string, error) {
 	// List all tags in the specification repo. All released version numbers are tags
 	// in the repo.
+	// #nosec G204
 	cmd := exec.Command("git", "tag")
 	// The specification repo is in cfg.inputPath.
 	cmd.Dir = cfg.inputPath
@@ -244,6 +252,7 @@ func findLatestSpecVersion(cfg config) (string, error) {
 func checkoutSpecToDir(cfg config, toDir string) (doneFunc func(), err error) {
 	// Checkout the selected tag to make sure we use the correct version of semantic
 	// convention yaml files as the input. We will checkout the worktree to a temporary toDir.
+	// #nosec G204
 	cmd := exec.Command("git", "worktree", "add", toDir, cfg.specVersion)
 	// The specification repo is in cfg.inputPath.
 	cmd.Dir = cfg.inputPath
@@ -371,16 +380,17 @@ var replacements = map[string]string{
 }
 
 func fixIdentifiers(cfg config) error {
-	data, err := ioutil.ReadFile(cfg.outputFilename)
+	data, err := os.ReadFile(cfg.outputFilename)
 	if err != nil {
 		return fmt.Errorf("unable to read file: %w", err)
 	}
 
+	caser := cases.Title(language.Und)
 	for _, init := range capitalizations {
 		// Match the title-cased capitalization target, asserting that its followed by
 		// either a capital letter, whitespace, a digit, or the end of text.
 		// This is to avoid, e.g., turning "Identifier" into "IDentifier".
-		re := regexp.MustCompile(strings.Title(strings.ToLower(init)) + `([A-Z\s\d]|\b|$)`)
+		re := regexp.MustCompile(caser.String(strings.ToLower(init)) + `([A-Z\s\d]|\b|$)`)
 		// RE2 does not support zero-width lookahead assertions, so we have to replace
 		// the last character that may have matched the first capture group in the
 		// expression constructed above.
@@ -396,7 +406,7 @@ func fixIdentifiers(cfg config) error {
 	importPath := fmt.Sprintf(`"go.opentelemetry.io/otel/semconv/%s"`, packageDir)
 	data = bytes.ReplaceAll(data, []byte(`[[IMPORTPATH]]`), []byte(importPath))
 
-	err = ioutil.WriteFile(cfg.outputFilename, data, 0644)
+	err = os.WriteFile(cfg.outputFilename, data, 0600)
 	if err != nil {
 		return fmt.Errorf("unable to write updated file: %w", err)
 	}

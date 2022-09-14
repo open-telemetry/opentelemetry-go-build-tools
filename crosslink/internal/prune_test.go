@@ -15,7 +15,6 @@
 package crosslink
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -46,21 +45,21 @@ func TestPrune(t *testing.T) {
 				Verbose: true,
 			},
 			expected: map[string][]byte{
-				filepath.Join("go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
-					"go 1.17\n\n" +
+				"go.mod": []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
+					"go 1.18\n\n" +
 					"require (\n\t" +
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testA v1.0.0\n" +
 					")\n" +
 					"replace go.opentelemetry.io/build-tools/crosslink/testroot/testA => ./testA\n\n" +
 					"replace go.opentelemetry.io/build-tools/crosslink/testroot/testB => ./testB"),
 				filepath.Join("testA", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot/testA\n\n" +
-					"go 1.17\n\n" +
+					"go 1.18\n\n" +
 					"require (\n\t" +
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testB v1.0.0\n" +
 					")\n" +
 					"replace go.opentelemetry.io/build-tools/crosslink/testroot/testB => ../testB"),
 				filepath.Join("testB", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot/testB\n\n" +
-					"go 1.17\n\n"),
+					"go 1.18\n\n"),
 			},
 		},
 	}
@@ -84,7 +83,7 @@ func TestPrune(t *testing.T) {
 			if assert.NoError(t, err, "error message on execution %s") {
 
 				for modFilePath, modFilesExpected := range test.expected {
-					modFileActual, err := os.ReadFile(filepath.Join(tmpRootDir, modFilePath))
+					modFileActual, err := os.ReadFile(filepath.Clean(filepath.Join(tmpRootDir, modFilePath)))
 
 					if err != nil {
 						t.Fatalf("error reading actual mod files: %v", err)
@@ -135,7 +134,7 @@ func TestPruneReplace(t *testing.T) {
 		t.Errorf("error renaming gomod files: %v", err)
 	}
 
-	modContents, err := ioutil.ReadFile(filepath.Join(tmpRootDir, "go.mod"))
+	modContents, err := os.ReadFile(filepath.Clean(filepath.Join(tmpRootDir, "go.mod")))
 	if err != nil {
 		t.Errorf("failed to read mock gomod file: %v", err)
 	}
@@ -160,10 +159,10 @@ func TestPruneReplace(t *testing.T) {
 	mockModInfo := newModuleInfo(*modFile)
 	mockModInfo.requiredReplaceStatements = mockRequiredReplaceStatements
 	lg, _ := zap.NewDevelopment()
-	assert.NoError(t, pruneReplace("go.opentelemetry.io/build-tools/crosslink/testroot", mockModInfo, RunConfig{Prune: true, Verbose: true, Logger: lg}))
+	pruneReplace("go.opentelemetry.io/build-tools/crosslink/testroot", mockModInfo, RunConfig{Prune: true, Verbose: true, Logger: lg})
 
 	expectedModFile := []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
-		"go 1.17\n\n" +
+		"go 1.18\n\n" +
 		"require (\n\t" +
 		"go.opentelemetry.io/build-tools/crosslink/testroot/testA v1.0.0\n" +
 		"go.opentelemetry.io/build-tools/crosslink/testroot/testB v1.0.0\n" +

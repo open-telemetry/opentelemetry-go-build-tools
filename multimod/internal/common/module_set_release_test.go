@@ -15,7 +15,6 @@
 package common
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -29,13 +28,7 @@ import (
 )
 
 func TestNewModuleSetRelease(t *testing.T) {
-	tmpRootDir, err := os.MkdirTemp(testDataDir, "NewModuleSetRelease")
-	if err != nil {
-		t.Fatal("error creating temp dir:", err)
-	}
-
-	defer commontest.RemoveAll(t, tmpRootDir)
-
+	tmpRootDir := t.TempDir()
 	modFiles := map[string][]byte{
 		filepath.Join(tmpRootDir, "test", "test1", "go.mod"): []byte("module \"go.opentelemetry.io/test/test1\"\n\ngo 1.16\n\n" +
 			"require (\n\t\"go.opentelemetry.io/testroot/v2\" v2.0.0\n)\n"),
@@ -44,12 +37,10 @@ func TestNewModuleSetRelease(t *testing.T) {
 		filepath.Join(tmpRootDir, "test", "test2", "go.mod"): []byte("module \"go.opentelemetry.io/test/testexcluded\"\n\ngo 1.16\n"),
 	}
 
-	if err := commontest.WriteTempFiles(modFiles); err != nil {
-		t.Fatal("could not create go mod file tree", err)
-	}
+	require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
 
 	// initialize temporary local git repository
-	_, err = git.PlainInit(tmpRootDir, true)
+	_, err := git.PlainInit(tmpRootDir, true)
 	if err != nil {
 		t.Fatal("could not initialize temp git repo:", err)
 	}
@@ -112,14 +103,14 @@ func TestNewModuleSetRelease(t *testing.T) {
 				},
 			},
 			expectedTagNames: map[string][]ModuleTagName{
-				"mod-set-1": []ModuleTagName{"test/test1"},
-				"mod-set-2": []ModuleTagName{"test"},
-				"mod-set-3": []ModuleTagName{RepoRootTag},
+				"mod-set-1": {"test/test1"},
+				"mod-set-2": {"test"},
+				"mod-set-3": {RepoRootTag},
 			},
 			expectedFullTagNames: map[string][]string{
-				"mod-set-1": []string{"test/test1/v1.2.3-RC1+meta"},
-				"mod-set-2": []string{"test/v0.1.0"},
-				"mod-set-3": []string{"v2.2.2"},
+				"mod-set-1": {"test/test1/v1.2.3-RC1+meta"},
+				"mod-set-2": {"test/v0.1.0"},
+				"mod-set-3": {"v2.2.2"},
 			},
 			expectedModSetVersions: map[string]string{
 				"mod-set-1": "v1.2.3-RC1+meta",
@@ -127,9 +118,9 @@ func TestNewModuleSetRelease(t *testing.T) {
 				"mod-set-3": "v2.2.2",
 			},
 			expectedModSetPaths: map[string][]ModulePath{
-				"mod-set-1": []ModulePath{"go.opentelemetry.io/test/test1"},
-				"mod-set-2": []ModulePath{"go.opentelemetry.io/test3"},
-				"mod-set-3": []ModulePath{"go.opentelemetry.io/testroot/v2"},
+				"mod-set-1": {"go.opentelemetry.io/test/test1"},
+				"mod-set-2": {"go.opentelemetry.io/test3"},
+				"mod-set-3": {"go.opentelemetry.io/testroot/v2"},
 			},
 		},
 		{
@@ -175,13 +166,7 @@ func TestNewModuleSetRelease(t *testing.T) {
 }
 
 func TestCheckGitTagsAlreadyExist(t *testing.T) {
-	tmpRootDir, err := os.MkdirTemp(testDataDir, "CheckGitTagsAlreadyExist")
-	if err != nil {
-		t.Fatal("error creating temp dir:", err)
-	}
-
-	defer commontest.RemoveAll(t, tmpRootDir)
-
+	tmpRootDir := t.TempDir()
 	modFiles := map[string][]byte{
 		filepath.Join(tmpRootDir, "test", "test1", "go.mod"): []byte("module \"go.opentelemetry.io/test/test1\"\n\ngo 1.16\n\n" +
 			"require (\n\t\"go.opentelemetry.io/testroot/v2\" v2.0.0\n)\n"),
@@ -192,9 +177,7 @@ func TestCheckGitTagsAlreadyExist(t *testing.T) {
 		filepath.Join(tmpRootDir, "test", "test2", "go.mod"): []byte("module \"go.opentelemetry.io/test/testexcluded\"\n\ngo 1.16\n"),
 	}
 
-	if err := commontest.WriteTempFiles(modFiles); err != nil {
-		t.Fatal("could not create go mod file tree", err)
-	}
+	require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
 
 	versioningFilename := filepath.Join(testDataDir, "verify_git_tags_do_not_already_exist/versions_valid.yaml")
 	repoRoot := tmpRootDir
@@ -247,7 +230,7 @@ func TestCheckGitTagsAlreadyExist(t *testing.T) {
 		{
 			name:       "multiple git tags exist",
 			modSetName: "mod-set-1",
-			expectedError: &ErrGitTagsAlreadyExist{
+			expectedError: ErrGitTagsAlreadyExist{
 				tagNames: []string{
 					"test/test1/v1.2.3-RC1+meta",
 					"test/test4/v1.2.3-RC1+meta",
@@ -262,7 +245,7 @@ func TestCheckGitTagsAlreadyExist(t *testing.T) {
 		{
 			name:       "root git tag exists",
 			modSetName: "mod-set-3",
-			expectedError: &ErrGitTagsAlreadyExist{
+			expectedError: ErrGitTagsAlreadyExist{
 				tagNames: []string{
 					"v2.2.2",
 				},

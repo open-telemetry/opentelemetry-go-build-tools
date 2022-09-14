@@ -15,7 +15,7 @@
 package sync
 
 import (
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -34,7 +34,7 @@ var (
 
 // TestMain performs setup for the tests and suppress printing logs.
 func TestMain(m *testing.M) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	os.Exit(m.Run())
 }
 
@@ -83,9 +83,7 @@ func TestNewSync(t *testing.T) {
 			")"),
 	}
 
-	if err := commontest.WriteTempFiles(modFiles); err != nil {
-		t.Fatal("could not create go mod file tree", err)
-	}
+	require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
 
 	expectedMyModuleVersioning := common.ModuleVersioning{
 		ModSetMap: common.ModuleSetMap{
@@ -331,9 +329,7 @@ func TestUpdateAllGoModFiles(t *testing.T) {
 		}
 
 		t.Run(tc.modSetName, func(t *testing.T) {
-			if err := commontest.WriteTempFiles(modFiles); err != nil {
-				t.Fatal("could not create go mod file tree", err)
-			}
+			require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
 
 			s, err := newSync(
 				myVersioningFilename,
@@ -347,7 +343,7 @@ func TestUpdateAllGoModFiles(t *testing.T) {
 			require.NoError(t, err)
 
 			for modFilePathSuffix, expectedByteOutput := range tc.expectedOutputModFiles {
-				actual, err := ioutil.ReadFile(filepath.Join(tmpRootDir, modFilePathSuffix))
+				actual, err := os.ReadFile(filepath.Clean(filepath.Join(tmpRootDir, modFilePathSuffix)))
 				require.NoError(t, err)
 
 				assert.Equal(t, expectedByteOutput, actual)

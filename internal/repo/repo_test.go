@@ -46,7 +46,7 @@ func TestFindModules(t *testing.T) {
 	for _, d := range dirs {
 		require.NoError(t, os.MkdirAll(d, os.ModePerm))
 		goMod := filepath.Join(d, "go.mod")
-		f, err := os.Create(goMod)
+		f, err := os.Create(filepath.Clean(goMod))
 		require.NoError(t, err)
 		modName := strings.Replace(d, root, "fake.multi.mod.project", 1)
 		fmt.Fprintf(f, "module %s\n", modName)
@@ -66,14 +66,12 @@ func TestFindModules(t *testing.T) {
 func TestFindModulesReturnsErrorForInvalidGoModFile(t *testing.T) {
 	root := t.TempDir()
 	goMod := filepath.Join(root, "go.mod")
-	f, err := os.Create(goMod)
-	require.NoError(t, err)
-	fmt.Fprintln(f, "invalid file format")
-	require.NoError(t, f.Close())
 
-	_, err = FindModules(root)
-	require.IsType(t, modfile.ErrorList{}, err)
-	errList := err.(modfile.ErrorList)
+	require.NoError(t, os.WriteFile(filepath.Clean(goMod), []byte("invalid file format"), 0600))
+
+	_, err := FindModules(root)
+	errList := modfile.ErrorList{}
+	require.ErrorAs(t, err, &errList)
 	require.Len(t, errList, 1, "unexpected errors")
 	assert.EqualError(t, errList[0].Err, "unknown directive: invalid")
 }

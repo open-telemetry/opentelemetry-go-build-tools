@@ -123,6 +123,14 @@ lint: misspell | $(GOLANGCI_LINT)
 	    $(GOLANGCI_LINT) run); \
 	done
 
+.PHONY: tidy
+tidy:
+	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
+	  echo "$(GO) mod tidy in $${dir}"; \
+	  (cd "$${dir}" && $(GO) mod tidy); \
+	done
+	set -e; cd $(TOOLS_MOD_DIR) && $(GO) mod tidy
+
 .PHONY: misspell
 misspell: | $(MISSPELL)
 	$(MISSPELL) -w $(ALL_DOCS)

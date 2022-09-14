@@ -15,7 +15,6 @@
 package common
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -51,14 +50,7 @@ func TestIsStableVersion(t *testing.T) {
 }
 
 func TestUpdateGoModVersions(t *testing.T) {
-	testName := "update_go_mod_versions"
-
-	tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
-	if err != nil {
-		t.Fatal("error creating temp dir:", err)
-	}
-
-	defer commontest.RemoveAll(t, tmpRootDir)
+	tmpRootDir := t.TempDir()
 	modFiles := map[string][]byte{
 		filepath.Join(tmpRootDir, "test", "test1", "go.mod"): []byte("module go.opentelemetry.io/build-tools/multimod/internal/prerelease/test/test1\n\n" +
 			"go 1.16\n\n" +
@@ -92,9 +84,7 @@ func TestUpdateGoModVersions(t *testing.T) {
 			")"),
 	}
 
-	if err := commontest.WriteTempFiles(modFiles); err != nil {
-		t.Fatal("could not create go mod file tree", err)
-	}
+	require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
 
 	var modFilePaths []ModuleFilePath
 	for modFilePath := range modFiles {
@@ -140,11 +130,9 @@ func TestUpdateGoModVersions(t *testing.T) {
 	}
 	newVersion := "v1.2.3-RC1+meta"
 
-	err = UpdateGoModFiles(modFilePaths, newModPaths, newVersion)
-	require.NoError(t, err)
-
+	require.NoError(t, UpdateGoModFiles(modFilePaths, newModPaths, newVersion))
 	for modFilePath, expectedByteOutput := range expectedModFiles {
-		actual, err := ioutil.ReadFile(modFilePath)
+		actual, err := os.ReadFile(filepath.Clean(modFilePath))
 		require.NoError(t, err)
 
 		assert.Equal(t, expectedByteOutput, actual)

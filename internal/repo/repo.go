@@ -74,7 +74,7 @@ func FindModules(root string) ([]*modfile.File, error) {
 		}
 
 		goMod := filepath.Join(path, "go.mod")
-		f, err := os.Open(goMod)
+		f, err := os.Open(filepath.Clean(goMod))
 		if errors.Is(err, os.ErrNotExist) {
 			return nil
 		}

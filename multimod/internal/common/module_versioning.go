@@ -30,27 +30,24 @@ type ModuleVersioning struct {
 func NewModuleVersioning(versioningFilename string, repoRoot string) (ModuleVersioning, error) {
 	repoRoot, err := filepath.Abs(repoRoot)
 	if err != nil {
-		return ModuleVersioning{}, fmt.Errorf("could not get absolute path of repo root: %v", err)
+		return ModuleVersioning{}, fmt.Errorf("could not get absolute path of repo root: %w", err)
 	}
 
 	vCfg, err := readVersioningFile(versioningFilename)
 	if err != nil {
-		return ModuleVersioning{}, fmt.Errorf("error reading versioning file %v: %v", versioningFilename, err)
+		return ModuleVersioning{}, fmt.Errorf("error reading versioning file %v: %w", versioningFilename, err)
 	}
 
-	modSetMap, err := vCfg.buildModuleSetsMap()
-	if err != nil {
-		return ModuleVersioning{}, fmt.Errorf("error building module set map for NewModuleVersioning: %v", err)
-	}
+	modSetMap := vCfg.buildModuleSetsMap()
 
 	modInfoMap, err := vCfg.buildModuleMap()
 	if err != nil {
-		return ModuleVersioning{}, fmt.Errorf("error building module info map for NewModuleVersioning: %v", err)
+		return ModuleVersioning{}, fmt.Errorf("error building module info map for NewModuleVersioning: %w", err)
 	}
 
 	modPathMap, err := vCfg.BuildModulePathMap(repoRoot)
 	if err != nil {
-		return ModuleVersioning{}, fmt.Errorf("error building module path map for NewModuleVersioning: %v", err)
+		return ModuleVersioning{}, fmt.Errorf("error building module path map for NewModuleVersioning: %w", err)
 	}
 
 	return ModuleVersioning{

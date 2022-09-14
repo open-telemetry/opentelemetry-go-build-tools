@@ -221,7 +221,7 @@ func TestUpdateE2E(t *testing.T) {
 			require.NoError(t, err)
 
 			expectedChangelogMD := filepath.Join("testdata", tc.name+".md")
-			expectedBytes, err := os.ReadFile(expectedChangelogMD)
+			expectedBytes, err := os.ReadFile(filepath.Clean(expectedChangelogMD))
 			require.NoError(t, err)
 
 			require.Equal(t, string(expectedBytes), string(actualBytes))
@@ -318,7 +318,7 @@ func setupTestDir(t *testing.T, entries []*Entry) chlogContext {
 
 	// Copy the entry template, for tests that ensure it is not deleted
 	templateInRootDir := newChlogContext("testdata").templateYAML
-	templateBytes, err := os.ReadFile(templateInRootDir)
+	templateBytes, err := os.ReadFile(filepath.Clean(templateInRootDir))
 	require.NoError(t, err)
 	require.NoError(t, os.WriteFile(ctx.templateYAML, templateBytes, os.FileMode(0755)))
 

@@ -17,7 +17,7 @@ package crosslink
 import (
 	"fmt"
 	"io/fs"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -28,8 +28,8 @@ import (
 // Creates a dependency graph for all intra-repository go.mod files. Only adds
 // modules that fall under the root module namespace.
 // returns map of module path -> moduleInfo
-func buildDepedencyGraph(rc RunConfig, rootModulePath string) (map[string]moduleInfo, error) {
-	moduleMap := make(map[string]moduleInfo)
+func buildDepedencyGraph(rc RunConfig, rootModulePath string) (map[string]*moduleInfo, error) {
+	moduleMap := make(map[string]*moduleInfo)
 
 	goModFunc := func(filePath string, info fs.FileInfo, err error) error {
 		if err != nil {
@@ -41,7 +41,7 @@ func buildDepedencyGraph(rc RunConfig, rootModulePath string) (map[string]module
 		}
 
 		if filepath.Base(filePath) == "go.mod" {
-			modFile, err := ioutil.ReadFile(filePath)
+			modFile, err := os.ReadFile(filepath.Clean(filePath))
 			if err != nil {
 				return fmt.Errorf("failed to read file: %w", err)
 			}
@@ -53,9 +53,7 @@ func buildDepedencyGraph(rc RunConfig, rootModulePath string) (map[string]module
 					zap.String("file_path", filePath))
 			}
 
-			modInfo := newModuleInfo(*modContents)
-
-			moduleMap[modfile.ModulePath(modFile)] = *modInfo
+			moduleMap[modfile.ModulePath(modFile)] = newModuleInfo(*modContents)
 		}
 		return nil
 	}
@@ -100,9 +98,6 @@ func buildDepedencyGraph(rc RunConfig, rootModulePath string) (map[string]module
 			// have not already been added and they are not the current module we are working in.
 			if value, ok := moduleMap[reqModule]; ok {
 				m := value.moduleContents
-				if err != nil {
-					return nil, fmt.Errorf("failed to parse go.mod file: %w", err)
-				}
 				for _, transReq := range m.Require {
 					_, existsInPath := moduleMap[transReq.Mod.Path]
 					_, alreadyInserted := alreadyInsertedRepSet[transReq.Mod.Path]

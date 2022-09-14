@@ -44,12 +44,12 @@ func combineModuleTagNamesAndVersion(modTagNames []ModuleTagName, version string
 func ModulePathsToTagNames(modPaths []ModulePath, modPathMap ModulePathMap, repoRoot string) ([]ModuleTagName, error) {
 	modFilePaths, err := modulePathsToFilePaths(modPaths, modPathMap)
 	if err != nil {
-		return nil, fmt.Errorf("could not convert module paths to file paths: %v", err)
+		return nil, fmt.Errorf("could not convert module paths to file paths: %w", err)
 	}
 
 	modTagNames, err := moduleFilePathsToTagNames(modFilePaths, repoRoot)
 	if err != nil {
-		return nil, fmt.Errorf("could not convert module file paths to tag names: %v", err)
+		return nil, fmt.Errorf("could not convert module file paths to tag names: %w", err)
 	}
 
 	return modTagNames, nil
@@ -98,7 +98,7 @@ func moduleFilePathsToTagNames(modFilePaths []ModuleFilePath, repoRoot string) (
 	for _, modFilePath := range modFilePaths {
 		modTagName, err := moduleFilePathToTagName(modFilePath, repoRoot)
 		if err != nil {
-			return nil, fmt.Errorf("could not convert module file path to tag name: %v", err)
+			return nil, fmt.Errorf("could not convert module file path to tag name: %w", err)
 		}
 		modNames = append(modNames, modTagName)
 	}

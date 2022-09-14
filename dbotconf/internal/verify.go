@@ -18,10 +18,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
-	yaml "gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -34,7 +35,7 @@ var (
 // configuredUpdates returns the set of Go modules dependabot is configured to
 // check updates for.
 func configuredUpdates(path string) (map[string]struct{}, error) {
-	f, err := os.Open(path)
+	f, err := os.Open(filepath.Clean(path))
 	if errors.Is(err, os.ErrNotExist) {
 		return nil, fmt.Errorf("dependabot configuration file does not exist: %s", path)
 	} else if err != nil {

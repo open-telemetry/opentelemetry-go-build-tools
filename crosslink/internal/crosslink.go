@@ -39,7 +39,7 @@ func Crosslink(rc RunConfig) error {
 	}
 
 	for moduleName, moduleInfo := range graph {
-		err = insertReplace(&moduleInfo, rc)
+		err = insertReplace(moduleInfo, rc)
 		logger := rc.Logger.With(zap.String("module", moduleName))
 		if err != nil {
 			logger.Error("Failed to insert replace statements",
@@ -48,13 +48,7 @@ func Crosslink(rc RunConfig) error {
 		}
 
 		if rc.Prune {
-			err = pruneReplace(rootModulePath, &moduleInfo, rc)
-			if err != nil {
-				logger.Error("Failed to prune replace statements",
-					zap.Error(err))
-				continue
-			}
-
+			pruneReplace(rootModulePath, moduleInfo, rc)
 		}
 
 		err = writeModule(moduleInfo)

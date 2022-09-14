@@ -15,7 +15,7 @@
 package tag
 
 import (
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -36,7 +36,7 @@ var (
 
 // TestMain performs setup for the tests and suppress printing logs.
 func TestMain(m *testing.M) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	os.Exit(m.Run())
 }
 
@@ -44,13 +44,7 @@ func TestNewTagger(t *testing.T) {
 	testName := "new_tagger"
 	versionsYamlDir := filepath.Join(testDataDir, testName)
 
-	tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
-	if err != nil {
-		t.Fatal("error creating temp dir:", err)
-	}
-
-	defer commontest.RemoveAll(t, tmpRootDir)
-
+	tmpRootDir := t.TempDir()
 	repo, _, err := commontest.InitNewRepoWithCommit(tmpRootDir)
 	require.NoError(t, err)
 
@@ -66,9 +60,7 @@ func TestNewTagger(t *testing.T) {
 		filepath.Join(tmpRootDir, "test", "testexcluded", "go.mod"): []byte("module \"go.opentelemetry.io/test/testexcluded\"\n\ngo 1.16\n"),
 	}
 
-	if err := commontest.WriteTempFiles(modFiles); err != nil {
-		t.Fatal("could not create go mod file tree", err)
-	}
+	require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
 
 	versioningFilename := filepath.Join(versionsYamlDir, "versions_valid.yaml")
 	repoRoot := tmpRootDir
@@ -112,14 +104,14 @@ func TestNewTagger(t *testing.T) {
 		},
 	}
 	expectedTagNames := map[string][]common.ModuleTagName{
-		"mod-set-1": []common.ModuleTagName{"test/test1"},
-		"mod-set-2": []common.ModuleTagName{"test"},
-		"mod-set-3": []common.ModuleTagName{common.RepoRootTag},
+		"mod-set-1": {"test/test1"},
+		"mod-set-2": {"test"},
+		"mod-set-3": {common.RepoRootTag},
 	}
 	expectedFullTagNames := map[string][]string{
-		"mod-set-1": []string{"test/test1/v1.2.3-RC1+meta"},
-		"mod-set-2": []string{"test/v0.1.0"},
-		"mod-set-3": []string{"v2.2.2"},
+		"mod-set-1": {"test/test1/v1.2.3-RC1+meta"},
+		"mod-set-2": {"test/v0.1.0"},
+		"mod-set-3": {"v2.2.2"},
 	}
 	expectedModSetVersions := map[string]string{
 		"mod-set-1": "v1.2.3-RC1+meta",
@@ -127,9 +119,9 @@ func TestNewTagger(t *testing.T) {
 		"mod-set-3": "v2.2.2",
 	}
 	expectedModSetPaths := map[string][]common.ModulePath{
-		"mod-set-1": []common.ModulePath{"go.opentelemetry.io/test/test1"},
-		"mod-set-2": []common.ModulePath{"go.opentelemetry.io/test2"},
-		"mod-set-3": []common.ModulePath{"go.opentelemetry.io/testroot/v2"},
+		"mod-set-1": {"go.opentelemetry.io/test/test1"},
+		"mod-set-2": {"go.opentelemetry.io/test2"},
+		"mod-set-3": {"go.opentelemetry.io/testroot/v2"},
 	}
 
 	for expectedModSetName, expectedModSet := range expectedModuleSetMap {
@@ -159,15 +151,7 @@ func TestNewTagger(t *testing.T) {
 }
 
 func TestVerifyTagsOnCommit(t *testing.T) {
-	testName := "verify_tags_on_commit"
-
-	tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
-	if err != nil {
-		t.Fatal("error creating temp dir:", err)
-	}
-
-	defer commontest.RemoveAll(t, tmpRootDir)
-
+	tmpRootDir := t.TempDir()
 	repo, firstHash, err := commontest.InitNewRepoWithCommit(tmpRootDir)
 	require.NoError(t, err)
 
@@ -274,15 +258,7 @@ func TestVerifyTagsOnCommit(t *testing.T) {
 }
 
 func TestGetFullCommitHash(t *testing.T) {
-	testName := "get_full_commit_hash"
-
-	tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
-	if err != nil {
-		t.Fatal("error creating temp dir:", err)
-	}
-
-	defer commontest.RemoveAll(t, tmpRootDir)
-
+	tmpRootDir := t.TempDir()
 	repo, _, err := commontest.InitNewRepoWithCommit(tmpRootDir)
 	require.NoError(t, err)
 
@@ -336,13 +312,7 @@ func TestDeleteModuleSetTags(t *testing.T) {
 	testName := "delete_module_set_tags"
 	versionsYamlDir := filepath.Join(testDataDir, testName)
 
-	tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
-	if err != nil {
-		t.Fatal("error creating temp dir:", err)
-	}
-
-	defer commontest.RemoveAll(t, tmpRootDir)
-
+	tmpRootDir := t.TempDir()
 	repo, _, err := commontest.InitNewRepoWithCommit(tmpRootDir)
 	require.NoError(t, err)
 
@@ -375,9 +345,7 @@ func TestDeleteModuleSetTags(t *testing.T) {
 		filepath.Join(tmpRootDir, "test", "testexcluded", "go.mod"): []byte("module \"go.opentelemetry.io/test/testexcluded\"\n\ngo 1.16\n"),
 	}
 
-	if err := commontest.WriteTempFiles(modFiles); err != nil {
-		t.Fatal("could not create go mod file tree", err)
-	}
+	require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
 
 	versioningFilename := filepath.Join(versionsYamlDir, "versions_valid.yaml")
 	repoRoot := tmpRootDir
@@ -415,8 +383,6 @@ func TestDeleteModuleSetTags(t *testing.T) {
 }
 
 func TestDeleteTags(t *testing.T) {
-	testName := "delete_tags"
-
 	testCases := []struct {
 		name           string
 		moduleFullTags []string
@@ -449,13 +415,7 @@ func TestDeleteTags(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tmpRootDir, err := os.MkdirTemp(testDataDir, testName+tc.name)
-			if err != nil {
-				t.Fatal("error creating temp dir:", err)
-			}
-
-			defer commontest.RemoveAll(t, tmpRootDir)
-
+			tmpRootDir := t.TempDir()
 			repo, firstHash, err := commontest.InitNewRepoWithCommit(tmpRootDir)
 			require.NoError(t, err)
 
@@ -587,13 +547,7 @@ func TestTagAllModules(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tmpRootDir, err := os.MkdirTemp(testDataDir, testName+tc.name)
-			if err != nil {
-				t.Fatal("error creating temp dir:", err)
-			}
-
-			defer commontest.RemoveAll(t, tmpRootDir)
-
+			tmpRootDir := t.TempDir()
 			repo, _, err := commontest.InitNewRepoWithCommit(tmpRootDir)
 			require.NoError(t, err)
 
@@ -610,9 +564,7 @@ func TestTagAllModules(t *testing.T) {
 				filepath.Join(tmpRootDir, "test", "testexcluded", "go.mod"): []byte("module \"go.opentelemetry.io/test/testexcluded\"\n\ngo 1.16\n"),
 			}
 
-			if err := commontest.WriteTempFiles(modFiles); err != nil {
-				t.Fatal("could not create go mod file tree", err)
-			}
+			require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
 
 			for _, tagName := range tagNames {
 				_, err = repo.CreateTag(tagName, fullHash, createTagOptions)
@@ -623,13 +575,9 @@ func TestTagAllModules(t *testing.T) {
 			if tc.shouldError {
 				assert.Error(t, err)
 				return
-			} else {
-				require.NoError(t, err)
 			}
-
-			err = tagger.tagAllModules(commontest.TestAuthor)
 			require.NoError(t, err)
-
+			require.NoError(t, tagger.tagAllModules(commontest.TestAuthor))
 			for _, tagName := range tc.shouldExistTags {
 				tagRef, tagRefErr := repo.Tag(tagName)
 

@@ -16,7 +16,8 @@ package verify
 
 import (
 	"bytes"
-	"io/ioutil"
+	"errors"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -35,7 +36,7 @@ var (
 
 // TestMain performs setup for the tests and suppress printing logs.
 func TestMain(m *testing.M) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	os.Exit(m.Run())
 }
 
@@ -43,7 +44,7 @@ func captureOutput(f func()) string {
 	var buf bytes.Buffer
 	log.SetOutput(&buf)
 	defer func() {
-		log.SetOutput(ioutil.Discard)
+		log.SetOutput(io.Discard)
 	}()
 
 	f()
@@ -54,13 +55,7 @@ func TestNewVerification(t *testing.T) {
 	testName := "new_verification"
 	versionYamlDir := filepath.Join(testDataDir, testName)
 
-	tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
-	if err != nil {
-		t.Fatal("creating temp dir:", err)
-	}
-
-	defer os.RemoveAll(tmpRootDir)
-
+	tmpRootDir := t.TempDir()
 	modFiles := map[string][]byte{
 		filepath.Join(tmpRootDir, "test", "test1", "go.mod"): []byte("module \"go.opentelemetry.io/test/test1\"\n\ngo 1.16\n\n" +
 			"require (\n\t\"go.opentelemetry.io/testroot/v2\" v2.0.0\n)\n"),
@@ -69,9 +64,7 @@ func TestNewVerification(t *testing.T) {
 		filepath.Join(tmpRootDir, "test", "excluded", "go.mod"): []byte("module \"go.opentelemetry.io/test/testexcluded\"\n\ngo 1.16\n"),
 	}
 
-	if err := commontest.WriteTempFiles(modFiles); err != nil {
-		t.Fatal("could not create go mod file tree", err)
-	}
+	require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
 
 	testCases := []struct {
 		name                  string
@@ -161,13 +154,7 @@ func TestGetDependencies(t *testing.T) {
 
 	versionYamlDir := filepath.Join(testDataDir, testName)
 
-	tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
-	if err != nil {
-		t.Fatal("creating temp dir:", err)
-	}
-
-	defer os.RemoveAll(tmpRootDir)
-
+	tmpRootDir := t.TempDir()
 	modFiles := map[string][]byte{
 		filepath.Join(tmpRootDir, "test", "test1", "go.mod"): []byte("module go.opentelemetry.io/build-tools/multimod/internal/verify/test/test1\n\n" +
 			"go 1.16\n\n" +
@@ -197,9 +184,7 @@ func TestGetDependencies(t *testing.T) {
 			")"),
 	}
 
-	if err := commontest.WriteTempFiles(modFiles); err != nil {
-		t.Fatal("could not create go mod file tree", err)
-	}
+	require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
 	v, _ := newVerification(
 		filepath.Join(versionYamlDir, "versions_valid.yaml"),
 		tmpRootDir,
@@ -242,13 +227,7 @@ func TestVerifyAllModulesInSet(t *testing.T) {
 	testName := "verify_all_modules_in_set"
 	versionYamlDir := filepath.Join(testDataDir, testName)
 
-	tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
-	if err != nil {
-		t.Fatal("creating temp dir:", err)
-	}
-
-	defer os.RemoveAll(tmpRootDir)
-
+	tmpRootDir := t.TempDir()
 	testCases := []struct {
 		name               string
 		versioningFilename string
@@ -301,9 +280,7 @@ func TestVerifyAllModulesInSet(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if err := commontest.WriteTempFiles(tc.modFiles); err != nil {
-				t.Fatal("could not create go mod file tree", err)
-			}
+			require.NoError(t, commontest.WriteTempFiles(tc.modFiles), "could not create go mod file tree")
 
 			v, err := newVerification(tc.versioningFilename, tc.repoRoot)
 			require.NoError(t, err)
@@ -319,13 +296,7 @@ func TestVerifyVersions(t *testing.T) {
 	testName := "verify_versions"
 	versionYamlDir := filepath.Join(testDataDir, testName)
 
-	tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
-	if err != nil {
-		t.Fatal("creating temp dir:", err)
-	}
-
-	defer os.RemoveAll(tmpRootDir)
-
+	tmpRootDir := t.TempDir()
 	testCases := []struct {
 		name               string
 		versioningFilename string
@@ -387,20 +358,18 @@ func TestVerifyVersions(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if err := commontest.WriteTempFiles(tc.modFiles); err != nil {
-				t.Fatal("could not create go mod file tree", err)
-			}
+			require.NoError(t, commontest.WriteTempFiles(tc.modFiles), "could not create go mod file tree")
 
 			v, err := newVerification(tc.versioningFilename, tc.repoRoot)
 			require.NoError(t, err)
 
 			actual := v.verifyVersions()
 			if tc.expectedError != nil {
+				expectedErr := &errMultipleSetSameVersion{}
 				// Check if expectedError is of type errMultipleSetSameVersion
-				if expectedErr, ok := tc.expectedError.(*errMultipleSetSameVersion); ok {
-					actualErr, ok := actual.(*errMultipleSetSameVersion)
-					assert.True(t, ok)
-					assert.IsType(t, expectedErr, actualErr)
+				if errors.As(tc.expectedError, &expectedErr) {
+					actualErr := &errMultipleSetSameVersion{}
+					require.ErrorAs(t, actual, actualErr)
 
 					// compare that modSetNames elements match (order should not matter)
 					assert.ElementsMatch(t, expectedErr.modSetNames, actualErr.modSetNames)
@@ -416,13 +385,7 @@ func TestVerifyDependencies(t *testing.T) {
 	testName := "verify_dependencies"
 	versionYamlDir := filepath.Join(testDataDir, testName)
 
-	tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
-	if err != nil {
-		t.Fatal("creating temp dir:", err)
-	}
-
-	defer os.RemoveAll(tmpRootDir)
-
+	tmpRootDir := t.TempDir()
 	testCases := []struct {
 		name               string
 		versioningFilename string
@@ -466,7 +429,7 @@ func TestVerifyDependencies(t *testing.T) {
 			},
 		},
 		{
-			name: "stable depends on unstable",
+			name:               "stable depends on unstable",
 			versioningFilename: filepath.Join(versionYamlDir, "versions_valid.yaml"),
 			repoRoot:           filepath.Join(tmpRootDir, "stable_unstable"),
 			modFiles: map[string][]byte{
@@ -523,9 +486,7 @@ func TestVerifyDependencies(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if err := commontest.WriteTempFiles(tc.modFiles); err != nil {
-				t.Fatal("could not create go mod file tree", err)
-			}
+			require.NoError(t, commontest.WriteTempFiles(tc.modFiles), "could not create go mod file tree")
 
 			v, err := newVerification(tc.versioningFilename, tc.repoRoot)
 			require.NoError(t, err)

@@ -34,12 +34,12 @@ type ModuleSetRelease struct {
 func NewModuleSetRelease(versioningFilename, modSetToUpdate, repoRoot string) (ModuleSetRelease, error) {
 	repoRoot, err := filepath.Abs(repoRoot)
 	if err != nil {
-		return ModuleSetRelease{}, fmt.Errorf("could not get absolute path of repo root: %v", err)
+		return ModuleSetRelease{}, fmt.Errorf("could not get absolute path of repo root: %w", err)
 	}
 
 	modVersioning, err := NewModuleVersioning(versioningFilename, repoRoot)
 	if err != nil {
-		return ModuleSetRelease{}, fmt.Errorf("unable to load baseVersionStruct: %v", err)
+		return ModuleSetRelease{}, fmt.Errorf("unable to load baseVersionStruct: %w", err)
 	}
 
 	// get new version and mod tags to update
@@ -55,7 +55,7 @@ func NewModuleSetRelease(versioningFilename, modSetToUpdate, repoRoot string) (M
 		repoRoot,
 	)
 	if err != nil {
-		return ModuleSetRelease{}, fmt.Errorf("could not retrieve tag names from module paths: %v", err)
+		return ModuleSetRelease{}, fmt.Errorf("could not retrieve tag names from module paths: %w", err)
 	}
 
 	return ModuleSetRelease{
@@ -95,7 +95,7 @@ func (modRelease ModuleSetRelease) CheckGitTagsAlreadyExist(repo *git.Repository
 
 	existingTags, err := repo.Tags()
 	if err != nil {
-		return fmt.Errorf("error getting repo tags: %v", err)
+		return fmt.Errorf("error getting repo tags: %w", err)
 	}
 
 	var existingGitTagNames []string
@@ -110,18 +110,18 @@ func (modRelease ModuleSetRelease) CheckGitTagsAlreadyExist(repo *git.Repository
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("could not check all git tags: %v", err)
+		return fmt.Errorf("could not check all git tags: %w", err)
 	}
 
 	switch len(existingGitTagNames) {
 	case len(newTags):
-		return &ErrGitTagsAlreadyExist{
+		return ErrGitTagsAlreadyExist{
 			tagNames: existingGitTagNames,
 		}
 	case 0:
 		return nil
 	default:
-		return &ErrInconsistentGitTagsExist{
+		return ErrInconsistentGitTagsExist{
 			tagNames: existingGitTagNames,
 		}
 	}

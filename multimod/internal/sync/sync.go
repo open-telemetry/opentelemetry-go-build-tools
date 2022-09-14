@@ -19,6 +19,7 @@ import (
 	"log"
 
 	"github.com/go-git/go-git/v5"
+
 	"go.opentelemetry.io/build-tools/internal/repo"
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
@@ -96,12 +97,12 @@ type sync struct {
 func newSync(myVersioningFilename, otherVersioningFilename, modSetToUpdate, myRepoRoot string) (sync, error) {
 	otherModuleSet, err := common.GetModuleSet(modSetToUpdate, otherVersioningFilename)
 	if err != nil {
-		return sync{}, fmt.Errorf("error creating new sync struct: %v", err)
+		return sync{}, fmt.Errorf("error creating new sync struct: %w", err)
 	}
 
 	myModVersioning, err := common.NewModuleVersioning(myVersioningFilename, myRepoRoot)
 	if err != nil {
-		return sync{}, fmt.Errorf("could not get my ModuleVersioning: %v", err)
+		return sync{}, fmt.Errorf("could not get my ModuleVersioning: %w", err)
 	}
 
 	return sync{
@@ -125,7 +126,7 @@ func (s sync) updateAllGoModFiles() error {
 		s.OtherModuleSet.Modules,
 		s.OtherModuleSet.Version,
 	); err != nil {
-		return fmt.Errorf("could not update all go mod files: %v", err)
+		return fmt.Errorf("could not update all go mod files: %w", err)
 	}
 
 	return nil
@@ -139,12 +140,8 @@ func checkModuleSetUpToDate(repo *git.Repository) (bool, error) {
 
 	status, err := worktree.Status()
 	if err != nil {
-		return false, fmt.Errorf("could not get worktree status: %v", err)
+		return false, fmt.Errorf("could not get worktree status: %w", err)
 	}
 
-	if status.IsClean() {
-		return true, nil
-	} else {
-		return false, nil
-	}
+	return status.IsClean(), nil
 }

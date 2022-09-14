@@ -20,6 +20,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+
 	"go.opentelemetry.io/build-tools/internal/repo"
 )
 

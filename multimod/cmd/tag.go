@@ -57,7 +57,7 @@ func init() {
 	}
 
 	tagCmd.Flags().StringVarP(&moduleSetName, "module-set-name", "m", "",
-		"Name of module set being tagged. " +
+		"Name of module set being tagged. "+
 			"Name must be listed in the module set versioning YAML. ",
 	)
 	if err := tagCmd.MarkFlagRequired("module-set-name"); err != nil {
