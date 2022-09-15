@@ -502,9 +502,9 @@ interface that defines the specific functionality should be preferred.
 
 CodeOwners:
 
-- [@open-telemetry/go-maintainers](https://github.com/orgs/open-telemetry/teams/go-maintainers)
-- [@open-telemetry/collector-maintainers](https://github.com/orgs/open-telemetry/teams/collector-maintainers)
-- [@open-telemetry/collector-contrib-approvers](https://github.com/orgs/open-telemetry/teams/collector-contrib-approvers)
+- @open-telemetry/go-maintainers
+- @open-telemetry/collector-maintainers
+- @open-telemetry/collector-contrib-approvers
 
 ### Become an Approver or a Maintainer
 
