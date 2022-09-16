@@ -208,7 +208,7 @@ func commitChanges(msr common.ModuleSetRelease, commitToDifferentBranch bool, re
 
 	var hash plumbing.Hash
 	var err error
-	if !commitToDifferentBranch {
+	if commitToDifferentBranch {
 		branchNameElements := []string{"prerelease", msr.ModSetName, msr.ModSetVersion()}
 		branchName := strings.Join(branchNameElements, "_")
 		hash, err = common.CommitChangesToNewBranch(branchName, commitMessage, repo, nil)
