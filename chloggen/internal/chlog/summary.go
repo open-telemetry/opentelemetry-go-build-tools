@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package chlog
 
 import (
 	"bytes"
@@ -31,22 +31,22 @@ type summary struct {
 	BugFixes        []string
 }
 
-func generateSummary(version string, entries []*Entry) (string, error) {
+func GenerateSummary(version string, entries []*Entry) (string, error) {
 	s := summary{
 		Version: version,
 	}
 
 	for _, entry := range entries {
 		switch entry.ChangeType {
-		case breaking:
+		case Breaking:
 			s.BreakingChanges = append(s.BreakingChanges, entry.String())
-		case deprecation:
+		case Deprecation:
 			s.Deprecations = append(s.Deprecations, entry.String())
-		case newComponent:
+		case NewComponent:
 			s.NewComponents = append(s.NewComponents, entry.String())
-		case enhancement:
+		case Enhancement:
 			s.Enhancements = append(s.Enhancements, entry.String())
-		case bugFix:
+		case BugFix:
 			s.BugFixes = append(s.BugFixes, entry.String())
 		}
 	}

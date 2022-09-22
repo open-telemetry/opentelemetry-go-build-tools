@@ -12,12 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package cmd
 
-import (
-	"go.opentelemetry.io/build-tools/chloggen/cmd"
-)
+import "github.com/spf13/cobra"
 
-func main() {
-	cmd.Execute()
+var rootCmd = &cobra.Command{
+	Use:   "chloggen",
+	Short: "Updates CHANGELOG.MD to include all new changes",
+	Long:  `chloggen is a tool used to automate the generation of CHANGELOG files using individual yaml files as the source.`,
+}
+
+func Execute() {
+	cobra.CheckErr(rootCmd.Execute())
+}
+
+func init() {
+	cobra.OnInitialize()
+
+	rootCmd.AddCommand(newCmd)
+	rootCmd.AddCommand(updateCmd)
+	rootCmd.AddCommand(validateCmd)
 }
