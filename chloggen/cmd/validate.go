@@ -19,6 +19,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+
 	"go.opentelemetry.io/build-tools/chloggen/internal/chlog"
 )
 

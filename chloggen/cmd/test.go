@@ -22,8 +22,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/build-tools/chloggen/internal/chlog"
 	"gopkg.in/yaml.v3"
+
+	"go.opentelemetry.io/build-tools/chloggen/internal/chlog"
 )
 
 func getSampleEntries() []*chlog.Entry {

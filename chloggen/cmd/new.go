@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -70,5 +71,7 @@ func cleanFileName(filename string) string {
 
 func init() {
 	newCmd.Flags().StringVarP(&filename, "filename", "f", "", "name of the file to add")
-	newCmd.MarkFlagRequired("filename")
+	if err := newCmd.MarkFlagRequired("filename"); err != nil {
+		log.Fatalf("could not mark filename flag as required: %v", err)
+	}
 }
