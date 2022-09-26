@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package chlog
 
 import (
 	"fmt"
@@ -27,22 +27,22 @@ const (
 	templateYAML  = "TEMPLATE.yaml"
 )
 
-// chlogContext enables tests by allowing them to work in an test directory
-type chlogContext struct {
-	changelogMD   string
-	unreleasedDir string
-	templateYAML  string
+// Context enables tests by allowing them to work in an test directory
+type Context struct {
+	ChangelogMD   string
+	UnreleasedDir string
+	TemplateYAML  string
 }
 
-func newChlogContext(rootDir string) chlogContext {
-	return chlogContext{
-		changelogMD:   filepath.Join(rootDir, changelogMD),
-		unreleasedDir: filepath.Join(rootDir, unreleasedDir),
-		templateYAML:  filepath.Join(rootDir, unreleasedDir, templateYAML),
+func New(rootDir string) Context {
+	return Context{
+		ChangelogMD:   filepath.Join(rootDir, changelogMD),
+		UnreleasedDir: filepath.Join(rootDir, unreleasedDir),
+		TemplateYAML:  filepath.Join(rootDir, unreleasedDir, templateYAML),
 	}
 }
 
-var defaultCtx = newChlogContext(repoRoot())
+var DefaultCtx = New(repoRoot())
 
 func repoRoot() string {
 	dir, err := os.Getwd()
