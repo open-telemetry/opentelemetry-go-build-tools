@@ -37,7 +37,7 @@ type Context struct {
 
 type Option func(*Context)
 
-func WithUnreleaseDir(unreleasedDir string) Option {
+func WithUnreleasedDir(unreleasedDir string) Option {
 	return func(ctx *Context) {
 		ctx.UnreleasedDir = filepath.Join(ctx.rootDir, unreleasedDir)
 		ctx.TemplateYAML = filepath.Join(ctx.rootDir, unreleasedDir, templateYAML)
