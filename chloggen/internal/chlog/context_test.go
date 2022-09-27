@@ -33,7 +33,7 @@ func TestNew(t *testing.T) {
 func TestWithUnreleasedDir(t *testing.T) {
 	root := "/tmp"
 	unreleased := ".test"
-	ctx := New(root, WithUnreleaseDir(unreleased))
+	ctx := New(root, WithUnreleasedDir(unreleased))
 	require.Equal(t, root, ctx.rootDir)
 	require.Equal(t, filepath.Join(root, unreleased), ctx.UnreleasedDir)
 	require.Equal(t, filepath.Join(root, changelogMD), ctx.ChangelogMD)
