@@ -23,28 +23,41 @@ import (
 
 const (
 	changelogMD   = "CHANGELOG.md"
-	unreleasedDir = "unreleased"
+	unreleasedDir = ".chloggen"
 	templateYAML  = "TEMPLATE.yaml"
 )
 
 // Context enables tests by allowing them to work in an test directory
 type Context struct {
+	rootDir       string
 	ChangelogMD   string
 	UnreleasedDir string
 	TemplateYAML  string
 }
 
-func New(rootDir string) Context {
-	return Context{
+type Option func(*Context)
+
+func WithUnreleaseDir(unreleasedDir string) Option {
+	return func(ctx *Context) {
+		ctx.UnreleasedDir = filepath.Join(ctx.rootDir, unreleasedDir)
+		ctx.TemplateYAML = filepath.Join(ctx.rootDir, unreleasedDir, templateYAML)
+	}
+}
+
+func New(rootDir string, options ...Option) Context {
+	ctx := Context{
+		rootDir:       rootDir,
 		ChangelogMD:   filepath.Join(rootDir, changelogMD),
 		UnreleasedDir: filepath.Join(rootDir, unreleasedDir),
 		TemplateYAML:  filepath.Join(rootDir, unreleasedDir, templateYAML),
 	}
+	for _, op := range options {
+		op(&ctx)
+	}
+	return ctx
 }
 
-var DefaultCtx = New(repoRoot())
-
-func repoRoot() string {
+func RepoRoot() string {
 	dir, err := os.Getwd()
 	if err != nil {
 		// This is not expected, but just in case

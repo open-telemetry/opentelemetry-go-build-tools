@@ -27,7 +27,7 @@ var validateCmd = &cobra.Command{
 	Use:   "validate",
 	Short: "Validates the files in the changelog directory",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return validate(chlog.DefaultCtx)
+		return validate(chlogCtx)
 	},
 }
 

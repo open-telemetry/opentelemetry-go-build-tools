@@ -14,7 +14,15 @@
 
 package cmd
 
-import "github.com/spf13/cobra"
+import (
+	"github.com/spf13/cobra"
+	"go.opentelemetry.io/build-tools/chloggen/internal/chlog"
+)
+
+var (
+	chloggenDir string
+	chlogCtx    chlog.Context
+)
 
 var rootCmd = &cobra.Command{
 	Use:   "chloggen",
@@ -26,8 +34,17 @@ func Execute() {
 	cobra.CheckErr(rootCmd.Execute())
 }
 
+func initConfig() {
+	if chloggenDir == "" {
+		chloggenDir = ".chloggen"
+	}
+	chlogCtx = chlog.New(chlog.RepoRoot(), chlog.WithUnreleaseDir(chloggenDir))
+}
+
 func init() {
-	cobra.OnInitialize()
+	cobra.OnInitialize(initConfig)
+
+	rootCmd.PersistentFlags().StringVar(&chloggenDir, "chloggen-directory", "", "directory containing unreleased change log entries (default: .chloggen)")
 
 	rootCmd.AddCommand(newCmd)
 	rootCmd.AddCommand(updateCmd)

@@ -34,7 +34,7 @@ var newCmd = &cobra.Command{
 	Use:   "new",
 	Short: "Creates new change file",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return initialize(chlog.DefaultCtx, filename)
+		return initialize(chlogCtx, filename)
 	},
 }
 
