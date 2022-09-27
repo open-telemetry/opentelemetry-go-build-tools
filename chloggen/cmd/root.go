@@ -39,7 +39,7 @@ func initConfig() {
 	if chloggenDir == "" {
 		chloggenDir = ".chloggen"
 	}
-	chlogCtx = chlog.New(chlog.RepoRoot(), chlog.WithUnreleaseDir(chloggenDir))
+	chlogCtx = chlog.New(chlog.RepoRoot(), chlog.WithUnreleasedDir(chloggenDir))
 }
 
 func init() {
