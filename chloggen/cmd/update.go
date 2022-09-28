@@ -39,7 +39,7 @@ var updateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Updates CHANGELOG.MD to include all new changes",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return update(chlog.DefaultCtx, version, dry)
+		return update(chlogCtx, version, dry)
 	},
 }
 
