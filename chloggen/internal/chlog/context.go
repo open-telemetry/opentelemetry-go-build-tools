@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package chlog
 
 import (
 	"fmt"
@@ -23,28 +23,41 @@ import (
 
 const (
 	changelogMD   = "CHANGELOG.md"
-	unreleasedDir = "unreleased"
+	unreleasedDir = ".chloggen"
 	templateYAML  = "TEMPLATE.yaml"
 )
 
-// chlogContext enables tests by allowing them to work in an test directory
-type chlogContext struct {
-	changelogMD   string
-	unreleasedDir string
-	templateYAML  string
+// Context enables tests by allowing them to work in an test directory
+type Context struct {
+	rootDir       string
+	ChangelogMD   string
+	UnreleasedDir string
+	TemplateYAML  string
 }
 
-func newChlogContext(rootDir string) chlogContext {
-	return chlogContext{
-		changelogMD:   filepath.Join(rootDir, changelogMD),
-		unreleasedDir: filepath.Join(rootDir, unreleasedDir),
-		templateYAML:  filepath.Join(rootDir, unreleasedDir, templateYAML),
+type Option func(*Context)
+
+func WithUnreleasedDir(unreleasedDir string) Option {
+	return func(ctx *Context) {
+		ctx.UnreleasedDir = filepath.Join(ctx.rootDir, unreleasedDir)
+		ctx.TemplateYAML = filepath.Join(ctx.rootDir, unreleasedDir, templateYAML)
 	}
 }
 
-var defaultCtx = newChlogContext(repoRoot())
+func New(rootDir string, options ...Option) Context {
+	ctx := Context{
+		rootDir:       rootDir,
+		ChangelogMD:   filepath.Join(rootDir, changelogMD),
+		UnreleasedDir: filepath.Join(rootDir, unreleasedDir),
+		TemplateYAML:  filepath.Join(rootDir, unreleasedDir, templateYAML),
+	}
+	for _, op := range options {
+		op(&ctx)
+	}
+	return ctx
+}
 
-func repoRoot() string {
+func RepoRoot() string {
 	dir, err := os.Getwd()
 	if err != nil {
 		// This is not expected, but just in case

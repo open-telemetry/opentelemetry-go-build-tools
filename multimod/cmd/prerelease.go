@@ -24,9 +24,10 @@ import (
 )
 
 var (
-	allModuleSets  bool
-	moduleSetNames []string
-	skipGoModTidy  bool
+	allModuleSets           bool
+	moduleSetNames          []string
+	skipGoModTidy           bool
+	commitToDifferentBranch bool
 )
 
 // prereleaseCmd represents the prerelease command
@@ -56,7 +57,7 @@ var prereleaseCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Using versioning file", versioningFile)
 
-		prerelease.Run(versioningFile, moduleSetNames, allModuleSets, skipGoModTidy)
+		prerelease.Run(versioningFile, moduleSetNames, allModuleSets, skipGoModTidy, commitToDifferentBranch)
 	},
 }
 
@@ -82,5 +83,8 @@ func init() {
 	prereleaseCmd.Flags().BoolVarP(&skipGoModTidy, "skip-go-mod-tidy", "s", false,
 		"Specify this flag to skip calling 'go mod tidy'. "+
 			"To be used for debugging purposes. Should not be skipped during actual release.",
+	)
+	prereleaseCmd.Flags().BoolVarP(&commitToDifferentBranch, "commit-to-different-branch", "b", true,
+		"Specify this flag to commit to a different branch.",
 	)
 }
