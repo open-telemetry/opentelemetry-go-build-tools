@@ -13,4 +13,4 @@
 #
 # For anything not explicitly taken by someone else:
 
-* @open-telemetry/go-maintainers @open-telemetry/go-approvers @open-telemetry/collector-maintainers @open-telemetry/collector-approvers @open-telemetry/collector-contrib-maintainers @open-telemetry/collector-contrib-approvers
+* @open-telemetry/go-maintainers @open-telemetry/go-approvers @open-telemetry/collector-maintainers @open-telemetry/collector-approvers @open-telemetry/collector-contrib-maintainer @open-telemetry/collector-contrib-approvers
