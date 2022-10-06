@@ -45,22 +45,17 @@ $(TOOLS)/golangci-lint: PACKAGE=github.com/golangci/golangci-lint/cmd/golangci-l
 MISSPELL = $(TOOLS)/misspell
 $(TOOLS)/misspell: PACKAGE= github.com/client9/misspell/cmd/misspell
 
-STRINGER = $(TOOLS)/stringer
-$(TOOLS)/stringer: PACKAGE=golang.org/x/tools/cmd/stringer
-
 DBOTCONF = $(TOOLS)/dbotconf
 $(TOOLS)/dbotconf: PACKAGE=go.opentelemetry.io/build-tools/dbotconf
 
-$(TOOLS)/gojq: PACKAGE=github.com/itchyny/gojq/cmd/gojq
-
 .PHONY: tools
-tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(STRINGER) $(TOOLS)/gojq
+tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL)
 
 
 # Build
 
 .PHONY: generate build
-generate: $(STRINGER)
+generate:
 	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
 	  echo "$(GO) generate $${dir}/..."; \
 	  (cd "$${dir}" && \
