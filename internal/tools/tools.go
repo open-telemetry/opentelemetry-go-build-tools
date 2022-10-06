@@ -22,4 +22,5 @@ import (
 	_ "github.com/gogo/protobuf/protoc-gen-gogofast"
 	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
 	_ "go.opentelemetry.io/build-tools/dbotconf"
+	_ "go.opentelemetry.io/build-tools/multimod"
 )

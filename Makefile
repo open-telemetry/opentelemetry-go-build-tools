@@ -48,9 +48,11 @@ $(TOOLS)/misspell: PACKAGE= github.com/client9/misspell/cmd/misspell
 DBOTCONF = $(TOOLS)/dbotconf
 $(TOOLS)/dbotconf: PACKAGE=go.opentelemetry.io/build-tools/dbotconf
 
-.PHONY: tools
-tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL)
+MULTIMOD = $(TOOLS)/multimod
+$(TOOLS)/multimod: PACKAGE=go.opentelemetry.io/build-tools/multimod
 
+.PHONY: tools
+tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD)
 
 # Build
 
@@ -158,3 +160,13 @@ check-clean-work-tree:
 	  git status; \
 	  exit 1; \
 	fi
+
+.PHONY: multimod-verify
+multimod-verify: $(MULTIMOD)
+	@echo "Validating versions.yaml"
+	multimod verify
+
+.PHONY: multimod-prerelease
+multimod-prerelease: $(MULTIMOD)
+	multimod prerelease -s=true -b=false -v ./versions.yaml -m collector-core
+	$(MAKE) gotidy
