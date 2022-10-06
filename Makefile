@@ -170,3 +170,8 @@ multimod-verify: $(MULTIMOD)
 multimod-prerelease: $(MULTIMOD)
 	multimod prerelease -s=true -b=false -v ./versions.yaml -m tools
 	$(MAKE) tidy
+
+.PHONY: add-tags
+add-tags: | $(MULTIMOD)
+	@[ "${MODSET}" ] || ( echo ">> env var MODSET is not set"; exit 1 )
+	$(MULTIMOD) verify && $(MULTIMOD) tag -m ${MODSET} -c ${COMMIT}
