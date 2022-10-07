@@ -26,7 +26,7 @@ TIMEOUT = 60
 .DEFAULT_GOAL := precommit
 
 .PHONY: precommit ci
-precommit: dependabot-check license-check lint build test-default
+precommit: dependabot-check license-check lint build test-default crosslink
 ci: precommit check-clean-work-tree test-coverage
 
 # Tools
