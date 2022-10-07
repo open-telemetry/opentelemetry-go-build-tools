@@ -202,3 +202,5 @@ replace (
 	go.opentelemetry.io/build-tools/dbotconf => ../../dbotconf
 	go.opentelemetry.io/build-tools/multimod => ../../multimod
 )
+
+replace go.opentelemetry.io/build-tools/crosslink => ../../crosslink
