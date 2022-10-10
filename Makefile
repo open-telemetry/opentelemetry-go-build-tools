@@ -51,11 +51,11 @@ $(TOOLS)/dbotconf: PACKAGE=go.opentelemetry.io/build-tools/dbotconf
 MULTIMOD = $(TOOLS)/multimod
 $(TOOLS)/multimod: PACKAGE=go.opentelemetry.io/build-tools/multimod
 
-CHGLOGGEN = $(TOOLS)/chloggen
-$(TOOLS)/chloggen: PACKAKGE=go.opentelemetry.io/build-tools/chloggen
+CHLOGGEN = $(TOOLS)/chloggen
+$(TOOLS)/chloggen: PACKAGE=go.opentelemetry.io/build-tools/chloggen
 
 .PHONY: tools
-tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD) $(CHGLOGGEN)
+tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD) $(CHLOGGEN)
 
 # Build
 
@@ -181,17 +181,17 @@ add-tags: | $(MULTIMOD)
 
 FILENAME?=$(shell git branch --show-current)
 .PHONY: chlog-new
-chlog-new: chlog-install
+chlog-new: 
 	chloggen new --filename $(FILENAME)
 
 .PHONY: chlog-validate
-chlog-validate: chlog-install
+chlog-validate: 
 	chloggen validate
 
 .PHONY: chlog-preview
-chlog-preview: chlog-install
+chlog-preview: 
 	chloggen update --dry
 
 .PHONY: chlog-update
-chlog-update: chlog-install
+chlog-update: 
 	chloggen update --version $(VERSION)
