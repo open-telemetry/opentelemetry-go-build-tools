@@ -201,7 +201,7 @@ require (
 
 replace (
 	go.opentelemetry.io/build-tools => ../../
+	go.opentelemetry.io/build-tools/chloggen => ../../chloggen
 	go.opentelemetry.io/build-tools/dbotconf => ../../dbotconf
 	go.opentelemetry.io/build-tools/multimod => ../../multimod
-	go.opentelemetry.io/build-tools/chloggen => ../../chloggen
 )
