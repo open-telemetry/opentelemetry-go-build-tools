@@ -181,17 +181,17 @@ add-tags: | $(MULTIMOD)
 
 FILENAME?=$(shell git branch --show-current)
 .PHONY: chlog-new
-chlog-new: 
+chlog-new: | $(CHLOGGEN)
 	$(CHLOGGEN) new --filename $(FILENAME)
 
 .PHONY: chlog-validate
-chlog-validate: 
+chlog-validate: | $(CHLOGGEN)
 	$(CHLOGGEN) validate
 
 .PHONY: chlog-preview
-chlog-preview: 
+chlog-preview: | $(CHLOGGEN)
 	$(CHLOGGEN) update --dry
 
 .PHONY: chlog-update
-chlog-update: 
+chlog-update: | $(CHLOGGEN)
 	$(CHLOGGEN) update --version $(VERSION)
