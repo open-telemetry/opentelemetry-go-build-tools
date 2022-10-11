@@ -26,7 +26,7 @@ TIMEOUT = 60
 .DEFAULT_GOAL := precommit
 
 .PHONY: precommit ci
-precommit: dependabot-check license-check lint build test-default
+precommit: dependabot-check license-check lint build test-default crosslink
 ci: precommit check-clean-work-tree test-coverage
 
 # Tools
@@ -51,11 +51,14 @@ $(TOOLS)/dbotconf: PACKAGE=go.opentelemetry.io/build-tools/dbotconf
 MULTIMOD = $(TOOLS)/multimod
 $(TOOLS)/multimod: PACKAGE=go.opentelemetry.io/build-tools/multimod
 
+CROSSLINK = $(TOOLS)/crosslink
+$(TOOLS)/crosslink: PACKAGE=go.opentelemetry.io/build-tools/crosslink
+
 CHLOGGEN = $(TOOLS)/chloggen
 $(TOOLS)/chloggen: PACKAGE=go.opentelemetry.io/build-tools/chloggen
 
 .PHONY: tools
-tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD) $(CHLOGGEN)
+tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD) $(CROSSLINK) $(CHLOGGEN)
 
 # Build
 
@@ -124,7 +127,7 @@ lint: misspell | $(GOLANGCI_LINT)
 	done
 
 .PHONY: tidy
-tidy:
+tidy: | crosslink
 	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
 	  echo "$(GO) mod tidy in $${dir}"; \
 	  (cd "$${dir}" && $(GO) mod tidy); \
@@ -195,3 +198,7 @@ chlog-preview: | $(CHLOGGEN)
 .PHONY: chlog-update
 chlog-update: | $(CHLOGGEN)
 	$(CHLOGGEN) update --version $(VERSION)
+.PHONY: crosslink
+crosslink: | $(CROSSLINK)
+	@echo "Updating intra-repository dependencies in all go modules" \
+		&& $(CROSSLINK) --root=$(shell pwd) --prune
