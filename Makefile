@@ -54,8 +54,11 @@ $(TOOLS)/multimod: PACKAGE=go.opentelemetry.io/build-tools/multimod
 CROSSLINK = $(TOOLS)/crosslink
 $(TOOLS)/crosslink: PACKAGE=go.opentelemetry.io/build-tools/crosslink
 
+CHLOGGEN = $(TOOLS)/chloggen
+$(TOOLS)/chloggen: PACKAGE=go.opentelemetry.io/build-tools/chloggen
+
 .PHONY: tools
-tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD) $(CROSSLINK)
+tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD) $(CROSSLINK) $(CHLOGGEN)
 
 # Build
 
@@ -179,6 +182,22 @@ add-tags: | $(MULTIMOD)
 	@[ "${MODSET}" ] || ( echo ">> env var MODSET is not set"; exit 1 )
 	$(MULTIMOD) verify && $(MULTIMOD) tag -m ${MODSET} -c ${COMMIT}
 
+FILENAME?=$(shell git branch --show-current)
+.PHONY: chlog-new
+chlog-new: | $(CHLOGGEN)
+	$(CHLOGGEN) new --filename $(FILENAME)
+
+.PHONY: chlog-validate
+chlog-validate: | $(CHLOGGEN)
+	$(CHLOGGEN) validate
+
+.PHONY: chlog-preview
+chlog-preview: | $(CHLOGGEN)
+	$(CHLOGGEN) update --dry
+
+.PHONY: chlog-update
+chlog-update: | $(CHLOGGEN)
+	$(CHLOGGEN) update --version $(VERSION)
 .PHONY: crosslink
 crosslink: | $(CROSSLINK)
 	@echo "Updating intra-repository dependencies in all go modules" \

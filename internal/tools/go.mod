@@ -6,6 +6,7 @@ require (
 	github.com/client9/misspell v0.3.4
 	github.com/gogo/protobuf v1.3.2
 	github.com/golangci/golangci-lint v1.50.0
+	go.opentelemetry.io/build-tools/chloggen v0.1.0
 	go.opentelemetry.io/build-tools/crosslink v0.1.0
 	go.opentelemetry.io/build-tools/dbotconf v0.1.0
 	go.opentelemetry.io/build-tools/multimod v0.1.0
@@ -201,6 +202,7 @@ require (
 
 replace (
 	go.opentelemetry.io/build-tools => ../../
+	go.opentelemetry.io/build-tools/chloggen => ../../chloggen
 	go.opentelemetry.io/build-tools/dbotconf => ../../dbotconf
 	go.opentelemetry.io/build-tools/multimod => ../../multimod
 )
