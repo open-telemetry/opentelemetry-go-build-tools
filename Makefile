@@ -26,7 +26,7 @@ TIMEOUT = 60
 .DEFAULT_GOAL := precommit
 
 .PHONY: precommit ci
-precommit: dependabot-check license-check lint build test-default
+precommit: dependabot-check license-check lint build test-default crosslink
 ci: precommit check-clean-work-tree test-coverage
 
 # Tools
@@ -51,8 +51,11 @@ $(TOOLS)/dbotconf: PACKAGE=go.opentelemetry.io/build-tools/dbotconf
 MULTIMOD = $(TOOLS)/multimod
 $(TOOLS)/multimod: PACKAGE=go.opentelemetry.io/build-tools/multimod
 
+CROSSLINK = $(TOOLS)/crosslink
+$(TOOLS)/crosslink: PACKAGE=go.opentelemetry.io/build-tools/crosslink
+
 .PHONY: tools
-tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD)
+tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD) $(CROSSLINK)
 
 # Build
 
@@ -121,7 +124,7 @@ lint: misspell | $(GOLANGCI_LINT)
 	done
 
 .PHONY: tidy
-tidy:
+tidy: | crosslink
 	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
 	  echo "$(GO) mod tidy in $${dir}"; \
 	  (cd "$${dir}" && $(GO) mod tidy); \
@@ -175,3 +178,8 @@ multimod-prerelease: $(MULTIMOD)
 add-tags: | $(MULTIMOD)
 	@[ "${MODSET}" ] || ( echo ">> env var MODSET is not set"; exit 1 )
 	$(MULTIMOD) verify && $(MULTIMOD) tag -m ${MODSET} -c ${COMMIT}
+
+.PHONY: crosslink
+crosslink: | $(CROSSLINK)
+	@echo "Updating intra-repository dependencies in all go modules" \
+		&& $(CROSSLINK) --root=$(shell pwd) --prune
