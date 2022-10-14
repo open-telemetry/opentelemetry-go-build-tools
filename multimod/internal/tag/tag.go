@@ -17,9 +17,10 @@ package tag
 import (
 	"errors"
 	"fmt"
-	"github.com/go-git/go-git/v5/config"
 	"log"
 	"os/exec"
+
+	"github.com/go-git/go-git/v5/config"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"

@@ -15,13 +15,14 @@
 package tag
 
 import (
-	"github.com/go-git/go-git/v5/config"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/go-git/go-git/v5/config"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -655,12 +656,13 @@ func TestTagPush(t *testing.T) {
 
 			upstreamRepo, err := git.PlainInit(upstreamRepoDir, true)
 			require.NoError(t, err)
-			originRepo.CreateRemote(&config.RemoteConfig{Name: "upstream", URLs: []string{upstreamRepoDir}})
-			defer originRepo.DeleteRemote("upstream")
+			_, err = originRepo.CreateRemote(&config.RemoteConfig{Name: "upstream", URLs: []string{upstreamRepoDir}})
+			require.NoError(t, err)
 
 			refCommitMap := make(map[string]string)
 			for _, tagName := range tc.moduleFullTags {
-				tagRef, err := originRepo.Tag(tagName)
+				var tagRef *plumbing.Reference
+				tagRef, err = originRepo.Tag(tagName)
 				require.NoError(t, err)
 				refCommitMap[tagRef.Name().String()] = tagRef.Hash().String()
 			}
