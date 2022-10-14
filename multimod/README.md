@@ -121,10 +121,17 @@ commit will be found in your currently checked out branch.
     ```sh
     ./multimod tag --module-set-name <name> --commit-hash <hash>
     ```
+   
+    **Note** Provide the `--publish` flag if you would like multimod to push the tags
+    a remote repository automatically. You can also provide the `remote` flag to 
+    specify which remote you would like to push to. `remote` defaults to `upstream`.
+    
+    ```sh
+    ./multimod tag --module-set-name <name> --commit-hash <hash> --publish
+    ```
+   
 
-2. Push tags for ALL updated modules to the upstream remote (not your fork),
-   which are printed by the `tag` script. This step must be done manually,
-   specifying one tag at a time to push.
+2. If the `--publish` tag was not provided then tags must be pushed manually. 
 
     ```sh
     git push upstream <new tag 1>
