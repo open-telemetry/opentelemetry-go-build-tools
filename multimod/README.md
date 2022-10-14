@@ -126,11 +126,10 @@ commit will be found in your currently checked out branch.
     tags a remote repository automatically. You can also provide the `remote`
     flag to specify which remote you would like to push to.
     `remote` defaults to `upstream`.
-    
+
     ```sh
     ./multimod tag --module-set-name <name> --commit-hash <hash> --push
     ```
-   
 
 2. If the `--publish` tag was not provided then tags must be pushed manually.
 
