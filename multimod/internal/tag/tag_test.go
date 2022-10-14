@@ -673,8 +673,9 @@ func TestTagPush(t *testing.T) {
 			require.NoError(t, err)
 
 			for name, target := range refCommitMap {
+				var actual *plumbing.Reference
 				expected := plumbing.NewReferenceFromStrings(name, target)
-				actual, err := upstreamRepo.Reference(expected.Name(), true)
+				actual, err = upstreamRepo.Reference(expected.Name(), true)
 				tc.shouldErrorAssert(t, err)
 
 				matches := reflect.DeepEqual(actual, expected)
