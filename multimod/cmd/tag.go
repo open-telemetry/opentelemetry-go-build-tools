@@ -27,7 +27,7 @@ var (
 	commitHash          string
 	deleteModuleSetTags bool
 	moduleSetName       string
-	publish             bool
+	push                bool
 	remote              string
 )
 
@@ -41,7 +41,7 @@ var tagCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Using versioning file", versioningFile)
 
-		tag.Run(versioningFile, moduleSetName, commitHash, deleteModuleSetTags, publish, remote)
+		tag.Run(versioningFile, moduleSetName, commitHash, deleteModuleSetTags, push, remote)
 	},
 }
 
@@ -70,7 +70,7 @@ func init() {
 		"Specify this flag to delete all module tags associated with the version listed for the module set in the versioning file. Should only be used to undo recent tagging mistakes.",
 	)
 
-	tagCmd.Flags().BoolVarP(&publish, "publish-tags", "p", false, "Providng this"+
+	tagCmd.Flags().BoolVarP(&push, "push-tags", "p", false, "Providing this"+
 		" flag will cause tags to be pushed to an upstream repository.")
 
 	tagCmd.Flags().StringVarP(&remote, "remote-name", "r", "upstream", "Name of the remote"+

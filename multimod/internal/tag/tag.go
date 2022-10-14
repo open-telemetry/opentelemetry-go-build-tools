@@ -30,7 +30,7 @@ import (
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
 
-func Run(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags bool, publish bool, remote string) {
+func Run(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags bool, shouldPushTags bool, remote string) {
 
 	repoRoot, err := repo.FindRoot()
 	if err != nil {
@@ -57,7 +57,7 @@ func Run(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags b
 		}
 	}
 
-	if publish {
+	if shouldPushTags {
 		if err := pushTags(t.ModuleSetRelease.ModuleFullTagNames(), t.Repo, remote); err != nil {
 			log.Fatalf("failed to pushTags tags: %v", err)
 		}

@@ -122,12 +122,12 @@ commit will be found in your currently checked out branch.
     ./multimod tag --module-set-name <name> --commit-hash <hash>
     ```
    
-    **Note** Provide the `--publish` flag if you would like multimod to push the tags
+    **Note** Provide the `--push` flag if you would like multimod to push the tags
     a remote repository automatically. You can also provide the `remote` flag to 
     specify which remote you would like to push to. `remote` defaults to `upstream`.
     
     ```sh
-    ./multimod tag --module-set-name <name> --commit-hash <hash> --publish
+    ./multimod tag --module-set-name <name> --commit-hash <hash> --push
     ```
    
 
