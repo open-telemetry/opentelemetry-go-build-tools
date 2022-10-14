@@ -647,6 +647,7 @@ func TestTagPush(t *testing.T) {
 				"test_tag_second_hash_3/v1.0.0",
 			},
 			shouldMatchAssert: assert.True,
+			shouldErrorAssert: assert.NoError,
 		},
 	}
 
@@ -657,6 +658,7 @@ func TestTagPush(t *testing.T) {
 			upstreamRepo, err := git.PlainInit(upstreamRepoDir, true)
 			require.NoError(t, err)
 			_, err = originRepo.CreateRemote(&config.RemoteConfig{Name: "upstream", URLs: []string{upstreamRepoDir}})
+
 			require.NoError(t, err)
 
 			refCommitMap := make(map[string]string)
@@ -673,12 +675,39 @@ func TestTagPush(t *testing.T) {
 			for name, target := range refCommitMap {
 				expected := plumbing.NewReferenceFromStrings(name, target)
 				actual, err := upstreamRepo.Reference(expected.Name(), true)
-				assert.NoError(t, err)
+				tc.shouldErrorAssert(t, err)
 
 				matches := reflect.DeepEqual(actual, expected)
 				tc.shouldMatchAssert(t, matches)
 			}
+			err = originRepo.DeleteRemote("upstream")
+			require.NoError(t, err)
 		})
 
 	}
+}
+
+func TestPushTags_BadRemote(t *testing.T) {
+	originRepoDir := t.TempDir()
+	originRepo, firstHash, err := commontest.InitNewRepoWithCommit(originRepoDir)
+	require.NoError(t, err)
+
+	createTagOptions := &git.CreateTagOptions{
+		Message: "test tag message",
+		Tagger:  commontest.TestAuthor,
+	}
+
+	tagsToPush := []string{
+		"test_tag_first_hash_1/v1.0.0",
+		"test_tag_first_hash_2/v1.0.0",
+		"test_tag_first_hash_3/v1.0.0",
+	}
+
+	for _, tagName := range tagsToPush {
+		_, err = originRepo.CreateTag(tagName, firstHash, createTagOptions)
+		require.NoError(t, err)
+	}
+
+	err = pushTags(tagsToPush, originRepo, "upstream")
+	assert.Error(t, err)
 }
