@@ -33,6 +33,27 @@ func TestValidateE2E(t *testing.T) {
 			entries: getSampleEntries(),
 		},
 		{
+			name: "empty_component",
+			entries: []*chlog.Entry{
+				{
+					ChangeType: "breaking",
+					Component:  "  ",
+				},
+			},
+			wantErr: "specify a 'component'",
+		},
+		{
+			name: "empty_note",
+			entries: []*chlog.Entry{
+				{
+					ChangeType: "breaking",
+					Component:  "valid/comp",
+					Note: "  ",
+				},
+			},
+			wantErr: "specify a 'note'",
+		},
+		{
 			name: "invalid_change_type",
 			entries: func() []*chlog.Entry {
 				return append(getSampleEntries(), &chlog.Entry{

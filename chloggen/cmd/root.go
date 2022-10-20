@@ -26,9 +26,11 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "chloggen",
-	Short: "Updates CHANGELOG.MD to include all new changes",
-	Long:  `chloggen is a tool used to automate the generation of CHANGELOG files using individual yaml files as the source.`,
+	Use:           "chloggen",
+	Short:         "Updates CHANGELOG.MD to include all new changes",
+	Long:          `chloggen is a tool used to automate the generation of CHANGELOG files using individual yaml files as the source.`,
+	SilenceUsage:  true,
+	SilenceErrors: true,
 }
 
 func Execute() {
