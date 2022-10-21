@@ -48,7 +48,7 @@ func TestValidateE2E(t *testing.T) {
 				{
 					ChangeType: "breaking",
 					Component:  "valid/comp",
-					Note: "  ",
+					Note:       "  ",
 				},
 			},
 			wantErr: "specify a 'note'",
