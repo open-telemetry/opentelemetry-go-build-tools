@@ -20,6 +20,8 @@ import (
 	"log"
 	"os/exec"
 
+	"github.com/go-git/go-git/v5/config"
+
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -29,7 +31,7 @@ import (
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
 
-func Run(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags bool) {
+func Run(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags bool, shouldPushTags bool, remote string) {
 
 	repoRoot, err := repo.FindRoot()
 	if err != nil {
@@ -53,6 +55,12 @@ func Run(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags b
 	} else {
 		if err := t.tagAllModules(nil); err != nil {
 			log.Fatalf("unable to tag modules: %v", err)
+		}
+	}
+
+	if shouldPushTags {
+		if err := pushTags(t.ModuleSetRelease.ModuleFullTagNames(), t.Repo, remote); err != nil {
+			log.Fatalf("failed to pushTags tags: %v", err)
 		}
 	}
 }
@@ -221,5 +229,33 @@ func (t tagger) tagAllModules(customTagger *object.Signature) error {
 		addedFullTags = append(addedFullTags, newFullTag)
 	}
 
+	return nil
+}
+
+func pushTags(tagsToPush []string, repo *git.Repository, remote string) error {
+
+	for _, fullTageName := range tagsToPush {
+		tagref, err := repo.Tag(fullTageName)
+		if err != nil {
+			return fmt.Errorf("unable to fetch git tag ref for %v: %w", fullTageName, err)
+		}
+		refName := fmt.Sprintf("%s:%s", tagref.Name(), tagref.Name())
+		rs := config.RefSpec(refName)
+		err = rs.Validate()
+		if err != nil {
+			return fmt.Errorf("failed validation for refspec %s:%w", rs.String(), err)
+		}
+		err = repo.Push(&git.PushOptions{
+			RefSpecs:   []config.RefSpec{rs},
+			RemoteName: remote,
+		})
+		if err != nil {
+			if errors.Is(err, git.NoErrAlreadyUpToDate) {
+				log.Printf("tag %s is is already present on remote %s", tagref.Name(), remote)
+			} else {
+				return fmt.Errorf("error pushing tag %s:%w", tagref.Name(), err)
+			}
+		}
+	}
 	return nil
 }
