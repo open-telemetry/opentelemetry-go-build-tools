@@ -177,10 +177,11 @@ multimod-prerelease: $(MULTIMOD)
 	multimod prerelease -s=true -b=false -v ./versions.yaml -m tools
 	$(MAKE) tidy
 
-.PHONY: add-tags
-add-tags: | $(MULTIMOD)
-	@[ "${MODSET}" ] || ( echo ">> env var MODSET is not set"; exit 1 )
-	$(MULTIMOD) verify && $(MULTIMOD) tag -m ${MODSET} -c ${COMMIT}
+COMMIT ?= "HEAD"
+REMOTE ?= "upstream"
+.PHONY: push-tags
+push-tags: | $(MULTIMOD)
+	$(MULTIMOD) verify && $(MULTIMOD) tag -m tools -c ${COMMIT} -push -remote ${REMOTE}
 
 FILENAME?=$(shell git branch --show-current)
 .PHONY: chlog-new
@@ -198,6 +199,7 @@ chlog-preview: | $(CHLOGGEN)
 .PHONY: chlog-update
 chlog-update: | $(CHLOGGEN)
 	$(CHLOGGEN) update --version $(VERSION)
+
 .PHONY: crosslink
 crosslink: | $(CROSSLINK)
 	@echo "Updating intra-repository dependencies in all go modules" \
