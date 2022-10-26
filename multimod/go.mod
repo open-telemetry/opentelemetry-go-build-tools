@@ -7,7 +7,7 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.13.0
 	github.com/stretchr/testify v1.8.0
-	go.opentelemetry.io/build-tools v0.1.0
+	go.opentelemetry.io/build-tools v0.2.0
 	go.uber.org/multierr v1.8.0
 	golang.org/x/mod v0.6.0
 )
