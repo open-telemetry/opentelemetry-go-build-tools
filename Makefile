@@ -198,7 +198,7 @@ chlog-preview: | $(CHLOGGEN)
 
 .PHONY: chlog-update
 chlog-update: | $(CHLOGGEN)
-	$(CHLOGGEN) update --version $(VERSION)
+	$(CHLOGGEN) update -v $(VERSION)
 
 .PHONY: crosslink
 crosslink: | $(CROSSLINK)
