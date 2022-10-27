@@ -177,11 +177,11 @@ multimod-prerelease: $(MULTIMOD)
 	multimod prerelease -s=true -b=false -v ./versions.yaml -m tools
 	$(MAKE) tidy
 
-COMMIT ?= "HEAD"
-REMOTE ?= "upstream"
+COMMIT?=HEAD
+REMOTE?=upstream
 .PHONY: push-tags
 push-tags: | $(MULTIMOD)
-	$(MULTIMOD) verify && $(MULTIMOD) tag -m tools -c ${COMMIT} -push -remote ${REMOTE}
+	$(MULTIMOD) verify && $(MULTIMOD) tag -m tools -c ${COMMIT} -p -r ${REMOTE}
 
 FILENAME?=$(shell git branch --show-current)
 .PHONY: chlog-new
