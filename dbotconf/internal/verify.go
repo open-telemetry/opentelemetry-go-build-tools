@@ -26,10 +26,7 @@ import (
 )
 
 var (
-	errInvalid      = errors.New("invalid dependabot configuration")
-	errMissing      = errors.New("missing update check(s)")
 	errNotEnoughArg = errors.New("path argument required")
-	errTooManyArg   = errors.New("only single path argument allowed")
 )
 
 // configuredUpdates returns the set of Go modules dependabot is configured to
@@ -38,13 +35,14 @@ func configuredUpdates(path string) (map[string]struct{}, error) {
 	f, err := os.Open(filepath.Clean(path))
 	if errors.Is(err, os.ErrNotExist) {
 		return nil, fmt.Errorf("dependabot configuration file does not exist: %s", path)
-	} else if err != nil {
+	}
+	if err != nil {
 		return nil, fmt.Errorf("failed to read dependabot configuration file: %s", path)
 	}
 
 	var c dependabotConfig
 	if err := yaml.NewDecoder(f).Decode(&c); err != nil {
-		return nil, fmt.Errorf("%w: %v", errInvalid, err)
+		return nil, fmt.Errorf("invalid dependabot configuration: %w", err)
 	}
 
 	updates := make(map[string]struct{})
@@ -65,7 +63,7 @@ func verify(args []string) error {
 	case 1:
 		// Valid case.
 	default:
-		return fmt.Errorf("%w, received %v", errTooManyArg, args)
+		return fmt.Errorf("only single path argument allowed, received: %v", args)
 	}
 
 	root, mods, err := allModsFunc()
@@ -91,7 +89,7 @@ func verify(args []string) error {
 	}
 
 	if len(missing) > 0 {
-		return fmt.Errorf("%w: %s", errMissing, strings.Join(missing, ", "))
+		return fmt.Errorf("missing update check(s): %s", strings.Join(missing, ", "))
 	}
 	return nil
 }
