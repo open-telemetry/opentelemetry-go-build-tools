@@ -33,12 +33,20 @@ var buildConfigFunc = buildConfig
 func buildConfig(root string, mods []*modfile.File) (*dependabotConfig, error) {
 	c := &dependabotConfig{
 		Version: version2,
-		Updates: []update{{
-			PackageEcosystem: ghPkgEco,
-			Directory:        "/",
-			Labels:           actionLabels,
-			Schedule:         weeklySchedule,
-		}},
+		Updates: []update{
+			{
+				PackageEcosystem: ghPkgEco,
+				Directory:        "/",
+				Labels:           actionLabels,
+				Schedule:         weeklySchedule,
+			},
+			{
+				PackageEcosystem: dockerPkgEco,
+				Directory:        "/",
+				Labels:           dockerLabels,
+				Schedule:         weeklySchedule,
+			},
+		},
 	}
 	for _, m := range mods {
 		local, err := localPath(root, m)

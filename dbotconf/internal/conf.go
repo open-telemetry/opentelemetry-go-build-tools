@@ -15,14 +15,16 @@
 package internal
 
 const (
-	version2    = 2
-	ghPkgEco    = "github-actions"
-	gomodPkgEco = "gomod"
+	version2     = 2
+	ghPkgEco     = "github-actions"
+	dockerPkgEco = "docker"
+	gomodPkgEco  = "gomod"
 )
 
 var (
 	weeklySchedule = schedule{Interval: "weekly", Day: "sunday"}
 	actionLabels   = []string{"dependencies", "actions", "Skip Changelog"}
+	dockerLabels   = []string{"dependencies", "docker", "Skip Changelog"}
 	goLabels       = []string{"dependencies", "go", "Skip Changelog"}
 )
 
