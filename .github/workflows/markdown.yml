@@ -32,6 +32,7 @@ jobs:
       uses: docker://avtodev/markdown-lint:v1
       with:
         args: -i "/**/testdata" ${{needs.changedfiles.outputs.md}}
+        ignore: 'CHANGELOG.md'
 
   check-links:
     runs-on: ubuntu-latest
