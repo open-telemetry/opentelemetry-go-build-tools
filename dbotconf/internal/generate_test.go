@@ -71,6 +71,7 @@ func TestBuildConfig(t *testing.T) {
 		Version: version2,
 		Updates: []update{
 			newUpdate(ghPkgEco, "/", actionLabels),
+			newUpdate(dockerPkgEco, "/", dockerLabels),
 			newUpdate(gomodPkgEco, "/", goLabels),
 			newUpdate(gomodPkgEco, "/a", goLabels),
 			newUpdate(gomodPkgEco, "/b", goLabels),
