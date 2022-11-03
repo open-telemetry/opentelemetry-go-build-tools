@@ -5,7 +5,8 @@ change_type: enhancement
 component: crosslink
 
 # A brief description of the change.  Surround your text with quotes ("") if it needs to start with a backtick (`).
-note: Ignore ENOTTY error produced by zaps logger.sync() method
+note: Add internal build tools syncerror package to ignore known zap.logger.Sync() errors. 
+  Ignore known sync errors in crosslink.
 
 # One or more tracking issues related to the change
 issues: [190]
