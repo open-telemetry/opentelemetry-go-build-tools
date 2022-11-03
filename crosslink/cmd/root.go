@@ -15,11 +15,9 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
-	"syscall"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -27,6 +25,7 @@ import (
 
 	cl "go.opentelemetry.io/build-tools/crosslink/internal"
 	"go.opentelemetry.io/build-tools/internal/repo"
+	"go.opentelemetry.io/build-tools/internal/syncerror"
 )
 
 type commandConfig struct {
@@ -75,8 +74,8 @@ func newCommandConfig() *commandConfig {
 
 	postRunSetup := func(cmd *cobra.Command, args []string) error {
 		err := c.runConfig.Logger.Sync()
-		if err != nil && !errors.Is(err, syscall.ENOTTY) {
-			return fmt.Errorf("failed to sync logger: %w \n", err)
+		if err != nil && !syncerror.KnownSyncError(err) {
+			return fmt.Errorf("failed to sync logger: %w", err)
 		}
 		return nil
 	}
