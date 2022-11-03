@@ -15,9 +15,11 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
+	"syscall"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -71,13 +73,22 @@ func newCommandConfig() *commandConfig {
 
 	}
 
+	postRunSetup := func(cmd *cobra.Command, args []string) error {
+		err := c.runConfig.Logger.Sync()
+		if err != nil && !errors.Is(err, syscall.ENOTTY) {
+			return fmt.Errorf("failed to sync logger: %w \n", err)
+		}
+		return nil
+	}
+
 	c.rootCommand = cobra.Command{
 		Use:   "crosslink",
 		Short: "Automatically insert replace statements for intra-repository dependencies",
 		Long: `Crosslink is a tool to assist with go.mod file management for repositories containing
 		multiple go modules. Crosslink automatically inserts replace statements into go.mod files
 		for all intra-repository dependencies including transitive dependencies so the local module is used.`,
-		PersistentPreRunE: preRunSetup,
+		PersistentPreRunE:  preRunSetup,
+		PersistentPostRunE: postRunSetup,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cl.Crosslink(c.runConfig)
 		},
