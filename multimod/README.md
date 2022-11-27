@@ -122,9 +122,9 @@ commit will be found in your currently checked out branch.
     ./multimod tag --module-set-name <name> --commit-hash <hash>
     ```
 
-    **Note** Provide the `--print-tags` flag if you would like multimod to print 
-    tags after tagging operations are done. This output will use a new-line
-    delimiter.
+    **Note** Provide the `--print-tags` flag if you would like multimod to
+    print tags after tagging operations are done. This output will use a
+    new-line delimiter.
 
     ```sh
     ./multimod tag --module-set-name <name> --commit-hash <hash> --print-tags
@@ -136,8 +136,11 @@ commit will be found in your currently checked out branch.
     out.
 
     ```sh
-    ./multimod tag --module-set-name $MOD_SET_NAME --commit-hash $MOD_SET_COMMIT 
-    --print-tags | grep $RELEASE_VER | xargs -L 1 git push $REMOTE_NAME
+    ./multimod tag --module-set-name $MOD_SET_NAME \
+    --commit-hash $MOD_SET_COMMIT \
+    --print-tags \
+    | grep $RELEASE_VER \
+    | xargs -L 1 git push $REMOTE_NAME
     ```
 
 2. Tags can then be pushed to a remote repository of your choice.
