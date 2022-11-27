@@ -27,6 +27,7 @@ var (
 	commitHash          string
 	deleteModuleSetTags bool
 	moduleSetName       string
+	printTags           bool
 )
 
 // tagCmd represents the tag command
@@ -39,7 +40,7 @@ var tagCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Using versioning file", versioningFile)
 
-		tag.Run(versioningFile, moduleSetName, commitHash, deleteModuleSetTags)
+		tag.Run(versioningFile, moduleSetName, commitHash, deleteModuleSetTags, printTags)
 	},
 }
 
@@ -66,5 +67,9 @@ func init() {
 
 	tagCmd.Flags().BoolVarP(&deleteModuleSetTags, "delete-module-set-tags", "d", false,
 		"Specify this flag to delete all module tags associated with the version listed for the module set in the versioning file. Should only be used to undo recent tagging mistakes.",
+	)
+
+	tagCmd.Flags().BoolVarP(&printTags, "print-tags", "p", false,
+		"Specify this flag to print all tags after tagging is complete. Printed tags are new-line delimited.",
 	)
 }

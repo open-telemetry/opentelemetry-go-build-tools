@@ -29,7 +29,7 @@ import (
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
 
-func Run(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags bool) {
+func Run(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags bool, shouldPrintTags bool) {
 
 	repoRoot, err := repo.FindRoot()
 	if err != nil {
@@ -53,6 +53,12 @@ func Run(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags b
 	} else {
 		if err := t.tagAllModules(nil); err != nil {
 			log.Fatalf("unable to tag modules: %v", err)
+		}
+	}
+
+	if shouldPrintTags {
+		for _, tag := range t.ModuleFullTagNames() {
+			fmt.Println(tag)
 		}
 	}
 }
