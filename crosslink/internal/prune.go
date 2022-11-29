@@ -47,11 +47,6 @@ func Prune(rc RunConfig) error {
 				zap.Error(err))
 		}
 	}
-
-	err = rc.Logger.Sync()
-	if err != nil {
-		fmt.Printf("failed to sync logger:  %v", err)
-	}
 	return nil
 }
 
