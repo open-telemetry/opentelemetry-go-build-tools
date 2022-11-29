@@ -25,7 +25,7 @@ import (
 
 func TestRunVerifyErrors(t *testing.T) {
 	assert.ErrorIs(t, verify(nil), errNotEnoughArg)
-	assert.ErrorIs(t, verify([]string{"", ""}), errTooManyArg)
+	assert.ErrorContains(t, verify([]string{"", ""}), "only single path argument allowed, received")
 }
 
 func TestRunVerify(t *testing.T) {
@@ -71,7 +71,7 @@ func TestRunVerifyMissing(t *testing.T) {
 		return map[string]struct{}{}, nil
 	}
 
-	assert.ErrorIs(t, verify([]string{""}), errMissing)
+	assert.ErrorContains(t, verify([]string{""}), "missing update check(s)")
 }
 
 func TestRunVerifyReturnAllModsError(t *testing.T) {
@@ -121,5 +121,5 @@ func TestConfiguredUpdatesBadPath(t *testing.T) {
 
 func TestConfiguredUpdatesInvalidYAML(t *testing.T) {
 	_, err := configuredUpdates("./testdata/invalid.yml")
-	assert.ErrorIs(t, err, errInvalid)
+	assert.ErrorContains(t, err, "invalid dependabot configuration")
 }
