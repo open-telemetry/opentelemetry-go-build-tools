@@ -178,10 +178,14 @@ multimod-prerelease: $(MULTIMOD)
 	$(MAKE) tidy
 
 COMMIT?=HEAD
-REMOTE?=upstream
+REMOTE?=git@github.com:open-telemetry/opentelemetry-go-build-tools.git
 .PHONY: push-tags
 push-tags: | $(MULTIMOD)
-	$(MULTIMOD) verify && $(MULTIMOD) tag -m tools -c ${COMMIT} -p -r ${REMOTE}
+	$(MULTIMOD) verify
+	set -e; for tag in `$(MULTIMOD) tag -m tools -c ${COMMIT} --print-tags | grep -v "Using" `; do \
+		echo "pushing tag $${tag}"; \
+		git push ${REMOTE} $${tag}; \
+	done;
 
 FILENAME?=$(shell git branch --show-current)
 .PHONY: chlog-new
