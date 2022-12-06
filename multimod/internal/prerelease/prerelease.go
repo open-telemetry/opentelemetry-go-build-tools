@@ -23,7 +23,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 
 	"go.opentelemetry.io/build-tools/internal/repo"
@@ -204,7 +203,7 @@ func (p prerelease) updateAllGoModFiles() error {
 }
 
 func commitChanges(msr common.ModuleSetRelease, commitToDifferentBranch bool, repo *git.Repository) error {
-	commitMessage := fmt.Sprintf("Prepare %v for version %v", msr.ModSetName, msr.ModSetVersion())
+	commitMessage := fmt.Sprintf("Prepare %v modules for version %v", msr.ModSetName, msr.ModSetVersion())
 
 	var hash plumbing.Hash
 	var err error
