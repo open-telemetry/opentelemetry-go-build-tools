@@ -2,9 +2,7 @@
 
 # Changelog
 
-### 💡 Enhancements 💡
-
-- `dbotconf`: Dynamically add upgrade entry for all repository Dockerfile. (#211)
+<!-- next version -->
 
 ## v0.3.0
 
