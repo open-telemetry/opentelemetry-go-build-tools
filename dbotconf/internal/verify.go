@@ -85,7 +85,7 @@ func verify(args []string) error {
 		return err
 	}
 
-	var missing []string
+	var missingMod []string
 	for _, m := range mods {
 		local, err := localModPath(root, m)
 		if err != nil {
@@ -93,9 +93,10 @@ func verify(args []string) error {
 		}
 
 		if _, ok := modUp[local]; !ok {
-			missing = append(missing, local)
+			missingMod = append(missingMod, local)
 		}
 	}
+	var missingDocker []string
 	for _, d := range dockerFiles {
 		local, err := localPath(root, d)
 		if err != nil {
@@ -103,12 +104,20 @@ func verify(args []string) error {
 		}
 
 		if _, ok := dockerUp[local]; !ok {
-			missing = append(missing, local)
+			missingDocker = append(missingDocker, local)
 		}
 	}
 
-	if len(missing) > 0 {
-		return fmt.Errorf("missing update check(s): %s", strings.Join(missing, ", "))
+	if len(missingMod) > 0 || len(missingDocker) > 0 {
+		msg := "missing update check(s):"
+		if len(missingMod) > 0 {
+			msg = fmt.Sprintf("%s\n- Go mod files: %s", msg, strings.Join(missingMod, ", "))
+		}
+		if len(missingDocker) > 0 {
+			msg = fmt.Sprintf("%s\n- Dockerfiles: %s", msg, strings.Join(missingDocker, ", "))
+		}
+		msg += "\n"
+		return errors.New(msg)
 	}
 	return nil
 }

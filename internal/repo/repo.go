@@ -126,7 +126,7 @@ func FindFilePatternDirs(root, pattern string) ([]string, error) {
 			return err
 		}
 		if matched {
-			results = append(results, filepath.Dir(path))
+			results = append(results, path)
 		}
 		return nil
 	})
