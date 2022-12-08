@@ -29,33 +29,37 @@ var (
 	errNotEnoughArg = errors.New("path argument required")
 )
 
-// configuredUpdates returns the set of Go modules dependabot is configured to
-// check updates for.
-func configuredUpdates(path string) (map[string]struct{}, error) {
+// configuredUpdates returns the set of Go modules and Dockerfiles dependabot
+// is configured to check updates for.
+func configuredUpdates(path string) (mods map[string]struct{}, docker map[string]struct{}, err error) {
 	f, err := os.Open(filepath.Clean(path))
 	if errors.Is(err, os.ErrNotExist) {
-		return nil, fmt.Errorf("dependabot configuration file does not exist: %s", path)
+		return nil, nil, fmt.Errorf("dependabot configuration file does not exist: %s", path)
 	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to read dependabot configuration file: %s", path)
+		return nil, nil, fmt.Errorf("failed to read dependabot configuration file: %s", path)
 	}
 
 	var c dependabotConfig
 	if err := yaml.NewDecoder(f).Decode(&c); err != nil {
-		return nil, fmt.Errorf("invalid dependabot configuration: %w", err)
+		return nil, nil, fmt.Errorf("invalid dependabot configuration: %w", err)
 	}
 
-	updates := make(map[string]struct{})
+	mods = make(map[string]struct{})
+	docker = make(map[string]struct{})
 	for _, u := range c.Updates {
-		if u.PackageEcosystem != gomodPkgEco {
-			continue
+		if u.PackageEcosystem == dockerPkgEco {
+			docker[u.Directory] = struct{}{}
 		}
-		updates[u.Directory] = struct{}{}
+		if u.PackageEcosystem == gomodPkgEco {
+			mods[u.Directory] = struct{}{}
+		}
 	}
-	return updates, nil
+	return mods, docker, nil
 }
 
-// verify ensures dependabot configuration contains a check for all modules.
+// verify ensures dependabot configuration contains a check for all modules and
+// Dockerfiles.
 func verify(args []string) error {
 	switch len(args) {
 	case 0:
@@ -71,19 +75,34 @@ func verify(args []string) error {
 		return err
 	}
 
-	updates, err := configuredUpdatesFunc(args[0])
+	dockerFiles, err := allDockerFunc(root)
+	if err != nil {
+		return err
+	}
+
+	modUp, dockerUp, err := configuredUpdatesFunc(args[0])
 	if err != nil {
 		return err
 	}
 
 	var missing []string
 	for _, m := range mods {
-		local, err := localPath(root, m)
+		local, err := localModPath(root, m)
 		if err != nil {
 			return err
 		}
 
-		if _, ok := updates[local]; !ok {
+		if _, ok := modUp[local]; !ok {
+			missing = append(missing, local)
+		}
+	}
+	for _, d := range dockerFiles {
+		local, err := localPath(root, d)
+		if err != nil {
+			return err
+		}
+
+		if _, ok := dockerUp[local]; !ok {
 			missing = append(missing, local)
 		}
 	}
