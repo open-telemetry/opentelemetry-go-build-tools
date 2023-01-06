@@ -167,7 +167,6 @@ func render(cfg config) error {
 		"-v", fmt.Sprintf("%s:/data", tmpDir),
 		cfg.containerImage,
 		"--yaml-root", path.Join("/data/input/semantic_conventions/", path.Base(cfg.inputPath)),
-		"--only", cfg.onlyType,
 	}
 	if cfg.onlyType != "" {
 		args = append(args, "--only", cfg.onlyType)
