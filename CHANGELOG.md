@@ -9,7 +9,7 @@
 ### 💡 Enhancements 💡
 
 - `dbotconf`: Dynamically add upgrade entry for all repository Dockerfile. (#212)
-- `semconvgen`: add only flag to proccess only a specified type (#216)
+- `semconvgen`: add only flag to process only a specified type (#216)
 
 ## v0.3.0
 
