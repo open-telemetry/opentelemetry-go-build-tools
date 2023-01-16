@@ -107,3 +107,45 @@ func FindModules(root string) ([]*modfile.File, error) {
 
 	return results, err
 }
+
+func FindFilePatternDirs(root, pattern string) ([]string, error) {
+	var results []string
+	err := filepath.Walk(root, func(path string, info os.FileInfo, walkErr error) error {
+		if walkErr != nil {
+			// Walk failed to walk into this directory. Stop walking and
+			// signal this error.
+			return walkErr
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		matched, err := filepath.Match(pattern, filepath.Base(path))
+		if err != nil {
+			return err
+		}
+		if matched {
+			results = append(results, path)
+		}
+		return nil
+	})
+	return uniqueSort(results), err
+}
+
+func uniqueSort(data []string) []string {
+	n := len(data)
+	if n == 0 {
+		return nil
+	}
+	sort.Strings(data)
+
+	var i int
+	for j := 1; j < n; j++ {
+		if data[i] < data[j] {
+			i++
+			data[i], data[j] = data[j], data[i]
+		}
+	}
+	return data[:i+1]
+}
