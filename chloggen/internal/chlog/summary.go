@@ -16,11 +16,14 @@ package chlog
 
 import (
 	"bytes"
+	"embed"
 	"fmt"
-	"path/filepath"
 	"sort"
 	"text/template"
 )
+
+//go:embed summary.tmpl
+var tmpl embed.FS
 
 type summary struct {
 	Version         string
@@ -61,13 +64,11 @@ func GenerateSummary(version string, entries []*Entry) (string, error) {
 }
 
 func (s summary) String() (string, error) {
-	summaryTmpl := filepath.Join(moduleDir(), "summary.tmpl")
-
 	tmpl := template.Must(
 		template.
 			New("summary.tmpl").
 			Option("missingkey=error").
-			ParseFiles(summaryTmpl))
+			ParseFS(tmpl, "summary.tmpl"))
 
 	buf := bytes.Buffer{}
 	if err := tmpl.Execute(&buf, s); err != nil {
