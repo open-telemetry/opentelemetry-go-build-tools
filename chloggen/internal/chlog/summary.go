@@ -23,7 +23,7 @@ import (
 )
 
 //go:embed summary.tmpl
-var tmpl embed.FS
+var tmpl []byte
 
 type summary struct {
 	Version         string
