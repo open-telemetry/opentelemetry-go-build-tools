@@ -68,7 +68,7 @@ func (s summary) String() (string, error) {
 		template.
 			New("summary.tmpl").
 			Option("missingkey=error").
-			ParseFS(tmpl, "summary.tmpl"))
+			Parse(string(tmpl))
 
 	buf := bytes.Buffer{}
 	if err := tmpl.Execute(&buf, s); err != nil {
