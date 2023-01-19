@@ -16,7 +16,7 @@ package chlog
 
 import (
 	"bytes"
-	"embed"
+	_ "embed"
 	"fmt"
 	"sort"
 	"text/template"
@@ -68,7 +68,7 @@ func (s summary) String() (string, error) {
 		template.
 			New("summary.tmpl").
 			Option("missingkey=error").
-			Parse(string(tmpl))
+			Parse(string(tmpl)))
 
 	buf := bytes.Buffer{}
 	if err := tmpl.Execute(&buf, s); err != nil {
