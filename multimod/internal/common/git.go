@@ -66,12 +66,14 @@ func CommitChanges(commitMessage string, repo *git.Repository, customAuthor *obj
 	var commitOptions *git.CommitOptions
 	if customAuthor == nil {
 		commitOptions = &git.CommitOptions{
-			All: true,
+			All:               true,
+			AllowEmptyCommits: true,
 		}
 	} else {
 		commitOptions = &git.CommitOptions{
-			All:    true,
-			Author: customAuthor,
+			All:               true,
+			Author:            customAuthor,
+			AllowEmptyCommits: true,
 		}
 	}
 
