@@ -164,7 +164,7 @@ func render(cfg config) error {
 
 	args := []string{
 		"run", "--rm",
-		"-v", fmt.Sprintf("%s:/data", tmpDir),
+		"-v", fmt.Sprintf("%s:/data:Z", tmpDir),
 		cfg.containerImage,
 		"--yaml-root", path.Join("/data/input/semantic_conventions/", path.Base(cfg.inputPath)),
 	}
