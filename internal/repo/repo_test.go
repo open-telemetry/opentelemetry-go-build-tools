@@ -75,3 +75,34 @@ func TestFindModulesReturnsErrorForInvalidGoModFile(t *testing.T) {
 	require.Len(t, errList, 1, "unexpected errors")
 	assert.EqualError(t, errList[0].Err, "unknown directive: invalid")
 }
+
+func TestFindDockerfiles(t *testing.T) {
+	root := t.TempDir()
+	layout := []struct {
+		dir  string
+		file string
+	}{
+		{root, "Dockerfile"},
+		{filepath.Join(root, "a/b"), "Dockerfile.test"},
+		{filepath.Join(root, "a"), "test.Dockerfile"},
+		{filepath.Join(root, "c"), "Dockerfile"},
+	}
+	for _, path := range layout {
+		require.NoError(t, os.MkdirAll(path.dir, os.ModePerm))
+
+		dFile := filepath.Join(path.dir, path.file)
+		f, err := os.Create(filepath.Clean(dFile))
+		require.NoError(t, err)
+		fmt.Fprint(f, "FROM golang:1.18-alpine\n")
+		require.NoError(t, f.Close())
+	}
+	// Add an empty dir.
+	require.NoError(t, os.MkdirAll(filepath.Join(root, "tools"), os.ModePerm))
+
+	got, err := FindFilePatternDirs(root, "*Dockerfile*")
+	require.NoError(t, err)
+	require.Len(t, got, len(layout), "number of found Dockerfile")
+	for i, path := range layout {
+		assert.Equal(t, filepath.Join(path.dir, path.file), got[i])
+	}
+}

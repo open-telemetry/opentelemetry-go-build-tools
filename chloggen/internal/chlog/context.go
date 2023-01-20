@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 )
 
 const (
@@ -64,13 +63,4 @@ func RepoRoot() string {
 		fmt.Println("FAIL: Could not determine current working directory")
 	}
 	return dir
-}
-
-func moduleDir() string {
-	_, filename, _, ok := runtime.Caller(0)
-	if !ok {
-		// This is not expected, but just in case
-		fmt.Println("FAIL: Could not determine module directory")
-	}
-	return filepath.Dir(filename)
 }
