@@ -29,7 +29,7 @@ declare -A mods
 
 for line in $requests; do
     echo $line
-    if [[ $line != build\(deps\)* ]]; then
+    if [[ $line != Bump* ]]; then
         continue
     fi
 
