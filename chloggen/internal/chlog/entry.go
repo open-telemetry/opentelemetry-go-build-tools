@@ -59,11 +59,11 @@ func (e Entry) Validate() error {
 		return fmt.Errorf("'%s' is not a valid 'change_type'. Specify one of %v", e.ChangeType, changeTypes)
 	}
 
-	if e.Component == "" {
+	if strings.TrimSpace(e.Component) == "" {
 		return fmt.Errorf("specify a 'component'")
 	}
 
-	if e.Note == "" {
+	if strings.TrimSpace(e.Note) == "" {
 		return fmt.Errorf("specify a 'note'")
 	}
 
