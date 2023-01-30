@@ -65,8 +65,9 @@ func InitNewRepoWithCommit(repoRoot string) (*git.Repository, plumbing.Hash, err
 	commitMessage := "test commit"
 
 	commitHash, err := worktree.Commit(commitMessage, &git.CommitOptions{
-		All:    true,
-		Author: TestAuthor,
+		All:               true,
+		Author:            TestAuthor,
+		AllowEmptyCommits: true,
 	})
 	if err != nil {
 		return nil, plumbing.ZeroHash, fmt.Errorf("could not commit changes to git: %w", err)

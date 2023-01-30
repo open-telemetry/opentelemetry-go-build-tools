@@ -25,6 +25,7 @@ import (
 
 	cl "go.opentelemetry.io/build-tools/crosslink/internal"
 	"go.opentelemetry.io/build-tools/internal/repo"
+	"go.opentelemetry.io/build-tools/internal/syncerror"
 )
 
 type commandConfig struct {
@@ -71,13 +72,22 @@ func newCommandConfig() *commandConfig {
 
 	}
 
+	postRunSetup := func(cmd *cobra.Command, args []string) error {
+		err := c.runConfig.Logger.Sync()
+		if err != nil && !syncerror.KnownSyncError(err) {
+			return fmt.Errorf("failed to sync logger: %w", err)
+		}
+		return nil
+	}
+
 	c.rootCommand = cobra.Command{
 		Use:   "crosslink",
 		Short: "Automatically insert replace statements for intra-repository dependencies",
 		Long: `Crosslink is a tool to assist with go.mod file management for repositories containing
 		multiple go modules. Crosslink automatically inserts replace statements into go.mod files
 		for all intra-repository dependencies including transitive dependencies so the local module is used.`,
-		PersistentPreRunE: preRunSetup,
+		PersistentPreRunE:  preRunSetup,
+		PersistentPostRunE: postRunSetup,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cl.Crosslink(c.runConfig)
 		},

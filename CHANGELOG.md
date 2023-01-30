@@ -4,6 +4,24 @@
 
 <!-- next version -->
 
+## v0.4.0
+
+### 💡 Enhancements 💡
+
+- `dbotconf`: Dynamically add upgrade entry for all repository Dockerfile. (#212)
+- `semconvgen`: add only flag to process only a specified type (#216)
+
+## v0.3.0
+
+### 🛑 Breaking changes 🛑
+
+- `multimod`: Remove multimod tag push option in favor of printing tags (#177)
+
+### 💡 Enhancements 💡
+
+- `crosslink`: Add internal build tools syncerror package to ignore known zap.logger.Sync() errors. Ignore known sync errors in crosslink. (#190)
+- `dbotconf`: Add upgrade entry for docker (#186)
+
 ## v0.2.0
 
 ### 💡 Enhancements 💡

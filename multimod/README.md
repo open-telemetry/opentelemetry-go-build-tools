@@ -122,16 +122,28 @@ commit will be found in your currently checked out branch.
     ./multimod tag --module-set-name <name> --commit-hash <hash>
     ```
 
-    **Note** Provide the `--push` flag if you would like multimod to push the
-    tags a remote repository automatically. You can also provide the `remote`
-    flag to specify which remote you would like to push to.
-    `remote` defaults to `upstream`.
+    **Note** Provide the `--print-tags` flag if you would like multimod to
+    print tags after tagging operations are done. This output will use a
+    new-line delimiter.
 
     ```sh
-    ./multimod tag --module-set-name <name> --commit-hash <hash> --push
+    ./multimod tag --module-set-name <name> --commit-hash <hash> --print-tags
     ```
 
-2. If the `--publish` tag was not provided then tags must be pushed manually.
+    Using `--print-tags` allows `multimod tag` to be used in conjunction with tools
+    such as `xargs` to automatically push tags. Grepping the release version number
+    is required since multimod can output non tag related information to standard
+    out.
+
+    ```sh
+    ./multimod tag --module-set-name $MOD_SET_NAME \
+    --commit-hash $MOD_SET_COMMIT \
+    --print-tags \
+    | grep $RELEASE_VER \
+    | xargs -L 1 git push $REMOTE_NAME
+    ```
+
+2. Tags can then be pushed to a remote repository of your choice.
 
     ```sh
     git push upstream <new tag 1>
