@@ -26,7 +26,6 @@ func TestNew(t *testing.T) {
 	tests := []struct {
 		name     string
 		filename string
-		wantErr  string
 	}{
 		{
 			name:     "no_extension",
@@ -45,21 +44,18 @@ func TestNew(t *testing.T) {
 			filename: "replace/forward/slash",
 		},
 		{
+			name:     "name_with_period",
+			filename: "not.an.extension",
+		},
+		{
 			name:     "bad_extension",
 			filename: "my-change.txt",
-			wantErr:  "non-yaml extension",
 		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := setupTestDir(t, []*chlog.Entry{})
-			err := initialize(ctx, tc.filename)
-			if tc.wantErr != "" {
-				require.Regexp(t, tc.wantErr, err)
-				return
-			}
-			require.NoError(t, err)
-
+			require.NoError(t, initialize(ctx, tc.filename))
 			require.Error(t, validate(ctx), "The new entry should not be valid without user input")
 		})
 	}
