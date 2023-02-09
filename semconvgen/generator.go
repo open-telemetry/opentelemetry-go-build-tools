@@ -376,6 +376,7 @@ var capitalizations = []string{
 	"DragonflyBSD",
 	"InProc",
 	"FaaS",
+	"OTel",
 }
 
 // These are not simple capitalization fixes, but require string replacement.
