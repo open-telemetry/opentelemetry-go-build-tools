@@ -4,6 +4,26 @@
 
 <!-- next version -->
 
+## v0.6.0
+
+### 💡 Enhancements 💡
+
+- `chloggen`: Allow filenames containing '.' outside of extension (#237)
+
+### 🧰 Bug fixes 🧰
+
+- `semconvgen`: Correct capitalization of Otel to be OTel (#242)
+
+## v0.5.0
+
+### 💡 Enhancements 💡
+
+- `chloggen`: Use go embed to embed the template file in chloggen (#224)
+
+### 🧰 Bug fixes 🧰
+
+- `semconvgen`: Add docker/podman mount option to modify selinux labels of shared host files. (#222)
+
 ## v0.4.0
 
 ### 💡 Enhancements 💡
