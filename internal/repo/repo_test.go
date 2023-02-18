@@ -93,7 +93,7 @@ func TestFindDockerfiles(t *testing.T) {
 		dFile := filepath.Join(path.dir, path.file)
 		f, err := os.Create(filepath.Clean(dFile))
 		require.NoError(t, err)
-		fmt.Fprint(f, "FROM golang:1.18-alpine\n")
+		fmt.Fprint(f, "FROM golang:1.19-alpine\n")
 		require.NoError(t, f.Close())
 	}
 	// Add an empty dir.
