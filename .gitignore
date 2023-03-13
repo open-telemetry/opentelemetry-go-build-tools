@@ -12,6 +12,7 @@ checkdoc/checkdoc
 chloggen/chloggen
 crosslink/crosslink
 dbotconf/dbotconf
+gocp/gocp
 issuegenerator/issuegenerator
 multimod/multimod
 semconvgen/semconvgen
