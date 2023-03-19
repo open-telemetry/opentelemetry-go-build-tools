@@ -66,9 +66,8 @@ func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot stri
 		if modSetUpToDate {
 			log.Println("Module set already up to date. Skipping...")
 			continue
-		} else {
-			log.Println("Updating versions for module set...")
 		}
+		log.Println("Updating versions for module set...")
 
 		if skipModTidy {
 			log.Println("Skipping go mod tidy...")

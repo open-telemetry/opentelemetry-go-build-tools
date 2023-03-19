@@ -68,9 +68,8 @@ func Run(versioningFile string, moduleSetNames []string, allModuleSets bool, ski
 		if modSetUpToDate {
 			log.Println("Module set already up to date (git tags already exist). Skipping...")
 			continue
-		} else {
-			log.Println("Updating versions for module set...")
 		}
+		log.Println("Updating versions for module set...")
 
 		if err = p.updateAllVersionGo(); err != nil {
 			log.Fatalf("updateAllVersionGo failed: %v", err)
@@ -144,9 +143,8 @@ func (p prerelease) updateAllVersionGo() error {
 		if err != nil {
 			if os.IsNotExist(err) {
 				continue
-			} else {
-				return fmt.Errorf("could not check existence of %v: %w", versionGoFilePath, err)
 			}
+			return fmt.Errorf("could not check existence of %v: %w", versionGoFilePath, err)
 		}
 		if err = updateVersionGoFile(versionGoFilePath, p.ModuleSetRelease.ModSetVersion()); err != nil {
 			return fmt.Errorf("could not update %v: %w", versionGoFilePath, err)
