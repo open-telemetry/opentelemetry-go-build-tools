@@ -40,7 +40,7 @@ var (
 func main() {
 	flag.Parse()
 
-	if err := copy(*dest, *pkg, *src); err != nil {
+	if err := cpy(*dest, *pkg, *src); err != nil {
 		fmt.Println(err)
 		flag.PrintDefaults()
 		os.Exit(1)

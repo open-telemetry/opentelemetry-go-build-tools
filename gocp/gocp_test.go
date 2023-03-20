@@ -30,7 +30,7 @@ func Test(t *testing.T) {
 
 	out := filepath.Join(t.TempDir(), "out.go")
 
-	err = copy(out, "pkg", "testdata/in.go")
+	err = cpy(out, "pkg", "testdata/in.go")
 	require.NoError(t, err)
 
 	got, err := os.ReadFile(out) //nolint:gosec // It is a safe test temp filepath.
@@ -41,7 +41,7 @@ func Test(t *testing.T) {
 }
 
 func TestEmptyDest(t *testing.T) {
-	err := copy("", "pkg", "testdata/in.go")
+	err := cpy("", "pkg", "testdata/in.go")
 
 	assert.ErrorContains(t, err, "gocp: destination filepath must be set")
 }
@@ -49,7 +49,7 @@ func TestEmptyDest(t *testing.T) {
 func TestEmptyPkg(t *testing.T) {
 	out := filepath.Join(t.TempDir(), "out.go")
 
-	err := copy(out, "", "testdata/in.go")
+	err := cpy(out, "", "testdata/in.go")
 
 	assert.ErrorContains(t, err, "gocp: destination package name must be set")
 }
@@ -57,7 +57,7 @@ func TestEmptyPkg(t *testing.T) {
 func TestEmptySrc(t *testing.T) {
 	out := filepath.Join(t.TempDir(), "out.go")
 
-	err := copy(out, "pkg", "")
+	err := cpy(out, "pkg", "")
 
 	assert.ErrorContains(t, err, "gocp: source filepath must be set")
 }
@@ -65,7 +65,7 @@ func TestEmptySrc(t *testing.T) {
 func TestNotExistingSrc(t *testing.T) {
 	out := filepath.Join(t.TempDir(), "out.go")
 
-	err := copy(out, "pkg", "testdata/non-exiting.go")
+	err := cpy(out, "pkg", "testdata/non-exiting.go")
 
 	assert.ErrorIs(t, err, os.ErrNotExist)
 }

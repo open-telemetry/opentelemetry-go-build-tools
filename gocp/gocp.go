@@ -21,9 +21,9 @@ import (
 	"strings"
 )
 
-// copy copies a Go file from src to dst
+// cpy copies a Go file from src to dst
 // with package renamed to pkg.
-func copy(dest, pkg, src string) error {
+func cpy(dest, pkg, src string) error {
 	if dest == "" {
 		return errors.New("gocp: destination filepath must be set")
 	}
@@ -77,8 +77,5 @@ func copy(dest, pkg, src string) error {
 	if err := outFile.Close(); err != nil {
 		return err
 	}
-	if err := inFile.Close(); err != nil {
-		return err
-	}
-	return nil
+	return inFile.Close()
 }
