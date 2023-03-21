@@ -13,5 +13,6 @@ chloggen/chloggen
 crosslink/crosslink
 dbotconf/dbotconf
 issuegenerator/issuegenerator
+gotmpl/gotmpl
 multimod/multimod
 semconvgen/semconvgen
