@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	srcPath  = "testdata/in.go.tmpl"
+	bodyPath = "testdata/in.go.tmpl"
 	jsonData = `{ "pkg": "myname" }`
 )
 
@@ -35,7 +35,7 @@ func Test(t *testing.T) {
 
 	destPath := filepath.Join(t.TempDir(), "out.go")
 
-	err = gotmpl(srcPath, jsonData, destPath)
+	err = gotmpl(bodyPath, jsonData, destPath)
 	require.NoError(t, err)
 
 	got, err := os.ReadFile(destPath) //nolint:gosec // It is a safe test temp filepath.
@@ -46,7 +46,7 @@ func Test(t *testing.T) {
 }
 
 func TestEmptyOut(t *testing.T) {
-	err := gotmpl(srcPath, jsonData, "")
+	err := gotmpl(bodyPath, jsonData, "")
 
 	assert.ErrorContains(t, err, "gotmpl: output filepath must be set")
 }
@@ -54,7 +54,7 @@ func TestEmptyOut(t *testing.T) {
 func TestMissingData(t *testing.T) {
 	destPath := filepath.Join(t.TempDir(), "out.go")
 
-	err := gotmpl(srcPath, `{ "badkey": "val" }`, destPath)
+	err := gotmpl(bodyPath, `{ "badkey": "val" }`, destPath)
 
 	assert.ErrorContains(t, err, "gotmpl: execution failed")
 }
@@ -62,7 +62,7 @@ func TestMissingData(t *testing.T) {
 func TestDataIsNotJSON(t *testing.T) {
 	destPath := filepath.Join(t.TempDir(), "out.go")
 
-	err := gotmpl(srcPath, "{ bad[]", destPath)
+	err := gotmpl(bodyPath, "{ bad[]", destPath)
 
 	assert.ErrorContains(t, err, "gotmpl: data must be in JSON format")
 }
@@ -82,4 +82,24 @@ func TestNotExistingBody(t *testing.T) {
 
 	assert.ErrorContains(t, err, "gotmpl: cannot parse template body file")
 	assert.ErrorIs(t, err, os.ErrNotExist)
+}
+
+func TestComplex(t *testing.T) {
+	wantText := `myapp v2.1.0`
+	destPath := filepath.Join(t.TempDir(), "complex.txt")
+
+	bodyPath := filepath.Join(t.TempDir(), "complex.txt.tmpl")
+	body := `{{.app.name}} v{{.app.version.major}}.{{.app.version.minor}}.{{.app.version.patch}}`
+	jsonData := `{"app":{"name": "myapp", "version": {"major": 2, "minor": 1, "patch": 0}}}`
+	err := os.WriteFile(bodyPath, ([]byte)(body), 0o600)
+	require.NoError(t, err)
+
+	err = gotmpl(bodyPath, jsonData, destPath)
+	require.NoError(t, err)
+
+	got, err := os.ReadFile(destPath) //nolint:gosec // It is a safe test temp filepath.
+	require.NoError(t, err)
+	gotText := string(got)
+
+	assert.Equal(t, wantText, gotText)
 }
