@@ -12,15 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/*
-gocp copies Go source code.
-The copied code is marked as generated.
-Usage of gotmpl:
-
-	-v, --data string   Data in JSON format.
-	-d, --dest string   Destination filepath.
-	-s, --src string    Source filepath with template body.
-*/
+// gotmpl is a tool to generate files from [text/template] and JSON data.
 package main
 
 import (
