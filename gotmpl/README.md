@@ -1,8 +1,8 @@
 # gotmpl
 
-`gotmpl` is a tool that uses Go's [`text/template`](https://pkg.go.dev/text/template)
-for generting generating text files
-based on file templates and input JSON data.
+`gotmpl` is a tool
+to generate files
+from [templates](https://pkg.go.dev/text/template) and JSON data.
 
 ## Usage
 
@@ -20,10 +20,10 @@ to avoid depending on internal packages of different modules.
 Such dependencies could transitively lead to build failure
 when an internal package API introduces a non-backward compatible change.
 
-`gotmpl` can be used for sharing non-exported,
+`gotmpl` can be used for sharing non-exported
 common code across multiple Go modules.
 It is advised to keep the shared code in a separate internal Go module
-e.g. under `internal/shared`.
+(e.g. under `internal/shared`).
 The shared code should be consumed across modules using `go generate`,
 for example:
 
