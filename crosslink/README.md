@@ -51,7 +51,7 @@ Crosslink supports the following commands and flags.
 Used to provide the path to a directory where a `go.mod` file must exist. The
 root flag is available to all crosslink subcommands.
 
-**Note: If no `--root` flag is provided than crosslink attempts to identify a git
+**Note: If no `--root` flag is provided then crosslink attempts to identify a git
 repository in the current or a parent directory. If no git repository exists, crosslink will return an error.**
 
     crosslink --root=/users/foo/multimodule-go-repo
