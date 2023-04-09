@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/spf13/pflag v1.0.5
 	go.opentelemetry.io/build-tools v0.6.0
-	golang.org/x/mod v0.9.0
+	golang.org/x/mod v0.10.0
 	golang.org/x/text v0.9.0
 )
 
