@@ -14,13 +14,14 @@
 
 module-sets:
   tools:
-    version: v0.6.0
+    version: v0.7.0
     modules:
       - go.opentelemetry.io/build-tools
       - go.opentelemetry.io/build-tools/checkdoc
       - go.opentelemetry.io/build-tools/chloggen
       - go.opentelemetry.io/build-tools/crosslink
       - go.opentelemetry.io/build-tools/dbotconf
+      - go.opentelemetry.io/build-tools/gotmpl
       - go.opentelemetry.io/build-tools/issuegenerator
       - go.opentelemetry.io/build-tools/multimod
       - go.opentelemetry.io/build-tools/semconvgen

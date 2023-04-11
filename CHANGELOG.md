@@ -4,6 +4,16 @@
 
 <!-- next version -->
 
+## v0.7.0
+
+### 🛑 Breaking changes 🛑
+
+- `all`: bump minimum go version to 1.19 (#253)
+
+### 🚀 New components 🚀
+
+- `gotmpl`: Add gotmpl tool to allow using text/template via CLI. (#276)
+
 ## v0.6.0
 
 ### 💡 Enhancements 💡

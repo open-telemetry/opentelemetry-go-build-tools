@@ -174,7 +174,7 @@ multimod-verify: $(MULTIMOD)
 
 .PHONY: multimod-prerelease
 multimod-prerelease: $(MULTIMOD)
-	multimod prerelease -s=true -b=false -v ./versions.yaml -m tools
+	multimod prerelease -s=true -v ./versions.yaml -m tools
 	$(MAKE) tidy
 
 COMMIT?=HEAD
