@@ -261,7 +261,7 @@ func checkoutSpecToDir(cfg config, toDir string) (doneFunc func(), err error) {
 	// Checkout the selected tag to make sure we use the correct version of semantic
 	// convention yaml files as the input. We will checkout the worktree to a temporary toDir.
 	// #nosec G204
-	cmd := exec.Command("git", "worktree", "add", toDir, cfg.specVersion)
+	cmd := exec.Command("git", "worktree", "add", "-f", toDir, cfg.specVersion)
 	// The specification repo is in cfg.inputPath.
 	cmd.Dir = cfg.inputPath
 	err = cmd.Run()
