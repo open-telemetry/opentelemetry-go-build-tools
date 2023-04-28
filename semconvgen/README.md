@@ -26,7 +26,7 @@ A full list of available options:
   -c, --container string    Container image ID (default "otel/semconvgen")
   -f, --filename string     Filename for templated output. If not specified 'basename(inputPath).go' will be used.
   -i, --input string        Path to semantic convention definition YAML. Should be a directory in the specification git repository.
-      --only string         Process only semantic conventions of the specified type. {span,resource,event,metric,units,scope}
+      --only string         Process only semantic conventions of the specified type. {span, resource, event, metric_group, metric, units, scope, attribute_group}
   -o, --output string       Path to output target. Must be either an absolute path or relative to the repository root. If unspecified will output to a sub-directory with the name matching the version number specified via --specver flag.
   -p, --parameters string   List of key=value pairs separated by comma. These values are fed into the template as-is.
   -s, --specver string      Version of semantic convention to generate. Must be an existing version tag in the specification git repository.
