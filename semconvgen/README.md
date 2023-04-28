@@ -1,8 +1,11 @@
 # Go Semantic Convention Generator
 
-This tool is designed to generate constants in a semantic convention package for the Go API and the collector.
-It may be used by other systems, but it's primary function beyond invoking the template processor is to ensure that
-generated identifiers conform to Go's naming idiom, particularly with respect to initialisms and acronyms.
+This tool is designed to generate constants in a semantic convention package
+for the Go API and the collector.
+It may be used by other systems,
+but it's primary function beyond invoking the template processor is to ensure
+that generated identifiers conform to Go's naming idiom,
+particularly with respect to initialisms and acronyms.
 Other users may be served just as well by using the template processor directly.
 
 ## Installation
