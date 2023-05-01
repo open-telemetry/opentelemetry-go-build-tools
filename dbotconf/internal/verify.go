@@ -29,24 +29,25 @@ var (
 	errNotEnoughArg = errors.New("path argument required")
 )
 
-// configuredUpdates returns the set of Go modules and Dockerfiles dependabot
+// configuredUpdates returns the set of Go modules, Dockerfiles, Pip requirements dependabot
 // is configured to check updates for.
-func configuredUpdates(path string) (mods map[string]struct{}, docker map[string]struct{}, err error) {
+func configuredUpdates(path string) (mods map[string]struct{}, docker map[string]struct{}, pip map[string]struct{}, err error) {
 	f, err := os.Open(filepath.Clean(path))
 	if errors.Is(err, os.ErrNotExist) {
-		return nil, nil, fmt.Errorf("dependabot configuration file does not exist: %s", path)
+		return nil, nil, nil, fmt.Errorf("dependabot configuration file does not exist: %s", path)
 	}
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to read dependabot configuration file: %s", path)
+		return nil, nil, nil, fmt.Errorf("failed to read dependabot configuration file: %s", path)
 	}
 
 	var c dependabotConfig
 	if err := yaml.NewDecoder(f).Decode(&c); err != nil {
-		return nil, nil, fmt.Errorf("invalid dependabot configuration: %w", err)
+		return nil, nil, nil, fmt.Errorf("invalid dependabot configuration: %w", err)
 	}
 
 	mods = make(map[string]struct{})
 	docker = make(map[string]struct{})
+	pip = make(map[string]struct{})
 	for _, u := range c.Updates {
 		if u.PackageEcosystem == dockerPkgEco {
 			docker[u.Directory] = struct{}{}
@@ -54,12 +55,15 @@ func configuredUpdates(path string) (mods map[string]struct{}, docker map[string
 		if u.PackageEcosystem == gomodPkgEco {
 			mods[u.Directory] = struct{}{}
 		}
+		if u.PackageEcosystem == pipPkgEco {
+			pip[u.Directory] = struct{}{}
+		}
 	}
-	return mods, docker, nil
+	return mods, docker, pip, nil
 }
 
-// verify ensures dependabot configuration contains a check for all modules and
-// Dockerfiles.
+// verify ensures dependabot configuration contains a check for all modules,
+// Dockerfiles, and requirements.txt files.
 func verify(args []string) error {
 	switch len(args) {
 	case 0:
@@ -80,7 +84,12 @@ func verify(args []string) error {
 		return err
 	}
 
-	modUp, dockerUp, err := configuredUpdatesFunc(args[0])
+	pipFiles, err := allPipFunc(root)
+	if err != nil {
+		return err
+	}
+
+	modUp, dockerUp, pipUp, err := configuredUpdatesFunc(args[0])
 	if err != nil {
 		return err
 	}
@@ -107,14 +116,28 @@ func verify(args []string) error {
 			missingDocker = append(missingDocker, local)
 		}
 	}
+	var missingPip []string
+	for _, p := range pipFiles {
+		local, err := localPath(root, p)
+		if err != nil {
+			return err
+		}
 
-	if len(missingMod) > 0 || len(missingDocker) > 0 {
+		if _, ok := pipUp[local]; !ok {
+			missingPip = append(missingPip, local)
+		}
+	}
+
+	if len(missingMod) > 0 || len(missingDocker) > 0 || len(missingPip) > 0 {
 		msg := "missing update check(s):"
 		if len(missingMod) > 0 {
 			msg = fmt.Sprintf("%s\n- Go mod files: %s", msg, strings.Join(missingMod, ", "))
 		}
 		if len(missingDocker) > 0 {
 			msg = fmt.Sprintf("%s\n- Dockerfiles: %s", msg, strings.Join(missingDocker, ", "))
+		}
+		if len(missingPip) > 0 {
+			msg = fmt.Sprintf("%s\n- Pip files: %s", msg, strings.Join(missingPip, ", "))
 		}
 		msg += "\n"
 		return errors.New(msg)
