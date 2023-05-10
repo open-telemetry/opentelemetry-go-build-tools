@@ -63,7 +63,7 @@ func Crosslink(rc RunConfig) error {
 
 	// update go.work file
 	var modules []string
-	for module, _ := range graph {
+	for module := range graph {
 		// skip excluded
 		if _, exists := rc.ExcludedPaths[module]; exists {
 			rc.Logger.Debug("Excluded Module, ignoring use",
@@ -155,7 +155,7 @@ func containsReplace(replaceStatments []*modfile.Replace, modName string) (*modf
 	return nil, false
 }
 
-func updateGoWork(modules []string, rc RunConfig) error {
+func updateGoWork(uses []string, rc RunConfig) error {
 	goWorkPath := filepath.Join(rc.RootPath, "go.work")
 	content, err := os.ReadFile(filepath.Clean(goWorkPath))
 	if errors.Is(err, os.ErrNotExist) {
@@ -176,15 +176,51 @@ func updateGoWork(modules []string, rc RunConfig) error {
 		existingGoWorkUses[use.Path] = true
 	}
 
-	for _, useToAdd := range modules {
+	for _, useToAdd := range uses {
 		if existingGoWorkUses[useToAdd] {
 			continue
 		}
 		err := goWork.AddUse(useToAdd, "")
 		if err != nil {
 			rc.Logger.Error("Failed to add use statement", zap.Error(err),
-				zap.String("module", useToAdd))
+				zap.String("path", useToAdd))
 		}
+	}
+
+	if rc.Prune {
+		requiredUses := make(map[string]bool, len(uses))
+		for _, use := range uses {
+			requiredUses[use] = true
+		}
+
+		usesToKeep := existingGoWorkUses
+		for use := range usesToKeep {
+			// check to see if its intra dependency
+			if !strings.HasPrefix(use, "./") {
+				continue
+			}
+
+			// check if the intra depdency is stil up to date
+			if requiredUses[use] {
+				continue
+			}
+
+			usesToKeep[use] = false
+		}
+
+		// remove unnecessary uses
+		for use, needed := range usesToKeep {
+			if needed {
+				continue
+			}
+
+			err := goWork.DropUse(use)
+			if err != nil {
+				rc.Logger.Error("Failed to drop use statement", zap.Error(err),
+					zap.String("path", use))
+			}
+		}
+
 	}
 
 	content = modfile.Format(goWork.Syntax)
