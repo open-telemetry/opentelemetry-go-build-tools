@@ -64,7 +64,12 @@ func Crosslink(rc RunConfig) error {
 	// update go.work file
 	var modules []string
 	for module, _ := range graph {
-		// TODO: skip excluded
+		// skip excluded
+		if _, exists := rc.ExcludedPaths[module]; exists {
+			rc.Logger.Debug("Excluded Module, ignoring use",
+				zap.String("module", module))
+			continue
+		}
 
 		localPath, err := filepath.Rel(rootModulePath, module)
 		if err != nil {
