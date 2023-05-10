@@ -18,8 +18,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"go.uber.org/zap"
 	"golang.org/x/mod/modfile"
@@ -81,14 +79,9 @@ func insertReplace(module *moduleInfo, rc RunConfig) error {
 			continue
 		}
 
-		localPath, err := filepath.Rel(modContents.Module.Mod.Path, reqModule)
+		localPath, err := relativeModulePath(modContents.Module.Mod.Path, reqModule)
 		if err != nil {
-			return fmt.Errorf("failed to retrieve relative path: %w", err)
-		}
-		if localPath == "." || localPath == ".." {
-			localPath += "/"
-		} else if !strings.HasPrefix(localPath, "..") {
-			localPath = "./" + localPath
+			return err
 		}
 
 		if oldReplace, exists := containsReplace(modContents.Replace, reqModule); exists {

@@ -51,14 +51,9 @@ func buildUses(rootModulePath string, graph map[string]*moduleInfo, rc RunConfig
 			continue
 		}
 
-		localPath, err := filepath.Rel(rootModulePath, module)
+		localPath, err := relativeModulePath(rootModulePath, module)
 		if err != nil {
-			return nil, fmt.Errorf("failed to retrieve relative path: %w", err)
-		}
-		if localPath == "." || localPath == ".." {
-			localPath += "/"
-		} else if !strings.HasPrefix(localPath, "..") {
-			localPath = "./" + localPath
+			return nil, err
 		}
 		uses = append(uses, localPath)
 	}
@@ -95,4 +90,17 @@ func writeGoWork(goWork *modfile.WorkFile, rc RunConfig) error {
 	goWorkPath := filepath.Join(rc.RootPath, "go.work")
 	content := modfile.Format(goWork.Syntax)
 	return os.WriteFile(goWorkPath, content, 0600)
+}
+
+func relativeModulePath(rootModule, module string) (string, error) {
+	localPath, err := filepath.Rel(rootModule, module)
+	if err != nil {
+		return "", fmt.Errorf("failed to retrieve relative path: %w", err)
+	}
+	if localPath == "." || localPath == ".." {
+		localPath += "/"
+	} else if !strings.HasPrefix(localPath, "..") {
+		localPath = "./" + localPath
+	}
+	return localPath, nil
 }
