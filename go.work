@@ -1,0 +1,14 @@
+go 1.19
+
+use (
+	./
+	./checkdoc
+	./chloggen
+	./crosslink
+	./dbotconf
+	./gotmpl
+	./internal/tools
+	./issuegenerator
+	./multimod
+	./semconvgen
+)
