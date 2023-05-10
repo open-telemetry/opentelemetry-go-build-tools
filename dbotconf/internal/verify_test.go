@@ -23,12 +23,15 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
+// TestRunVerifyErrors tests the error paths of verify.
 func TestRunVerifyErrors(t *testing.T) {
 	assert.ErrorIs(t, verify(nil), errNotEnoughArg)
 	assert.ErrorContains(t, verify([]string{"", ""}), "only single path argument allowed, received")
 }
 
+// TestRunVerify tests the happy path of verify.
 func TestRunVerify(t *testing.T) {
+	// We need to override the functions that finds the files
 	t.Cleanup(func(f func() (string, []*modfile.File, error)) func() {
 		return func() { allModsFunc = f }
 	}(allModsFunc))
@@ -60,26 +63,33 @@ func TestRunVerify(t *testing.T) {
 		}, nil
 	}
 
-	t.Cleanup(func(f func(string) (map[string]struct{}, map[string]struct{}, map[string]struct{}, error)) func() {
+	// Finally, we need to override the function that finds the updates
+	t.Cleanup(func(f func(string) (updates, error)) func() {
 		return func() { configuredUpdatesFunc = f }
 	}(configuredUpdatesFunc))
-	configuredUpdatesFunc = func(string) (map[string]struct{}, map[string]struct{}, map[string]struct{}, error) {
-		return map[string]struct{}{
+	configuredUpdatesFunc = func(string) (updates, error) {
+		return updates{
+			mods: map[string]struct{}{
 				"/":  {},
 				"/a": {},
 				"/b": {},
-			}, map[string]struct{}{
+			},
+			docker: map[string]struct{}{
 				"/":  {},
 				"/a": {},
 				"/b": {},
-			}, map[string]struct{}{
+			},
+			pip: map[string]struct{}{
 				"/": {},
-			}, nil
+			},
+		}, nil
 	}
 
+	// Assert that verify returns no error
 	assert.NoError(t, verify([]string{""}))
 }
 
+// TestRunVerifyMissingRepo tests when there are missing mods
 func TestRunVerifyMissingMods(t *testing.T) {
 	t.Cleanup(func(f func() (string, []*modfile.File, error)) func() {
 		return func() { allModsFunc = f }
@@ -104,16 +114,17 @@ func TestRunVerifyMissingMods(t *testing.T) {
 		return []string{}, nil
 	}
 
-	t.Cleanup(func(f func(string) (map[string]struct{}, map[string]struct{}, map[string]struct{}, error)) func() {
+	t.Cleanup(func(f func(string) (updates, error)) func() {
 		return func() { configuredUpdatesFunc = f }
 	}(configuredUpdatesFunc))
-	configuredUpdatesFunc = func(string) (map[string]struct{}, map[string]struct{}, map[string]struct{}, error) {
-		return map[string]struct{}{}, map[string]struct{}{}, map[string]struct{}{}, nil
+	configuredUpdatesFunc = func(string) (updates, error) {
+		return updates{}, nil
 	}
 
 	assert.ErrorContains(t, verify([]string{""}), "missing update check(s)")
 }
 
+// TestRunVerifyMissingDocker tests when there are missing docker files
 func TestRunVerifyMissingDocker(t *testing.T) {
 	t.Cleanup(func(f func() (string, []*modfile.File, error)) func() {
 		return func() { allModsFunc = f }
@@ -133,14 +144,47 @@ func TestRunVerifyMissingDocker(t *testing.T) {
 		return func() { allPipFunc = f }
 	}(allPipFunc))
 	allPipFunc = func(string) ([]string, error) {
+		return []string{}, nil
+	}
+
+	t.Cleanup(func(f func(string) (updates, error)) func() {
+		return func() { configuredUpdatesFunc = f }
+	}(configuredUpdatesFunc))
+	configuredUpdatesFunc = func(string) (updates, error) {
+		return updates{}, nil
+	}
+
+	assert.ErrorContains(t, verify([]string{""}), "missing update check(s)")
+}
+
+// TestRunVerifyMissingPip tests when there are missing Pip files
+func TestRunVerifyMissingPip(t *testing.T) {
+	t.Cleanup(func(f func() (string, []*modfile.File, error)) func() {
+		return func() { allModsFunc = f }
+	}(allModsFunc))
+	allModsFunc = func() (string, []*modfile.File, error) {
+		return "/home/user/repo", []*modfile.File{}, nil
+	}
+
+	t.Cleanup(func(f func(string) ([]string, error)) func() {
+		return func() { allDockerFunc = f }
+	}(allDockerFunc))
+	allDockerFunc = func(string) ([]string, error) {
+		return []string{}, nil
+	}
+
+	t.Cleanup(func(f func(string) ([]string, error)) func() {
+		return func() { allPipFunc = f }
+	}(allPipFunc))
+	allPipFunc = func(string) ([]string, error) {
 		return []string{"/home/user/repo/requirements.txt"}, nil
 	}
 
-	t.Cleanup(func(f func(string) (map[string]struct{}, map[string]struct{}, map[string]struct{}, error)) func() {
+	t.Cleanup(func(f func(string) (updates, error)) func() {
 		return func() { configuredUpdatesFunc = f }
 	}(configuredUpdatesFunc))
-	configuredUpdatesFunc = func(string) (map[string]struct{}, map[string]struct{}, map[string]struct{}, error) {
-		return map[string]struct{}{}, map[string]struct{}{}, map[string]struct{}{}, nil
+	configuredUpdatesFunc = func(string) (updates, error) {
+		return updates{}, nil
 	}
 
 	assert.ErrorContains(t, verify([]string{""}), "missing update check(s)")
@@ -174,6 +218,31 @@ func TestRunVerifyReturnAllDockerError(t *testing.T) {
 	assert.ErrorIs(t, verify([]string{""}), assert.AnError)
 }
 
+func TestRunVerifyReturnAllPipError(t *testing.T) {
+	t.Cleanup(func(f func() (string, []*modfile.File, error)) func() {
+		return func() { allModsFunc = f }
+	}(allModsFunc))
+	allModsFunc = func() (string, []*modfile.File, error) {
+		return "", []*modfile.File{}, nil
+	}
+
+	t.Cleanup(func(f func(string) ([]string, error)) func() {
+		return func() { allDockerFunc = f }
+	}(allDockerFunc))
+	allDockerFunc = func(string) ([]string, error) {
+		return []string{}, assert.AnError
+	}
+
+	t.Cleanup(func(f func(string) ([]string, error)) func() {
+		return func() { allPipFunc = f }
+	}(allPipFunc))
+	allPipFunc = func(string) ([]string, error) {
+		return []string{}, assert.AnError
+	}
+
+	assert.ErrorIs(t, verify([]string{""}), assert.AnError)
+}
+
 func TestRunVerifyReturnConfiguredUpdatesError(t *testing.T) {
 	t.Cleanup(func(f func() (string, []*modfile.File, error)) func() {
 		return func() { allModsFunc = f }
@@ -196,41 +265,41 @@ func TestRunVerifyReturnConfiguredUpdatesError(t *testing.T) {
 		return []string{}, nil
 	}
 
-	t.Cleanup(func(f func(string) (map[string]struct{}, map[string]struct{}, map[string]struct{}, error)) func() {
+	t.Cleanup(func(f func(string) (updates, error)) func() {
 		return func() { configuredUpdatesFunc = f }
 	}(configuredUpdatesFunc))
-	configuredUpdatesFunc = func(string) (map[string]struct{}, map[string]struct{}, map[string]struct{}, error) {
-		return map[string]struct{}{}, map[string]struct{}{}, map[string]struct{}{}, assert.AnError
+	configuredUpdatesFunc = func(string) (updates, error) {
+		return updates{}, assert.AnError
 	}
 	assert.ErrorIs(t, verify([]string{""}), assert.AnError)
 }
 
 func TestConfiguredUpdates(t *testing.T) {
-	modUp, dockerUp, pipUp, err := configuredUpdates("./testdata/dependabot.yml")
+	updates, err := configuredUpdates("./testdata/dependabot.yml")
 	require.NoError(t, err)
 
 	assert.Equal(t, map[string]struct{}{
 		"/":    {},
 		"/a":   {},
 		"/a/b": {},
-	}, modUp)
+	}, updates.mods)
 	assert.Equal(t, map[string]struct{}{
 		"/":            {},
 		"/a/b/example": {},
-	}, dockerUp)
+	}, updates.docker)
 	assert.Equal(t, map[string]struct{}{
 		"/": {},
-	}, pipUp)
+	}, updates.pip)
 }
 
 func TestConfiguredUpdatesBadPath(t *testing.T) {
 	const path = "./testdata/file-does-not-exist"
-	_, _, _, err := configuredUpdates(path)
+	_, err := configuredUpdates(path)
 	errMsg := fmt.Sprintf("dependabot configuration file does not exist: %s", path)
 	assert.EqualError(t, err, errMsg)
 }
 
 func TestConfiguredUpdatesInvalidYAML(t *testing.T) {
-	_, _, _, err := configuredUpdates("./testdata/invalid.yml")
+	_, err := configuredUpdates("./testdata/invalid.yml")
 	assert.ErrorContains(t, err, "invalid dependabot configuration")
 }
