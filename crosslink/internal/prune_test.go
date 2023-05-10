@@ -22,6 +22,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"golang.org/x/mod/modfile"
 )
@@ -206,4 +207,68 @@ func TestPruneReplace(t *testing.T) {
 		t.Errorf("Replace{} mismatch (-want +got):\n%s", diff)
 	}
 
+}
+
+func TestPruneGoWork(t *testing.T) {
+	want := `go 1.19
+
+	// existing valid use statements under root should remain
+	use ./testA
+
+	// invalid use statements under root is REMOVED when prune is used
+	// use ./testC
+	
+	// use statements outside the root should remain
+	use ../other-module
+	
+	// replace statements should remain
+	replace foo.opentelemetery.io/bar => ../bar`
+	mockDir := "testGoWork"
+	lg, _ := zap.NewDevelopment()
+	config := RunConfig{Logger: lg}
+	tmpRootDir, err := createTempTestDir(mockDir)
+	if err != nil {
+		t.Fatal("creating temp dir:", err)
+	}
+
+	err = renameGoMod(tmpRootDir)
+	if err != nil {
+		t.Errorf("error renaming gomod files: %v", err)
+	}
+	t.Cleanup(func() { os.RemoveAll(tmpRootDir) })
+
+	config.RootPath = tmpRootDir
+
+	err = Prune(config)
+	require.NoError(t, err)
+	goWorkContent, err := os.ReadFile(filepath.Clean(filepath.Join(tmpRootDir, "go.work")))
+	require.NoError(t, err)
+
+	actual, err := modfile.ParseWork("go.work", goWorkContent, nil)
+	require.NoError(t, err)
+	actual.Cleanup()
+
+	expected, err := modfile.ParseWork("go.work", []byte(want), nil)
+	require.NoError(t, err)
+	expected.Cleanup()
+
+	// replace structs need to be assorted to avoid flaky fails in test
+	replaceSortFunc := func(x, y *modfile.Replace) bool {
+		return x.Old.Path < y.Old.Path
+	}
+
+	// use structs need to be assorted to avoid flaky fails in test
+	useSortFunc := func(x, y *modfile.Use) bool {
+		return x.Path < y.Path
+	}
+
+	if diff := cmp.Diff(expected, actual,
+		cmpopts.IgnoreFields(modfile.Use{}, "Syntax", "ModulePath"),
+		cmpopts.IgnoreFields(modfile.Replace{}, "Syntax"),
+		cmpopts.IgnoreFields(modfile.WorkFile{}, "Syntax"),
+		cmpopts.SortSlices(replaceSortFunc),
+		cmpopts.SortSlices(useSortFunc),
+	); diff != "" {
+		t.Errorf("go.work mismatch (-want +got):\n%s", diff)
+	}
 }
