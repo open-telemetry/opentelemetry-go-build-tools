@@ -72,5 +72,4 @@ func createTempTestDir(testName string) (string, error) {
 	}
 
 	return tmpRootDir, nil
-
 }

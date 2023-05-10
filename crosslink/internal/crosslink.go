@@ -64,6 +64,8 @@ func Crosslink(rc RunConfig) error {
 	// update go.work file
 	var modules []string
 	for module, _ := range graph {
+		// TODO: skip excluded
+
 		localPath, err := filepath.Rel(rootModulePath, module)
 		if err != nil {
 			return fmt.Errorf("failed to retrieve relative path: %w", err)
@@ -170,8 +172,6 @@ func updateGoWork(modules []string, rc RunConfig) error {
 	}
 
 	for _, useToAdd := range modules {
-		// TODO: skip excluded
-
 		if existingGoWorkUses[useToAdd] {
 			continue
 		}

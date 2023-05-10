@@ -497,6 +497,31 @@ func TestGoWork(t *testing.T) {
 			// replace statements should remain
 			replace foo.opentelemetery.io/bar => ../bar`,
 		},
+		{
+			testName: "excluded",
+			config: RunConfig{Logger: lg, ExcludedPaths: map[string]struct{}{
+				"go.opentelemetry.io/build-tools/crosslink/testroot/testB": {},
+			}},
+			expected: `go 1.19
+
+			// new statement added by crosslink
+			use ./
+
+			// existing valid use statements under root should remain
+			use ./testA
+
+			// do not add EXCLUDED modules
+			// use ./testB
+			
+			// invalid use statements under root should be removed ONLY if prune is used
+			use ./testC
+			
+			// use statements outside the root should remain
+			use ../other-module
+			
+			// replace statements should remain
+			replace foo.opentelemetery.io/bar => ../bar`,
+		},
 	}
 
 	for _, test := range tests {
