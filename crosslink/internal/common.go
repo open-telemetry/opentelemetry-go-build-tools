@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"go.uber.org/zap"
@@ -61,6 +62,7 @@ func buildUses(rootModulePath string, graph map[string]*moduleInfo, rc RunConfig
 		}
 		uses = append(uses, localPath)
 	}
+	sort.Strings(uses)
 	return uses, nil
 }
 
