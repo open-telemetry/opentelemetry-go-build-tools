@@ -18,7 +18,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"go.uber.org/zap"
 	"golang.org/x/mod/modfile"
 )
 
@@ -38,6 +40,30 @@ func identifyRootModule(rootPath string) (string, error) {
 	return modfile.ModulePath(rootModFile), nil
 }
 
+func buildUses(rootModulePath string, graph map[string]*moduleInfo, rc RunConfig) ([]string, error) {
+	var uses []string
+	for module := range graph {
+		// skip excluded
+		if _, exists := rc.ExcludedPaths[module]; exists {
+			rc.Logger.Debug("Excluded Module, ignoring use",
+				zap.String("module", module))
+			continue
+		}
+
+		localPath, err := filepath.Rel(rootModulePath, module)
+		if err != nil {
+			return nil, fmt.Errorf("failed to retrieve relative path: %w", err)
+		}
+		if localPath == "." || localPath == ".." {
+			localPath += "/"
+		} else if !strings.HasPrefix(localPath, "..") {
+			localPath = "./" + localPath
+		}
+		uses = append(uses, localPath)
+	}
+	return uses, nil
+}
+
 func writeModule(module *moduleInfo) error {
 	modContents := module.moduleContents
 	//  now overwrite the existing gomod file
@@ -52,4 +78,19 @@ func writeModule(module *moduleInfo) error {
 	}
 
 	return nil
+}
+
+func openGoWork(rc RunConfig) (*modfile.WorkFile, error) {
+	goWorkPath := filepath.Join(rc.RootPath, "go.work")
+	content, err := os.ReadFile(filepath.Clean(goWorkPath))
+	if err != nil {
+		return nil, err
+	}
+	return modfile.ParseWork(goWorkPath, content, nil)
+}
+
+func writeGoWork(goWork *modfile.WorkFile, rc RunConfig) error {
+	goWorkPath := filepath.Join(rc.RootPath, "go.work")
+	content := modfile.Format(goWork.Syntax)
+	return os.WriteFile(goWorkPath, content, 0600)
 }

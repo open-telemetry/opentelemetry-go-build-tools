@@ -62,27 +62,11 @@ func Crosslink(rc RunConfig) error {
 	}
 
 	// update go.work file
-	var modules []string
-	for module := range graph {
-		// skip excluded
-		if _, exists := rc.ExcludedPaths[module]; exists {
-			rc.Logger.Debug("Excluded Module, ignoring use",
-				zap.String("module", module))
-			continue
-		}
-
-		localPath, err := filepath.Rel(rootModulePath, module)
-		if err != nil {
-			return fmt.Errorf("failed to retrieve relative path: %w", err)
-		}
-		if localPath == "." || localPath == ".." {
-			localPath += "/"
-		} else if !strings.HasPrefix(localPath, "..") {
-			localPath = "./" + localPath
-		}
-		modules = append(modules, localPath)
+	uses, err := buildUses(rootModulePath, graph, rc)
+	if err != nil {
+		return err
 	}
-	return updateGoWork(modules, rc)
+	return updateGoWork(uses, rc)
 }
 
 func insertReplace(module *moduleInfo, rc RunConfig) error {
@@ -156,16 +140,10 @@ func containsReplace(replaceStatments []*modfile.Replace, modName string) (*modf
 }
 
 func updateGoWork(uses []string, rc RunConfig) error {
-	goWorkPath := filepath.Join(rc.RootPath, "go.work")
-	content, err := os.ReadFile(filepath.Clean(goWorkPath))
+	goWork, err := openGoWork(rc)
 	if errors.Is(err, os.ErrNotExist) {
 		return nil
 	}
-	if err != nil {
-		return err
-	}
-
-	goWork, err := modfile.ParseWork(goWorkPath, content, nil)
 	if err != nil {
 		return err
 	}
@@ -188,41 +166,8 @@ func updateGoWork(uses []string, rc RunConfig) error {
 	}
 
 	if rc.Prune {
-		requiredUses := make(map[string]bool, len(uses))
-		for _, use := range uses {
-			requiredUses[use] = true
-		}
-
-		usesToKeep := existingGoWorkUses
-		for use := range usesToKeep {
-			// check to see if its intra dependency
-			if !strings.HasPrefix(use, "./") {
-				continue
-			}
-
-			// check if the intra depdency is stil up to date
-			if requiredUses[use] {
-				continue
-			}
-
-			usesToKeep[use] = false
-		}
-
-		// remove unnecessary uses
-		for use, needed := range usesToKeep {
-			if needed {
-				continue
-			}
-
-			err := goWork.DropUse(use)
-			if err != nil {
-				rc.Logger.Error("Failed to drop use statement", zap.Error(err),
-					zap.String("path", use))
-			}
-		}
-
+		pruneUse(goWork, uses, rc)
 	}
 
-	content = modfile.Format(goWork.Syntax)
-	return os.WriteFile(goWorkPath, content, 0600)
+	return writeGoWork(goWork, rc)
 }

@@ -15,10 +15,13 @@
 package crosslink
 
 import (
+	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"go.uber.org/zap"
+	"golang.org/x/mod/modfile"
 )
 
 // main entry point for the Prune subcommand.
@@ -47,7 +50,21 @@ func Prune(rc RunConfig) error {
 				zap.Error(err))
 		}
 	}
-	return nil
+
+	// update go.work file
+	uses, err := buildUses(rootModulePath, graph, rc)
+	if err != nil {
+		return err
+	}
+	goWork, err := openGoWork(rc)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	pruneUse(goWork, uses, rc)
+	return writeGoWork(goWork, rc)
 }
 
 // pruneReplace removes any extraneous intra-repository replace statements.
@@ -81,4 +98,44 @@ func pruneReplace(rootModulePath string, module *moduleInfo, rc RunConfig) {
 		}
 	}
 	module.moduleContents = modContents
+}
+
+// pruneUses removes any extraneous intra-repository use statements.
+func pruneUse(goWork *modfile.WorkFile, uses []string, rc RunConfig) {
+	requiredUses := make(map[string]bool, len(uses))
+	for _, use := range uses {
+		requiredUses[use] = true
+	}
+
+	usesToKeep := make(map[string]bool, len(goWork.Use))
+	for _, use := range goWork.Use {
+		usesToKeep[use.Path] = true
+	}
+
+	for use := range usesToKeep {
+		// check to see if its intra dependency
+		if !strings.HasPrefix(use, "./") {
+			continue
+		}
+
+		// check if the intra dependency is still used
+		if requiredUses[use] {
+			continue
+		}
+
+		usesToKeep[use] = false
+	}
+
+	// remove unnecessary uses
+	for use, needed := range usesToKeep {
+		if needed {
+			continue
+		}
+
+		err := goWork.DropUse(use)
+		if err != nil {
+			rc.Logger.Error("Failed to drop use statement", zap.Error(err),
+				zap.String("path", use))
+		}
+	}
 }
