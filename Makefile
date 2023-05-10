@@ -206,5 +206,5 @@ chlog-update: | $(CHLOGGEN)
 
 .PHONY: crosslink
 crosslink: | $(CROSSLINK)
-	@echo "Updating intra-repository dependencies in all go modules" \
+	@echo "Updating intra-repository dependencies in all go modules and go.work" \
 		&& $(CROSSLINK) --root=$(shell pwd) --prune
