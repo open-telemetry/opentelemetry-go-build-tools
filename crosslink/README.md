@@ -2,7 +2,8 @@
 
 Crosslink is a tool to assist in managing go repositories that contain multiple
 intra-repository `go.mod` files. Crosslink automatically scans and inserts
-replace statements for direct and transitive intra-repository dependencies.
+replace statements for direct and transitive intra-repository dependencies
+to `go.mod` files as well as root `go.work` file (if exists).
 Crosslink also contains functionality to remove any extra replace statements
 that are no longer required within reason (see below).
 
