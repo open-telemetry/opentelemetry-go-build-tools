@@ -15,7 +15,9 @@
 package crosslink
 
 import (
+	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -38,6 +40,7 @@ func Crosslink(rc RunConfig) error {
 		return fmt.Errorf("failed to build dependency graph: %w", err)
 	}
 
+	// update go.mod files
 	for moduleName, moduleInfo := range graph {
 		err = insertReplace(moduleInfo, rc)
 		logger := rc.Logger.With(zap.String("module", moduleName))
@@ -57,7 +60,22 @@ func Crosslink(rc RunConfig) error {
 				zap.Error(err))
 		}
 	}
-	return nil
+
+	// update go.work file
+	var modules []string
+	for module, _ := range graph {
+		localPath, err := filepath.Rel(rootModulePath, module)
+		if err != nil {
+			return fmt.Errorf("failed to retrieve relative path: %w", err)
+		}
+		if localPath == "." || localPath == ".." {
+			localPath += "/"
+		} else if !strings.HasPrefix(localPath, "..") {
+			localPath = "./" + localPath
+		}
+		modules = append(modules, localPath)
+	}
+	return updateGoWork(modules, rc)
 }
 
 func insertReplace(module *moduleInfo, rc RunConfig) error {
@@ -128,4 +146,42 @@ func containsReplace(replaceStatments []*modfile.Replace, modName string) (*modf
 		}
 	}
 	return nil, false
+}
+
+func updateGoWork(modules []string, rc RunConfig) error {
+	goWorkPath := filepath.Join(rc.RootPath, "go.work")
+	content, err := os.ReadFile(filepath.Clean(goWorkPath))
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	goWork, err := modfile.ParseWork(goWorkPath, content, nil)
+	if err != nil {
+		return err
+	}
+
+	// add missing uses
+	existingGoWorkUses := make(map[string]bool, len(goWork.Use))
+	for _, use := range goWork.Use {
+		existingGoWorkUses[use.Path] = true
+	}
+
+	for _, useToAdd := range modules {
+		// TODO: skip excluded
+
+		if existingGoWorkUses[useToAdd] {
+			continue
+		}
+		err := goWork.AddUse(useToAdd, "")
+		if err != nil {
+			rc.Logger.Error("Failed to add use statement", zap.Error(err),
+				zap.String("module", useToAdd))
+		}
+	}
+
+	content = modfile.Format(goWork.Syntax)
+	return os.WriteFile(goWorkPath, content, 0600)
 }

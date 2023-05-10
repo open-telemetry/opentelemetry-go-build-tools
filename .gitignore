@@ -8,6 +8,8 @@ Thumbs.db
 *.so
 coverage.*
 
+crosslink/internal/test_data/
+
 checkdoc/checkdoc
 chloggen/chloggen
 crosslink/crosslink

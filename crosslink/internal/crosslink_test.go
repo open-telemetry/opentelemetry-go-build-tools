@@ -456,6 +456,9 @@ func TestGoWork(t *testing.T) {
 			config:   RunConfig{Logger: lg},
 			expected: `go 1.19
 
+			// new statement added by crosslink
+			use ./
+
 			// existing valid use statements under root should remain
 			use ./testA
 		
@@ -476,10 +479,13 @@ func TestGoWork(t *testing.T) {
 			config:   RunConfig{Logger: lg, Prune: true},
 			expected: `go 1.19
 
+			// new statement added by crosslink
+			use ./
+
 			// existing valid use statements under root should remain
 			use ./testA
-		
-			// new statement added by crossling
+
+			// new statement added by crosslink
 			use ./testB
 			
 			// invalid use statements under root is REMOVED when prune is used
