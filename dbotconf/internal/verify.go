@@ -94,7 +94,7 @@ func verify(args []string) error {
 		return err
 	}
 
-	updates, err := configuredUpdatesFunc(args[0])
+	u, err := configuredUpdatesFunc(args[0])
 
 	if err != nil {
 		return err
@@ -107,7 +107,7 @@ func verify(args []string) error {
 			return err
 		}
 
-		if _, ok := updates.mods[local]; !ok {
+		if _, ok := u.mods[local]; !ok {
 			missingMod = append(missingMod, local)
 		}
 	}
@@ -118,7 +118,7 @@ func verify(args []string) error {
 			return err
 		}
 
-		if _, ok := updates.docker[local]; !ok {
+		if _, ok := u.docker[local]; !ok {
 			missingDocker = append(missingDocker, local)
 		}
 	}
@@ -129,7 +129,7 @@ func verify(args []string) error {
 			return err
 		}
 
-		if _, ok := updates.pip[local]; !ok {
+		if _, ok := u.pip[local]; !ok {
 			missingPip = append(missingPip, local)
 		}
 	}
