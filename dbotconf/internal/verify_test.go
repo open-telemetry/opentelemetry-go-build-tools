@@ -230,7 +230,7 @@ func TestRunVerifyReturnAllPipError(t *testing.T) {
 		return func() { allDockerFunc = f }
 	}(allDockerFunc))
 	allDockerFunc = func(string) ([]string, error) {
-		return []string{}, assert.AnError
+		return []string{}, nil
 	}
 
 	t.Cleanup(func(f func(string) ([]string, error)) func() {
