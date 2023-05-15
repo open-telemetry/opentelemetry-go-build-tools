@@ -46,27 +46,7 @@ func TestWork(t *testing.T) {
 			// new statement added by crossling
 			use ./testB
 			
-			// invalid use statements under root should be removed ONLY if prune is used
-			use ./testC
-			
-			// use statements outside the root should remain
-			use ../other-module
-			
-			// replace statements should remain
-			replace foo.opentelemetery.io/bar => ../bar`,
-		},
-		{
-			testName: "prune",
-			config:   RunConfig{Logger: lg, Prune: true},
-			expected: `go 1.19
-			// new statement added by crosslink
-			use ./
-			// existing valid use statements under root should remain
-			use ./testA
-			// new statement added by crosslink
-			use ./testB
-			
-			// invalid use statements under root is REMOVED when prune is used
+			// invalid use statements under root should be removed
 			// use ./testC
 			
 			// use statements outside the root should remain
@@ -79,16 +59,18 @@ func TestWork(t *testing.T) {
 			testName: "excluded",
 			config: RunConfig{Logger: lg, ExcludedPaths: map[string]struct{}{
 				"go.opentelemetry.io/build-tools/crosslink/testroot/testB": {},
+				"go.opentelemetry.io/build-tools/crosslink/testroot/testC": {},
 			}},
 			expected: `go 1.19
 			// new statement added by crosslink
 			use ./
 			// existing valid use statements under root should remain
 			use ./testA
+
 			// do not add EXCLUDED modules
 			// use ./testB
 			
-			// invalid use statements under root should be removed ONLY if prune is used
+			// do not add remove EXCLUDED modules
 			use ./testC
 			
 			// use statements outside the root should remain
