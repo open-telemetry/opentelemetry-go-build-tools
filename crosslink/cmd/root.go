@@ -135,11 +135,13 @@ func init() {
 
 	comCfg.rootCommand.PersistentFlags().StringVar(&comCfg.runConfig.RootPath, "root", "", `path to root directory of multi-module repository. If --root flag is not provided crosslink will attempt to find a
 	git repository in the current or a parent directory.`)
-	comCfg.rootCommand.PersistentFlags().StringSliceVar(&comCfg.excludeFlags, "exclude", []string{}, "list of comma separated go modules that crosslink will ignore in operations."+
-		"multiple calls of --exclude can be made")
 	comCfg.rootCommand.PersistentFlags().BoolVarP(&comCfg.runConfig.Verbose, "verbose", "v", false, "verbose output")
+	comCfg.rootCommand.Flags().StringSliceVar(&comCfg.excludeFlags, "exclude", []string{}, "list of comma separated go modules that crosslink will ignore in operations."+
+		"multiple calls of --exclude can be made")
 	comCfg.rootCommand.Flags().BoolVar(&comCfg.runConfig.Overwrite, "overwrite", false, "overwrite flag allows crosslink to make destructive (replacing or updating) actions to existing go.mod files")
-	comCfg.rootCommand.Flags().BoolVarP(&comCfg.runConfig.Prune, "prune", "p", false, "enables pruning operations on all go.mod files inside root repository")
+	comCfg.rootCommand.Flags().BoolVarP(&comCfg.runConfig.Prune, "prune", "p", false, "enables pruning operations on ll go.mod files inside root repository")
+	comCfg.pruneCommand.Flags().StringSliceVar(&comCfg.excludeFlags, "exclude", []string{}, "list of comma separated go modules that crosslink will ignore in operations."+
+		"multiple calls of --exclude can be made")
 }
 
 // transform array slice into map
