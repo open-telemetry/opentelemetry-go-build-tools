@@ -32,22 +32,22 @@ func TestWorkUpdate(t *testing.T) {
 
 	mockDir := "testWork"
 	want := `go 1.19
-			// new statement added by crosslink
-			use ./
-			// existing valid use statements under root should remain
-			use ./testA
-		
-			// new statement added by crossling
-			use ./testB
-			
-			// invalid use statements under root should be removed
-			// use ./testC
-			
-			// use statements outside the root should remain
-			use ../other-module
-			
-			// replace statements should remain
-			replace foo.opentelemetery.io/bar => ../bar`
+// new statement added by crosslink
+use ./
+// existing valid use statements under root should remain
+use ./testA
+
+// new statement added by crossling
+use ./testB
+
+// invalid use statements under root should be removed
+// use ./testC
+
+// use statements outside the root should remain
+use ../other-module
+
+// replace statements should remain
+replace foo.opentelemetery.io/bar => ../bar`
 
 	tmpRootDir, err := createTempTestDir(mockDir)
 	if err != nil {
@@ -73,9 +73,9 @@ func TestWorkNew(t *testing.T) {
 
 	mockDir := "testWork"
 	want := `go 1.20
-			use ./
-			use ./testA
-			use ./testB`
+use ./
+use ./testA
+use ./testB`
 
 	tmpRootDir, err := createTempTestDir(mockDir)
 	if err != nil {
