@@ -5,7 +5,7 @@ change_type: enhancement
 component: dbotconf
 
 # A brief description of the change.  Surround your text with quotes ("") if it needs to start with a backtick (`).
-note: "Add support for pip package ecosystem to dbotconf"
+note: "Add support for pip package ecosystem."
 
 # One or more tracking issues related to the change
 issues: [307]
