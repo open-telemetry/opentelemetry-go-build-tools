@@ -133,6 +133,6 @@ before running crosslink.**
 
 ### work
 
-Creates or updates exising `go.work` file by adding use statements
+Creates or updates existing `go.work` file by adding use statements
 for all intra-repository Go modules. It also removes use statements
 for out-dated intra-repository Go modules.
