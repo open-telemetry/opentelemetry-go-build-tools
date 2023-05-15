@@ -17,7 +17,6 @@ package crosslink
 import (
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -30,7 +29,7 @@ import (
 func Work(rc RunConfig) error {
 	rc.Logger.Debug("Crosslink run config", zap.Any("run_config", rc))
 
-	uses, err := intraRepoUses(rc.RootPath)
+	uses, err := intraRepoUses(rc)
 	if err != nil {
 		return fmt.Errorf("failed to find Go modules: %w", err)
 	}
@@ -53,18 +52,9 @@ func Work(rc RunConfig) error {
 	return writeGoWork(goWork, rc)
 }
 
-func intraRepoUses(rootPath string) ([]string, error) {
+func intraRepoUses(rc RunConfig) ([]string, error) {
 	var uses []string
-	err := fs.WalkDir(os.DirFS(rootPath), ".", func(path string, dir fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		// find Go module
-		if dir.Name() != "go.mod" {
-			return nil
-		}
-
+	err := forGoModules(rc.Logger, rc.RootPath, func(path string) error {
 		// normalize use statement (path)
 		use := filepath.Dir(path)
 		if use == "." {

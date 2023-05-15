@@ -16,9 +16,11 @@ package crosslink
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 
+	"go.uber.org/zap"
 	"golang.org/x/mod/modfile"
 )
 
@@ -52,4 +54,22 @@ func writeModule(module *moduleInfo) error {
 	}
 
 	return nil
+}
+
+func forGoModules(logger *zap.Logger, rootPath string, fn func(path string) error) error {
+	return fs.WalkDir(os.DirFS(rootPath), ".", func(path string, dir fs.DirEntry, err error) error {
+		if err != nil {
+			logger.Warn("File could not be read during fs.WalkDir",
+				zap.Error(err),
+				zap.String("path", path))
+			return nil
+		}
+
+		// find Go module
+		if dir.Name() != "go.mod" {
+			return nil
+		}
+
+		return fn(path)
+	})
 }
