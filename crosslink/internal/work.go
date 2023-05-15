@@ -94,7 +94,7 @@ func writeGoWork(goWork *modfile.WorkFile, rc RunConfig) error {
 	return os.WriteFile(goWorkPath, content, 0600)
 }
 
-// pruneUses removes any missing intra-repository use statements.
+// insertUses adds any missing intra-repository use statements.
 func insertUses(goWork *modfile.WorkFile, uses []string, rc RunConfig) {
 	existingGoWorkUses := make(map[string]bool, len(goWork.Use))
 	for _, use := range goWork.Use {
