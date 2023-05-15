@@ -55,30 +55,31 @@ func TestWork(t *testing.T) {
 			// replace statements should remain
 			replace foo.opentelemetery.io/bar => ../bar`,
 		},
-		{
-			testName: "excluded",
-			config: RunConfig{Logger: lg, ExcludedPaths: map[string]struct{}{
-				"go.opentelemetry.io/build-tools/crosslink/testroot/testB": {},
-				"go.opentelemetry.io/build-tools/crosslink/testroot/testC": {},
-			}},
-			expected: `go 1.19
-			// new statement added by crosslink
-			use ./
-			// existing valid use statements under root should remain
-			use ./testA
+		// excluded flag is NOT supported
+		// {
+		// 	testName: "excluded",
+		// 	config: RunConfig{Logger: lg, ExcludedPaths: map[string]struct{}{
+		// 		"go.opentelemetry.io/build-tools/crosslink/testroot/testB": {},
+		// 		"go.opentelemetry.io/build-tools/crosslink/testroot/testC": {},
+		// 	}},
+		// 	expected: `go 1.19
+		// 	// new statement added by crosslink
+		// 	use ./
+		// 	// existing valid use statements under root should remain
+		// 	use ./testA
 
-			// do not add EXCLUDED modules
-			// use ./testB
-			
-			// do not add remove EXCLUDED modules
-			use ./testC
-			
-			// use statements outside the root should remain
-			use ../other-module
-			
-			// replace statements should remain
-			replace foo.opentelemetery.io/bar => ../bar`,
-		},
+		// 	// do not add EXCLUDED modules
+		// 	// use ./testB
+
+		// 	// do not add remove EXCLUDED modules
+		// 	use ./testC
+
+		// 	// use statements outside the root should remain
+		// 	use ../other-module
+
+		// 	// replace statements should remain
+		// 	replace foo.opentelemetery.io/bar => ../bar`,
+		// },
 	}
 
 	for _, test := range tests {
