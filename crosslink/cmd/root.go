@@ -105,6 +105,15 @@ func newCommandConfig() *commandConfig {
 		},
 	}
 	c.rootCommand.AddCommand(&c.pruneCommand)
+
+	c.rootCommand.AddCommand(&cobra.Command{
+		Use:   "work",
+		Short: "Generate or update the go.work file with use statements for intra-repository dependencies",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cl.Work(c.runConfig)
+		},
+	})
+
 	return c
 }
 
