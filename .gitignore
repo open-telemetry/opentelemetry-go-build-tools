@@ -10,6 +10,9 @@ coverage.*
 go.work
 go.work.sum
 
+crosslink/internal/test_data/
+!crosslink/internal/test_data/.placeholder
+
 checkdoc/checkdoc
 chloggen/chloggen
 crosslink/crosslink
