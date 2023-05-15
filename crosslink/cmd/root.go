@@ -33,6 +33,7 @@ type commandConfig struct {
 	excludeFlags []string
 	rootCommand  cobra.Command
 	pruneCommand cobra.Command
+	workCommand  cobra.Command
 }
 
 func newCommandConfig() *commandConfig {
@@ -106,13 +107,14 @@ func newCommandConfig() *commandConfig {
 	}
 	c.rootCommand.AddCommand(&c.pruneCommand)
 
-	c.rootCommand.AddCommand(&cobra.Command{
+	c.workCommand = cobra.Command{
 		Use:   "work",
 		Short: "Generate or update the go.work file with use statements for intra-repository dependencies",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cl.Work(c.runConfig)
 		},
-	})
+	}
+	c.rootCommand.AddCommand(&c.workCommand)
 
 	return c
 }
@@ -132,7 +134,6 @@ func Execute() {
 }
 
 func init() {
-
 	comCfg.rootCommand.PersistentFlags().StringVar(&comCfg.runConfig.RootPath, "root", "", `path to root directory of multi-module repository. If --root flag is not provided crosslink will attempt to find a
 	git repository in the current or a parent directory.`)
 	comCfg.rootCommand.PersistentFlags().BoolVarP(&comCfg.runConfig.Verbose, "verbose", "v", false, "verbose output")
@@ -142,6 +143,7 @@ func init() {
 	comCfg.rootCommand.Flags().BoolVarP(&comCfg.runConfig.Prune, "prune", "p", false, "enables pruning operations on ll go.mod files inside root repository")
 	comCfg.pruneCommand.Flags().StringSliceVar(&comCfg.excludeFlags, "exclude", []string{}, "list of comma separated go modules that crosslink will ignore in operations."+
 		"multiple calls of --exclude can be made")
+	comCfg.workCommand.Flags().StringVar(&comCfg.runConfig.GoVersion, "go", "1.19", "Go version applied when new go.work is created")
 }
 
 // transform array slice into map

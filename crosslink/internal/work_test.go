@@ -26,18 +26,12 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
-func TestWork(t *testing.T) {
+func TestWorkUpdate(t *testing.T) {
 	lg, _ := zap.NewDevelopment()
+	config := RunConfig{Logger: lg}
 
-	tests := []struct {
-		testName string
-		config   RunConfig
-		expected string
-	}{
-		{
-			testName: "default",
-			config:   RunConfig{Logger: lg},
-			expected: `go 1.19
+	mockDir := "testWork"
+	expected := `go 1.19
 			// new statement added by crosslink
 			use ./
 			// existing valid use statements under root should remain
@@ -53,83 +47,112 @@ func TestWork(t *testing.T) {
 			use ../other-module
 			
 			// replace statements should remain
-			replace foo.opentelemetery.io/bar => ../bar`,
-		},
-		// excluded flag is NOT supported
-		// {
-		// 	testName: "excluded",
-		// 	config: RunConfig{Logger: lg, ExcludedPaths: map[string]struct{}{
-		// 		"go.opentelemetry.io/build-tools/crosslink/testroot/testB": {},
-		// 		"go.opentelemetry.io/build-tools/crosslink/testroot/testC": {},
-		// 	}},
-		// 	expected: `go 1.19
-		// 	// new statement added by crosslink
-		// 	use ./
-		// 	// existing valid use statements under root should remain
-		// 	use ./testA
+			replace foo.opentelemetery.io/bar => ../bar`
 
-		// 	// do not add EXCLUDED modules
-		// 	// use ./testB
-
-		// 	// do not add remove EXCLUDED modules
-		// 	use ./testC
-
-		// 	// use statements outside the root should remain
-		// 	use ../other-module
-
-		// 	// replace statements should remain
-		// 	replace foo.opentelemetery.io/bar => ../bar`,
-		// },
+	tmpRootDir, err := createTempTestDir(mockDir)
+	if err != nil {
+		t.Fatal("creating temp dir:", err)
 	}
 
-	for _, test := range tests {
-		t.Run(test.testName, func(t *testing.T) {
-			mockDir := "testWork"
-			tmpRootDir, err := createTempTestDir(mockDir)
-			if err != nil {
-				t.Fatal("creating temp dir:", err)
-			}
+	err = renameGoMod(tmpRootDir)
+	if err != nil {
+		t.Errorf("error renaming gomod files: %v", err)
+	}
+	t.Cleanup(func() { os.RemoveAll(tmpRootDir) })
 
-			err = renameGoMod(tmpRootDir)
-			if err != nil {
-				t.Errorf("error renaming gomod files: %v", err)
-			}
-			t.Cleanup(func() { os.RemoveAll(tmpRootDir) })
+	config.RootPath = tmpRootDir
 
-			test.config.RootPath = tmpRootDir
+	err = Work(config)
+	require.NoError(t, err)
+	goWorkContent, err := os.ReadFile(filepath.Clean(filepath.Join(tmpRootDir, "go.work")))
+	require.NoError(t, err)
 
-			err = Work(test.config)
-			require.NoError(t, err)
-			goWorkContent, err := os.ReadFile(filepath.Clean(filepath.Join(tmpRootDir, "go.work")))
-			require.NoError(t, err)
+	actual, err := modfile.ParseWork("go.work", goWorkContent, nil)
+	require.NoError(t, err)
+	actual.Cleanup()
 
-			actual, err := modfile.ParseWork("go.work", goWorkContent, nil)
-			require.NoError(t, err)
-			actual.Cleanup()
+	want, err := modfile.ParseWork("go.work", []byte(expected), nil)
+	require.NoError(t, err)
+	want.Cleanup()
 
-			expected, err := modfile.ParseWork("go.work", []byte(test.expected), nil)
-			require.NoError(t, err)
-			expected.Cleanup()
+	// replace structs need to be assorted to avoid flaky fails in test
+	replaceSortFunc := func(x, y *modfile.Replace) bool {
+		return x.Old.Path < y.Old.Path
+	}
 
-			// replace structs need to be assorted to avoid flaky fails in test
-			replaceSortFunc := func(x, y *modfile.Replace) bool {
-				return x.Old.Path < y.Old.Path
-			}
+	// use structs need to be assorted to avoid flaky fails in test
+	useSortFunc := func(x, y *modfile.Use) bool {
+		return x.Path < y.Path
+	}
 
-			// use structs need to be assorted to avoid flaky fails in test
-			useSortFunc := func(x, y *modfile.Use) bool {
-				return x.Path < y.Path
-			}
+	if diff := cmp.Diff(want, actual,
+		cmpopts.IgnoreFields(modfile.Use{}, "Syntax", "ModulePath"),
+		cmpopts.IgnoreFields(modfile.Replace{}, "Syntax"),
+		cmpopts.IgnoreFields(modfile.WorkFile{}, "Syntax"),
+		cmpopts.SortSlices(replaceSortFunc),
+		cmpopts.SortSlices(useSortFunc),
+	); diff != "" {
+		t.Errorf("go.work mismatch (-want +got):\n%s", diff)
+	}
+}
 
-			if diff := cmp.Diff(expected, actual,
-				cmpopts.IgnoreFields(modfile.Use{}, "Syntax", "ModulePath"),
-				cmpopts.IgnoreFields(modfile.Replace{}, "Syntax"),
-				cmpopts.IgnoreFields(modfile.WorkFile{}, "Syntax"),
-				cmpopts.SortSlices(replaceSortFunc),
-				cmpopts.SortSlices(useSortFunc),
-			); diff != "" {
-				t.Errorf("go.work mismatch (-want +got):\n%s", diff)
-			}
-		})
+func TestWorkNew(t *testing.T) {
+	lg, _ := zap.NewDevelopment()
+	config := RunConfig{Logger: lg, GoVersion: "1.20"}
+
+	mockDir := "testWork"
+	expected := `go 1.20
+			use ./
+			use ./testA
+			use ./testB`
+
+	tmpRootDir, err := createTempTestDir(mockDir)
+	if err != nil {
+		t.Fatal("creating temp dir:", err)
+	}
+
+	// remove the go.work to make sure new one gets created
+	err = os.Remove(filepath.Join(tmpRootDir, "go.work"))
+	require.NoError(t, err)
+
+	err = renameGoMod(tmpRootDir)
+	if err != nil {
+		t.Errorf("error renaming gomod files: %v", err)
+	}
+	t.Cleanup(func() { os.RemoveAll(tmpRootDir) })
+
+	config.RootPath = tmpRootDir
+
+	err = Work(config)
+	require.NoError(t, err)
+	goWorkContent, err := os.ReadFile(filepath.Clean(filepath.Join(tmpRootDir, "go.work")))
+	require.NoError(t, err)
+
+	actual, err := modfile.ParseWork("go.work", goWorkContent, nil)
+	require.NoError(t, err)
+	actual.Cleanup()
+
+	want, err := modfile.ParseWork("go.work", []byte(expected), nil)
+	require.NoError(t, err)
+	want.Cleanup()
+
+	// replace structs need to be assorted to avoid flaky fails in test
+	replaceSortFunc := func(x, y *modfile.Replace) bool {
+		return x.Old.Path < y.Old.Path
+	}
+
+	// use structs need to be assorted to avoid flaky fails in test
+	useSortFunc := func(x, y *modfile.Use) bool {
+		return x.Path < y.Path
+	}
+
+	if diff := cmp.Diff(want, actual,
+		cmpopts.IgnoreFields(modfile.Use{}, "Syntax", "ModulePath"),
+		cmpopts.IgnoreFields(modfile.Replace{}, "Syntax"),
+		cmpopts.IgnoreFields(modfile.WorkFile{}, "Syntax"),
+		cmpopts.SortSlices(replaceSortFunc),
+		cmpopts.SortSlices(useSortFunc),
+	); diff != "" {
+		t.Errorf("go.work mismatch (-want +got):\n%s", diff)
 	}
 }

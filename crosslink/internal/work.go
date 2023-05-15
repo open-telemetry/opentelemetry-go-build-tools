@@ -37,9 +37,13 @@ func Work(rc RunConfig) error {
 
 	goWork, err := openGoWork(rc)
 	if errors.Is(err, os.ErrNotExist) {
-		return nil
-	}
-	if err != nil {
+		goWork = &modfile.WorkFile{
+			Syntax: &modfile.FileSyntax{},
+		}
+		if addErr := goWork.AddGoStmt(rc.GoVersion); addErr != nil {
+			return fmt.Errorf("failed to create go.work: %w", addErr)
+		}
+	} else if err != nil {
 		return err
 	}
 
