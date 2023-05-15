@@ -31,7 +31,7 @@ func TestWorkUpdate(t *testing.T) {
 	config := RunConfig{Logger: lg}
 
 	mockDir := "testWork"
-	expected := `go 1.19
+	want := `go 1.19
 			// new statement added by crosslink
 			use ./
 			// existing valid use statements under root should remain
@@ -64,36 +64,7 @@ func TestWorkUpdate(t *testing.T) {
 
 	err = Work(config)
 	require.NoError(t, err)
-	goWorkContent, err := os.ReadFile(filepath.Clean(filepath.Join(tmpRootDir, "go.work")))
-	require.NoError(t, err)
-
-	actual, err := modfile.ParseWork("go.work", goWorkContent, nil)
-	require.NoError(t, err)
-	actual.Cleanup()
-
-	want, err := modfile.ParseWork("go.work", []byte(expected), nil)
-	require.NoError(t, err)
-	want.Cleanup()
-
-	// replace structs need to be assorted to avoid flaky fails in test
-	replaceSortFunc := func(x, y *modfile.Replace) bool {
-		return x.Old.Path < y.Old.Path
-	}
-
-	// use structs need to be assorted to avoid flaky fails in test
-	useSortFunc := func(x, y *modfile.Use) bool {
-		return x.Path < y.Path
-	}
-
-	if diff := cmp.Diff(want, actual,
-		cmpopts.IgnoreFields(modfile.Use{}, "Syntax", "ModulePath"),
-		cmpopts.IgnoreFields(modfile.Replace{}, "Syntax"),
-		cmpopts.IgnoreFields(modfile.WorkFile{}, "Syntax"),
-		cmpopts.SortSlices(replaceSortFunc),
-		cmpopts.SortSlices(useSortFunc),
-	); diff != "" {
-		t.Errorf("go.work mismatch (-want +got):\n%s", diff)
-	}
+	assertGoWork(t, want, tmpRootDir)
 }
 
 func TestWorkNew(t *testing.T) {
@@ -101,7 +72,7 @@ func TestWorkNew(t *testing.T) {
 	config := RunConfig{Logger: lg, GoVersion: "1.20"}
 
 	mockDir := "testWork"
-	expected := `go 1.20
+	want := `go 1.20
 			use ./
 			use ./testA
 			use ./testB`
@@ -125,6 +96,12 @@ func TestWorkNew(t *testing.T) {
 
 	err = Work(config)
 	require.NoError(t, err)
+	assertGoWork(t, want, tmpRootDir)
+}
+
+func assertGoWork(t *testing.T, expected string, tmpRootDir string) {
+	t.Helper()
+
 	goWorkContent, err := os.ReadFile(filepath.Clean(filepath.Join(tmpRootDir, "go.work")))
 	require.NoError(t, err)
 
