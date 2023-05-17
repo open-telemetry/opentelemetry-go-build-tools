@@ -27,7 +27,7 @@ var (
 	actionLabels   = []string{"dependencies", "actions", "Skip Changelog"}
 	dockerLabels   = []string{"dependencies", "docker", "Skip Changelog"}
 	goLabels       = []string{"dependencies", "go", "Skip Changelog"}
-	pipLabels      = []string{"dependencies", "pip", "Skip Changelog"}
+	pipLabels      = []string{"dependencies", "python", "Skip Changelog"}
 )
 
 type dependabotConfig struct {
