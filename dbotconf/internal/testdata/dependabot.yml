@@ -59,7 +59,7 @@ updates:
     directory: /
     labels:
       - dependencies
-      - pip
+      - python
       - Skip Changelog
     schedule:
       interval: weekly
