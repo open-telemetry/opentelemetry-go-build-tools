@@ -37,7 +37,7 @@ use ./
 // existing valid use statements under root should remain
 use ./testA
 
-// new statement added by crossling
+// new statement added by crosslink
 use ./testB
 
 // invalid use statements under root should be removed
