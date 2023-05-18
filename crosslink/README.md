@@ -136,3 +136,11 @@ before running crosslink.**
 Creates or updates existing `go.work` file by adding use statements
 for all intra-repository Go modules. It also removes use statements
 for out-dated intra-repository Go modules.
+
+    crosslink work --root=/users/foo/multimodule-go-repo
+
+### --go
+
+ Go version applied when new `go.work` file is created (default "1.19").
+
+    crosslink work --go=1.20
