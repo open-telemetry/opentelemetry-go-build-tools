@@ -1,0 +1,13 @@
+go 1.19
+
+// existing valid use statements under root should remain
+use ./testA
+
+// invalid use statements under root should be removed ONLY if prune is used
+use ./testC
+
+// use statements outside the root should remain
+use ../other-module
+
+// replace statements should remain
+replace foo.opentelemetery.io/bar => ../bar

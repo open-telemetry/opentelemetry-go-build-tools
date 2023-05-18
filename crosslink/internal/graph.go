@@ -16,7 +16,6 @@ package crosslink
 
 import (
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,34 +30,23 @@ import (
 func buildDepedencyGraph(rc RunConfig, rootModulePath string) (map[string]*moduleInfo, error) {
 	moduleMap := make(map[string]*moduleInfo)
 
-	goModFunc := func(filePath string, info fs.FileInfo, err error) error {
+	err := forGoModules(rc.Logger, rc.RootPath, func(path string) error {
+		fullPath := filepath.Join(rc.RootPath, path)
+		modFile, err := os.ReadFile(filepath.Clean(fullPath))
 		if err != nil {
-			rc.Logger.Error("File could not be read during filePath.Walk",
+			return fmt.Errorf("failed to read file: %w", err)
+		}
+
+		modContents, err := modfile.Parse(fullPath, modFile, nil)
+		if err != nil {
+			rc.Logger.Error("Modfile could not be parsed",
 				zap.Error(err),
-				zap.String("file_path", filePath))
-
-			return nil
+				zap.String("file_path", path))
 		}
 
-		if filepath.Base(filePath) == "go.mod" {
-			modFile, err := os.ReadFile(filepath.Clean(filePath))
-			if err != nil {
-				return fmt.Errorf("failed to read file: %w", err)
-			}
-
-			modContents, err := modfile.Parse(filePath, modFile, nil)
-			if err != nil {
-				rc.Logger.Error("Modfile could not be parsed",
-					zap.Error(err),
-					zap.String("file_path", filePath))
-			}
-
-			moduleMap[modfile.ModulePath(modFile)] = newModuleInfo(*modContents)
-		}
+		moduleMap[modfile.ModulePath(modFile)] = newModuleInfo(*modContents)
 		return nil
-	}
-
-	err := filepath.Walk(rc.RootPath, goModFunc)
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed during file walk: %w", err)
 	}
