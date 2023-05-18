@@ -69,8 +69,8 @@ func newCommandConfig() *commandConfig {
 				return fmt.Errorf("could not create zap logger: %w", err)
 			}
 		}
-		return nil
 
+		return nil
 	}
 
 	postRunSetup := func(cmd *cobra.Command, args []string) error {

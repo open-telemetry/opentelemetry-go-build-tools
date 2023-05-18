@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"go.uber.org/zap"
@@ -28,6 +29,10 @@ import (
 // Work is the main entry point for the work subcommand.
 func Work(rc RunConfig) error {
 	rc.Logger.Debug("Crosslink run config", zap.Any("run_config", rc))
+
+	if err := validateGoVersion(rc.GoVersion); err != nil {
+		return err
+	}
 
 	uses, err := intraRepoUses(rc)
 	if err != nil {
@@ -50,6 +55,22 @@ func Work(rc RunConfig) error {
 	pruneUses(goWork, uses, rc)
 
 	return writeGoWork(goWork, rc)
+}
+
+// validateGoVersion checks if goVersion is valid Go release version
+// according to the go.work file syntax:
+// a positive integer followed by a dot and a non-negative integer
+// (for example, 1.18, 1.19).
+// More: https://go.dev/ref/mod#workspaces.
+func validateGoVersion(goVersion string) error {
+	matched, err := regexp.MatchString(`^[1-9]+[0-9]*\.(0|[1-9]+[0-9]*)$`, goVersion)
+	if err != nil {
+		return err
+	}
+	if !matched {
+		return fmt.Errorf("%q is not a valid Go version", goVersion)
+	}
+	return nil
 }
 
 func intraRepoUses(rc RunConfig) ([]string, error) {

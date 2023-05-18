@@ -21,6 +21,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"golang.org/x/mod/modfile"
@@ -28,7 +29,7 @@ import (
 
 func TestWorkUpdate(t *testing.T) {
 	lg, _ := zap.NewDevelopment()
-	config := RunConfig{Logger: lg}
+	config := RunConfig{Logger: lg, GoVersion: "1.20"}
 
 	mockDir := "testWork"
 	want := `go 1.19
@@ -131,5 +132,41 @@ func assertGoWork(t *testing.T, expected string, tmpRootDir string) {
 		cmpopts.SortSlices(useSortFunc),
 	); diff != "" {
 		t.Errorf("go.work mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestGoVersionValid(t *testing.T) {
+	goVersions := []string{
+		"1.0",
+		"1.1",
+		"1.21",
+		"21.0",
+		"10.0",
+	}
+	for _, goVersion := range goVersions {
+		t.Run(goVersion, func(t *testing.T) {
+			err := validateGoVersion(goVersion)
+			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestGoVersionInvalid(t *testing.T) {
+	goVersions := []string{
+		"1.-0",
+		"a.1",
+		"1.2.3",
+		"0.0",
+		"1",
+		"-1.2",
+		"01.2",
+		"1.02",
+	}
+	for _, goVersion := range goVersions {
+		t.Run(goVersion, func(t *testing.T) {
+			err := validateGoVersion(goVersion)
+			assert.Error(t, err)
+
+		})
 	}
 }
