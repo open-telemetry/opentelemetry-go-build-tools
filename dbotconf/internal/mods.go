@@ -27,6 +27,7 @@ import (
 var (
 	allModsFunc           = allMods
 	allDockerFunc         = allDocker
+	allPipFunc            = allPip
 	configuredUpdatesFunc = configuredUpdates
 )
 
@@ -49,6 +50,10 @@ func allMods() (string, []*modfile.File, error) {
 
 func allDocker(root string) ([]string, error) {
 	return repo.FindFilePatternDirs(root, "*Dockerfile*")
+}
+
+func allPip(root string) ([]string, error) {
+	return repo.FindFilePatternDirs(root, "*requirements.txt")
 }
 
 // localModPath returns the dependabot appropriate directory name for module
