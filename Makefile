@@ -57,8 +57,11 @@ $(TOOLS)/crosslink: PACKAGE=go.opentelemetry.io/build-tools/crosslink
 CHLOGGEN = $(TOOLS)/chloggen
 $(TOOLS)/chloggen: PACKAGE=go.opentelemetry.io/build-tools/chloggen
 
+MDATAGEN = $(TOOLS)/mdatagen
+$(TOOLS)/mdatagen: PACKAGE=go.opentelemetry.io/build-tools/mdatagen
+
 .PHONY: tools
-tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD) $(CROSSLINK) $(CHLOGGEN)
+tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD) $(CROSSLINK) $(CHLOGGEN) $(MDATAGEN)
 
 # Build
 
