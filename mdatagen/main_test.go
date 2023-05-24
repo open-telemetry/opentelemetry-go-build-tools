@@ -78,15 +78,13 @@ foo
 				require.NoFileExists(t, filepath.Join(tmpdir, "internal/metadata/generated_config_test.go"))
 			}
 
+			contents, err := os.ReadFile(filepath.Clean(filepath.Join(tmpdir, "README.md")))
+			require.NoError(t, err)
 			if tt.wantStatusGenerated {
 				require.FileExists(t, filepath.Join(tmpdir, "internal/metadata/generated_status.go"))
-				contents, err := os.ReadFile(filepath.Join(tmpdir, "README.md"))
-				require.NoError(t, err)
 				require.NotContains(t, string(contents), "foo")
 			} else {
 				require.NoFileExists(t, filepath.Join(tmpdir, "internal/metadata/generated_status.go"))
-				contents, err := os.ReadFile(filepath.Join(tmpdir, "README.md"))
-				require.NoError(t, err)
 				require.Contains(t, string(contents), "foo")
 			}
 		})
@@ -248,7 +246,7 @@ Some info about a component
 			require.NoError(t, err)
 
 			require.FileExists(t, filepath.Join(tmpdir, "README.md"))
-			got, err := os.ReadFile(filepath.Join(tmpdir, "README.md"))
+			got, err := os.ReadFile(filepath.Clean(filepath.Join(tmpdir, "README.md")))
 			require.NoError(t, err)
 			got = bytes.ReplaceAll(got, []byte("\r\n"), []byte("\n"))
 			expected, err := os.ReadFile(filepath.Join("testdata", tt.outputFile))
@@ -322,7 +320,7 @@ const (
 			err := generateFile("templates/status.go.tmpl",
 				filepath.Join(tmpdir, "generated_status.go"), tt.md)
 			require.NoError(t, err)
-			actual, err := os.ReadFile(filepath.Join(tmpdir, "generated_status.go"))
+			actual, err := os.ReadFile(filepath.Clean(filepath.Join(tmpdir, "generated_status.go")))
 			require.NoError(t, err)
 			require.Equal(t, tt.expected, string(actual))
 		})
