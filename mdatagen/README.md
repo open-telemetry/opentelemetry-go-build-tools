@@ -25,11 +25,11 @@ generation. See below for details.
 
 2. All `go:generate mdatagen` directives that are usually defined in `doc.go`
    files of the metric scrapers will be executed. For example,
-   [/receiver/hostmetricsreceiver/internal/scraper/cpuscraper/doc.go](../../receiver/hostmetricsreceiver/internal/scraper/cpuscraper/doc.go)
-   runs `mdatagen` for the [metadata.yaml](../../receiver/hostmetricsreceiver/internal/scraper/cpuscraper/metadata.yaml)
+   [/receiver/hostmetricsreceiver/internal/scraper/cpuscraper/doc.go](https://github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver/internal/scraper/cpuscraper/doc.go)
+   runs `mdatagen` for the [metadata.yaml](https://github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver/internal/scraper/cpuscraper/metadata.yaml)
    which generates the metrics builder code in
-   [internal/metadata](../../receiver/hostmetricsreceiver/internal/scraper/cpuscraper/internal/metadata)
-   and [documentation.md](../../receiver/hostmetricsreceiver/internal/scraper/cpuscraper/internal/metadata)
+   [internal/metadata](https://github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver/internal/scraper/cpuscraper/internal/metadata)
+   and [documentation.md](https://github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver/internal/scraper/cpuscraper/internal/metadata)
    with generated documentation about emitted metrics.
 
 ## Development
