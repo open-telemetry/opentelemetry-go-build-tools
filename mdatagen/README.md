@@ -36,7 +36,7 @@ generation. See below for details.
 
 In order to introduce support of a new functionality in metadata.yaml:
 
-1. Make code changes in the [generating code](./loader.test) and [templates](./templates/).
+1. Make code changes in the [generating code](./) and [templates](./templates/).
 2. Add usage of the new functionality in [metadata.yaml](./metadata.yaml).
 3. Run `make mdatagen-test`.
 4. Make sure all tests are passing including [generated tests](./internal/metadata/generated_metrics_test.go).
