@@ -151,7 +151,7 @@ license-check:
 DEPENDABOT_CONFIG = .github/dependabot.yml
 .PHONY: dependabot-check
 dependabot-check: | $(DBOTCONF)
-	@$(DBOTCONF) verify $(DEPENDABOT_CONFIG) || echo "(run: make dependabot-generate)"
+	@$(DBOTCONF) verify $(DEPENDABOT_CONFIG) || (echo "Please run 'make dependabot-generate' to update the config" && exit 1)
 
 .PHONY: dependabot-generate
 dependabot-generate: | $(DBOTCONF)
@@ -212,4 +212,3 @@ crosslink: | $(CROSSLINK)
 .PHONY: gowork
 gowork: | $(CROSSLINK)
 	$(CROSSLINK) work --root=$(shell pwd)
-
