@@ -29,11 +29,19 @@ const (
 	NewComponent = "new_component"
 	Enhancement  = "enhancement"
 	BugFix       = "bug_fix"
+	Receiver     = "receiver"
+	Processor    = "processor"
+	Exporter     = "exporter"
+	Extension    = "extension"
+	Connector    = "connector"
+	Cmd          = "cmd"
 )
 
 type Entry struct {
 	ChangeType string `yaml:"change_type"`
 	Component  string `yaml:"component"`
+	Class      string `yaml:"class"`
+	Type       string `yaml:"type"`
 	Note       string `yaml:"note"`
 	Issues     []int  `yaml:"issues"`
 	SubText    string `yaml:"subtext"`
@@ -45,6 +53,15 @@ var changeTypes = []string{
 	NewComponent,
 	Enhancement,
 	BugFix,
+}
+
+var classTypes = []string{
+	Receiver,
+	Exporter,
+	Processor,
+	Connector,
+	Extension,
+	Cmd,
 }
 
 func (e Entry) Validate() error {
@@ -59,8 +76,29 @@ func (e Entry) Validate() error {
 		return fmt.Errorf("'%s' is not a valid 'change_type'. Specify one of %v", e.ChangeType, changeTypes)
 	}
 
-	if e.Component == "" {
-		return fmt.Errorf("specify a 'component'")
+	if e.Class != "" {
+		var validClass bool
+		for _, ct := range classTypes {
+			if e.Class == ct {
+				validClass = true
+				break
+			}
+		}
+		if !validClass {
+			return fmt.Errorf("'%s' is not a valid 'class'. Specify one of %v", e.Class, classTypes)
+		}
+		if e.Type == "" {
+			return fmt.Errorf("specify a 'type'")
+		}
+	}
+	if e.Class == "" && e.Type != "" {
+		return fmt.Errorf("specify a 'class'")
+	}
+	if e.Component == "" && e.Class == "" {
+		return fmt.Errorf("specify a 'component' or a 'class' and 'type'")
+	}
+	if e.Component != "" && e.Class != "" && e.Type != "" {
+		return fmt.Errorf("specify a 'component' or a 'class' and 'type'")
 	}
 
 	if e.Note == "" {
@@ -82,7 +120,11 @@ func (e Entry) String() string {
 	issueStr := strings.Join(issueStrs, ", ")
 
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("- `%s`: %s (%s)", e.Component, e.Note, issueStr))
+	component := e.Component
+	if e.Component == "" {
+		component = fmt.Sprintf("%s/%s", e.Class, e.Type)
+	}
+	sb.WriteString(fmt.Sprintf("- `%s`: %s (%s)", component, e.Note, issueStr))
 	if e.SubText != "" {
 		sb.WriteString("\n  ")
 		lines := strings.Split(strings.ReplaceAll(e.SubText, "\r\n", "\n"), "\n")

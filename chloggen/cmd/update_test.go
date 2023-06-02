@@ -67,6 +67,11 @@ func TestUpdateE2E(t *testing.T) {
 			version: "v0.45.0",
 		},
 		{
+			name:    "class_and_type",
+			entries: []*chlog.Entry{classAndTypeEntry()},
+			version: "v0.45.0",
+		},
+		{
 			name:    "enhancement_only",
 			entries: []*chlog.Entry{enhancementEntry()},
 			version: "v0.45.0",

@@ -55,7 +55,15 @@ func bugFixEntry() *chlog.Entry {
 		Issues:     []int{12346, 12347},
 	}
 }
-
+func classAndTypeEntry() *chlog.Entry {
+	return &chlog.Entry{
+		ChangeType: chlog.BugFix,
+		Class:      "receiver",
+		Type:       "foo",
+		Note:       "Fix blah",
+		Issues:     []int{12346, 12347},
+	}
+}
 func deprecationEntry() *chlog.Entry {
 	return &chlog.Entry{
 		ChangeType: chlog.Deprecation,

@@ -54,7 +54,71 @@ func TestValidateE2E(t *testing.T) {
 					Issues:     []int{12345},
 				})
 			}(),
-			wantErr: "specify a 'component'",
+			wantErr: "specify a 'component' or a 'class' and 'type'",
+		},
+		{
+			name: "type_and_class",
+			entries: func() []*chlog.Entry {
+				return append(getSampleEntries(), &chlog.Entry{
+					ChangeType: chlog.BugFix,
+					Type:       "foo",
+					Class:      "receiver",
+					Note:       "Add some bar",
+					Issues:     []int{12345},
+				})
+			}(),
+			wantErr: "",
+		},
+		{
+			name: "type_missing",
+			entries: func() []*chlog.Entry {
+				return append(getSampleEntries(), &chlog.Entry{
+					ChangeType: chlog.BugFix,
+					Class:      "receiver",
+					Note:       "Add some bar",
+					Issues:     []int{12345},
+				})
+			}(),
+			wantErr: "specify a 'type'",
+		},
+		{
+			name: "class_missing",
+			entries: func() []*chlog.Entry {
+				return append(getSampleEntries(), &chlog.Entry{
+					ChangeType: chlog.BugFix,
+					Type:       "foo",
+					Note:       "Add some bar",
+					Issues:     []int{12345},
+				})
+			}(),
+			wantErr: "specify a 'class'",
+		},
+		{
+			name: "invalid_class",
+			entries: func() []*chlog.Entry {
+				return append(getSampleEntries(), &chlog.Entry{
+					ChangeType: chlog.BugFix,
+					Class:      "foo",
+					Type:       "foo",
+					Note:       "Add some bar",
+					Issues:     []int{12345},
+				})
+			}(),
+			wantErr: "'foo' is not a valid 'class'. Specify one of \\[receiver exporter processor connector extension cmd\\]",
+		},
+		{
+			name: "type_and_class_and_component",
+			entries: func() []*chlog.Entry {
+				return append(getSampleEntries(), &chlog.Entry{
+					ChangeType: chlog.BugFix,
+					Component:  "receiver/foo",
+					Type:       "foo",
+					Class:      "receiver",
+					Note:       "Add some bar",
+					Issues:     []int{12345},
+				})
+			}(),
+			wantErr: "specify a 'component' or a 'class' and 'type'",
 		},
 		{
 			name: "missing_note",
