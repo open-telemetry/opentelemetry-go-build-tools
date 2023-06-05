@@ -4,6 +4,13 @@
 
 <!-- next version -->
 
+## v0.8.0
+
+### 💡 Enhancements 💡
+
+- `crosslink`: Add work command generating go.work file. (#309)
+- `dbotconf`: Add support for pip package ecosystem. (#307)
+
 ## v0.7.0
 
 ### 🛑 Breaking changes 🛑
