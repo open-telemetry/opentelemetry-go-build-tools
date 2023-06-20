@@ -1,5 +1,5 @@
 module go.opentelemetry.io/build-tools/crosslink/testroot
 
-go 1.18
+go 1.19
 
 require go.opentelemetry.io/build-tools/crosslink/testroot/testA v1.0.0

@@ -4,6 +4,43 @@
 
 <!-- next version -->
 
+## v0.8.0
+
+### 💡 Enhancements 💡
+
+- `crosslink`: Add work command generating go.work file. (#309)
+- `dbotconf`: Add support for pip package ecosystem. (#307)
+
+## v0.7.0
+
+### 🛑 Breaking changes 🛑
+
+- `all`: bump minimum go version to 1.19 (#253)
+
+### 🚀 New components 🚀
+
+- `gotmpl`: Add gotmpl tool to allow using text/template via CLI. (#276)
+
+## v0.6.0
+
+### 💡 Enhancements 💡
+
+- `chloggen`: Allow filenames containing '.' outside of extension (#237)
+
+### 🧰 Bug fixes 🧰
+
+- `semconvgen`: Correct capitalization of Otel to be OTel (#242)
+
+## v0.5.0
+
+### 💡 Enhancements 💡
+
+- `chloggen`: Use go embed to embed the template file in chloggen (#224)
+
+### 🧰 Bug fixes 🧰
+
+- `semconvgen`: Add docker/podman mount option to modify selinux labels of shared host files. (#222)
+
 ## v0.4.0
 
 ### 💡 Enhancements 💡

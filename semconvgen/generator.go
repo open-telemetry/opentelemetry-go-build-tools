@@ -41,7 +41,7 @@ func main() {
 
 	cfg := config{}
 	flag.StringVarP(&cfg.inputPath, "input", "i", "", "Path to semantic convention definition YAML. Should be a directory in the specification git repository.")
-	flag.StringVarP(&cfg.onlyType, "only", "", "", "Process only semantic conventions of the specified type. {span,resource,event,metric,units,scope}")
+	flag.StringVarP(&cfg.onlyType, "only", "", "", "Process only semantic conventions of the specified type. {span, resource, event, metric_group, metric, units, scope, attribute_group}")
 	flag.StringVarP(&cfg.specVersion, "specver", "s", "", "Version of semantic convention to generate. Must be an existing version tag in the specification git repository.")
 	flag.StringVarP(&cfg.outputPath, "output", "o", "", "Path to output target. Must be either an absolute path or relative to the repository root. If unspecified will output to a sub-directory with the name matching the version number specified via --specver flag.")
 	flag.StringVarP(&cfg.containerImage, "container", "c", "otel/semconvgen", "Container image ID")
@@ -376,6 +376,7 @@ var capitalizations = []string{
 	"DragonflyBSD",
 	"InProc",
 	"FaaS",
+	"OTel",
 }
 
 // These are not simple capitalization fixes, but require string replacement.

@@ -46,10 +46,8 @@ func initialize(ctx chlog.Context, filename string) error {
 		pathWithExt = path
 	case ".yml":
 		pathWithExt = strings.TrimSuffix(path, ".yml") + ".yaml"
-	case "":
-		pathWithExt = path + ".yaml"
 	default:
-		return fmt.Errorf("non-yaml extension: %s", ext)
+		pathWithExt = path + ".yaml"
 	}
 
 	templateBytes, err := os.ReadFile(filepath.Clean(ctx.TemplateYAML))

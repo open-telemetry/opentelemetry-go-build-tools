@@ -151,7 +151,7 @@ license-check:
 DEPENDABOT_CONFIG = .github/dependabot.yml
 .PHONY: dependabot-check
 dependabot-check: | $(DBOTCONF)
-	@$(DBOTCONF) verify $(DEPENDABOT_CONFIG) || echo "(run: make dependabot-generate)"
+	@$(DBOTCONF) verify $(DEPENDABOT_CONFIG) || (echo "Please run 'make dependabot-generate' to update the config" && exit 1)
 
 .PHONY: dependabot-generate
 dependabot-generate: | $(DBOTCONF)
@@ -174,7 +174,7 @@ multimod-verify: $(MULTIMOD)
 
 .PHONY: multimod-prerelease
 multimod-prerelease: $(MULTIMOD)
-	multimod prerelease -s=true -b=false -v ./versions.yaml -m tools
+	multimod prerelease -s=true -v ./versions.yaml -m tools
 	$(MAKE) tidy
 
 COMMIT?=HEAD
@@ -208,3 +208,7 @@ chlog-update: | $(CHLOGGEN)
 crosslink: | $(CROSSLINK)
 	@echo "Updating intra-repository dependencies in all go modules" \
 		&& $(CROSSLINK) --root=$(shell pwd) --prune
+
+.PHONY: gowork
+gowork: | $(CROSSLINK)
+	$(CROSSLINK) work --root=$(shell pwd)
