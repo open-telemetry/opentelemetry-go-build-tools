@@ -7,11 +7,17 @@ Thumbs.db
 *.iml
 *.so
 coverage.*
+/go.work
+go.work.sum
+
+crosslink/internal/test_data/
+!crosslink/internal/test_data/.placeholder
 
 checkdoc/checkdoc
 chloggen/chloggen
 crosslink/crosslink
 dbotconf/dbotconf
 issuegenerator/issuegenerator
+gotmpl/gotmpl
 multimod/multimod
 semconvgen/semconvgen

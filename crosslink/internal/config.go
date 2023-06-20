@@ -39,6 +39,7 @@ type RunConfig struct {
 	ExcludedPaths map[string]struct{}
 	Overwrite     bool
 	Prune         bool
+	GoVersion     string
 	Logger        *zap.Logger
 }
 

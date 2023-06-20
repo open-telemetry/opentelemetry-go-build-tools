@@ -69,8 +69,11 @@ func TestBuildConfig(t *testing.T) {
 		"/home/user/repo/a/",
 		"/home/user/repo/b/",
 	}
+	pipFiles := []string{
+		"/home/user/repo/requirements.txt",
+	}
 
-	got, err := buildConfig(root, mods, dockerFiles)
+	got, err := buildConfig(root, mods, dockerFiles, pipFiles)
 	require.NoError(t, err)
 	assert.Equal(t, &dependabotConfig{
 		Version: version2,
@@ -82,6 +85,7 @@ func TestBuildConfig(t *testing.T) {
 			newUpdate(gomodPkgEco, "/", goLabels),
 			newUpdate(gomodPkgEco, "/a", goLabels),
 			newUpdate(gomodPkgEco, "/b", goLabels),
+			newUpdate(pipPkgEco, "/", pipLabels),
 		},
 	}, got)
 }
@@ -119,11 +123,17 @@ func TestRunGenerateReturnBuildConfigError(t *testing.T) {
 	allDockerFunc = func(string) ([]string, error) {
 		return nil, nil
 	}
+	t.Cleanup(func(f func(string) ([]string, error)) func() {
+		return func() { allPipFunc = f }
+	}(allPipFunc))
+	allPipFunc = func(string) ([]string, error) {
+		return nil, nil
+	}
 
-	t.Cleanup(func(f func(string, []*modfile.File, []string) (*dependabotConfig, error)) func() {
+	t.Cleanup(func(f func(string, []*modfile.File, []string, []string) (*dependabotConfig, error)) func() {
 		return func() { buildConfigFunc = f }
 	}(buildConfigFunc))
-	buildConfigFunc = func(string, []*modfile.File, []string) (*dependabotConfig, error) {
+	buildConfigFunc = func(string, []*modfile.File, []string, []string) (*dependabotConfig, error) {
 		return nil, assert.AnError
 	}
 	assert.ErrorIs(t, generate(), assert.AnError)
