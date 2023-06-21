@@ -57,12 +57,36 @@ func TestValidateE2E(t *testing.T) {
 			wantErr: "specify a 'component'",
 		},
 		{
+			name: "empty_component",
+			entries: func() []*chlog.Entry {
+				return append(getSampleEntries(), &chlog.Entry{
+					ChangeType: chlog.BugFix,
+					Component:  " ",
+					Note:       "Add some bar",
+					Issues:     []int{12345},
+				})
+			}(),
+			wantErr: "specify a 'component'",
+		},
+		{
 			name: "missing_note",
 			entries: func() []*chlog.Entry {
 				return append(getSampleEntries(), &chlog.Entry{
 					ChangeType: chlog.BugFix,
 					Component:  "receiver/foo",
 					Note:       "",
+					Issues:     []int{12345},
+				})
+			}(),
+			wantErr: "specify a 'note'",
+		},
+		{
+			name: "empty_note",
+			entries: func() []*chlog.Entry {
+				return append(getSampleEntries(), &chlog.Entry{
+					ChangeType: chlog.BugFix,
+					Component:  "receiver/foo",
+					Note:       " ",
 					Issues:     []int{12345},
 				})
 			}(),
