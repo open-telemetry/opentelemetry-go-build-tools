@@ -13,5 +13,5 @@ checkdoc --project-path path/to/project \
 
 ## Deprecation note
 
-This has been deprecated in favor of `checkfile`. Please use `checkfile` with 
+This has been deprecated in favor of `checkfile`. Please use `checkfile` with
 argument `--file-name README.md` instead.
