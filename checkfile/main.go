@@ -11,40 +11,39 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
-// Deprecated: Please use checkfile with argument --file-name README.md instead.
+
 package main
 
 import (
 	"go.opentelemetry.io/build-tools/internal/check"
 )
 
-const (
-	// The name of the Readme file
-	readMeFileName = "README.md"
-)
-
-// The main verifies if README.md and proper documentations for the enabled default components
-// are existed in OpenTelemetry core and contrib repository.
+// The main verifies if filename exists for the enabled default components
+// in OpenTelemetry core and contrib repository.
 // Usage in the core repo:
 //
-//	checkdoc --project-path path/to/project \
+//	checkfile --project-path path/to/project \
 //				--component-rel-path service/defaultcomponents/defaults.go \
 //				--module-name go.opentelemetry.io/collector
+//				--file-name README.md
 //
 // Usage in the contrib repo:
 //
-//	checkdoc --project-path path/to/project \
+//	checkfile --project-path path/to/project \
 //				--component-rel-path cmd/otelcontrib/components.go \
 //				--module-name github.com/open-telemetry/opentelemetry-collector-contrib
+//				--file-name metadata.yaml
 func main() {
-	projectPath, componentPath, moduleName, _ := check.Flags()
+	projectPath, componentPath, moduleName, fileName := check.Flags()
+	if *fileName == "" {
+		panic("Missing required argument: --file-name")
+	}
 
 	err := check.CheckFile(
 		*projectPath,
 		*componentPath,
 		*moduleName,
-		readMeFileName,
+		*fileName,
 	)
 
 	if err != nil {

@@ -1,18 +1,4 @@
-// Copyright The OpenTelemetry Authors
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//       http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-package main
+package check
 
 import (
 	"os"
@@ -57,7 +43,7 @@ func TestIsComponentImport(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := isComponentImport(tt.args.importStr, tt.args.importPrefixesToCheck); got != tt.want {
+			if got := IsComponentImport(tt.args.importStr, tt.args.importPrefixesToCheck); got != tt.want {
 				t.Errorf("isComponentImport() = %v, want %v", got, tt.want)
 			}
 		})
@@ -93,18 +79,19 @@ func TestGetImportPrefixesToCheck(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getImportPrefixesToCheck(tt.module); !reflect.DeepEqual(got, tt.want) {
+			if got := GetImportPrefixesToCheck(tt.module); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("getImportPrefixesToCheck() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestCheckDocs(t *testing.T) {
+func TestCheckFile(t *testing.T) {
 	type args struct {
 		projectPath                   string
 		relativeDefaultComponentsPath string
 		projectGoModule               string
+		filename                      string
 	}
 	tests := []struct {
 		name    string
@@ -144,13 +131,14 @@ func TestCheckDocs(t *testing.T) {
 				projectPath:                   getProjectPath(t),
 				relativeDefaultComponentsPath: "component/componenttest/testdata/valid_go.txt",
 				projectGoModule:               "go.opentelemetry.io/collector",
+				filename:                      "README.md",
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := checkDocs(tt.args.projectPath, tt.args.relativeDefaultComponentsPath, tt.args.projectGoModule); (err != nil) != tt.wantErr {
+			if err := CheckFile(tt.args.projectPath, tt.args.relativeDefaultComponentsPath, tt.args.projectGoModule, tt.args.filename); (err != nil) != tt.wantErr {
 				t.Errorf("checkDocs() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

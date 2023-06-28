@@ -1,4 +1,4 @@
-module go.opentelemetry.io/build-tools/checkdoc
+module go.opentelemetry.io/build-tools/checkfile
 
 go 1.19
 
