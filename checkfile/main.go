@@ -39,7 +39,7 @@ func main() {
 		panic("Missing required argument: --file-name")
 	}
 
-	err := check.CheckFile(
+	err := check.ValidateFile(
 		*projectPath,
 		*componentPath,
 		*moduleName,
