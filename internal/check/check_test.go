@@ -58,7 +58,7 @@ func TestIsComponentImport(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := IsComponentImport(tt.args.importStr, tt.args.importPrefixesToCheck); got != tt.want {
+			if got := isComponentImport(tt.args.importStr, tt.args.importPrefixesToCheck); got != tt.want {
 				t.Errorf("isComponentImport() = %v, want %v", got, tt.want)
 			}
 		})
@@ -94,7 +94,7 @@ func TestGetImportPrefixesToCheck(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := GetImportPrefixesToCheck(tt.module); !reflect.DeepEqual(got, tt.want) {
+			if got := getImportPrefixesToCheck(tt.module); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("getImportPrefixesToCheck() = %v, want %v", got, tt.want)
 			}
 		})

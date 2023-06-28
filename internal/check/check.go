@@ -65,12 +65,12 @@ func CheckFile(projectPath string, relativeComponentsPath string, projectGoModul
 		return fmt.Errorf("failed to load imports: %w", err)
 	}
 
-	importPrefixesToCheck := GetImportPrefixesToCheck(projectGoModule)
+	importPrefixesToCheck := getImportPrefixesToCheck(projectGoModule)
 
 	for _, i := range f.Imports {
 		importPath := strings.Trim(i.Path.Value, `"`)
 
-		if IsComponentImport(importPath, importPrefixesToCheck) {
+		if isComponentImport(importPath, importPrefixesToCheck) {
 			relativeComponentPath := strings.Replace(importPath, projectGoModule, "", 1)
 			readmePath := filepath.Join(projectPath, relativeComponentPath, filename)
 			_, err := os.Stat(readmePath)
@@ -86,7 +86,7 @@ var componentTypes = []string{"extension", "receiver", "processor", "exporter"}
 
 // getImportPrefixesToCheck returns a slice of strings that are relevant import
 // prefixes for components in the given module.
-func GetImportPrefixesToCheck(module string) []string {
+func getImportPrefixesToCheck(module string) []string {
 	out := make([]string, len(componentTypes))
 	for i, typ := range componentTypes {
 		out[i] = strings.Join([]string{strings.TrimRight(module, "/"), typ}, "/")
@@ -96,7 +96,7 @@ func GetImportPrefixesToCheck(module string) []string {
 
 // isComponentImport returns true if the import corresponds to  a Otel component,
 // i.e. an extension, exporter, processor or a receiver.
-func IsComponentImport(importStr string, importPrefixesToCheck []string) bool {
+func isComponentImport(importStr string, importPrefixesToCheck []string) bool {
 	for _, prefix := range importPrefixesToCheck {
 		if strings.HasPrefix(importStr, prefix) {
 			return true
