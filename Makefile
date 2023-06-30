@@ -26,7 +26,7 @@ TIMEOUT = 60
 .DEFAULT_GOAL := precommit
 
 .PHONY: precommit ci
-precommit: dependabot-check license-check lint build test-default
+precommit: dependabot-check license-check lint build test-default crosslink
 ci: precommit check-clean-work-tree test-coverage
 
 # Tools
@@ -45,22 +45,25 @@ $(TOOLS)/golangci-lint: PACKAGE=github.com/golangci/golangci-lint/cmd/golangci-l
 MISSPELL = $(TOOLS)/misspell
 $(TOOLS)/misspell: PACKAGE= github.com/client9/misspell/cmd/misspell
 
-STRINGER = $(TOOLS)/stringer
-$(TOOLS)/stringer: PACKAGE=golang.org/x/tools/cmd/stringer
-
 DBOTCONF = $(TOOLS)/dbotconf
 $(TOOLS)/dbotconf: PACKAGE=go.opentelemetry.io/build-tools/dbotconf
 
-$(TOOLS)/gojq: PACKAGE=github.com/itchyny/gojq/cmd/gojq
+MULTIMOD = $(TOOLS)/multimod
+$(TOOLS)/multimod: PACKAGE=go.opentelemetry.io/build-tools/multimod
+
+CROSSLINK = $(TOOLS)/crosslink
+$(TOOLS)/crosslink: PACKAGE=go.opentelemetry.io/build-tools/crosslink
+
+CHLOGGEN = $(TOOLS)/chloggen
+$(TOOLS)/chloggen: PACKAGE=go.opentelemetry.io/build-tools/chloggen
 
 .PHONY: tools
-tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(STRINGER) $(TOOLS)/gojq
-
+tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD) $(CROSSLINK) $(CHLOGGEN)
 
 # Build
 
 .PHONY: generate build
-generate: $(STRINGER)
+generate:
 	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
 	  echo "$(GO) generate $${dir}/..."; \
 	  (cd "$${dir}" && \
@@ -124,7 +127,7 @@ lint: misspell | $(GOLANGCI_LINT)
 	done
 
 .PHONY: tidy
-tidy:
+tidy: | crosslink
 	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
 	  echo "$(GO) mod tidy in $${dir}"; \
 	  (cd "$${dir}" && $(GO) mod tidy); \
@@ -148,7 +151,7 @@ license-check:
 DEPENDABOT_CONFIG = .github/dependabot.yml
 .PHONY: dependabot-check
 dependabot-check: | $(DBOTCONF)
-	@$(DBOTCONF) verify $(DEPENDABOT_CONFIG) || echo "(run: make dependabot-generate)"
+	@$(DBOTCONF) verify $(DEPENDABOT_CONFIG) || (echo "Please run 'make dependabot-generate' to update the config" && exit 1)
 
 .PHONY: dependabot-generate
 dependabot-generate: | $(DBOTCONF)
@@ -163,3 +166,49 @@ check-clean-work-tree:
 	  git status; \
 	  exit 1; \
 	fi
+
+.PHONY: multimod-verify
+multimod-verify: $(MULTIMOD)
+	@echo "Validating versions.yaml"
+	multimod verify
+
+.PHONY: multimod-prerelease
+multimod-prerelease: $(MULTIMOD)
+	multimod prerelease -s=true -v ./versions.yaml -m tools
+	$(MAKE) tidy
+
+COMMIT?=HEAD
+REMOTE?=git@github.com:open-telemetry/opentelemetry-go-build-tools.git
+.PHONY: push-tags
+push-tags: | $(MULTIMOD)
+	$(MULTIMOD) verify
+	set -e; for tag in `$(MULTIMOD) tag -m tools -c ${COMMIT} --print-tags | grep -v "Using" `; do \
+		echo "pushing tag $${tag}"; \
+		git push ${REMOTE} $${tag}; \
+	done;
+
+FILENAME?=$(shell git branch --show-current)
+.PHONY: chlog-new
+chlog-new: | $(CHLOGGEN)
+	$(CHLOGGEN) new --filename $(FILENAME)
+
+.PHONY: chlog-validate
+chlog-validate: | $(CHLOGGEN)
+	$(CHLOGGEN) validate
+
+.PHONY: chlog-preview
+chlog-preview: | $(CHLOGGEN)
+	$(CHLOGGEN) update --dry
+
+.PHONY: chlog-update
+chlog-update: | $(CHLOGGEN)
+	$(CHLOGGEN) update -v $(VERSION)
+
+.PHONY: crosslink
+crosslink: | $(CROSSLINK)
+	@echo "Updating intra-repository dependencies in all go modules" \
+		&& $(CROSSLINK) --root=$(shell pwd) --prune
+
+.PHONY: gowork
+gowork: | $(CROSSLINK)
+	$(CROSSLINK) work --root=$(shell pwd)

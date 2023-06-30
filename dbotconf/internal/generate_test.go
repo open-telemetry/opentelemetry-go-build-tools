@@ -64,16 +64,28 @@ func TestBuildConfig(t *testing.T) {
 		{Syntax: &modfile.FileSyntax{Name: "/home/user/repo/a/go.mod"}},
 		{Syntax: &modfile.FileSyntax{Name: "/home/user/repo/b/go.mod"}},
 	}
+	dockerFiles := []string{
+		"/home/user/repo/",
+		"/home/user/repo/a/",
+		"/home/user/repo/b/",
+	}
+	pipFiles := []string{
+		"/home/user/repo/requirements.txt",
+	}
 
-	got, err := buildConfig(root, mods)
+	got, err := buildConfig(root, mods, dockerFiles, pipFiles)
 	require.NoError(t, err)
 	assert.Equal(t, &dependabotConfig{
 		Version: version2,
 		Updates: []update{
 			newUpdate(ghPkgEco, "/", actionLabels),
+			newUpdate(dockerPkgEco, "/", dockerLabels),
+			newUpdate(dockerPkgEco, "/a", dockerLabels),
+			newUpdate(dockerPkgEco, "/b", dockerLabels),
 			newUpdate(gomodPkgEco, "/", goLabels),
 			newUpdate(gomodPkgEco, "/a", goLabels),
 			newUpdate(gomodPkgEco, "/b", goLabels),
+			newUpdate(pipPkgEco, "/", pipLabels),
 		},
 	}, got)
 }
@@ -88,6 +100,16 @@ func TestRunGenerateReturnAllModsError(t *testing.T) {
 	assert.ErrorIs(t, generate(), assert.AnError)
 }
 
+func TestRunGenerateReturnAllDockerError(t *testing.T) {
+	t.Cleanup(func(f func(string) ([]string, error)) func() {
+		return func() { allDockerFunc = f }
+	}(allDockerFunc))
+	allDockerFunc = func(string) ([]string, error) {
+		return nil, assert.AnError
+	}
+	assert.ErrorIs(t, generate(), assert.AnError)
+}
+
 func TestRunGenerateReturnBuildConfigError(t *testing.T) {
 	t.Cleanup(func(f func() (string, []*modfile.File, error)) func() {
 		return func() { allModsFunc = f }
@@ -95,11 +117,23 @@ func TestRunGenerateReturnBuildConfigError(t *testing.T) {
 	allModsFunc = func() (string, []*modfile.File, error) {
 		return "", []*modfile.File{}, nil
 	}
+	t.Cleanup(func(f func(string) ([]string, error)) func() {
+		return func() { allDockerFunc = f }
+	}(allDockerFunc))
+	allDockerFunc = func(string) ([]string, error) {
+		return nil, nil
+	}
+	t.Cleanup(func(f func(string) ([]string, error)) func() {
+		return func() { allPipFunc = f }
+	}(allPipFunc))
+	allPipFunc = func(string) ([]string, error) {
+		return nil, nil
+	}
 
-	t.Cleanup(func(f func(string, []*modfile.File) (*dependabotConfig, error)) func() {
+	t.Cleanup(func(f func(string, []*modfile.File, []string, []string) (*dependabotConfig, error)) func() {
 		return func() { buildConfigFunc = f }
 	}(buildConfigFunc))
-	buildConfigFunc = func(string, []*modfile.File) (*dependabotConfig, error) {
+	buildConfigFunc = func(string, []*modfile.File, []string, []string) (*dependabotConfig, error) {
 		return nil, assert.AnError
 	}
 	assert.ErrorIs(t, generate(), assert.AnError)

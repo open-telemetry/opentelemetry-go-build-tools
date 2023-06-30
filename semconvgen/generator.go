@@ -41,6 +41,7 @@ func main() {
 
 	cfg := config{}
 	flag.StringVarP(&cfg.inputPath, "input", "i", "", "Path to semantic convention definition YAML. Should be a directory in the specification git repository.")
+	flag.StringVarP(&cfg.onlyType, "only", "", "", "Process only semantic conventions of the specified type. {span, resource, event, metric_group, metric, units, scope, attribute_group}")
 	flag.StringVarP(&cfg.specVersion, "specver", "s", "", "Version of semantic convention to generate. Must be an existing version tag in the specification git repository.")
 	flag.StringVarP(&cfg.outputPath, "output", "o", "", "Path to output target. Must be either an absolute path or relative to the repository root. If unspecified will output to a sub-directory with the name matching the version number specified via --specver flag.")
 	flag.StringVarP(&cfg.containerImage, "container", "c", "otel/semconvgen", "Container image ID")
@@ -78,6 +79,7 @@ type config struct {
 	outputFilename     string
 	templateFilename   string
 	templateParameters string
+	onlyType           string
 	containerImage     string
 	specVersion        string
 }
@@ -162,13 +164,19 @@ func render(cfg config) error {
 
 	args := []string{
 		"run", "--rm",
-		"-v", fmt.Sprintf("%s:/data", tmpDir),
+		"-v", fmt.Sprintf("%s:/data:Z", tmpDir),
 		cfg.containerImage,
 		"--yaml-root", path.Join("/data/input/semantic_conventions/", path.Base(cfg.inputPath)),
+	}
+	if cfg.onlyType != "" {
+		args = append(args, "--only", cfg.onlyType)
+	}
+
+	args = append(args,
 		"code",
 		"--template", path.Join("/data", path.Base(cfg.templateFilename)),
 		"--output", path.Join("/data/output", path.Base(cfg.outputFilename)),
-	}
+	)
 	if cfg.templateParameters != "" {
 		args = append(args, "--parameters", cfg.templateParameters)
 	}
@@ -368,6 +376,7 @@ var capitalizations = []string{
 	"DragonflyBSD",
 	"InProc",
 	"FaaS",
+	"OTel",
 }
 
 // These are not simple capitalization fixes, but require string replacement.

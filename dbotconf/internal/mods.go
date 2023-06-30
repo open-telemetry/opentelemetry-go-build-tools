@@ -26,6 +26,8 @@ import (
 // Allow test overrides and validation.
 var (
 	allModsFunc           = allMods
+	allDockerFunc         = allDocker
+	allPipFunc            = allPip
 	configuredUpdatesFunc = configuredUpdates
 )
 
@@ -46,10 +48,24 @@ func allMods() (string, []*modfile.File, error) {
 	return root, mods, nil
 }
 
-// localPath returns the dependabot appropriate directory name for module mod
+func allDocker(root string) ([]string, error) {
+	return repo.FindFilePatternDirs(root, "*Dockerfile*")
+}
+
+func allPip(root string) ([]string, error) {
+	return repo.FindFilePatternDirs(root, "*requirements.txt")
+}
+
+// localModPath returns the dependabot appropriate directory name for module
+// mod that resides in a repo with root.
+func localModPath(root string, mod *modfile.File) (string, error) {
+	return localPath(root, mod.Syntax.Name)
+}
+
+// localPath returns the dependabot appropriate directory name for file at path
 // that resides in a repo with root.
-func localPath(root string, mod *modfile.File) (string, error) {
-	absPath, err := filepath.Abs(filepath.Dir(mod.Syntax.Name))
+func localPath(root, path string) (string, error) {
+	absPath, err := filepath.Abs(filepath.Dir(path))
 	if err != nil {
 		return "", err
 	}

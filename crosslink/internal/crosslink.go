@@ -57,10 +57,6 @@ func Crosslink(rc RunConfig) error {
 				zap.Error(err))
 		}
 	}
-	err = rc.Logger.Sync()
-	if err != nil {
-		fmt.Printf("failed to sync logger:  %v \n", err)
-	}
 	return nil
 }
 

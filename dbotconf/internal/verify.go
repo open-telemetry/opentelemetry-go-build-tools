@@ -26,38 +26,49 @@ import (
 )
 
 var (
-	errInvalid      = errors.New("invalid dependabot configuration")
-	errMissing      = errors.New("missing update check(s)")
 	errNotEnoughArg = errors.New("path argument required")
-	errTooManyArg   = errors.New("only single path argument allowed")
 )
 
-// configuredUpdates returns the set of Go modules dependabot is configured to
-// check updates for.
-func configuredUpdates(path string) (map[string]struct{}, error) {
+type updates struct {
+	mods   map[string]struct{}
+	docker map[string]struct{}
+	pip    map[string]struct{}
+}
+
+// configuredUpdates returns updates configured in the dependabot configuration
+func configuredUpdates(path string) (u updates, err error) {
 	f, err := os.Open(filepath.Clean(path))
 	if errors.Is(err, os.ErrNotExist) {
-		return nil, fmt.Errorf("dependabot configuration file does not exist: %s", path)
-	} else if err != nil {
-		return nil, fmt.Errorf("failed to read dependabot configuration file: %s", path)
+		return updates{}, fmt.Errorf("dependabot configuration file does not exist: %s", path)
+	}
+	if err != nil {
+		return updates{}, fmt.Errorf("failed to read dependabot configuration file: %s", path)
 	}
 
 	var c dependabotConfig
 	if err := yaml.NewDecoder(f).Decode(&c); err != nil {
-		return nil, fmt.Errorf("%w: %v", errInvalid, err)
+		return updates{}, fmt.Errorf("invalid dependabot configuration: %w", err)
 	}
 
-	updates := make(map[string]struct{})
+	mods := make(map[string]struct{})
+	docker := make(map[string]struct{})
+	pip := make(map[string]struct{})
 	for _, u := range c.Updates {
-		if u.PackageEcosystem != gomodPkgEco {
-			continue
+		if u.PackageEcosystem == dockerPkgEco {
+			docker[u.Directory] = struct{}{}
 		}
-		updates[u.Directory] = struct{}{}
+		if u.PackageEcosystem == gomodPkgEco {
+			mods[u.Directory] = struct{}{}
+		}
+		if u.PackageEcosystem == pipPkgEco {
+			pip[u.Directory] = struct{}{}
+		}
 	}
-	return updates, nil
+	return updates{mods, docker, pip}, nil
 }
 
-// verify ensures dependabot configuration contains a check for all modules.
+// verify ensures dependabot configuration contains a check for all modules,
+// Dockerfiles, and requirements.txt files.
 func verify(args []string) error {
 	switch len(args) {
 	case 0:
@@ -65,7 +76,7 @@ func verify(args []string) error {
 	case 1:
 		// Valid case.
 	default:
-		return fmt.Errorf("%w, received %v", errTooManyArg, args)
+		return fmt.Errorf("only single path argument allowed, received: %v", args)
 	}
 
 	root, mods, err := allModsFunc()
@@ -73,25 +84,69 @@ func verify(args []string) error {
 		return err
 	}
 
-	updates, err := configuredUpdatesFunc(args[0])
+	dockerFiles, err := allDockerFunc(root)
 	if err != nil {
 		return err
 	}
 
-	var missing []string
+	pipFiles, err := allPipFunc(root)
+	if err != nil {
+		return err
+	}
+
+	u, err := configuredUpdatesFunc(args[0])
+
+	if err != nil {
+		return err
+	}
+
+	var missingMod []string
 	for _, m := range mods {
-		local, err := localPath(root, m)
+		local, err := localModPath(root, m)
 		if err != nil {
 			return err
 		}
 
-		if _, ok := updates[local]; !ok {
-			missing = append(missing, local)
+		if _, ok := u.mods[local]; !ok {
+			missingMod = append(missingMod, local)
+		}
+	}
+	var missingDocker []string
+	for _, d := range dockerFiles {
+		local, err := localPath(root, d)
+		if err != nil {
+			return err
+		}
+
+		if _, ok := u.docker[local]; !ok {
+			missingDocker = append(missingDocker, local)
+		}
+	}
+	var missingPip []string
+	for _, p := range pipFiles {
+		local, err := localPath(root, p)
+		if err != nil {
+			return err
+		}
+
+		if _, ok := u.pip[local]; !ok {
+			missingPip = append(missingPip, local)
 		}
 	}
 
-	if len(missing) > 0 {
-		return fmt.Errorf("%w: %s", errMissing, strings.Join(missing, ", "))
+	if len(missingMod) > 0 || len(missingDocker) > 0 || len(missingPip) > 0 {
+		msg := "missing update check(s):"
+		if len(missingMod) > 0 {
+			msg = fmt.Sprintf("%s\n- Go mod files: %s", msg, strings.Join(missingMod, ", "))
+		}
+		if len(missingDocker) > 0 {
+			msg = fmt.Sprintf("%s\n- Dockerfiles: %s", msg, strings.Join(missingDocker, ", "))
+		}
+		if len(missingPip) > 0 {
+			msg = fmt.Sprintf("%s\n- Pip files: %s", msg, strings.Join(missingPip, ", "))
+		}
+		msg += "\n"
+		return errors.New(msg)
 	}
 	return nil
 }

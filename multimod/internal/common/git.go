@@ -40,7 +40,7 @@ func CommitChangesToNewBranch(branchName string, commitMessage string, repo *git
 		return plumbing.ZeroHash, fmt.Errorf("createPrereleaseBranch failed: %w", err)
 	}
 
-	hash, err := commitChanges(commitMessage, repo, customAuthor)
+	hash, err := CommitChanges(commitMessage, repo, customAuthor)
 	if err != nil {
 		return plumbing.ZeroHash, fmt.Errorf("could not commit changes: %w", err)
 	}
@@ -54,7 +54,7 @@ func CommitChangesToNewBranch(branchName string, commitMessage string, repo *git
 	return hash, err
 }
 
-func commitChanges(commitMessage string, repo *git.Repository, customAuthor *object.Signature) (plumbing.Hash, error) {
+func CommitChanges(commitMessage string, repo *git.Repository, customAuthor *object.Signature) (plumbing.Hash, error) {
 	// commit changes to git
 	log.Printf("Committing changes to git with message '%v'\n", commitMessage)
 
@@ -66,12 +66,14 @@ func commitChanges(commitMessage string, repo *git.Repository, customAuthor *obj
 	var commitOptions *git.CommitOptions
 	if customAuthor == nil {
 		commitOptions = &git.CommitOptions{
-			All: true,
+			All:               true,
+			AllowEmptyCommits: true,
 		}
 	} else {
 		commitOptions = &git.CommitOptions{
-			All:    true,
-			Author: customAuthor,
+			All:               true,
+			Author:            customAuthor,
+			AllowEmptyCommits: true,
 		}
 	}
 

@@ -122,9 +122,28 @@ commit will be found in your currently checked out branch.
     ./multimod tag --module-set-name <name> --commit-hash <hash>
     ```
 
-2. Push tags for ALL updated modules to the upstream remote (not your fork),
-   which are printed by the `tag` script. This step must be done manually,
-   specifying one tag at a time to push.
+    **Note** Provide the `--print-tags` flag if you would like multimod to
+    print tags after tagging operations are done. This output will use a
+    new-line delimiter.
+
+    ```sh
+    ./multimod tag --module-set-name <name> --commit-hash <hash> --print-tags
+    ```
+
+    Using `--print-tags` allows `multimod tag` to be used in conjunction with tools
+    such as `xargs` to automatically push tags. Grepping the release version number
+    is required since multimod can output non tag related information to standard
+    out.
+
+    ```sh
+    ./multimod tag --module-set-name $MOD_SET_NAME \
+    --commit-hash $MOD_SET_COMMIT \
+    --print-tags \
+    | grep $RELEASE_VER \
+    | xargs -L 1 git push $REMOTE_NAME
+    ```
+
+2. Tags can then be pushed to a remote repository of your choice.
 
     ```sh
     git push upstream <new tag 1>

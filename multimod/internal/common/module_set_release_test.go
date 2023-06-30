@@ -199,6 +199,7 @@ func TestCheckGitTagsAlreadyExist(t *testing.T) {
 			Email: "test_email",
 			When:  time.Now(),
 		},
+		AllowEmptyCommits: true,
 	})
 	if err != nil {
 		t.Fatal("could not commit to worktree:", err)
