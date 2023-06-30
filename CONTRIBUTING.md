@@ -34,8 +34,8 @@ is up-to-date and properly formatted.
 Everyone is welcome to contribute code to `opentelemetry-go-build-tools` via
 GitHub pull requests (PRs).
 
-Open a pull request against the main `opentelemetry-go-build-tools` repo. Be sure to add the
-pull request ID to the entry you added to `CHANGELOG.md`.
+Open a pull request against the main `opentelemetry-go-build-tools` repo. 
+Be sure to add the pull request ID to the entry you added to `CHANGELOG.md`.
 
 ### How to Receive Comments
 
