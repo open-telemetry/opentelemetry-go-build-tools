@@ -1,11 +1,5 @@
 # Contributing to opentelemetry-go-build-tools
 
-See the [public meeting
-notes](https://docs.google.com/document/d/1A63zSWX0x2CyCK_LoNhmQC4rqhLpYXJzXbEPDUQ2n6w/edit#heading=h.9tngw7jdwd6b)
-for a summary description of past meetings. To request edit access,
-join the meeting or get in touch on
-[Slack](https://cloud-native.slack.com/archives/C01NPAXACKT).
-
 ## Development
 
 You can view and edit the source code by cloning this repository:
