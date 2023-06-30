@@ -34,8 +34,8 @@ is up-to-date and properly formatted.
 Everyone is welcome to contribute code to `opentelemetry-go-build-tools` via
 GitHub pull requests (PRs).
 
-Open a pull request against the main `opentelemetry-go-build-tools` repo. Be sure to add the pull
-request ID to the entry you added to `CHANGELOG.md`.
+Open a pull request against the main `opentelemetry-go-build-tools` repo. Be sure to add the
+pull request ID to the entry you added to `CHANGELOG.md`.
 
 ### How to Receive Comments
 
@@ -194,7 +194,8 @@ Moreover, the interface becomes sealed so the user cannot easily implement
 the interface on its own.
 
 The `apply` method should return a modified version of the passed config.
-This approach, instead of passing a pointer, is used to prevent the config from being allocated to the heap.
+This approach, instead of passing a pointer, is used to prevent the config
+from being allocated to the heap.
 
 The name of the interface should be prefixed in the same way the
 corresponding `config` is (if at all).
@@ -335,9 +336,9 @@ return c
 
 CodeOwners:
 
-- @open-telemetry/go-maintainers
-- @open-telemetry/collector-maintainers
-- @open-telemetry/collector-contrib-approvers
+* @open-telemetry/go-maintainers
+* @open-telemetry/collector-maintainers
+* @open-telemetry/collector-contrib-approvers
 
 ### Become an Approver or a Maintainer
 
