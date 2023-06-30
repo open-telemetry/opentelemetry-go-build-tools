@@ -1,10 +1,5 @@
 # Contributing to opentelemetry-go-build-tools
 
-The Go special interest group (SIG) meets regularly. See the
-OpenTelemetry
-[community](https://github.com/open-telemetry/community#golang-sdk)
-repo for information on this and other language SIGs.
-
 See the [public meeting
 notes](https://docs.google.com/document/d/1A63zSWX0x2CyCK_LoNhmQC4rqhLpYXJzXbEPDUQ2n6w/edit#heading=h.9tngw7jdwd6b)
 for a summary description of past meetings. To request edit access,
@@ -38,49 +33,6 @@ is up-to-date and properly formatted.
 
 Everyone is welcome to contribute code to `opentelemetry-go-build-tools` via
 GitHub pull requests (PRs).
-
-To create a new PR, fork the project in GitHub and clone the upstream
-repo:
-
-```sh
-go get -d go.opentelemetry.io/otel
-```
-
-(This may print some warning about "build constraints exclude all Go
-files", just ignore it.)
-
-This will put the project in `${GOPATH}/src/go.opentelemetry.io/otel`. You
-can alternatively use `git` directly with:
-
-```sh
-git clone https://github.com/open-telemetry/opentelemetry-go-build-tools
-```
-
-(Note that `git clone` is *not* using the `go.opentelemetry.io/otel` name -
-that name is a kind of a redirector to GitHub that `go get` can
-understand, but `git` does not.)
-
-This would put the project in the `opentelemetry-go-build-tools` directory in
-current working directory.
-
-Enter the newly created directory and add your fork as a new remote:
-
-```sh
-git remote add <YOUR_FORK> git@github.com:<YOUR_GITHUB_USERNAME>/opentelemetry-go-build-tools
-```
-
-Check out a new branch, make modifications, run linters and tests, update
-`CHANGELOG.md`, and push the branch to your fork:
-
-```sh
-git checkout -b <YOUR_BRANCH_NAME>
-# edit files
-# update changelog
-make precommit
-git add -p
-git commit
-git push <YOUR_FORK> <YOUR_BRANCH_NAME>
-```
 
 Open a pull request against the main `opentelemetry-go-build-tools` repo. Be sure to add the pull
 request ID to the entry you added to `CHANGELOG.md`.
@@ -152,12 +104,12 @@ Each non-example Go Module should have its own `README.md` containing:
 - Brief description.
 - Installation instructions (and requirements if applicable).
 - Hyperlink to an example. Depending on the component the example can be:
-  - An `example_test.go` like [here](exporters/stdout/stdouttrace/example_test.go).
-  - A sample Go application with its own `README.md`, like [here](example/zipkin).
+    - An `example_test.go` like [here](exporters/stdout/stdouttrace/example_test.go).
+    - A sample Go application with its own `README.md`, like [here](example/zipkin).
 - Additional documentation sections such us:
-  - Configuration,
-  - Contributing,
-  - References.
+    - Configuration,
+    - Contributing,
+    - References.
 
 [Here](exporters/jaeger/README.md) is an example of a concise `README.md`.
 
@@ -201,7 +153,7 @@ specific type name this Configuration applies to if there are multiple
 ```go
 // config contains configuration options for a thing.
 type config struct {
-	// options ...
+// options ...
 }
 ```
 
@@ -213,7 +165,7 @@ how the user can extend the configuration.
 
 It is important that internal `config` are not shared across package boundaries.
 Meaning a `config` from one package should not be directly used by another. The
-one exception is the API packages.  The configs from the base API, eg.
+one exception is the API packages. The configs from the base API, eg.
 `go.opentelemetry.io/otel/trace.TracerConfig` and
 `go.opentelemetry.io/otel/metric.InstrumentConfig`, are intended to be consumed
 by the SDK therefor it is expected that these are exported.
@@ -229,13 +181,13 @@ all options to create a configured `config`.
 ```go
 // newConfig returns an appropriately configured config.
 func newConfig(options ...Option) config {
-	// Set default values for config.
-	config := config{/* […] */}
-	for _, option := range options {
-		config = option.apply(config)
-	}
-	// Preform any validation here.
-	return config
+// Set default values for config.
+config := config{ /* […] */ }
+for _, option := range options {
+config = option.apply(config)
+}
+// Preform any validation here.
+return config
 }
 ```
 
@@ -253,7 +205,7 @@ To set the value of the options a `config` contains, a corresponding
 
 ```go
 type Option interface {
-	apply(config) config
+apply(config) config
 }
 ```
 
@@ -287,13 +239,13 @@ func With*(…) Option { … }
 type defaultFalseOption bool
 
 func (o defaultFalseOption) apply(c config) config {
-	c.Bool = bool(o)
-    return c
+c.Bool = bool(o)
+return c
 }
 
 // WithOption sets a T to have an option included.
 func WithOption() Option {
-	return defaultFalseOption(true)
+return defaultFalseOption(true)
 }
 ```
 
@@ -301,13 +253,13 @@ func WithOption() Option {
 type defaultTrueOption bool
 
 func (o defaultTrueOption) apply(c config) config {
-	c.Bool = bool(o)
-    return c
+c.Bool = bool(o)
+return c
 }
 
 // WithoutOption sets a T to have Bool option excluded.
 func WithoutOption() Option {
-	return defaultTrueOption(false)
+return defaultTrueOption(false)
 }
 ```
 
@@ -315,35 +267,35 @@ func WithoutOption() Option {
 
 ```go
 type myTypeOption struct {
-	MyType MyType
+MyType MyType
 }
 
 func (o myTypeOption) apply(c config) config {
-	c.MyType = o.MyType
-    return c
+c.MyType = o.MyType
+return c
 }
 
 // WithMyType sets T to have include MyType.
 func WithMyType(t MyType) Option {
-	return myTypeOption{t}
+return myTypeOption{t}
 }
 ```
 
 ##### Functional Options
 
 ```go
-type optionFunc func(config) config
+type optionFunc func (config) config
 
 func (fn optionFunc) apply(c config) config {
-	return fn(c)
+return fn(c)
 }
 
 // WithMyType sets t as MyType.
 func WithMyType(t MyType) Option {
-	return optionFunc(func(c config) config {
-		c.MyType = t
-        return c
-	})
+return optionFunc(func (c config) config {
+c.MyType = t
+return c
+})
 }
 ```
 
@@ -370,133 +322,34 @@ For example.
 ```go
 // config holds options for all animals.
 type config struct {
-	Weight      float64
-	Color       string
-	MaxAltitude float64
+Weight      float64
+Color       string
+MaxAltitude float64
 }
 
 // DogOption apply Dog specific options.
 type DogOption interface {
-	applyDog(config) config
+applyDog(config) config
 }
 
 // BirdOption apply Bird specific options.
 type BirdOption interface {
-	applyBird(config) config
+applyBird(config) config
 }
 
 // Option apply options for all animals.
 type Option interface {
-	BirdOption
-	DogOption
+BirdOption
+DogOption
 }
 
 type weightOption float64
 
 func (o weightOption) applyDog(c config) config {
-	c.Weight = float64(o)
-	return c
-}
-
-func (o weightOption) applyBird(c config) config {
-	c.Weight = float64(o)
-	return c
-}
-
-func WithWeight(w float64) Option { return weightOption(w) }
-
-type furColorOption string
-
-func (o furColorOption) applyDog(c config) config {
-	c.Color = string(o)
-	return c
-}
-
-func WithFurColor(c string) DogOption { return furColorOption(c) }
-
-type maxAltitudeOption float64
-
-func (o maxAltitudeOption) applyBird(c config) config {
-	c.MaxAltitude = float64(o)
-	return c
-}
-
-func WithMaxAltitude(a float64) BirdOption { return maxAltitudeOption(a) }
-
-func NewDog(name string, o ...DogOption) Dog    {…}
-func NewBird(name string, o ...BirdOption) Bird {…}
-```
-
-### Interfaces
-
-To allow other developers to better comprehend the code, it is important
-to ensure it is sufficiently documented. One simple measure that contributes
-to this aim is self-documenting by naming method parameters. Therefore,
-where appropriate, methods of every exported interface type should have
-their parameters appropriately named.
-
-#### Interface Stability
-
-All exported stable interfaces that include the following warning in their
-doumentation are allowed to be extended with additional methods.
-
-> Warning: methods may be added to this interface in minor releases.
-
-Otherwise, stable interfaces MUST NOT be modified.
-
-If new functionality is needed for an interface that cannot be changed it MUST
-be added by including an additional interface. That added interface can be a
-simple interface for the specific functionality that you want to add or it can
-be a super-set of the original interface. For example, if you wanted to a
-`Close` method to the `Exporter` interface:
-
-```go
-type Exporter interface {
-	Export()
+c.Weight = float64(o)
+return c
 }
 ```
-
-A new interface, `Closer`, can be added:
-
-```go
-type Closer interface {
-	Close()
-}
-```
-
-Code that is passed the `Exporter` interface can now check to see if the passed
-value also satisfies the new interface. E.g.
-
-```go
-func caller(e Exporter) {
-	/* ... */
-	if c, ok := e.(Closer); ok {
-		c.Close()
-	}
-	/* ... */
-}
-```
-
-Alternatively, a new type that is the super-set of an `Exporter` can be created.
-
-```go
-type ClosingExporter struct {
-	Exporter
-	Close()
-}
-```
-
-This new type can be used similar to the simple interface above in that a
-passed `Exporter` type can be asserted to satisfy the `ClosingExporter` type
-and the `Close` method called.
-
-This super-set approach can be useful if there is explicit behavior that needs
-to be coupled with the original type and passed as a unified type to a new
-function, but, because of this coupling, it also limits the applicability of
-the added functionality. If there exist other interfaces where this
-functionality should be added, each one will need their own super-set
-interfaces and will duplicate the pattern. For this reason, the simple targeted
-interface that defines the specific functionality should be preferred.
 
 ## Approvers and Maintainers
 
