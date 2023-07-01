@@ -67,11 +67,7 @@ Any Maintainer can merge the PR once it is **ready to merge**.
 
 ## Approvers and Maintainers
 
-CodeOwners:
-
-* @open-telemetry/go-maintainers
-* @open-telemetry/collector-maintainers
-* @open-telemetry/collector-contrib-approvers
+[CODEOWNERS](https://github.com/open-telemetry/opentelemetry-go-build-tools/blob/main/.github/CODEOWNERS)
 
 ### Become an Approver or a Maintainer
 
