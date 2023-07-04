@@ -35,6 +35,17 @@ func TestFindRepoRoot(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
+func TestGetGitRepo(t *testing.T) {
+	pwd, err := filepath.Abs(".")
+	require.NoError(t, err)
+
+	_, err = GetGitRepo(pwd)
+	require.NoError(t, err)
+
+	_, err = GetGitRepo("/tmp")
+	require.Error(t, err)
+}
+
 func TestFindModules(t *testing.T) {
 	root := t.TempDir()
 	dirs := []string{
