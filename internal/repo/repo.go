@@ -25,7 +25,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/go-git/go-git/v5"
 	"golang.org/x/mod/modfile"
 )
 
@@ -132,14 +131,6 @@ func FindFilePatternDirs(root, pattern string) ([]string, error) {
 		return nil
 	})
 	return uniqueSort(results), err
-}
-
-func GetGitRepo(repoRoot string) (*git.Repository, error) {
-	r, err := git.PlainOpen(repoRoot)
-	if err != nil {
-		return nil, fmt.Errorf("could not open repo at %v: %w", repoRoot, err)
-	}
-	return r, nil
 }
 
 func uniqueSort(data []string) []string {

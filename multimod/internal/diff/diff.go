@@ -11,7 +11,6 @@ import (
 
 	"github.com/go-git/go-git/v5"
 
-	"go.opentelemetry.io/build-tools/internal/repo"
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
 
@@ -30,9 +29,9 @@ func HasChanged(repoRoot string, versioningFile string, ver string, modset strin
 	changedFiles := []string{}
 	ver = normalizeVersion(ver)
 
-	r, err := repo.GetGitRepo(repoRoot)
+	r, err := git.PlainOpen(repoRoot)
 	if err != nil {
-		return changed, changedFiles, err
+		return changed, changedFiles, fmt.Errorf("could not open repo at %v: %w", repoRoot, err)
 	}
 
 	if e := common.VerifyWorkingTreeClean(r); e != nil {
