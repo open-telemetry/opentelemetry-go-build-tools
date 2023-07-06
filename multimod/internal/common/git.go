@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -154,4 +155,54 @@ func VerifyWorkingTreeClean(repo *git.Repository) error {
 	}
 
 	return nil
+}
+
+type Client interface {
+	HeadCommit(r *git.Repository) (*object.Commit, error)
+	TagCommit(r *git.Repository, tag string) (*object.Commit, error)
+	FilesChanged(headCommit *object.Commit, tagCommit *object.Commit, prefix string, suffix string) ([]string, error)
+}
+
+type GitClient struct{}
+
+func (g GitClient) HeadCommit(r *git.Repository) (*object.Commit, error) {
+	headRef, err := r.Head()
+	if err != nil {
+		return nil, err
+	}
+	return r.CommitObject(headRef.Hash())
+}
+
+func (g GitClient) TagCommit(r *git.Repository, tag string) (*object.Commit, error) {
+	tagRef, err := r.Tag(tag)
+	if err != nil {
+		return nil, err
+	}
+
+	o, err := r.TagObject(tagRef.Hash())
+	if err != nil {
+		return nil, fmt.Errorf("tag object error %s %w", tagRef.Hash().String(), err)
+	}
+	return r.CommitObject(o.Target)
+}
+
+// FilesChanged returns the differences between two commits
+func (g GitClient) FilesChanged(headCommit *object.Commit, tagCommit *object.Commit, prefix string, suffix string) ([]string, error) {
+	changedFiles := []string{}
+	p, err := headCommit.Patch(tagCommit)
+	if err != nil {
+		return changedFiles, err
+	}
+
+	for _, f := range p.FilePatches() {
+		from, to := f.Files()
+		if from != nil && strings.HasSuffix(from.Path(), suffix) && strings.HasPrefix(from.Path(), prefix) {
+			changedFiles = append(changedFiles, from.Path())
+			continue
+		}
+		if to != nil && strings.HasSuffix(to.Path(), suffix) && strings.HasPrefix(to.Path(), prefix) {
+			changedFiles = append(changedFiles, to.Path())
+		}
+	}
+	return changedFiles, nil
 }

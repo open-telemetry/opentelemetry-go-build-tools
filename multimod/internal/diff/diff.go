@@ -24,6 +24,13 @@ func normalizeVersion(ver string) string {
 	return fmt.Sprintf("v%s", ver)
 }
 
+func normalizeTag(tagName common.ModuleTagName, ver string) string {
+	if tagName == common.RepoRootTag {
+		return ver
+	}
+	return fmt.Sprintf("%s/%s", tagName, ver)
+}
+
 func HasChanged(repoRoot string, versioningFile string, ver string, modset string) (bool, []string, error) {
 	changed := false
 	changedFiles := []string{}
@@ -53,11 +60,13 @@ func HasChanged(repoRoot string, versioningFile string, ver string, modset strin
 		return changed, changedFiles, fmt.Errorf("could not retrieve tag names from module paths: %w", err)
 	}
 
-	headRef, err := r.Head()
-	if err != nil {
-		return changed, changedFiles, err
-	}
-	headCommit, err := r.CommitObject(headRef.Hash())
+	return filesChanged(r, modset, ver, tagNames, common.GitClient{})
+}
+
+func filesChanged(r *git.Repository, modset string, ver string, tagNames []common.ModuleTagName, client common.Client) (bool, []string, error) {
+	changed := false
+	changedFiles := []string{}
+	headCommit, err := client.HeadCommit(r)
 	if err != nil {
 		return changed, changedFiles, err
 	}
@@ -65,15 +74,9 @@ func HasChanged(repoRoot string, versioningFile string, ver string, modset strin
 	// get all modules in modset
 	for _, tagName := range tagNames {
 		// check tag exists
-		var tag string
+		tag := normalizeTag(tagName, ver)
 
-		if tagName == common.RepoRootTag {
-			tag = ver
-		} else {
-			tag = fmt.Sprintf("%s/%s", tagName, ver)
-		}
-
-		tagRef, err := r.Tag(tag)
+		tagCommit, err := client.TagCommit(r, tag)
 		if err != nil {
 			if errors.Is(err, git.ErrTagNotFound) {
 				log.Printf("Module %s does not have a %s tag", tagName, ver)
@@ -83,33 +86,13 @@ func HasChanged(repoRoot string, versioningFile string, ver string, modset strin
 			return changed, changedFiles, err
 		}
 
-		o, err := r.TagObject(tagRef.Hash())
+		files, err := client.FilesChanged(headCommit, tagCommit, string(tagName), ".go")
 		if err != nil {
-			return changed, changedFiles, fmt.Errorf("tag object error %s %w", tagRef.Hash().String(), err)
+			return changed, changedFiles, err
 		}
-		// diff files since tag
-		// tagRef.Hash()
-		commit, err := r.CommitObject(o.Target)
-		if err != nil {
-			return changed, changedFiles, fmt.Errorf("tag commit object error %s %w", o.Target.String(), err)
-		}
-
-		p, err := headCommit.Patch(commit)
-		if err != nil {
-			return changed, changedFiles, fmt.Errorf("patch error %s", tag)
-		}
-
-		for _, f := range p.FilePatches() {
-			from, to := f.Files()
-			if from != nil && strings.HasSuffix(from.Path(), ".go") && strings.HasPrefix(from.Path(), string(tagName)) {
-				changed = true
-				changedFiles = append(changedFiles, from.Path())
-				continue
-			}
-			if to != nil && strings.HasSuffix(to.Path(), ".go") && strings.HasPrefix(to.Path(), string(tagName)) {
-				changed = true
-				changedFiles = append(changedFiles, to.Path())
-			}
+		if len(files) > 0 {
+			changed = true
+			changedFiles = append(changedFiles, files...)
 		}
 	}
 
