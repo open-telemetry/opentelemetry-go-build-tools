@@ -24,11 +24,12 @@ import (
 )
 
 const (
-	Breaking     = "breaking"
-	Deprecation  = "deprecation"
-	NewComponent = "new_component"
-	Enhancement  = "enhancement"
-	BugFix       = "bug_fix"
+	Breaking         = "breaking"
+	Deprecation      = "deprecation"
+	NewComponent     = "new_component"
+	Enhancement      = "enhancement"
+	BugFix           = "bug_fix"
+	LibraryAPIChange = "library_api_change"
 )
 
 type Entry struct {

@@ -55,3 +55,13 @@
 {{ $change }}
 {{- end }}
 {{- end }}
+{{- if .LibraryChanges }}
+
+### 🛠️ Library changes 🛠️
+
+{{- range $i, $change := .LibraryChanges }}
+{{- if eq $i 0}}
+{{end}}
+{{ $change }}
+{{- end }}
+{{- end }}

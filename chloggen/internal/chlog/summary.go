@@ -32,6 +32,7 @@ type summary struct {
 	NewComponents   []string
 	Enhancements    []string
 	BugFixes        []string
+	LibraryChanges  []string
 }
 
 func GenerateSummary(version string, entries []*Entry) (string, error) {
@@ -51,6 +52,8 @@ func GenerateSummary(version string, entries []*Entry) (string, error) {
 			s.Enhancements = append(s.Enhancements, entry.String())
 		case BugFix:
 			s.BugFixes = append(s.BugFixes, entry.String())
+		case LibraryAPIChange:
+			s.LibraryChanges = append(s.LibraryChanges, entry.String())
 		}
 	}
 
@@ -59,6 +62,7 @@ func GenerateSummary(version string, entries []*Entry) (string, error) {
 	s.NewComponents = sort.StringSlice(s.NewComponents)
 	s.Enhancements = sort.StringSlice(s.Enhancements)
 	s.BugFixes = sort.StringSlice(s.BugFixes)
+	s.LibraryChanges = sort.StringSlice(s.LibraryChanges)
 
 	return s.String()
 }

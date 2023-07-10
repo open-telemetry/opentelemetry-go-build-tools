@@ -57,3 +57,46 @@ bar
 foobar
 `, result)
 }
+
+func Test_SummaryStringWithLibraryChanges(t *testing.T) {
+	s := summary{
+		Version:         "1.0",
+		BreakingChanges: []string{"foo", "bar"},
+		Deprecations:    []string{"foo", "bar"},
+		NewComponents:   []string{"foo", "bar", "new component"},
+		Enhancements:    []string{},
+		BugFixes:        []string{"foo", "bar", "foobar"},
+		LibraryChanges:  []string{"foo"},
+	}
+	result, err := s.String()
+	assert.NoError(t, err)
+	assert.Equal(t, `
+## 1.0
+
+### 🛑 Breaking changes 🛑
+
+foo
+bar
+
+### 🚩 Deprecations 🚩
+
+foo
+bar
+
+### 🚀 New components 🚀
+
+foo
+bar
+new component
+
+### 🧰 Bug fixes 🧰
+
+foo
+bar
+foobar
+
+### 🛠️ Library changes 🛠️
+
+foo
+`, result)
+}
