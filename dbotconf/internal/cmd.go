@@ -49,7 +49,7 @@ func BuildAndExecute() error {
 	rootCmd.AddCommand(generateCmd)
 	rootCmd.AddCommand(verifyCmd)
 
-	rootCmd.PersistentFlags().StringSlice(ignoreFlag, nil, "file paths to ignore")
+	rootCmd.PersistentFlags().StringSlice(ignoreFlag, nil, "directory paths to ignore")
 
 	return rootCmd.Execute()
 }
