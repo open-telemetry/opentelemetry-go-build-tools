@@ -92,18 +92,18 @@ var output io.Writer = os.Stdout
 
 // generate outputs a generated dependabot configuration for all Go modules
 // contained in the repository.
-func generate() error {
-	root, mods, err := allModsFunc()
+func generate(ignore []string) error {
+	root, mods, err := allModsFunc(ignore)
 	if err != nil {
 		return err
 	}
 
-	dockerFiles, err := allDockerFunc(root)
+	dockerFiles, err := allDockerFunc(root, ignore)
 	if err != nil {
 		return err
 	}
 
-	pipFiles, err := allPipFunc(root)
+	pipFiles, err := allPipFunc(root, ignore)
 	if err != nil {
 		return err
 	}
@@ -120,7 +120,13 @@ func generate() error {
 }
 
 func runGenerate(c *cobra.Command, _ []string) {
-	if err := generate(); err != nil {
+	ignore, err := c.Flags().GetStringSlice(ignoreFlag)
+	if err != nil {
+		fmt.Printf("%s: %v", c.CommandPath(), err)
+		os.Exit(1)
+	}
+
+	if err := generate(ignore); err != nil {
 		fmt.Printf("%s: %v", c.CommandPath(), err)
 		os.Exit(1)
 	}

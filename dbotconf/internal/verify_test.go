@@ -25,17 +25,17 @@ import (
 
 // TestRunVerifyErrors tests the error paths of verify.
 func TestRunVerifyErrors(t *testing.T) {
-	assert.ErrorIs(t, verify(nil), errNotEnoughArg)
-	assert.ErrorContains(t, verify([]string{"", ""}), "only single path argument allowed, received")
+	assert.ErrorIs(t, verify(nil, nil), errNotEnoughArg)
+	assert.ErrorContains(t, verify([]string{"", ""}, nil), "only single path argument allowed, received")
 }
 
 // TestRunVerify tests the happy path of verify.
 func TestRunVerify(t *testing.T) {
 	// We need to override the functions that finds the files
-	t.Cleanup(func(f func() (string, []*modfile.File, error)) func() {
+	t.Cleanup(func(f func([]string) (string, []*modfile.File, error)) func() {
 		return func() { allModsFunc = f }
 	}(allModsFunc))
-	allModsFunc = func() (string, []*modfile.File, error) {
+	allModsFunc = func([]string) (string, []*modfile.File, error) {
 		return "/home/user/repo", []*modfile.File{
 			{Syntax: &modfile.FileSyntax{Name: "/home/user/repo/go.mod"}},
 			{Syntax: &modfile.FileSyntax{Name: "/home/user/repo/a/go.mod"}},
@@ -43,10 +43,10 @@ func TestRunVerify(t *testing.T) {
 		}, nil
 	}
 
-	t.Cleanup(func(f func(string) ([]string, error)) func() {
+	t.Cleanup(func(f func(string, []string) ([]string, error)) func() {
 		return func() { allDockerFunc = f }
 	}(allDockerFunc))
-	allDockerFunc = func(string) ([]string, error) {
+	allDockerFunc = func(string, []string) ([]string, error) {
 		return []string{
 			"/home/user/repo/",
 			"/home/user/repo/a/",
@@ -54,10 +54,10 @@ func TestRunVerify(t *testing.T) {
 		}, nil
 	}
 
-	t.Cleanup(func(f func(string) ([]string, error)) func() {
+	t.Cleanup(func(f func(string, []string) ([]string, error)) func() {
 		return func() { allPipFunc = f }
 	}(allPipFunc))
-	allPipFunc = func(string) ([]string, error) {
+	allPipFunc = func(string, []string) ([]string, error) {
 		return []string{
 			"/home/user/repo/requirements.txt",
 		}, nil
@@ -86,31 +86,31 @@ func TestRunVerify(t *testing.T) {
 	}
 
 	// Assert that verify returns no error
-	assert.NoError(t, verify([]string{""}))
+	assert.NoError(t, verify([]string{""}, nil))
 }
 
 // TestRunVerifyMissingRepo tests when there are missing mods
 func TestRunVerifyMissingMods(t *testing.T) {
-	t.Cleanup(func(f func() (string, []*modfile.File, error)) func() {
+	t.Cleanup(func(f func([]string) (string, []*modfile.File, error)) func() {
 		return func() { allModsFunc = f }
 	}(allModsFunc))
-	allModsFunc = func() (string, []*modfile.File, error) {
+	allModsFunc = func([]string) (string, []*modfile.File, error) {
 		return "/home/user/repo", []*modfile.File{
 			{Syntax: &modfile.FileSyntax{Name: "/home/user/repo/go.mod"}},
 		}, nil
 	}
 
-	t.Cleanup(func(f func(string) ([]string, error)) func() {
+	t.Cleanup(func(f func(string, []string) ([]string, error)) func() {
 		return func() { allDockerFunc = f }
 	}(allDockerFunc))
-	allDockerFunc = func(string) ([]string, error) {
+	allDockerFunc = func(string, []string) ([]string, error) {
 		return []string{}, nil
 	}
 
-	t.Cleanup(func(f func(string) ([]string, error)) func() {
+	t.Cleanup(func(f func(string, []string) ([]string, error)) func() {
 		return func() { allPipFunc = f }
 	}(allPipFunc))
-	allPipFunc = func(string) ([]string, error) {
+	allPipFunc = func(string, []string) ([]string, error) {
 		return []string{}, nil
 	}
 
@@ -121,29 +121,29 @@ func TestRunVerifyMissingMods(t *testing.T) {
 		return updates{}, nil
 	}
 
-	assert.ErrorContains(t, verify([]string{""}), "missing update check(s)")
+	assert.ErrorContains(t, verify([]string{""}, nil), "missing update check(s)")
 }
 
 // TestRunVerifyMissingDocker tests when there are missing docker files
 func TestRunVerifyMissingDocker(t *testing.T) {
-	t.Cleanup(func(f func() (string, []*modfile.File, error)) func() {
+	t.Cleanup(func(f func([]string) (string, []*modfile.File, error)) func() {
 		return func() { allModsFunc = f }
 	}(allModsFunc))
-	allModsFunc = func() (string, []*modfile.File, error) {
+	allModsFunc = func([]string) (string, []*modfile.File, error) {
 		return "/home/user/repo", []*modfile.File{}, nil
 	}
 
-	t.Cleanup(func(f func(string) ([]string, error)) func() {
+	t.Cleanup(func(f func(string, []string) ([]string, error)) func() {
 		return func() { allDockerFunc = f }
 	}(allDockerFunc))
-	allDockerFunc = func(string) ([]string, error) {
+	allDockerFunc = func(string, []string) ([]string, error) {
 		return []string{"/home/user/repo/"}, nil
 	}
 
-	t.Cleanup(func(f func(string) ([]string, error)) func() {
+	t.Cleanup(func(f func(string, []string) ([]string, error)) func() {
 		return func() { allPipFunc = f }
 	}(allPipFunc))
-	allPipFunc = func(string) ([]string, error) {
+	allPipFunc = func(string, []string) ([]string, error) {
 		return []string{}, nil
 	}
 
@@ -154,29 +154,29 @@ func TestRunVerifyMissingDocker(t *testing.T) {
 		return updates{}, nil
 	}
 
-	assert.ErrorContains(t, verify([]string{""}), "missing update check(s)")
+	assert.ErrorContains(t, verify([]string{""}, nil), "missing update check(s)")
 }
 
 // TestRunVerifyMissingPip tests when there are missing Pip files
 func TestRunVerifyMissingPip(t *testing.T) {
-	t.Cleanup(func(f func() (string, []*modfile.File, error)) func() {
+	t.Cleanup(func(f func([]string) (string, []*modfile.File, error)) func() {
 		return func() { allModsFunc = f }
 	}(allModsFunc))
-	allModsFunc = func() (string, []*modfile.File, error) {
+	allModsFunc = func([]string) (string, []*modfile.File, error) {
 		return "/home/user/repo", []*modfile.File{}, nil
 	}
 
-	t.Cleanup(func(f func(string) ([]string, error)) func() {
+	t.Cleanup(func(f func(string, []string) ([]string, error)) func() {
 		return func() { allDockerFunc = f }
 	}(allDockerFunc))
-	allDockerFunc = func(string) ([]string, error) {
+	allDockerFunc = func(string, []string) ([]string, error) {
 		return []string{}, nil
 	}
 
-	t.Cleanup(func(f func(string) ([]string, error)) func() {
+	t.Cleanup(func(f func(string, []string) ([]string, error)) func() {
 		return func() { allPipFunc = f }
 	}(allPipFunc))
-	allPipFunc = func(string) ([]string, error) {
+	allPipFunc = func(string, []string) ([]string, error) {
 		return []string{"/home/user/repo/requirements.txt"}, nil
 	}
 
@@ -187,81 +187,81 @@ func TestRunVerifyMissingPip(t *testing.T) {
 		return updates{}, nil
 	}
 
-	assert.ErrorContains(t, verify([]string{""}), "missing update check(s)")
+	assert.ErrorContains(t, verify([]string{""}, nil), "missing update check(s)")
 }
 
 func TestRunVerifyReturnAllModsError(t *testing.T) {
-	t.Cleanup(func(f func() (string, []*modfile.File, error)) func() {
+	t.Cleanup(func(f func([]string) (string, []*modfile.File, error)) func() {
 		return func() { allModsFunc = f }
 	}(allModsFunc))
-	allModsFunc = func() (string, []*modfile.File, error) {
+	allModsFunc = func([]string) (string, []*modfile.File, error) {
 		return "", []*modfile.File{}, assert.AnError
 	}
-	assert.ErrorIs(t, verify([]string{""}), assert.AnError)
+	assert.ErrorIs(t, verify([]string{""}, nil), assert.AnError)
 }
 
 func TestRunVerifyReturnAllDockerError(t *testing.T) {
-	t.Cleanup(func(f func() (string, []*modfile.File, error)) func() {
+	t.Cleanup(func(f func([]string) (string, []*modfile.File, error)) func() {
 		return func() { allModsFunc = f }
 	}(allModsFunc))
-	allModsFunc = func() (string, []*modfile.File, error) {
+	allModsFunc = func([]string) (string, []*modfile.File, error) {
 		return "", []*modfile.File{}, nil
 	}
 
-	t.Cleanup(func(f func(string) ([]string, error)) func() {
+	t.Cleanup(func(f func(string, []string) ([]string, error)) func() {
 		return func() { allDockerFunc = f }
 	}(allDockerFunc))
-	allDockerFunc = func(string) ([]string, error) {
+	allDockerFunc = func(string, []string) ([]string, error) {
 		return []string{}, assert.AnError
 	}
 
-	assert.ErrorIs(t, verify([]string{""}), assert.AnError)
+	assert.ErrorIs(t, verify([]string{""}, nil), assert.AnError)
 }
 
 func TestRunVerifyReturnAllPipError(t *testing.T) {
-	t.Cleanup(func(f func() (string, []*modfile.File, error)) func() {
+	t.Cleanup(func(f func([]string) (string, []*modfile.File, error)) func() {
 		return func() { allModsFunc = f }
 	}(allModsFunc))
-	allModsFunc = func() (string, []*modfile.File, error) {
+	allModsFunc = func([]string) (string, []*modfile.File, error) {
 		return "", []*modfile.File{}, nil
 	}
 
-	t.Cleanup(func(f func(string) ([]string, error)) func() {
+	t.Cleanup(func(f func(string, []string) ([]string, error)) func() {
 		return func() { allDockerFunc = f }
 	}(allDockerFunc))
-	allDockerFunc = func(string) ([]string, error) {
+	allDockerFunc = func(string, []string) ([]string, error) {
 		return []string{}, nil
 	}
 
-	t.Cleanup(func(f func(string) ([]string, error)) func() {
+	t.Cleanup(func(f func(string, []string) ([]string, error)) func() {
 		return func() { allPipFunc = f }
 	}(allPipFunc))
-	allPipFunc = func(string) ([]string, error) {
+	allPipFunc = func(string, []string) ([]string, error) {
 		return []string{}, assert.AnError
 	}
 
-	assert.ErrorIs(t, verify([]string{""}), assert.AnError)
+	assert.ErrorIs(t, verify([]string{""}, nil), assert.AnError)
 }
 
 func TestRunVerifyReturnConfiguredUpdatesError(t *testing.T) {
-	t.Cleanup(func(f func() (string, []*modfile.File, error)) func() {
+	t.Cleanup(func(f func([]string) (string, []*modfile.File, error)) func() {
 		return func() { allModsFunc = f }
 	}(allModsFunc))
-	allModsFunc = func() (string, []*modfile.File, error) {
+	allModsFunc = func([]string) (string, []*modfile.File, error) {
 		return "", []*modfile.File{}, nil
 	}
 
-	t.Cleanup(func(f func(string) ([]string, error)) func() {
+	t.Cleanup(func(f func(string, []string) ([]string, error)) func() {
 		return func() { allDockerFunc = f }
 	}(allDockerFunc))
-	allDockerFunc = func(string) ([]string, error) {
+	allDockerFunc = func(string, []string) ([]string, error) {
 		return []string{}, nil
 	}
 
-	t.Cleanup(func(f func(string) ([]string, error)) func() {
+	t.Cleanup(func(f func(string, []string) ([]string, error)) func() {
 		return func() { allPipFunc = f }
 	}(allPipFunc))
-	allPipFunc = func(string) ([]string, error) {
+	allPipFunc = func(string, []string) ([]string, error) {
 		return []string{}, nil
 	}
 
@@ -271,7 +271,7 @@ func TestRunVerifyReturnConfiguredUpdatesError(t *testing.T) {
 	configuredUpdatesFunc = func(string) (updates, error) {
 		return updates{}, assert.AnError
 	}
-	assert.ErrorIs(t, verify([]string{""}), assert.AnError)
+	assert.ErrorIs(t, verify([]string{""}, nil), assert.AnError)
 }
 
 func TestConfiguredUpdates(t *testing.T) {

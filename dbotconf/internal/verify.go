@@ -69,7 +69,7 @@ func configuredUpdates(path string) (u updates, err error) {
 
 // verify ensures dependabot configuration contains a check for all modules,
 // Dockerfiles, and requirements.txt files.
-func verify(args []string) error {
+func verify(args []string, ignore []string) error {
 	switch len(args) {
 	case 0:
 		return errNotEnoughArg
@@ -79,17 +79,17 @@ func verify(args []string) error {
 		return fmt.Errorf("only single path argument allowed, received: %v", args)
 	}
 
-	root, mods, err := allModsFunc()
+	root, mods, err := allModsFunc(ignore)
 	if err != nil {
 		return err
 	}
 
-	dockerFiles, err := allDockerFunc(root)
+	dockerFiles, err := allDockerFunc(root, ignore)
 	if err != nil {
 		return err
 	}
 
-	pipFiles, err := allPipFunc(root)
+	pipFiles, err := allPipFunc(root, ignore)
 	if err != nil {
 		return err
 	}
@@ -152,7 +152,13 @@ func verify(args []string) error {
 }
 
 func runVerify(c *cobra.Command, args []string) {
-	if err := verify(args); err != nil {
+	ignore, err := c.Flags().GetStringSlice(ignoreFlag)
+	if err != nil {
+		fmt.Printf("%s: %v", c.CommandPath(), err)
+		os.Exit(1)
+	}
+
+	if err := verify(args, ignore); err != nil {
 		fmt.Printf("%s: %v", c.CommandPath(), err)
 		os.Exit(1)
 	}

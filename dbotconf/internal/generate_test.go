@@ -30,7 +30,7 @@ func TestRunGenerateHeader(t *testing.T) {
 	var b bytes.Buffer
 	t.Cleanup(func(w io.Writer) func() { return func() { output = w } }(output))
 	output = &b
-	require.NoError(t, generate())
+	require.NoError(t, generate(nil))
 
 	got := b.String()
 	assert.True(t, strings.HasPrefix(got, header), "missing header")
@@ -42,7 +42,7 @@ func TestRunGenerateYAML(t *testing.T) {
 	var b bytes.Buffer
 	t.Cleanup(func(w io.Writer) func() { return func() { output = w } }(output))
 	output = &b
-	require.NoError(t, generate())
+	require.NoError(t, generate(nil))
 
 	var c dependabotConfig
 	assert.NoError(t, yaml.NewDecoder(&b).Decode(&c))
@@ -91,42 +91,42 @@ func TestBuildConfig(t *testing.T) {
 }
 
 func TestRunGenerateReturnAllModsError(t *testing.T) {
-	t.Cleanup(func(f func() (string, []*modfile.File, error)) func() {
+	t.Cleanup(func(f func([]string) (string, []*modfile.File, error)) func() {
 		return func() { allModsFunc = f }
 	}(allModsFunc))
-	allModsFunc = func() (string, []*modfile.File, error) {
+	allModsFunc = func([]string) (string, []*modfile.File, error) {
 		return "", []*modfile.File{}, assert.AnError
 	}
-	assert.ErrorIs(t, generate(), assert.AnError)
+	assert.ErrorIs(t, generate(nil), assert.AnError)
 }
 
 func TestRunGenerateReturnAllDockerError(t *testing.T) {
-	t.Cleanup(func(f func(string) ([]string, error)) func() {
+	t.Cleanup(func(f func(string, []string) ([]string, error)) func() {
 		return func() { allDockerFunc = f }
 	}(allDockerFunc))
-	allDockerFunc = func(string) ([]string, error) {
+	allDockerFunc = func(string, []string) ([]string, error) {
 		return nil, assert.AnError
 	}
-	assert.ErrorIs(t, generate(), assert.AnError)
+	assert.ErrorIs(t, generate(nil), assert.AnError)
 }
 
 func TestRunGenerateReturnBuildConfigError(t *testing.T) {
-	t.Cleanup(func(f func() (string, []*modfile.File, error)) func() {
+	t.Cleanup(func(f func([]string) (string, []*modfile.File, error)) func() {
 		return func() { allModsFunc = f }
 	}(allModsFunc))
-	allModsFunc = func() (string, []*modfile.File, error) {
+	allModsFunc = func([]string) (string, []*modfile.File, error) {
 		return "", []*modfile.File{}, nil
 	}
-	t.Cleanup(func(f func(string) ([]string, error)) func() {
+	t.Cleanup(func(f func(string, []string) ([]string, error)) func() {
 		return func() { allDockerFunc = f }
 	}(allDockerFunc))
-	allDockerFunc = func(string) ([]string, error) {
+	allDockerFunc = func(string, []string) ([]string, error) {
 		return nil, nil
 	}
-	t.Cleanup(func(f func(string) ([]string, error)) func() {
+	t.Cleanup(func(f func(string, []string) ([]string, error)) func() {
 		return func() { allPipFunc = f }
 	}(allPipFunc))
-	allPipFunc = func(string) ([]string, error) {
+	allPipFunc = func(string, []string) ([]string, error) {
 		return nil, nil
 	}
 
@@ -136,5 +136,5 @@ func TestRunGenerateReturnBuildConfigError(t *testing.T) {
 	buildConfigFunc = func(string, []*modfile.File, []string, []string) (*dependabotConfig, error) {
 		return nil, assert.AnError
 	}
-	assert.ErrorIs(t, generate(), assert.AnError)
+	assert.ErrorIs(t, generate(nil), assert.AnError)
 }
