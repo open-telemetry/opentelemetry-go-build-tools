@@ -45,14 +45,14 @@ func Flags() (projectPath *string, componentPath *string, moduleName *string, fi
 	return
 }
 
-// ValidateFile returns an error if the given file is missing for at least one
+// FileExists returns an error if the given file is missing for at least one
 // enabled component. "projectPath" is the absolute path to the root
 // of the project to which the components belong. "defaultComponentsFilePath" is
 // the path to the file that contains imports to all required components,
 // "goModule" is the Go module to which the imports belong, "filename" is the name of the file
 // to check existence. This method is intended to be used to verify documentation and metadata.yaml
 // in Opentelemetry core and contrib repositories.
-func ValidateFile(projectPath string, relativeComponentsPath string, projectGoModule string, filename string) error {
+func FileExists(projectPath string, relativeComponentsPath string, projectGoModule string, filename string) error {
 	defaultComponentsFilePath := filepath.Join(projectPath, relativeComponentsPath)
 	_, err := os.Stat(defaultComponentsFilePath)
 	if err != nil {

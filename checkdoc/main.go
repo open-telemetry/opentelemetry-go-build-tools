@@ -40,7 +40,7 @@ const (
 func main() {
 	projectPath, componentPath, moduleName, _ := check.Flags()
 
-	err := check.ValidateFile(
+	err := check.FileExists(
 		*projectPath,
 		*componentPath,
 		*moduleName,

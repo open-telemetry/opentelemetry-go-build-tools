@@ -101,7 +101,7 @@ func TestGetImportPrefixesToCheck(t *testing.T) {
 	}
 }
 
-func TestValidateFile(t *testing.T) {
+func TestFileExists(t *testing.T) {
 	type args struct {
 		projectPath                   string
 		relativeDefaultComponentsPath string
@@ -153,7 +153,7 @@ func TestValidateFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := ValidateFile(tt.args.projectPath, tt.args.relativeDefaultComponentsPath, tt.args.projectGoModule, tt.args.filename); (err != nil) != tt.wantErr {
+			if err := FileExists(tt.args.projectPath, tt.args.relativeDefaultComponentsPath, tt.args.projectGoModule, tt.args.filename); (err != nil) != tt.wantErr {
 				t.Errorf("checkDocs() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
