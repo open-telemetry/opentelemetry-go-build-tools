@@ -4,6 +4,16 @@
 
 <!-- next version -->
 
+## v0.9.0
+
+### 💡 Enhancements 💡
+
+- `multimod`: add diff command to multimod to show files that have changed since a specified tag (#350)
+
+### 🧰 Bug fixes 🧰
+
+- `chloggen`: Disallow whitespace-only values (#164)
+
 ## v0.8.0
 
 ### 💡 Enhancements 💡
