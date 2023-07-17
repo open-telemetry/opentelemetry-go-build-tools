@@ -67,34 +67,29 @@ func TestHasChanged(t *testing.T) {
 		modset       string
 		versionsFile string
 		repoRoot     string
-		expected     bool
 		err          error
 	}{
 		{
 			name:     "invalid repoRoot",
-			expected: false,
 			err:      errors.New("repository does not exist"),
 			tag:      "v0.8.0",
 			modset:   "tools",
 			repoRoot: "invalid-repo-root",
 		},
 		{
-			name:     "invalid tag",
-			expected: false,
-			err:      errors.New("tag not found"),
-			tag:      "1.2.3",
-			modset:   "tools",
+			name:   "invalid tag",
+			err:    errors.New("tag not found"),
+			tag:    "1.2.3",
+			modset: "tools",
 		},
 		{
-			name:     "invalid modset",
-			expected: false,
-			err:      errors.New("could not find module set"),
-			tag:      "v0.8.0",
-			modset:   "invalid",
+			name:   "invalid modset",
+			err:    errors.New("could not find module set"),
+			tag:    "v0.8.0",
+			modset: "invalid",
 		},
 		{
 			name:         "invalid versions file",
-			expected:     false,
 			err:          errors.New("no such file or directory"),
 			tag:          "v0.8.0",
 			versionsFile: "invalid.yaml",
@@ -119,19 +114,14 @@ func TestHasChanged(t *testing.T) {
 			} else {
 				versionFile = filepath.Join(repoRoot, "versions.yaml")
 			}
-			actual, changedFiles, err := HasChanged(repoRoot, versionFile, tt.tag, tt.modset)
+			changedFiles, err := HasChanged(repoRoot, versionFile, tt.tag, tt.modset)
 			if tt.err != nil {
 				require.Error(t, err)
 				require.ErrorContains(t, err, tt.err.Error())
 			} else {
 				require.NoError(t, err)
 			}
-			require.Equal(t, tt.expected, actual)
-			if actual {
-				require.True(t, len(changedFiles) > 0)
-			} else {
-				require.False(t, len(changedFiles) > 0)
-			}
+			require.False(t, len(changedFiles) > 0)
 		})
 	}
 }
@@ -194,19 +184,14 @@ func TestFilesChanged(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actual, changedFiles, err := filesChanged(nil, tt.modset, tt.version, tt.tagNames, tt.cli)
+			changedFiles, err := filesChanged(nil, tt.modset, tt.version, tt.tagNames, tt.cli)
 			if tt.err != nil {
 				require.Error(t, err)
 				require.ErrorContains(t, err, tt.err.Error())
 			} else {
 				require.NoError(t, err)
 			}
-			require.Equal(t, tt.expected, actual)
-			if actual {
-				require.True(t, len(changedFiles) > 0)
-			} else {
-				require.False(t, len(changedFiles) > 0)
-			}
+			require.Equal(t, len(changedFiles) > 0, tt.expected)
 		})
 	}
 }
