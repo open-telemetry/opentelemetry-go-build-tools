@@ -25,19 +25,19 @@ func TestNew(t *testing.T) {
 	root := "/tmp"
 	ctx := New(root)
 	assert.Equal(t, root, ctx.rootDir)
-	assert.Equal(t, filepath.Join(root, unreleasedDir), ctx.UnreleasedDir)
-	assert.Equal(t, filepath.Join(root, changelogMD), ctx.ChangelogMD)
-	assert.Equal(t, filepath.Join(root, unreleasedDir, templateYAML), ctx.TemplateYAML)
+	assert.Equal(t, filepath.Join(root, DefaultChloggenDir), ctx.ChloggenDir)
+	assert.Equal(t, filepath.Join(root, DefaultChangelogMD), ctx.ChangelogMD)
+	assert.Equal(t, filepath.Join(root, DefaultChloggenDir, DefaultTemplateYAML), ctx.TemplateYAML)
 }
 
-func TestWithUnreleasedDir(t *testing.T) {
+func TestWithChloggenDir(t *testing.T) {
 	root := "/tmp"
-	unreleased := ".test"
-	ctx := New(root, WithUnreleasedDir(unreleased))
+	chloggenDir := ".test"
+	ctx := New(root, WithChloggenDir(chloggenDir))
 	assert.Equal(t, root, ctx.rootDir)
-	assert.Equal(t, filepath.Join(root, unreleased), ctx.UnreleasedDir)
-	assert.Equal(t, filepath.Join(root, changelogMD), ctx.ChangelogMD)
-	assert.Equal(t, filepath.Join(root, unreleased, templateYAML), ctx.TemplateYAML)
+	assert.Equal(t, filepath.Join(root, chloggenDir), ctx.ChloggenDir)
+	assert.Equal(t, filepath.Join(root, DefaultChangelogMD), ctx.ChangelogMD)
+	assert.Equal(t, filepath.Join(root, chloggenDir, DefaultTemplateYAML), ctx.TemplateYAML)
 }
 
 func TestRepoRoot(t *testing.T) {

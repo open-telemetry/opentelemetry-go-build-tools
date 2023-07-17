@@ -39,7 +39,7 @@ var newCmd = &cobra.Command{
 }
 
 func initialize(ctx chlog.Context, filename string) error {
-	path := filepath.Join(ctx.UnreleasedDir, cleanFileName(filename))
+	path := filepath.Join(ctx.ChloggenDir, cleanFileName(filename))
 	var pathWithExt string
 	switch ext := filepath.Ext(path); ext {
 	case ".yaml":

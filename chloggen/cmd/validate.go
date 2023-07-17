@@ -32,7 +32,7 @@ var validateCmd = &cobra.Command{
 }
 
 func validate(ctx chlog.Context) error {
-	if _, err := os.Stat(ctx.UnreleasedDir); err != nil {
+	if _, err := os.Stat(ctx.ChloggenDir); err != nil {
 		return err
 	}
 
@@ -45,6 +45,6 @@ func validate(ctx chlog.Context) error {
 			return err
 		}
 	}
-	fmt.Printf("PASS: all files in %s/ are valid\n", ctx.UnreleasedDir)
+	fmt.Printf("PASS: all files in %s/ are valid\n", ctx.ChloggenDir)
 	return nil
 }

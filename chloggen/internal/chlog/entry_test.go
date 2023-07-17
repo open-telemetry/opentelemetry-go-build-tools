@@ -117,7 +117,7 @@ func TestEntry(t *testing.T) {
 
 func TestReadDeleteEntries(t *testing.T) {
 	tempDir := t.TempDir()
-	entriesDir := filepath.Join(tempDir, ".chloggen")
+	entriesDir := filepath.Join(tempDir, DefaultChloggenDir)
 	require.NoError(t, os.Mkdir(entriesDir, os.ModePerm))
 
 	entryA := Entry{
