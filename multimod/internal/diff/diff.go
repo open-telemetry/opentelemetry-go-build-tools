@@ -66,7 +66,7 @@ func (g GitClient) FilesChanged(headCommit *object.Commit, tagCommit *object.Com
 }
 
 // normalizeVersion ensures the version is prefixed with a `v`. The missing v prefix in
-// the version has caused problems in the collector repo. This logic was originall implemented
+// the version has caused problems in the collector repo. This logic was originally implemented
 // in the Makefile.
 func normalizeVersion(ver string) string {
 	if strings.HasPrefix(ver, "v") {
