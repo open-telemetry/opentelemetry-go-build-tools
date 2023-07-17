@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package tools provides helper functions used in multiple build tools.
+// Package check provides functions used in checkdoc and checkfile.
 package check
 
 import (
