@@ -26,12 +26,12 @@ var diffCmd = &cobra.Command{
 			log.Fatalf("could not find repo root: %v", err)
 		}
 
-		changed, changedFiles, err := diff.HasChanged(repoRoot, versioningFile, previousVersion, moduleSetName)
+		changedFiles, err := diff.HasChanged(repoRoot, versioningFile, previousVersion, moduleSetName)
 		if err != nil {
 			log.Fatalf("error running diff: %v", err)
 		}
 
-		if changed {
+		if len(changedFiles) > 0 {
 			log.Fatalf("The following files changed in %s modules since %s: \n%s\nRelease is required for %s modset", moduleSetName, previousVersion, strings.Join(changedFiles, "\n"), moduleSetName)
 		}
 		log.Printf("No %s modules have changed since %s", moduleSetName, previousVersion)
