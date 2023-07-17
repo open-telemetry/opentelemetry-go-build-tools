@@ -13,8 +13,8 @@ go.work.sum
 crosslink/internal/test_data/
 !crosslink/internal/test_data/.placeholder
 
-checkfile/checkfile
 checkdoc/checkdoc
+checkfile/checkfile
 chloggen/chloggen
 crosslink/crosslink
 dbotconf/dbotconf
