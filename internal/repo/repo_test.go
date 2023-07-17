@@ -35,15 +35,21 @@ func TestFindRepoRoot(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
-func TestFindModules(t *testing.T) {
-	root := t.TempDir()
-	dirs := []string{
-		root,
-		filepath.Join(root, "a"),
-		filepath.Join(root, "a/b"),
-		filepath.Join(root, "c"),
+func prepend(root string, paths ...string) []string {
+	out := make([]string, len(paths))
+	for i, p := range paths {
+		out[i] = filepath.Join(root, p)
 	}
-	for _, d := range dirs {
+	return out
+}
+
+func setupGoMod(t *testing.T, dirs []string) string {
+	t.Helper()
+
+	root := t.TempDir()
+
+	paths := append([]string{root}, prepend(root, dirs...)...)
+	for _, d := range paths {
 		require.NoError(t, os.MkdirAll(d, os.ModePerm))
 		goMod := filepath.Join(d, "go.mod")
 		f, err := os.Create(filepath.Clean(goMod))
@@ -52,14 +58,34 @@ func TestFindModules(t *testing.T) {
 		fmt.Fprintf(f, "module %s\n", modName)
 		require.NoError(t, f.Close())
 	}
+	return root
+}
+
+func TestFindModules(t *testing.T) {
+	dirs := []string{"a", "a/b", "c"}
+	root := setupGoMod(t, dirs)
 	// Add a non-module dir.
 	require.NoError(t, os.MkdirAll(filepath.Join(root, "tools"), os.ModePerm))
 
-	got, err := FindModules(root)
+	got, err := FindModules(root, nil)
 	require.NoError(t, err)
-	require.Len(t, got, len(dirs), "number of found modules")
-	for i, d := range dirs {
-		assert.Equal(t, filepath.Join(d, "go.mod"), got[i].Syntax.Name)
+	require.Len(t, got, len(dirs)+1, "number of found modules")
+	for i, d := range append([]string{root}, prepend(root, dirs...)...) {
+		want := filepath.Join(d, "go.mod")
+		assert.Equal(t, want, got[i].Syntax.Name)
+	}
+}
+
+func TestFindModulesIgnore(t *testing.T) {
+	dirs := []string{"a", "a/b", "a/b/c", "a/b/c/d", "aa", "aa/b0", "aa/b1", "aa/b2", "c"}
+	root := setupGoMod(t, dirs)
+
+	got, err := FindModules(root, []string{"a/b", "aa/b?", "c"})
+	require.NoError(t, err)
+	require.Len(t, got, 3, "number of found modules")
+	for i, d := range append([]string{root}, prepend(root, "a", "aa")...) {
+		want := filepath.Join(d, "go.mod")
+		assert.Equal(t, want, got[i].Syntax.Name)
 	}
 }
 
@@ -69,23 +95,23 @@ func TestFindModulesReturnsErrorForInvalidGoModFile(t *testing.T) {
 
 	require.NoError(t, os.WriteFile(filepath.Clean(goMod), []byte("invalid file format"), 0600))
 
-	_, err := FindModules(root)
+	_, err := FindModules(root, nil)
 	errList := modfile.ErrorList{}
 	require.ErrorAs(t, err, &errList)
 	require.Len(t, errList, 1, "unexpected errors")
 	assert.EqualError(t, errList[0].Err, "unknown directive: invalid")
 }
 
-func TestFindDockerfiles(t *testing.T) {
+type fPath struct {
+	dir  string
+	file string
+}
+
+func setupDocker(t *testing.T, layout []*fPath) string {
 	root := t.TempDir()
-	layout := []struct {
-		dir  string
-		file string
-	}{
-		{root, "Dockerfile"},
-		{filepath.Join(root, "a/b"), "Dockerfile.test"},
-		{filepath.Join(root, "a"), "test.Dockerfile"},
-		{filepath.Join(root, "c"), "Dockerfile"},
+	for i, fp := range layout {
+		layout[i].dir = prepend(root, fp.dir)[0]
+
 	}
 	for _, path := range layout {
 		require.NoError(t, os.MkdirAll(path.dir, os.ModePerm))
@@ -96,13 +122,50 @@ func TestFindDockerfiles(t *testing.T) {
 		fmt.Fprint(f, "FROM golang:1.19-alpine\n")
 		require.NoError(t, f.Close())
 	}
+	return root
+}
+
+func TestFindDockerfiles(t *testing.T) {
+	layout := []*fPath{
+		{"", "Dockerfile"},
+		{"a/b", "Dockerfile.test"},
+		{"a", "test.Dockerfile"},
+		{"c", "Dockerfile"},
+	}
+	root := setupDocker(t, layout)
 	// Add an empty dir.
 	require.NoError(t, os.MkdirAll(filepath.Join(root, "tools"), os.ModePerm))
 
-	got, err := FindFilePatternDirs(root, "*Dockerfile*")
+	got, err := FindFilePatternDirs(root, "*Dockerfile*", nil)
 	require.NoError(t, err)
 	require.Len(t, got, len(layout), "number of found Dockerfile")
 	for i, path := range layout {
+		assert.Equal(t, filepath.Join(path.dir, path.file), got[i])
+	}
+}
+
+func TestFindDockerfilesIgnore(t *testing.T) {
+	layout := []*fPath{
+		{"", "Dockerfile"},
+		{"a", "Dockerfile"},
+		{"aa", "Dockerfile"},
+		{"a/b", "Dockerfile"},
+		{"a/b/c", "Dockerfile"},
+		{"a/b/c/d", "Dockerfile"},
+		{"aa/b0", "Dockerfile"},
+		{"aa/b1", "Dockerfile"},
+		{"aa/b2", "Dockerfile"},
+		{"c", "Dockerfile"},
+	}
+	root := setupDocker(t, layout)
+	// Add an empty dir.
+	require.NoError(t, os.MkdirAll(filepath.Join(root, "tools"), os.ModePerm))
+
+	got, err := FindFilePatternDirs(root, "*Dockerfile*", []string{"a/b", "aa/b?", "c"})
+	require.NoError(t, err)
+	require.Len(t, got, 3, "number of found Dockerfile")
+	want := []*fPath{layout[0], layout[1], layout[2]}
+	for i, path := range want {
 		assert.Equal(t, filepath.Join(path.dir, path.file), got[i])
 	}
 }

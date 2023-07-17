@@ -32,7 +32,7 @@ var (
 )
 
 // allMods returns the repo root and all module files within it.
-func allMods() (string, []*modfile.File, error) {
+func allMods(ignore []string) (string, []*modfile.File, error) {
 	root, err := repo.FindRoot()
 	if err != nil {
 		return "", nil, err
@@ -41,19 +41,19 @@ func allMods() (string, []*modfile.File, error) {
 	if err != nil {
 		return "", nil, err
 	}
-	mods, err := repo.FindModules(root)
+	mods, err := repo.FindModules(root, ignore)
 	if err != nil {
 		return "", nil, err
 	}
 	return root, mods, nil
 }
 
-func allDocker(root string) ([]string, error) {
-	return repo.FindFilePatternDirs(root, "*Dockerfile*")
+func allDocker(root string, ignore []string) ([]string, error) {
+	return repo.FindFilePatternDirs(root, "*Dockerfile*", ignore)
 }
 
-func allPip(root string) ([]string, error) {
-	return repo.FindFilePatternDirs(root, "*requirements.txt")
+func allPip(root string, ignore []string) ([]string, error) {
+	return repo.FindFilePatternDirs(root, "*requirements.txt", ignore)
 }
 
 // localModPath returns the dependabot appropriate directory name for module

@@ -60,13 +60,24 @@ func FindRoot() (string, error) {
 }
 
 // FindModules returns all Go modules in the file tree rooted at root.
-func FindModules(root string) ([]*modfile.File, error) {
+func FindModules(root string, ignore []string) ([]*modfile.File, error) {
 	var results []*modfile.File
 	err := filepath.Walk(root, func(path string, info os.FileInfo, walkErr error) error {
 		if walkErr != nil {
 			// Walk failed to walk into this directory. Stop walking and
 			// signal this error.
 			return walkErr
+		}
+
+		for _, p := range ignore {
+			pattern := filepath.Join(root, p)
+			matched, err := filepath.Match(pattern, path)
+			if err != nil {
+				return err
+			}
+			if matched {
+				return filepath.SkipDir
+			}
 		}
 
 		if !info.IsDir() {
@@ -108,13 +119,24 @@ func FindModules(root string) ([]*modfile.File, error) {
 	return results, err
 }
 
-func FindFilePatternDirs(root, pattern string) ([]string, error) {
+func FindFilePatternDirs(root, pattern string, ignore []string) ([]string, error) {
 	var results []string
 	err := filepath.Walk(root, func(path string, info os.FileInfo, walkErr error) error {
 		if walkErr != nil {
 			// Walk failed to walk into this directory. Stop walking and
 			// signal this error.
 			return walkErr
+		}
+
+		for _, p := range ignore {
+			ptrn := filepath.Join(root, p)
+			matched, err := filepath.Match(ptrn, path)
+			if err != nil {
+				return err
+			}
+			if matched {
+				return filepath.SkipDir
+			}
 		}
 
 		if info.IsDir() {
