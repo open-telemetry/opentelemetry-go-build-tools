@@ -1,11 +1,8 @@
+// Deprecated: This has been deprecated in favor of `checkfile`. Please use `checkfile` with argument `--file-name README.md` instead.
 module go.opentelemetry.io/build-tools/checkdoc
 
 go 1.19
 
-require github.com/stretchr/testify v1.8.4
+require go.opentelemetry.io/build-tools v0.8.0
 
-require (
-	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
-)
+replace go.opentelemetry.io/build-tools => ../

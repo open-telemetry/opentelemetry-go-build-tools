@@ -10,3 +10,8 @@ checkdoc --project-path path/to/project \
          --component-rel-path service/defaultcomponents/defaults.go \
          --module-name go.opentelemetry.io/collector
 ```
+
+## Deprecation note
+
+This has been deprecated in favor of `checkfile`. Please use `checkfile` with
+argument `--file-name README.md` instead.

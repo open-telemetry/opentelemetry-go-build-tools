@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//       http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+// Package tools provides helper functions used in multiple build tools.
+package check
 
 import (
 	"os"
@@ -100,11 +101,12 @@ func TestGetImportPrefixesToCheck(t *testing.T) {
 	}
 }
 
-func TestCheckDocs(t *testing.T) {
+func TestFileExists(t *testing.T) {
 	type args struct {
 		projectPath                   string
 		relativeDefaultComponentsPath string
 		projectGoModule               string
+		filename                      string
 	}
 	tests := []struct {
 		name    string
@@ -144,13 +146,14 @@ func TestCheckDocs(t *testing.T) {
 				projectPath:                   getProjectPath(t),
 				relativeDefaultComponentsPath: "component/componenttest/testdata/valid_go.txt",
 				projectGoModule:               "go.opentelemetry.io/collector",
+				filename:                      "README.md",
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := checkDocs(tt.args.projectPath, tt.args.relativeDefaultComponentsPath, tt.args.projectGoModule); (err != nil) != tt.wantErr {
+			if err := FileExists(tt.args.projectPath, tt.args.relativeDefaultComponentsPath, tt.args.projectGoModule, tt.args.filename); (err != nil) != tt.wantErr {
 				t.Errorf("checkDocs() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
