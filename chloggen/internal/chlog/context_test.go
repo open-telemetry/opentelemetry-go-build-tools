@@ -18,24 +18,28 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNew(t *testing.T) {
 	root := "/tmp"
 	ctx := New(root)
-	require.Equal(t, root, ctx.rootDir)
-	require.Equal(t, filepath.Join(root, unreleasedDir), ctx.UnreleasedDir)
-	require.Equal(t, filepath.Join(root, changelogMD), ctx.ChangelogMD)
-	require.Equal(t, filepath.Join(root, unreleasedDir, templateYAML), ctx.TemplateYAML)
+	assert.Equal(t, root, ctx.rootDir)
+	assert.Equal(t, filepath.Join(root, unreleasedDir), ctx.UnreleasedDir)
+	assert.Equal(t, filepath.Join(root, changelogMD), ctx.ChangelogMD)
+	assert.Equal(t, filepath.Join(root, unreleasedDir, templateYAML), ctx.TemplateYAML)
 }
 
 func TestWithUnreleasedDir(t *testing.T) {
 	root := "/tmp"
 	unreleased := ".test"
 	ctx := New(root, WithUnreleasedDir(unreleased))
-	require.Equal(t, root, ctx.rootDir)
-	require.Equal(t, filepath.Join(root, unreleased), ctx.UnreleasedDir)
-	require.Equal(t, filepath.Join(root, changelogMD), ctx.ChangelogMD)
-	require.Equal(t, filepath.Join(root, unreleased, templateYAML), ctx.TemplateYAML)
+	assert.Equal(t, root, ctx.rootDir)
+	assert.Equal(t, filepath.Join(root, unreleased), ctx.UnreleasedDir)
+	assert.Equal(t, filepath.Join(root, changelogMD), ctx.ChangelogMD)
+	assert.Equal(t, filepath.Join(root, unreleased, templateYAML), ctx.TemplateYAML)
+}
+
+func TestRepoRoot(t *testing.T) {
+	assert.DirExists(t, RepoRoot())
 }
