@@ -15,7 +15,9 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -125,4 +127,25 @@ func writeEntryYAML(ctx chlog.Context, filename string, entry *chlog.Entry) erro
 	}
 	path := filepath.Join(ctx.ChloggenDir, filename)
 	return os.WriteFile(path, entryBytes, os.FileMode(0755))
+}
+
+func runCobra(t *testing.T, args ...string) (string, string) {
+	cmd := rootCmd()
+
+	outBytes := bytes.NewBufferString("")
+	cmd.SetOut(outBytes)
+
+	errBytes := bytes.NewBufferString("")
+	cmd.SetErr(errBytes)
+
+	cmd.SetArgs(args)
+	cmd.Execute() // nolint:errcheck
+
+	out, ioErr := io.ReadAll(outBytes)
+	require.NoError(t, ioErr, "read stdout")
+
+	err, ioErr := io.ReadAll(errBytes)
+	require.NoError(t, ioErr, "read stderr")
+
+	return string(out), string(err)
 }

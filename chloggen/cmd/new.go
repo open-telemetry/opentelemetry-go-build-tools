@@ -15,61 +15,54 @@
 package cmd
 
 import (
-	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
-
-	"go.opentelemetry.io/build-tools/chloggen/internal/chlog"
 )
 
 var (
 	filename string
 )
 
-var newCmd = &cobra.Command{
-	Use:   "new",
-	Short: "Creates new change file",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return initialize(chlogCtx, filename)
-	},
-}
+func newCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "new",
+		Short: "Creates new change file",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			path := filepath.Join(chlogCtx.ChloggenDir, cleanFileName(filename))
+			var pathWithExt string
+			switch ext := filepath.Ext(path); ext {
+			case ".yaml":
+				pathWithExt = path
+			case ".yml":
+				pathWithExt = strings.TrimSuffix(path, ".yml") + ".yaml"
+			default:
+				pathWithExt = path + ".yaml"
+			}
 
-func initialize(ctx chlog.Context, filename string) error {
-	path := filepath.Join(ctx.ChloggenDir, cleanFileName(filename))
-	var pathWithExt string
-	switch ext := filepath.Ext(path); ext {
-	case ".yaml":
-		pathWithExt = path
-	case ".yml":
-		pathWithExt = strings.TrimSuffix(path, ".yml") + ".yaml"
-	default:
-		pathWithExt = path + ".yaml"
+			templateBytes, err := os.ReadFile(filepath.Clean(chlogCtx.TemplateYAML))
+			if err != nil {
+				return err
+			}
+			err = os.WriteFile(pathWithExt, templateBytes, os.FileMode(0755))
+			if err != nil {
+				return err
+			}
+			cmd.Printf("Changelog entry template copied to: %s\n", pathWithExt)
+			return nil
+		},
 	}
-
-	templateBytes, err := os.ReadFile(filepath.Clean(ctx.TemplateYAML))
-	if err != nil {
-		return err
+	cmd.Flags().StringVarP(&filename, "filename", "f", "", "name of the file to add")
+	if err := cmd.MarkFlagRequired("filename"); err != nil {
+		cmd.PrintErrf("could not mark filename flag as required: %v", err)
+		os.Exit(1)
 	}
-	err = os.WriteFile(pathWithExt, templateBytes, os.FileMode(0755))
-	if err != nil {
-		return err
-	}
-	fmt.Printf("Changelog entry template copied to: %s\n", pathWithExt)
-	return nil
+	return cmd
 }
 
 func cleanFileName(filename string) string {
 	replace := strings.NewReplacer("/", "_", "\\", "_")
 	return replace.Replace(filename)
-}
-
-func init() {
-	newCmd.Flags().StringVarP(&filename, "filename", "f", "", "name of the file to add")
-	if err := newCmd.MarkFlagRequired("filename"); err != nil {
-		log.Fatalf("could not mark filename flag as required: %v", err)
-	}
 }
