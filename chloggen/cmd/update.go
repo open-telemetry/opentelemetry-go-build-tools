@@ -35,67 +35,63 @@ var (
 	dry     bool
 )
 
-var updateCmd = &cobra.Command{
-	Use:   "update",
-	Short: "Updates CHANGELOG.MD to include all new changes",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return update(chlogCtx, version, dry)
-	},
-}
+func updateCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "update",
+		Short: "Updates CHANGELOG.MD to include all new changes",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			entries, err := chlog.ReadEntries(chlogCtx)
+			if err != nil {
+				return err
+			}
 
-func update(ctx chlog.Context, version string, dry bool) error {
-	entries, err := chlog.ReadEntries(ctx)
-	if err != nil {
-		return err
+			if len(entries) == 0 {
+				return fmt.Errorf("no entries to add to the changelog")
+			}
+
+			chlogUpdate, err := chlog.GenerateSummary(version, entries)
+			if err != nil {
+				return err
+			}
+
+			if dry {
+				cmd.Printf("Generated changelog updates:")
+				cmd.Println(chlogUpdate)
+				return nil
+			}
+
+			oldChlogBytes, err := os.ReadFile(filepath.Clean(chlogCtx.ChangelogMD))
+			if err != nil {
+				return err
+			}
+			chlogParts := bytes.Split(oldChlogBytes, []byte(insertPoint))
+			if len(chlogParts) != 2 {
+				return fmt.Errorf("expected one instance of %s", insertPoint)
+			}
+
+			chlogHeader, chlogHistory := string(chlogParts[0]), string(chlogParts[1])
+
+			var chlogBuilder strings.Builder
+			chlogBuilder.WriteString(chlogHeader)
+			chlogBuilder.WriteString(insertPoint)
+			chlogBuilder.WriteString(chlogUpdate)
+			chlogBuilder.WriteString(chlogHistory)
+
+			tmpMD := chlogCtx.ChangelogMD + ".tmp"
+			if err = os.WriteFile(filepath.Clean(tmpMD), []byte(chlogBuilder.String()), 0600); err != nil {
+				return err
+			}
+
+			if err = os.Rename(tmpMD, chlogCtx.ChangelogMD); err != nil {
+				return err
+			}
+
+			cmd.Printf("Finished updating %s\n", chlogCtx.ChangelogMD)
+
+			return chlog.DeleteEntries(chlogCtx)
+		},
 	}
-
-	if len(entries) == 0 {
-		return fmt.Errorf("no entries to add to the changelog")
-	}
-
-	chlogUpdate, err := chlog.GenerateSummary(version, entries)
-	if err != nil {
-		return err
-	}
-
-	if dry {
-		fmt.Printf("Generated changelog updates:")
-		fmt.Println(chlogUpdate)
-		return nil
-	}
-
-	oldChlogBytes, err := os.ReadFile(filepath.Clean(ctx.ChangelogMD))
-	if err != nil {
-		return err
-	}
-	chlogParts := bytes.Split(oldChlogBytes, []byte(insertPoint))
-	if len(chlogParts) != 2 {
-		return fmt.Errorf("expected one instance of %s", insertPoint)
-	}
-
-	chlogHeader, chlogHistory := string(chlogParts[0]), string(chlogParts[1])
-
-	var chlogBuilder strings.Builder
-	chlogBuilder.WriteString(chlogHeader)
-	chlogBuilder.WriteString(insertPoint)
-	chlogBuilder.WriteString(chlogUpdate)
-	chlogBuilder.WriteString(chlogHistory)
-
-	tmpMD := ctx.ChangelogMD + ".tmp"
-	if err = os.WriteFile(filepath.Clean(tmpMD), []byte(chlogBuilder.String()), 0600); err != nil {
-		return err
-	}
-
-	if err = os.Rename(tmpMD, ctx.ChangelogMD); err != nil {
-		return err
-	}
-
-	fmt.Printf("Finished updating %s\n", ctx.ChangelogMD)
-
-	return chlog.DeleteEntries(ctx)
-}
-
-func init() {
-	updateCmd.Flags().StringVarP(&version, "version", "v", "vTODO", "will be rendered directly into the update text")
-	updateCmd.Flags().BoolVarP(&dry, "dry", "d", false, "will generate the update text and print to stdout")
+	cmd.Flags().StringVarP(&version, "version", "v", "vTODO", "will be rendered directly into the update text")
+	cmd.Flags().BoolVarP(&dry, "dry", "d", false, "will generate the update text and print to stdout")
+	return cmd
 }

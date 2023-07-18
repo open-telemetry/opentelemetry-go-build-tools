@@ -15,11 +15,13 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"go.opentelemetry.io/build-tools/chloggen/internal/chlog"
@@ -85,26 +87,39 @@ func TestUpdateE2E(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := setupTestDir(t, tc.entries)
+			chlogCtx = setupTestDir(t, tc.entries)
 
-			require.NoError(t, update(ctx, tc.version, tc.dry))
+			args := []string{"update", "--version", tc.version}
+			if tc.dry {
+				args = append(args, "--dry")
+			}
 
-			actualBytes, err := os.ReadFile(ctx.ChangelogMD)
-			require.NoError(t, err)
+			var out, err string
+			out, err = runCobra(t, args...)
+
+			assert.Empty(t, err)
+			if tc.dry {
+				assert.Contains(t, out, "Generated changelog updates:")
+			} else {
+				assert.Contains(t, out, fmt.Sprintf("Finished updating %s", chlogCtx.ChangelogMD))
+			}
+
+			actualBytes, ioErr := os.ReadFile(chlogCtx.ChangelogMD)
+			require.NoError(t, ioErr)
 
 			expectedChangelogMD := filepath.Join("testdata", tc.name+".md")
-			expectedBytes, err := os.ReadFile(filepath.Clean(expectedChangelogMD))
-			require.NoError(t, err)
+			expectedBytes, ioErr := os.ReadFile(filepath.Clean(expectedChangelogMD))
+			require.NoError(t, ioErr)
 
 			require.Equal(t, string(expectedBytes), string(actualBytes))
 
-			remainingYAMLs, err := filepath.Glob(filepath.Join(ctx.ChloggenDir, "*.yaml"))
-			require.NoError(t, err)
+			remainingYAMLs, ioErr := filepath.Glob(filepath.Join(chlogCtx.ChloggenDir, "*.yaml"))
+			require.NoError(t, ioErr)
 			if tc.dry {
 				require.Equal(t, 1+len(tc.entries), len(remainingYAMLs))
 			} else {
 				require.Equal(t, 1, len(remainingYAMLs))
-				require.Equal(t, ctx.TemplateYAML, remainingYAMLs[0])
+				require.Equal(t, chlogCtx.TemplateYAML, remainingYAMLs[0])
 			}
 		})
 	}

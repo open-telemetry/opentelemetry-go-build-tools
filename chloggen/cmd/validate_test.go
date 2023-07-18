@@ -15,9 +15,10 @@
 package cmd
 
 import (
+	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 
 	"go.opentelemetry.io/build-tools/chloggen/internal/chlog"
 )
@@ -118,13 +119,15 @@ func TestValidateE2E(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := setupTestDir(t, tc.entries)
+			chlogCtx = setupTestDir(t, tc.entries)
 
-			err := validate(ctx)
+			out, err := runCobra(t, "validate")
+
 			if tc.wantErr != "" {
-				require.Regexp(t, tc.wantErr, err)
+				assert.Regexp(t, tc.wantErr, err)
 			} else {
-				require.NoError(t, err)
+				assert.Empty(t, err)
+				assert.Contains(t, out, fmt.Sprintf("PASS: all files in %s/ are valid", chlogCtx.ChloggenDir))
 			}
 		})
 	}

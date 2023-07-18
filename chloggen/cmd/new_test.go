@@ -15,53 +15,69 @@
 package cmd
 
 import (
+	"fmt"
+	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 
 	"go.opentelemetry.io/build-tools/chloggen/internal/chlog"
 )
 
-func TestNew(t *testing.T) {
-	tests := []struct {
-		name     string
-		filename string
-	}{
-		{
-			name:     "no_extension",
-			filename: "my-change",
-		},
-		{
-			name:     "yaml_extension",
-			filename: "some-change.yaml",
-		},
-		{
-			name:     "yml_extension",
-			filename: "some-change.yml",
-		},
-		{
-			name:     "replace_forward_slash",
-			filename: "replace/forward/slash",
-		},
-		{
-			name:     "name_with_period",
-			filename: "not.an.extension",
-		},
-		{
-			name:     "bad_extension",
-			filename: "my-change.txt",
-		},
-	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			ctx := setupTestDir(t, []*chlog.Entry{})
-			require.NoError(t, initialize(ctx, tc.filename))
-			require.Error(t, validate(ctx), "The new entry should not be valid without user input")
-		})
-	}
+const newUsage = `Usage:
+  chloggen new [flags]
+
+Flags:
+  -f, --filename string   name of the file to add
+  -h, --help              help for new
+
+Global Flags:
+      --chloggen-directory string   directory containing unreleased change log entries (default: .chloggen)`
+
+func TestNewCommand(t *testing.T) {
+	var out, err string
+
+	out, err = runCobra(t, "new", "--help")
+	assert.Contains(t, out, newUsage)
+	assert.Empty(t, err)
+
+	out, err = runCobra(t, "new")
+	assert.Contains(t, out, newUsage)
+	assert.Contains(t, err, `required flag(s) "filename" not set`)
+
+	out, err = runCobra(t, "new", "--filename", "my-change")
+	assert.Contains(t, out, newUsage)
+	assert.Contains(t, err, `no such file or directory`)
+
+	// Set up a test directory to which we will write new files
+	chlogCtx = setupTestDir(t, []*chlog.Entry{})
+
+	out, err = runCobra(t, "new", "--filename", "my-change")
+	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(chlogCtx.ChloggenDir, "my-change.yaml")))
+	assert.Empty(t, err)
+
+	out, err = runCobra(t, "new", "--filename", "some-change.yaml")
+	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(chlogCtx.ChloggenDir, "some-change.yaml")))
+	assert.Empty(t, err)
+
+	out, err = runCobra(t, "new", "--filename", "some-change.yml")
+	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(chlogCtx.ChloggenDir, "some-change.yaml")))
+	assert.Empty(t, err)
+
+	out, err = runCobra(t, "new", "--filename", "replace/forward/slash")
+	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(chlogCtx.ChloggenDir, "replace_forward_slash.yaml")))
+	assert.Empty(t, err)
+
+	out, err = runCobra(t, "new", "--filename", "not.an.extension")
+	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(chlogCtx.ChloggenDir, "not.an.extension.yaml")))
+	assert.Empty(t, err)
+
+	out, err = runCobra(t, "new", "--filename", "my-change.txt")
+	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(chlogCtx.ChloggenDir, "my-change.txt.yaml")))
+	assert.Empty(t, err)
 }
 
 func TestCleanFilename(t *testing.T) {
-	require.Equal(t, "fix_some_bug", cleanFileName("fix/some_bug"))
-	require.Equal(t, "fix_some_bug", cleanFileName("fix\\some_bug"))
+	assert.Equal(t, "fix_some_bug", cleanFileName("fix/some_bug"))
+	assert.Equal(t, "fix_some_bug", cleanFileName("fix\\some_bug"))
 }
