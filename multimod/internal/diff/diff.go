@@ -10,13 +10,64 @@ import (
 	"strings"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/object"
 
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
 
-// check
+type Client interface {
+	HeadCommit(r *git.Repository) (*object.Commit, error)
+	TagCommit(r *git.Repository, tag string) (*object.Commit, error)
+	FilesChanged(headCommit *object.Commit, tagCommit *object.Commit, prefix string, suffix string) ([]string, error)
+}
 
-// normalizeVersion ensures the version is prefixed with a `v`.
+type GitClient struct{}
+
+func (g GitClient) HeadCommit(r *git.Repository) (*object.Commit, error) {
+	headRef, err := r.Head()
+	if err != nil {
+		return nil, err
+	}
+	return r.CommitObject(headRef.Hash())
+}
+
+func (g GitClient) TagCommit(r *git.Repository, tag string) (*object.Commit, error) {
+	tagRef, err := r.Tag(tag)
+	if err != nil {
+		return nil, err
+	}
+
+	o, err := r.TagObject(tagRef.Hash())
+	if err != nil {
+		return nil, fmt.Errorf("tag object error %s %w", tagRef.Hash().String(), err)
+	}
+	return r.CommitObject(o.Target)
+}
+
+// FilesChanged returns a list of files that have changed between two commits.
+func (g GitClient) FilesChanged(headCommit *object.Commit, tagCommit *object.Commit, prefix string, suffix string) ([]string, error) {
+	changedFiles := []string{}
+	p, err := headCommit.Patch(tagCommit)
+	if err != nil {
+		return changedFiles, err
+	}
+
+	for _, f := range p.FilePatches() {
+		from, to := f.Files()
+		if from != nil && strings.HasSuffix(from.Path(), suffix) && strings.HasPrefix(from.Path(), prefix) {
+			changedFiles = append(changedFiles, from.Path())
+			continue
+		}
+		if to != nil && strings.HasSuffix(to.Path(), suffix) && strings.HasPrefix(to.Path(), prefix) {
+			changedFiles = append(changedFiles, to.Path())
+		}
+	}
+	return changedFiles, nil
+}
+
+// normalizeVersion ensures the version is prefixed with a `v`. The missing v prefix in
+// the version has caused problems in the collector repo. This logic was originally implemented
+// in the Makefile.
 func normalizeVersion(ver string) string {
 	if strings.HasPrefix(ver, "v") {
 		return ver
@@ -31,23 +82,22 @@ func normalizeTag(tagName common.ModuleTagName, ver string) string {
 	return fmt.Sprintf("%s/%s", tagName, ver)
 }
 
-func HasChanged(repoRoot string, versioningFile string, ver string, modset string) (bool, []string, error) {
-	changed := false
+func HasChanged(repoRoot string, versioningFile string, ver string, modset string) ([]string, error) {
 	changedFiles := []string{}
 	ver = normalizeVersion(ver)
 
 	r, err := git.PlainOpen(repoRoot)
 	if err != nil {
-		return changed, changedFiles, fmt.Errorf("could not open repo at %v: %w", repoRoot, err)
+		return changedFiles, fmt.Errorf("could not open repo at %v: %w", repoRoot, err)
 	}
 
 	if e := common.VerifyWorkingTreeClean(r); e != nil {
-		return changed, changedFiles, fmt.Errorf("VerifyWorkingTreeClean failed: %w", e)
+		return changedFiles, fmt.Errorf("VerifyWorkingTreeClean failed: %w", e)
 	}
 
 	mset, err := common.NewModuleSetRelease(versioningFile, modset, repoRoot)
 	if err != nil {
-		return changed, changedFiles, err
+		return changedFiles, err
 	}
 
 	// get tag names of mods to update
@@ -57,44 +107,40 @@ func HasChanged(repoRoot string, versioningFile string, ver string, modset strin
 		repoRoot,
 	)
 	if err != nil {
-		return changed, changedFiles, fmt.Errorf("could not retrieve tag names from module paths: %w", err)
+		return changedFiles, fmt.Errorf("could not retrieve tag names from module paths: %w", err)
 	}
 
-	return filesChanged(r, modset, ver, tagNames, common.GitClient{})
+	return filesChanged(r, modset, ver, tagNames, GitClient{})
 }
 
-func filesChanged(r *git.Repository, modset string, ver string, tagNames []common.ModuleTagName, client common.Client) (bool, []string, error) {
-	changed := false
+func filesChanged(r *git.Repository, modset string, ver string, tagNames []common.ModuleTagName, client Client) ([]string, error) {
 	changedFiles := []string{}
 	headCommit, err := client.HeadCommit(r)
 	if err != nil {
-		return changed, changedFiles, err
+		return changedFiles, err
 	}
 
 	// get all modules in modset
 	for _, tagName := range tagNames {
-		// check tag exists
 		tag := normalizeTag(tagName, ver)
-
 		tagCommit, err := client.TagCommit(r, tag)
 		if err != nil {
 			if errors.Is(err, git.ErrTagNotFound) {
 				log.Printf("Module %s does not have a %s tag", tagName, ver)
 				log.Printf("%s release is required.", modset)
-				return changed, changedFiles, fmt.Errorf("tag not found %s", tag)
+				return changedFiles, fmt.Errorf("tag not found %s", tag)
 			}
-			return changed, changedFiles, err
+			return changedFiles, err
 		}
 
 		files, err := client.FilesChanged(headCommit, tagCommit, string(tagName), ".go")
 		if err != nil {
-			return changed, changedFiles, err
+			return changedFiles, err
 		}
 		if len(files) > 0 {
-			changed = true
 			changedFiles = append(changedFiles, files...)
 		}
 	}
 
-	return changed, changedFiles, nil
+	return changedFiles, nil
 }
