@@ -99,11 +99,11 @@ func setupTestDir(t *testing.T, entries []*chlog.Entry) chlog.Context {
 	ctx := chlog.New(t.TempDir())
 
 	// Create a known dummy changelog which may be updated by the test
-	changelogBytes, err := os.ReadFile(filepath.Join("testdata", "CHANGELOG.md"))
+	changelogBytes, err := os.ReadFile(filepath.Join("testdata", chlog.DefaultChangelogMD))
 	require.NoError(t, err)
 	require.NoError(t, os.WriteFile(ctx.ChangelogMD, changelogBytes, os.FileMode(0755)))
 
-	require.NoError(t, os.Mkdir(ctx.UnreleasedDir, os.FileMode(0755)))
+	require.NoError(t, os.Mkdir(ctx.ChloggenDir, os.FileMode(0755)))
 
 	// Copy the entry template, for tests that ensure it is not deleted
 	templateInRootDir := chlog.New("testdata").TemplateYAML
@@ -123,6 +123,6 @@ func writeEntryYAML(ctx chlog.Context, filename string, entry *chlog.Entry) erro
 	if err != nil {
 		return err
 	}
-	path := filepath.Join(ctx.UnreleasedDir, filename)
+	path := filepath.Join(ctx.ChloggenDir, filename)
 	return os.WriteFile(path, entryBytes, os.FileMode(0755))
 }

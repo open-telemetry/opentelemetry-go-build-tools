@@ -92,7 +92,7 @@ func (e Entry) String() string {
 }
 
 func ReadEntries(ctx Context) ([]*Entry, error) {
-	entryYAMLs, err := filepath.Glob(filepath.Join(ctx.UnreleasedDir, "*.yaml"))
+	entryYAMLs, err := filepath.Glob(filepath.Join(ctx.ChloggenDir, "*.yaml"))
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func ReadEntries(ctx Context) ([]*Entry, error) {
 }
 
 func DeleteEntries(ctx Context) error {
-	entryYAMLs, err := filepath.Glob(filepath.Join(ctx.UnreleasedDir, "*.yaml"))
+	entryYAMLs, err := filepath.Glob(filepath.Join(ctx.ChloggenDir, "*.yaml"))
 	if err != nil {
 		return err
 	}

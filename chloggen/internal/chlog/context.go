@@ -21,34 +21,34 @@ import (
 )
 
 const (
-	changelogMD   = "CHANGELOG.md"
-	unreleasedDir = ".chloggen"
-	templateYAML  = "TEMPLATE.yaml"
+	DefaultChangelogMD  = "CHANGELOG.md"
+	DefaultChloggenDir  = ".chloggen"
+	DefaultTemplateYAML = "TEMPLATE.yaml"
 )
 
 // Context enables tests by allowing them to work in an test directory
 type Context struct {
-	rootDir       string
-	ChangelogMD   string
-	UnreleasedDir string
-	TemplateYAML  string
+	rootDir      string
+	ChangelogMD  string
+	ChloggenDir  string
+	TemplateYAML string
 }
 
 type Option func(*Context)
 
-func WithUnreleasedDir(unreleasedDir string) Option {
+func WithChloggenDir(chloggenDir string) Option {
 	return func(ctx *Context) {
-		ctx.UnreleasedDir = filepath.Join(ctx.rootDir, unreleasedDir)
-		ctx.TemplateYAML = filepath.Join(ctx.rootDir, unreleasedDir, templateYAML)
+		ctx.ChloggenDir = filepath.Join(ctx.rootDir, chloggenDir)
+		ctx.TemplateYAML = filepath.Join(ctx.rootDir, chloggenDir, DefaultTemplateYAML)
 	}
 }
 
 func New(rootDir string, options ...Option) Context {
 	ctx := Context{
-		rootDir:       rootDir,
-		ChangelogMD:   filepath.Join(rootDir, changelogMD),
-		UnreleasedDir: filepath.Join(rootDir, unreleasedDir),
-		TemplateYAML:  filepath.Join(rootDir, unreleasedDir, templateYAML),
+		rootDir:      rootDir,
+		ChangelogMD:  filepath.Join(rootDir, DefaultChangelogMD),
+		ChloggenDir:  filepath.Join(rootDir, DefaultChloggenDir),
+		TemplateYAML: filepath.Join(rootDir, DefaultChloggenDir, DefaultTemplateYAML),
 	}
 	for _, op := range options {
 		op(&ctx)

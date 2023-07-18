@@ -98,7 +98,7 @@ func TestUpdateE2E(t *testing.T) {
 
 			require.Equal(t, string(expectedBytes), string(actualBytes))
 
-			remainingYAMLs, err := filepath.Glob(filepath.Join(ctx.UnreleasedDir, "*.yaml"))
+			remainingYAMLs, err := filepath.Glob(filepath.Join(ctx.ChloggenDir, "*.yaml"))
 			require.NoError(t, err)
 			if tc.dry {
 				require.Equal(t, 1+len(tc.entries), len(remainingYAMLs))
