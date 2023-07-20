@@ -94,14 +94,14 @@ func (e Entry) String() string {
 }
 
 func ReadEntries(cfg config.Config) ([]*Entry, error) {
-	entryYAMLs, err := filepath.Glob(filepath.Join(cfg.ChloggenDir, "*.yaml"))
+	entryYAMLs, err := filepath.Glob(filepath.Join(cfg.ChlogsDir, "*.yaml"))
 	if err != nil {
 		return nil, err
 	}
 
 	entries := make([]*Entry, 0, len(entryYAMLs))
 	for _, entryYAML := range entryYAMLs {
-		if filepath.Base(entryYAML) == filepath.Base(cfg.TemplateYAML) {
+		if entryYAML == cfg.TemplateYAML || entryYAML == cfg.ConfigYAML {
 			continue
 		}
 
@@ -120,7 +120,7 @@ func ReadEntries(cfg config.Config) ([]*Entry, error) {
 }
 
 func DeleteEntries(cfg config.Config) error {
-	entryYAMLs, err := filepath.Glob(filepath.Join(cfg.ChloggenDir, "*.yaml"))
+	entryYAMLs, err := filepath.Glob(filepath.Join(cfg.ChlogsDir, "*.yaml"))
 	if err != nil {
 		return err
 	}

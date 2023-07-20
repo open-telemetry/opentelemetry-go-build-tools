@@ -24,8 +24,8 @@ import (
 )
 
 var (
-	chloggenDir string
-	globalCfg   config.Config
+	configFile string
+	globalCfg  config.Config
 )
 
 func rootCmd() *cobra.Command {
@@ -34,7 +34,7 @@ func rootCmd() *cobra.Command {
 		Short: "Updates CHANGELOG.MD to include all new changes",
 		Long:  `chloggen is a tool used to automate the generation of CHANGELOG files using individual yaml files as the source.`,
 	}
-	cmd.PersistentFlags().StringVar(&chloggenDir, "chloggen-directory", "", "directory containing unreleased change log entries (default: .chloggen)")
+	cmd.PersistentFlags().StringVar(&configFile, "config", "", "(optional) chloggen config file")
 	cmd.AddCommand(newCmd())
 	cmd.AddCommand(updateCmd())
 	cmd.AddCommand(validateCmd())
@@ -56,10 +56,16 @@ func initConfig() {
 		return
 	}
 
-	if chloggenDir == "" {
-		chloggenDir = ".chloggen"
+	if configFile == "" {
+		globalCfg = config.New(repoRoot())
+	} else {
+		var err error
+		globalCfg, err = config.NewFromFile(repoRoot(), configFile)
+		if err != nil {
+			fmt.Printf("FAIL: Could not load config file: %s\n", err.Error())
+			os.Exit(1)
+		}
 	}
-	globalCfg = config.New(repoRoot(), config.WithChloggenDir(chloggenDir))
 }
 
 func repoRoot() string {

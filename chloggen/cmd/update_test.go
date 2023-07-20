@@ -36,7 +36,7 @@ Flags:
   -v, --version string   will be rendered directly into the update text (default "vTODO")
 
 Global Flags:
-      --chloggen-directory string   directory containing unreleased change log entries (default: .chloggen)`
+      --config string   (optional) chloggen config file`
 
 func TestUpdateErr(t *testing.T) {
 	var out, err string
@@ -48,6 +48,17 @@ func TestUpdateErr(t *testing.T) {
 	out, err = runCobra(t, "update")
 	assert.Contains(t, out, updateUsage)
 	assert.Contains(t, err, "no entries to add to the changelog")
+
+	globalCfg = setupTestDir(t, []*chlog.Entry{})
+	badEntry, ioErr := os.CreateTemp(globalCfg.ChlogsDir, "*.yaml")
+	require.NoError(t, ioErr)
+	defer badEntry.Close()
+
+	_, ioErr = badEntry.Write([]byte("bad yaml"))
+	require.NoError(t, ioErr)
+	out, err = runCobra(t, "update")
+	assert.Contains(t, out, updateUsage)
+	assert.Contains(t, err, "yaml: unmarshal errors")
 }
 
 func TestUpdate(t *testing.T) {
@@ -137,7 +148,7 @@ func TestUpdate(t *testing.T) {
 
 			require.Equal(t, string(expectedBytes), string(actualBytes))
 
-			remainingYAMLs, ioErr := filepath.Glob(filepath.Join(globalCfg.ChloggenDir, "*.yaml"))
+			remainingYAMLs, ioErr := filepath.Glob(filepath.Join(globalCfg.ChlogsDir, "*.yaml"))
 			require.NoError(t, ioErr)
 			if tc.dry {
 				require.Equal(t, 1+len(tc.entries), len(remainingYAMLs))

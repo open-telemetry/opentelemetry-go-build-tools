@@ -32,7 +32,7 @@ Flags:
   -h, --help              help for new
 
 Global Flags:
-      --chloggen-directory string   directory containing unreleased change log entries (default: .chloggen)`
+      --config string   (optional) chloggen config file`
 
 func TestNewErr(t *testing.T) {
 	var out, err string
@@ -56,27 +56,27 @@ func TestNew(t *testing.T) {
 	var out, err string
 
 	out, err = runCobra(t, "new", "--filename", "my-change")
-	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.ChloggenDir, "my-change.yaml")))
+	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.ChlogsDir, "my-change.yaml")))
 	assert.Empty(t, err)
 
 	out, err = runCobra(t, "new", "--filename", "some-change.yaml")
-	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.ChloggenDir, "some-change.yaml")))
+	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.ChlogsDir, "some-change.yaml")))
 	assert.Empty(t, err)
 
 	out, err = runCobra(t, "new", "--filename", "some-change.yml")
-	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.ChloggenDir, "some-change.yaml")))
+	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.ChlogsDir, "some-change.yaml")))
 	assert.Empty(t, err)
 
 	out, err = runCobra(t, "new", "--filename", "replace/forward/slash")
-	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.ChloggenDir, "replace_forward_slash.yaml")))
+	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.ChlogsDir, "replace_forward_slash.yaml")))
 	assert.Empty(t, err)
 
 	out, err = runCobra(t, "new", "--filename", "not.an.extension")
-	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.ChloggenDir, "not.an.extension.yaml")))
+	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.ChlogsDir, "not.an.extension.yaml")))
 	assert.Empty(t, err)
 
 	out, err = runCobra(t, "new", "--filename", "my-change.txt")
-	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.ChloggenDir, "my-change.txt.yaml")))
+	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.ChlogsDir, "my-change.txt.yaml")))
 	assert.Empty(t, err)
 }
 

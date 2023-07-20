@@ -30,7 +30,7 @@ Flags:
   -h, --help   help for validate
 
 Global Flags:
-      --chloggen-directory string   directory containing unreleased change log entries (default: .chloggen)`
+      --config string   (optional) chloggen config file`
 
 func TestValidateErr(t *testing.T) {
 	var out, err string
@@ -148,7 +148,7 @@ func TestValidate(t *testing.T) {
 				assert.Regexp(t, tc.wantErr, err)
 			} else {
 				assert.Empty(t, err)
-				assert.Contains(t, out, fmt.Sprintf("PASS: all files in %s/ are valid", globalCfg.ChloggenDir))
+				assert.Contains(t, out, fmt.Sprintf("PASS: all files in %s/ are valid", globalCfg.ChlogsDir))
 			}
 		})
 	}
