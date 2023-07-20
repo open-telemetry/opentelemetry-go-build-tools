@@ -27,11 +27,11 @@ func validateCmd() *cobra.Command {
 		Use:   "validate",
 		Short: "Validates the files in the changelog directory",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if _, err := os.Stat(chlogCtx.ChloggenDir); err != nil {
+			if _, err := os.Stat(globalCfg.ChloggenDir); err != nil {
 				return err
 			}
 
-			entries, err := chlog.ReadEntries(chlogCtx)
+			entries, err := chlog.ReadEntries(globalCfg)
 			if err != nil {
 				return err
 			}
@@ -40,7 +40,7 @@ func validateCmd() *cobra.Command {
 					return err
 				}
 			}
-			cmd.Printf("PASS: all files in %s/ are valid\n", chlogCtx.ChloggenDir)
+			cmd.Printf("PASS: all files in %s/ are valid\n", globalCfg.ChloggenDir)
 			return nil
 		},
 	}

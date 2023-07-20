@@ -22,6 +22,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
+
+	"go.opentelemetry.io/build-tools/chloggen/internal/config"
 )
 
 func TestEntry(t *testing.T) {
@@ -117,7 +119,7 @@ func TestEntry(t *testing.T) {
 
 func TestReadDeleteEntries(t *testing.T) {
 	tempDir := t.TempDir()
-	entriesDir := filepath.Join(tempDir, DefaultChloggenDir)
+	entriesDir := filepath.Join(tempDir, config.DefaultChloggenDir)
 	require.NoError(t, os.Mkdir(entriesDir, os.ModePerm))
 
 	entryA := Entry{
@@ -155,14 +157,14 @@ func TestReadDeleteEntries(t *testing.T) {
 	_, err = fileB.Write(bytesB)
 	require.NoError(t, err)
 
-	chloggenCtx := New(tempDir)
-	entries, err := ReadEntries(chloggenCtx)
+	cfg := config.New(tempDir)
+	entries, err := ReadEntries(cfg)
 	assert.NoError(t, err)
 
 	assert.ElementsMatch(t, []*Entry{&entryA, &entryB}, entries)
 
-	assert.NoError(t, DeleteEntries(chloggenCtx))
-	entries, err = ReadEntries(chloggenCtx)
+	assert.NoError(t, DeleteEntries(cfg))
+	entries, err = ReadEntries(cfg)
 	assert.NoError(t, err)
 	assert.Empty(t, entries)
 }

@@ -40,7 +40,7 @@ func updateCmd() *cobra.Command {
 		Use:   "update",
 		Short: "Updates CHANGELOG.MD to include all new changes",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			entries, err := chlog.ReadEntries(chlogCtx)
+			entries, err := chlog.ReadEntries(globalCfg)
 			if err != nil {
 				return err
 			}
@@ -60,7 +60,7 @@ func updateCmd() *cobra.Command {
 				return nil
 			}
 
-			oldChlogBytes, err := os.ReadFile(filepath.Clean(chlogCtx.ChangelogMD))
+			oldChlogBytes, err := os.ReadFile(filepath.Clean(globalCfg.ChangelogMD))
 			if err != nil {
 				return err
 			}
@@ -77,18 +77,18 @@ func updateCmd() *cobra.Command {
 			chlogBuilder.WriteString(chlogUpdate)
 			chlogBuilder.WriteString(chlogHistory)
 
-			tmpMD := chlogCtx.ChangelogMD + ".tmp"
+			tmpMD := globalCfg.ChangelogMD + ".tmp"
 			if err = os.WriteFile(filepath.Clean(tmpMD), []byte(chlogBuilder.String()), 0600); err != nil {
 				return err
 			}
 
-			if err = os.Rename(tmpMD, chlogCtx.ChangelogMD); err != nil {
+			if err = os.Rename(tmpMD, globalCfg.ChangelogMD); err != nil {
 				return err
 			}
 
-			cmd.Printf("Finished updating %s\n", chlogCtx.ChangelogMD)
+			cmd.Printf("Finished updating %s\n", globalCfg.ChangelogMD)
 
-			return chlog.DeleteEntries(chlogCtx)
+			return chlog.DeleteEntries(globalCfg)
 		},
 	}
 	cmd.Flags().StringVarP(&version, "version", "v", "vTODO", "will be rendered directly into the update text")

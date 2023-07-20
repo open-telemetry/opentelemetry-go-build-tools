@@ -23,7 +23,28 @@ import (
 	"go.opentelemetry.io/build-tools/chloggen/internal/chlog"
 )
 
-func TestValidateE2E(t *testing.T) {
+const validateUsage = `Usage:
+  chloggen validate [flags]
+
+Flags:
+  -h, --help   help for validate
+
+Global Flags:
+      --chloggen-directory string   directory containing unreleased change log entries (default: .chloggen)`
+
+func TestValidateErr(t *testing.T) {
+	var out, err string
+
+	out, err = runCobra(t, "validate", "--help")
+	assert.Contains(t, out, validateUsage)
+	assert.Empty(t, err)
+
+	out, err = runCobra(t, "validate")
+	assert.Contains(t, out, validateUsage)
+	assert.Contains(t, err, "no such file or directory")
+}
+
+func TestValidate(t *testing.T) {
 	tests := []struct {
 		name    string
 		entries []*chlog.Entry
@@ -119,7 +140,7 @@ func TestValidateE2E(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			chlogCtx = setupTestDir(t, tc.entries)
+			globalCfg = setupTestDir(t, tc.entries)
 
 			out, err := runCobra(t, "validate")
 
@@ -127,7 +148,7 @@ func TestValidateE2E(t *testing.T) {
 				assert.Regexp(t, tc.wantErr, err)
 			} else {
 				assert.Empty(t, err)
-				assert.Contains(t, out, fmt.Sprintf("PASS: all files in %s/ are valid", chlogCtx.ChloggenDir))
+				assert.Contains(t, out, fmt.Sprintf("PASS: all files in %s/ are valid", globalCfg.ChloggenDir))
 			}
 		})
 	}

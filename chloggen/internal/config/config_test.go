@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package chlog
+package config
 
 import (
 	"path/filepath"
@@ -38,8 +38,4 @@ func TestWithChloggenDir(t *testing.T) {
 	assert.Equal(t, filepath.Join(root, chloggenDir), ctx.ChloggenDir)
 	assert.Equal(t, filepath.Join(root, DefaultChangelogMD), ctx.ChangelogMD)
 	assert.Equal(t, filepath.Join(root, chloggenDir, DefaultTemplateYAML), ctx.TemplateYAML)
-}
-
-func TestRepoRoot(t *testing.T) {
-	assert.DirExists(t, RepoRoot())
 }

@@ -27,10 +27,34 @@ import (
 	"go.opentelemetry.io/build-tools/chloggen/internal/chlog"
 )
 
-func TestUpdateE2E(t *testing.T) {
+const updateUsage = `Usage:
+  chloggen update [flags]
+
+Flags:
+  -d, --dry              will generate the update text and print to stdout
+  -h, --help             help for update
+  -v, --version string   will be rendered directly into the update text (default "vTODO")
+
+Global Flags:
+      --chloggen-directory string   directory containing unreleased change log entries (default: .chloggen)`
+
+func TestUpdateErr(t *testing.T) {
+	var out, err string
+
+	out, err = runCobra(t, "update", "--help")
+	assert.Contains(t, out, updateUsage)
+	assert.Empty(t, err)
+
+	out, err = runCobra(t, "update")
+	assert.Contains(t, out, updateUsage)
+	assert.Contains(t, err, "no entries to add to the changelog")
+}
+
+func TestUpdate(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Windows line breaks cause comparison failures w/ golden files.")
 	}
+
 	tests := []struct {
 		name    string
 		entries []*chlog.Entry
@@ -87,7 +111,7 @@ func TestUpdateE2E(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			chlogCtx = setupTestDir(t, tc.entries)
+			globalCfg = setupTestDir(t, tc.entries)
 
 			args := []string{"update", "--version", tc.version}
 			if tc.dry {
@@ -101,10 +125,10 @@ func TestUpdateE2E(t *testing.T) {
 			if tc.dry {
 				assert.Contains(t, out, "Generated changelog updates:")
 			} else {
-				assert.Contains(t, out, fmt.Sprintf("Finished updating %s", chlogCtx.ChangelogMD))
+				assert.Contains(t, out, fmt.Sprintf("Finished updating %s", globalCfg.ChangelogMD))
 			}
 
-			actualBytes, ioErr := os.ReadFile(chlogCtx.ChangelogMD)
+			actualBytes, ioErr := os.ReadFile(globalCfg.ChangelogMD)
 			require.NoError(t, ioErr)
 
 			expectedChangelogMD := filepath.Join("testdata", tc.name+".md")
@@ -113,13 +137,13 @@ func TestUpdateE2E(t *testing.T) {
 
 			require.Equal(t, string(expectedBytes), string(actualBytes))
 
-			remainingYAMLs, ioErr := filepath.Glob(filepath.Join(chlogCtx.ChloggenDir, "*.yaml"))
+			remainingYAMLs, ioErr := filepath.Glob(filepath.Join(globalCfg.ChloggenDir, "*.yaml"))
 			require.NoError(t, ioErr)
 			if tc.dry {
 				require.Equal(t, 1+len(tc.entries), len(remainingYAMLs))
 			} else {
 				require.Equal(t, 1, len(remainingYAMLs))
-				require.Equal(t, chlogCtx.TemplateYAML, remainingYAMLs[0])
+				require.Equal(t, globalCfg.TemplateYAML, remainingYAMLs[0])
 			}
 		})
 	}
