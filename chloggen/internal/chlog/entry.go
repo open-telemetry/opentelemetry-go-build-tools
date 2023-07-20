@@ -21,6 +21,8 @@ import (
 	"strings"
 
 	"gopkg.in/yaml.v3"
+
+	"go.opentelemetry.io/build-tools/chloggen/internal/config"
 )
 
 const (
@@ -91,15 +93,15 @@ func (e Entry) String() string {
 	return sb.String()
 }
 
-func ReadEntries(ctx Context) ([]*Entry, error) {
-	entryYAMLs, err := filepath.Glob(filepath.Join(ctx.ChloggenDir, "*.yaml"))
+func ReadEntries(cfg config.Config) ([]*Entry, error) {
+	entryYAMLs, err := filepath.Glob(filepath.Join(cfg.ChloggenDir, "*.yaml"))
 	if err != nil {
 		return nil, err
 	}
 
 	entries := make([]*Entry, 0, len(entryYAMLs))
 	for _, entryYAML := range entryYAMLs {
-		if filepath.Base(entryYAML) == filepath.Base(ctx.TemplateYAML) {
+		if filepath.Base(entryYAML) == filepath.Base(cfg.TemplateYAML) {
 			continue
 		}
 
@@ -117,14 +119,14 @@ func ReadEntries(ctx Context) ([]*Entry, error) {
 	return entries, nil
 }
 
-func DeleteEntries(ctx Context) error {
-	entryYAMLs, err := filepath.Glob(filepath.Join(ctx.ChloggenDir, "*.yaml"))
+func DeleteEntries(cfg config.Config) error {
+	entryYAMLs, err := filepath.Glob(filepath.Join(cfg.ChloggenDir, "*.yaml"))
 	if err != nil {
 		return err
 	}
 
 	for _, entryYAML := range entryYAMLs {
-		if filepath.Base(entryYAML) == filepath.Base(ctx.TemplateYAML) {
+		if filepath.Base(entryYAML) == filepath.Base(cfg.TemplateYAML) {
 			continue
 		}
 

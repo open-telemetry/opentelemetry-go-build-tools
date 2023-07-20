@@ -38,7 +38,7 @@ Flags:
 
 Use "chloggen [command] --help" for more information about a command.`
 
-func TestRootCommand(t *testing.T) {
+func TestRoot(t *testing.T) {
 	var out, err string
 
 	out, err = runCobra(t)
@@ -48,4 +48,8 @@ func TestRootCommand(t *testing.T) {
 	out, err = runCobra(t, "--help")
 	assert.Contains(t, out, rootUsage)
 	assert.Empty(t, err)
+}
+
+func TestRepoRoot(t *testing.T) {
+	assert.DirExists(t, repoRoot())
 }

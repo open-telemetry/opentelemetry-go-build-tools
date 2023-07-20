@@ -15,14 +15,17 @@
 package cmd
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/spf13/cobra"
 
-	"go.opentelemetry.io/build-tools/chloggen/internal/chlog"
+	"go.opentelemetry.io/build-tools/chloggen/internal/config"
 )
 
 var (
 	chloggenDir string
-	chlogCtx    chlog.Context
+	globalCfg   config.Config
 )
 
 func rootCmd() *cobra.Command {
@@ -48,13 +51,22 @@ func init() {
 
 func initConfig() {
 	// Don't override if already set in tests
-	var uninitialized chlog.Context
-	if chlogCtx != uninitialized {
+	var uninitialized config.Config
+	if globalCfg != uninitialized {
 		return
 	}
 
 	if chloggenDir == "" {
 		chloggenDir = ".chloggen"
 	}
-	chlogCtx = chlog.New(chlog.RepoRoot(), chlog.WithChloggenDir(chloggenDir))
+	globalCfg = config.New(repoRoot(), config.WithChloggenDir(chloggenDir))
+}
+
+func repoRoot() string {
+	dir, err := os.Getwd()
+	if err != nil {
+		// This is not expected, but just in case
+		fmt.Println("FAIL: Could not determine current working directory")
+	}
+	return dir
 }

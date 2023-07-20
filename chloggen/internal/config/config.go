@@ -12,11 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package chlog
+package config
 
 import (
-	"fmt"
-	"os"
 	"path/filepath"
 )
 
@@ -26,25 +24,25 @@ const (
 	DefaultTemplateYAML = "TEMPLATE.yaml"
 )
 
-// Context enables tests by allowing them to work in an test directory
-type Context struct {
+// Config enables tests by allowing them to work in an test directory
+type Config struct {
 	rootDir      string
 	ChangelogMD  string
 	ChloggenDir  string
 	TemplateYAML string
 }
 
-type Option func(*Context)
+type Option func(*Config)
 
 func WithChloggenDir(chloggenDir string) Option {
-	return func(ctx *Context) {
+	return func(ctx *Config) {
 		ctx.ChloggenDir = filepath.Join(ctx.rootDir, chloggenDir)
 		ctx.TemplateYAML = filepath.Join(ctx.rootDir, chloggenDir, DefaultTemplateYAML)
 	}
 }
 
-func New(rootDir string, options ...Option) Context {
-	ctx := Context{
+func New(rootDir string, options ...Option) Config {
+	ctx := Config{
 		rootDir:      rootDir,
 		ChangelogMD:  filepath.Join(rootDir, DefaultChangelogMD),
 		ChloggenDir:  filepath.Join(rootDir, DefaultChloggenDir),
@@ -54,13 +52,4 @@ func New(rootDir string, options ...Option) Context {
 		op(&ctx)
 	}
 	return ctx
-}
-
-func RepoRoot() string {
-	dir, err := os.Getwd()
-	if err != nil {
-		// This is not expected, but just in case
-		fmt.Println("FAIL: Could not determine current working directory")
-	}
-	return dir
 }

@@ -31,7 +31,7 @@ func newCmd() *cobra.Command {
 		Use:   "new",
 		Short: "Creates new change file",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path := filepath.Join(chlogCtx.ChloggenDir, cleanFileName(filename))
+			path := filepath.Join(globalCfg.ChloggenDir, cleanFileName(filename))
 			var pathWithExt string
 			switch ext := filepath.Ext(path); ext {
 			case ".yaml":
@@ -42,7 +42,7 @@ func newCmd() *cobra.Command {
 				pathWithExt = path + ".yaml"
 			}
 
-			templateBytes, err := os.ReadFile(filepath.Clean(chlogCtx.TemplateYAML))
+			templateBytes, err := os.ReadFile(filepath.Clean(globalCfg.TemplateYAML))
 			if err != nil {
 				return err
 			}

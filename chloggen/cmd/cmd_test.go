@@ -27,6 +27,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"go.opentelemetry.io/build-tools/chloggen/internal/chlog"
+	"go.opentelemetry.io/build-tools/chloggen/internal/config"
 )
 
 func getSampleEntries() []*chlog.Entry {
@@ -97,18 +98,18 @@ func entryWithSubtext() *chlog.Entry {
 	}
 }
 
-func setupTestDir(t *testing.T, entries []*chlog.Entry) chlog.Context {
-	ctx := chlog.New(t.TempDir())
+func setupTestDir(t *testing.T, entries []*chlog.Entry) config.Config {
+	ctx := config.New(t.TempDir())
 
 	// Create a known dummy changelog which may be updated by the test
-	changelogBytes, err := os.ReadFile(filepath.Join("testdata", chlog.DefaultChangelogMD))
+	changelogBytes, err := os.ReadFile(filepath.Join("testdata", config.DefaultChangelogMD))
 	require.NoError(t, err)
 	require.NoError(t, os.WriteFile(ctx.ChangelogMD, changelogBytes, os.FileMode(0755)))
 
 	require.NoError(t, os.Mkdir(ctx.ChloggenDir, os.FileMode(0755)))
 
 	// Copy the entry template, for tests that ensure it is not deleted
-	templateInRootDir := chlog.New("testdata").TemplateYAML
+	templateInRootDir := config.New("testdata").TemplateYAML
 	templateBytes, err := os.ReadFile(filepath.Clean(templateInRootDir))
 	require.NoError(t, err)
 	require.NoError(t, os.WriteFile(ctx.TemplateYAML, templateBytes, os.FileMode(0755)))
@@ -120,7 +121,7 @@ func setupTestDir(t *testing.T, entries []*chlog.Entry) chlog.Context {
 	return ctx
 }
 
-func writeEntryYAML(ctx chlog.Context, filename string, entry *chlog.Entry) error {
+func writeEntryYAML(ctx config.Config, filename string, entry *chlog.Entry) error {
 	entryBytes, err := yaml.Marshal(entry)
 	if err != nil {
 		return err
