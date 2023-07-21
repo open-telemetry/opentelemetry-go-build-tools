@@ -33,8 +33,8 @@ Available Commands:
   validate    Validates the files in the changelog directory
 
 Flags:
-      --chloggen-directory string   directory containing unreleased change log entries (default: .chloggen)
-  -h, --help                        help for chloggen
+      --config string   (optional) chloggen config file
+  -h, --help            help for chloggen
 
 Use "chloggen [command] --help" for more information about a command.`
 
@@ -46,6 +46,10 @@ func TestRoot(t *testing.T) {
 	assert.Empty(t, err)
 
 	out, err = runCobra(t, "--help")
+	assert.Contains(t, out, rootUsage)
+	assert.Empty(t, err)
+
+	out, err = runCobra(t, "--config", "foo.yaml")
 	assert.Contains(t, out, rootUsage)
 	assert.Empty(t, err)
 }

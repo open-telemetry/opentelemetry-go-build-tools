@@ -15,7 +15,11 @@
 package config
 
 import (
+	"os"
 	"path/filepath"
+	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -24,32 +28,42 @@ const (
 	DefaultTemplateYAML = "TEMPLATE.yaml"
 )
 
-// Config enables tests by allowing them to work in an test directory
 type Config struct {
-	rootDir      string
-	ChangelogMD  string
-	ChloggenDir  string
-	TemplateYAML string
+	ChangelogMD  string `yaml:"changelog_md"`
+	ChlogsDir    string `yaml:"chlogs_dir"`
+	TemplateYAML string `yaml:"template_yaml"`
+	ConfigYAML   string
 }
 
-type Option func(*Config)
-
-func WithChloggenDir(chloggenDir string) Option {
-	return func(ctx *Config) {
-		ctx.ChloggenDir = filepath.Join(ctx.rootDir, chloggenDir)
-		ctx.TemplateYAML = filepath.Join(ctx.rootDir, chloggenDir, DefaultTemplateYAML)
-	}
-}
-
-func New(rootDir string, options ...Option) Config {
-	ctx := Config{
-		rootDir:      rootDir,
+func New(rootDir string) Config {
+	return Config{
 		ChangelogMD:  filepath.Join(rootDir, DefaultChangelogMD),
-		ChloggenDir:  filepath.Join(rootDir, DefaultChloggenDir),
+		ChlogsDir:    filepath.Join(rootDir, DefaultChloggenDir),
 		TemplateYAML: filepath.Join(rootDir, DefaultChloggenDir, DefaultTemplateYAML),
 	}
-	for _, op := range options {
-		op(&ctx)
+}
+
+func NewFromFile(rootDir string, filename string) (Config, error) {
+	cfg := New(rootDir)
+	cfg.ConfigYAML = filepath.Clean(filepath.Join(rootDir, filename))
+	cfgBytes, err := os.ReadFile(cfg.ConfigYAML)
+	if err != nil {
+		return Config{}, err
 	}
-	return ctx
+	if err = yaml.Unmarshal(cfgBytes, &cfg); err != nil {
+		return Config{}, err
+	}
+
+	// If the user specified any of the following, interpret as a relative path from rootDir
+	// (unless they specified an absolute path including rootDir)
+	if !strings.HasPrefix(cfg.ChangelogMD, rootDir) {
+		cfg.ChangelogMD = filepath.Join(rootDir, cfg.ChangelogMD)
+	}
+	if !strings.HasPrefix(cfg.ChlogsDir, rootDir) {
+		cfg.ChlogsDir = filepath.Join(rootDir, cfg.ChlogsDir)
+	}
+	if !strings.HasPrefix(cfg.TemplateYAML, rootDir) {
+		cfg.TemplateYAML = filepath.Join(rootDir, cfg.TemplateYAML)
+	}
+	return cfg, nil
 }

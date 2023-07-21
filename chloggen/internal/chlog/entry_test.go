@@ -157,7 +157,19 @@ func TestReadDeleteEntries(t *testing.T) {
 	_, err = fileB.Write(bytesB)
 	require.NoError(t, err)
 
+	// Put config and template files in chlogs_dir to ensure they are ignored when reading/deleting entries
+	configYAML, err := os.CreateTemp(entriesDir, "config.yaml")
+	require.NoError(t, err)
+	defer configYAML.Close()
+
+	templateYAML, err := os.CreateTemp(entriesDir, "TEMPLATE.yaml")
+	require.NoError(t, err)
+	defer templateYAML.Close()
+
 	cfg := config.New(tempDir)
+	cfg.ConfigYAML = configYAML.Name()
+	cfg.TemplateYAML = templateYAML.Name()
+
 	entries, err := ReadEntries(cfg)
 	assert.NoError(t, err)
 
@@ -167,4 +179,8 @@ func TestReadDeleteEntries(t *testing.T) {
 	entries, err = ReadEntries(cfg)
 	assert.NoError(t, err)
 	assert.Empty(t, entries)
+
+	// Ensure these weren't deleted
+	assert.FileExists(t, cfg.ConfigYAML)
+	assert.FileExists(t, cfg.TemplateYAML)
 }

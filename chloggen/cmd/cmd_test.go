@@ -99,34 +99,34 @@ func entryWithSubtext() *chlog.Entry {
 }
 
 func setupTestDir(t *testing.T, entries []*chlog.Entry) config.Config {
-	ctx := config.New(t.TempDir())
+	cfg := config.New(t.TempDir())
 
 	// Create a known dummy changelog which may be updated by the test
 	changelogBytes, err := os.ReadFile(filepath.Join("testdata", config.DefaultChangelogMD))
 	require.NoError(t, err)
-	require.NoError(t, os.WriteFile(ctx.ChangelogMD, changelogBytes, os.FileMode(0755)))
+	require.NoError(t, os.WriteFile(cfg.ChangelogMD, changelogBytes, os.FileMode(0755)))
 
-	require.NoError(t, os.Mkdir(ctx.ChloggenDir, os.FileMode(0755)))
+	require.NoError(t, os.Mkdir(cfg.ChlogsDir, os.FileMode(0755)))
 
 	// Copy the entry template, for tests that ensure it is not deleted
 	templateInRootDir := config.New("testdata").TemplateYAML
 	templateBytes, err := os.ReadFile(filepath.Clean(templateInRootDir))
 	require.NoError(t, err)
-	require.NoError(t, os.WriteFile(ctx.TemplateYAML, templateBytes, os.FileMode(0755)))
+	require.NoError(t, os.WriteFile(cfg.TemplateYAML, templateBytes, os.FileMode(0755)))
 
 	for i, entry := range entries {
-		require.NoError(t, writeEntryYAML(ctx, fmt.Sprintf("%d.yaml", i), entry))
+		require.NoError(t, writeEntryYAML(cfg, fmt.Sprintf("%d.yaml", i), entry))
 	}
 
-	return ctx
+	return cfg
 }
 
-func writeEntryYAML(ctx config.Config, filename string, entry *chlog.Entry) error {
+func writeEntryYAML(cfg config.Config, filename string, entry *chlog.Entry) error {
 	entryBytes, err := yaml.Marshal(entry)
 	if err != nil {
 		return err
 	}
-	path := filepath.Join(ctx.ChloggenDir, filename)
+	path := filepath.Join(cfg.ChlogsDir, filename)
 	return os.WriteFile(path, entryBytes, os.FileMode(0755))
 }
 
