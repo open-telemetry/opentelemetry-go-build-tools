@@ -62,7 +62,7 @@ func (e Entry) Validate(requireChangelog bool, validChangeLogs ...string) error 
 			}
 		}
 		if !valid {
-			return fmt.Errorf("'%s' is not a valid 'change_log'. Specify one of %v", cl, validChangeLogs)
+			return fmt.Errorf("'%s' is not a valid value in 'change_logs'. Specify one of %v", cl, validChangeLogs)
 		}
 	}
 
@@ -110,7 +110,7 @@ func (e Entry) String() string {
 }
 
 func ReadEntries(cfg *config.Config) (map[string][]*Entry, error) {
-	yamlFiles, err := filepath.Glob(filepath.Join(cfg.ChlogsDir, "*.yaml"))
+	yamlFiles, err := filepath.Glob(filepath.Join(cfg.EntriesDir, "*.yaml"))
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +149,7 @@ func ReadEntries(cfg *config.Config) (map[string][]*Entry, error) {
 }
 
 func DeleteEntries(cfg *config.Config) error {
-	yamlFiles, err := filepath.Glob(filepath.Join(cfg.ChlogsDir, "*.yaml"))
+	yamlFiles, err := filepath.Glob(filepath.Join(cfg.EntriesDir, "*.yaml"))
 	if err != nil {
 		return err
 	}

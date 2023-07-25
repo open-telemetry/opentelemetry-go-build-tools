@@ -49,7 +49,7 @@ func TestUpdateErr(t *testing.T) {
 	assert.Contains(t, out, updateUsage)
 	assert.Empty(t, err)
 
-	badEntry, ioErr := os.CreateTemp(globalCfg.ChlogsDir, "*.yaml")
+	badEntry, ioErr := os.CreateTemp(globalCfg.EntriesDir, "*.yaml")
 	require.NoError(t, ioErr)
 	defer badEntry.Close()
 
@@ -232,7 +232,7 @@ func TestUpdate(t *testing.T) {
 
 				require.Equal(t, string(expectedBytes), string(actualBytes))
 
-				remainingYAMLs, ioErr := filepath.Glob(filepath.Join(globalCfg.ChlogsDir, "*.yaml"))
+				remainingYAMLs, ioErr := filepath.Glob(filepath.Join(globalCfg.EntriesDir, "*.yaml"))
 				require.NoError(t, ioErr)
 				if tc.dry {
 					require.Equal(t, 1+len(tc.entries), len(remainingYAMLs))

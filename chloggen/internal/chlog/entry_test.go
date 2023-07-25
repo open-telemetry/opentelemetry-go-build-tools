@@ -94,7 +94,7 @@ func TestEntry(t *testing.T) {
 				SubText:    "",
 			},
 			validChangeLogs: []string{"foo"},
-			expectErr:       "'bar' is not a valid 'change_log'. Specify one of [foo]",
+			expectErr:       "'bar' is not a valid value in 'change_logs'. Specify one of [foo]",
 		},
 		{
 			name: "valid",
@@ -215,7 +215,7 @@ func TestEntry(t *testing.T) {
 
 func TestReadDeleteEntries(t *testing.T) {
 	tempDir := t.TempDir()
-	entriesDir := filepath.Join(tempDir, config.DefaultChlogsDir)
+	entriesDir := filepath.Join(tempDir, config.DefaultEntriesDir)
 	require.NoError(t, os.Mkdir(entriesDir, os.ModePerm))
 
 	entryA := Entry{
@@ -255,7 +255,7 @@ func TestReadDeleteEntries(t *testing.T) {
 	}
 	writeEntry(t, entriesDir, &entryD)
 
-	// Put config and template files in chlogs_dir to ensure they are ignored when reading/deleting entries
+	// Put config and template files in entries_dir to ensure they are ignored when reading/deleting entries
 	configYAML, err := os.Create(filepath.Join(entriesDir, "config.yaml")) //nolint:gosec
 	require.NoError(t, err)
 	defer configYAML.Close()
@@ -272,7 +272,7 @@ func TestReadDeleteEntries(t *testing.T) {
 			"bar": filepath.Join(entriesDir, "CHANGELOG.bar.md"),
 		},
 		DefaultChangeLogs: []string{"foo"},
-		ChlogsDir:         entriesDir,
+		EntriesDir:        entriesDir,
 	}
 
 	changeLogEntries, err := ReadEntries(cfg)

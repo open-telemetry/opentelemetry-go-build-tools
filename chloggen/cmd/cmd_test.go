@@ -123,8 +123,8 @@ func setupTestDir(t *testing.T, entries []*chlog.Entry) {
 		require.NoError(t, os.WriteFile(filename, changelogBytes, os.FileMode(0755)))
 	}
 
-	// Create the chlogs directory
-	require.NoError(t, os.MkdirAll(globalCfg.ChlogsDir, os.FileMode(0755)))
+	// Create the entries directory
+	require.NoError(t, os.MkdirAll(globalCfg.EntriesDir, os.FileMode(0755)))
 
 	// Copy the entry template, for tests that ensure it is not deleted
 	templateInRootDir := config.New("testdata").TemplateYAML
@@ -132,11 +132,11 @@ func setupTestDir(t *testing.T, entries []*chlog.Entry) {
 	require.NoError(t, err)
 	require.NoError(t, os.WriteFile(globalCfg.TemplateYAML, templateBytes, os.FileMode(0755)))
 
-	// Write the entries to the chlogs directory
+	// Write the entries to the entries directory
 	for i, entry := range entries {
 		entryBytes, err := yaml.Marshal(entry)
 		require.NoError(t, err)
-		path := filepath.Join(globalCfg.ChlogsDir, fmt.Sprintf("%d.yaml", i))
+		path := filepath.Join(globalCfg.EntriesDir, fmt.Sprintf("%d.yaml", i))
 		require.NoError(t, os.WriteFile(path, entryBytes, os.FileMode(0755)))
 	}
 }

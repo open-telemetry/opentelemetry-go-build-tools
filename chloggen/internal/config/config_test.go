@@ -27,8 +27,8 @@ import (
 func TestNew(t *testing.T) {
 	root := "/tmp"
 	cfg := New(root)
-	assert.Equal(t, filepath.Join(root, DefaultChlogsDir), cfg.ChlogsDir)
-	assert.Equal(t, filepath.Join(root, DefaultChlogsDir, DefaultTemplateYAML), cfg.TemplateYAML)
+	assert.Equal(t, filepath.Join(root, DefaultEntriesDir), cfg.EntriesDir)
+	assert.Equal(t, filepath.Join(root, DefaultEntriesDir, DefaultTemplateYAML), cfg.TemplateYAML)
 
 	assert.Equal(t, 1, len(cfg.ChangeLogs))
 	assert.NotNil(t, cfg.ChangeLogs[DefaultChangeLogKey])
@@ -51,7 +51,7 @@ func TestNewFromFile(t *testing.T) {
 		{
 			name: "multi-changelog-no-default",
 			cfg: &Config{
-				ChlogsDir:    ".test",
+				EntriesDir:   ".test",
 				TemplateYAML: "TEMPLATE-custom.yaml",
 				ChangeLogs: map[string]string{
 					"foo": "CHANGELOG-1.md",
@@ -62,7 +62,7 @@ func TestNewFromFile(t *testing.T) {
 		{
 			name: "multi-changelog-with-default",
 			cfg: &Config{
-				ChlogsDir:    ".test",
+				EntriesDir:   ".test",
 				TemplateYAML: "TEMPLATE-custom.yaml",
 				ChangeLogs: map[string]string{
 					"foo": "CHANGELOG-1.md",
@@ -74,7 +74,7 @@ func TestNewFromFile(t *testing.T) {
 		{
 			name: "default-changelogs-without-changelogs",
 			cfg: &Config{
-				ChlogsDir:         ".test",
+				EntriesDir:        ".test",
 				TemplateYAML:      "TEMPLATE-custom.yaml",
 				DefaultChangeLogs: []string{"foo"},
 			},
@@ -83,7 +83,7 @@ func TestNewFromFile(t *testing.T) {
 		{
 			name: "default-changelog-not-in-changelogs",
 			cfg: &Config{
-				ChlogsDir:    ".test",
+				EntriesDir:   ".test",
 				TemplateYAML: "TEMPLATE-custom.yaml",
 				ChangeLogs: map[string]string{
 					"foo": "CHANGELOG-1.md",
@@ -120,11 +120,11 @@ func TestNewFromFile(t *testing.T) {
 			// Instantiate it here to compare against the actual config as appropriate.
 			defaultCfg := New(tempDir)
 
-			expectedChlogsDir := defaultCfg.ChlogsDir
-			if tc.cfg.ChlogsDir != "" {
-				expectedChlogsDir = filepath.Join(tempDir, tc.cfg.ChlogsDir)
+			expectedEntriesDir := defaultCfg.EntriesDir
+			if tc.cfg.EntriesDir != "" {
+				expectedEntriesDir = filepath.Join(tempDir, tc.cfg.EntriesDir)
 			}
-			assert.Equal(t, expectedChlogsDir, actualCfg.ChlogsDir)
+			assert.Equal(t, expectedEntriesDir, actualCfg.EntriesDir)
 
 			expectedTeamplateYAML := defaultCfg.TemplateYAML
 			if tc.cfg.TemplateYAML != "" {

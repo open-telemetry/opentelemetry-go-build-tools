@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	DefaultChlogsDir         = ".chloggen"
+	DefaultEntriesDir        = ".chloggen"
 	DefaultTemplateYAML      = "TEMPLATE.yaml"
 	DefaultChangeLogKey      = "default"
 	DefaultChangeLogFilename = "CHANGELOG.md"
@@ -34,7 +34,7 @@ const (
 type Config struct {
 	ChangeLogs        map[string]string `yaml:"change_logs"`
 	DefaultChangeLogs []string          `yaml:"default_change_logs"`
-	ChlogsDir         string            `yaml:"chlogs_dir"`
+	EntriesDir        string            `yaml:"entries_dir"`
 	TemplateYAML      string            `yaml:"template_yaml"`
 	ConfigYAML        string
 }
@@ -43,8 +43,8 @@ func New(rootDir string) *Config {
 	return &Config{
 		ChangeLogs:        map[string]string{DefaultChangeLogKey: filepath.Join(rootDir, DefaultChangeLogFilename)},
 		DefaultChangeLogs: []string{DefaultChangeLogKey},
-		ChlogsDir:         filepath.Join(rootDir, DefaultChlogsDir),
-		TemplateYAML:      filepath.Join(rootDir, DefaultChlogsDir, DefaultTemplateYAML),
+		EntriesDir:        filepath.Join(rootDir, DefaultEntriesDir),
+		TemplateYAML:      filepath.Join(rootDir, DefaultEntriesDir, DefaultTemplateYAML),
 	}
 }
 
@@ -60,14 +60,14 @@ func NewFromFile(rootDir string, cfgFilename string) (*Config, error) {
 	}
 
 	cfg.ConfigYAML = cfgYAML
-	if cfg.ChlogsDir == "" {
-		cfg.ChlogsDir = filepath.Join(rootDir, DefaultChlogsDir)
-	} else if !strings.HasPrefix(cfg.ChlogsDir, rootDir) {
-		cfg.ChlogsDir = filepath.Join(rootDir, cfg.ChlogsDir)
+	if cfg.EntriesDir == "" {
+		cfg.EntriesDir = filepath.Join(rootDir, DefaultEntriesDir)
+	} else if !strings.HasPrefix(cfg.EntriesDir, rootDir) {
+		cfg.EntriesDir = filepath.Join(rootDir, cfg.EntriesDir)
 	}
 
 	if cfg.TemplateYAML == "" {
-		cfg.TemplateYAML = filepath.Join(rootDir, DefaultChlogsDir, DefaultTemplateYAML)
+		cfg.TemplateYAML = filepath.Join(rootDir, DefaultEntriesDir, DefaultTemplateYAML)
 	} else if !strings.HasPrefix(cfg.TemplateYAML, rootDir) {
 		cfg.TemplateYAML = filepath.Join(rootDir, cfg.TemplateYAML)
 	}
