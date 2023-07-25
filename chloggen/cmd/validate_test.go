@@ -21,6 +21,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"go.opentelemetry.io/build-tools/chloggen/internal/chlog"
+	"go.opentelemetry.io/build-tools/chloggen/internal/config"
 )
 
 const validateUsage = `Usage:
@@ -140,7 +141,8 @@ func TestValidate(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			globalCfg = setupTestDir(t, tc.entries)
+			globalCfg = config.New(t.TempDir())
+			setupTestDir(t, tc.entries)
 
 			out, err := runCobra(t, "validate")
 

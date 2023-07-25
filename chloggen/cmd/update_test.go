@@ -25,6 +25,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"go.opentelemetry.io/build-tools/chloggen/internal/chlog"
+	"go.opentelemetry.io/build-tools/chloggen/internal/config"
 )
 
 const updateUsage = `Usage:
@@ -39,6 +40,9 @@ Global Flags:
       --config string   (optional) chloggen config file`
 
 func TestUpdateErr(t *testing.T) {
+	globalCfg = config.New(t.TempDir())
+	setupTestDir(t, []*chlog.Entry{})
+
 	var out, err string
 
 	out, err = runCobra(t, "update", "--help")
@@ -49,7 +53,6 @@ func TestUpdateErr(t *testing.T) {
 	assert.Contains(t, out, updateUsage)
 	assert.Contains(t, err, "no entries to add to the changelog")
 
-	globalCfg = setupTestDir(t, []*chlog.Entry{})
 	badEntry, ioErr := os.CreateTemp(globalCfg.ChlogsDir, "*.yaml")
 	require.NoError(t, ioErr)
 	defer badEntry.Close()
@@ -122,7 +125,8 @@ func TestUpdate(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			globalCfg = setupTestDir(t, tc.entries)
+			globalCfg = config.New(t.TempDir())
+			setupTestDir(t, tc.entries)
 
 			args := []string{"update", "--version", tc.version}
 			if tc.dry {

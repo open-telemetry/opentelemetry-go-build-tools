@@ -93,7 +93,7 @@ func (e Entry) String() string {
 	return sb.String()
 }
 
-func ReadEntries(cfg config.Config) ([]*Entry, error) {
+func ReadEntries(cfg *config.Config) ([]*Entry, error) {
 	entryYAMLs, err := filepath.Glob(filepath.Join(cfg.ChlogsDir, "*.yaml"))
 	if err != nil {
 		return nil, err
@@ -119,7 +119,7 @@ func ReadEntries(cfg config.Config) ([]*Entry, error) {
 	return entries, nil
 }
 
-func DeleteEntries(cfg config.Config) error {
+func DeleteEntries(cfg *config.Config) error {
 	entryYAMLs, err := filepath.Glob(filepath.Join(cfg.ChlogsDir, "*.yaml"))
 	if err != nil {
 		return err
