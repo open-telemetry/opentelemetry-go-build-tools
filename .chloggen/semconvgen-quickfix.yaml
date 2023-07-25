@@ -1,11 +1,11 @@
 # One of 'breaking', 'deprecation', 'new_component', 'enhancement', 'bug_fix'
-change_type: enhancement
+change_type: bug_fix
 
 # The name of the component, or a single word describing the area of concern, (e.g. crosslink)
 component: semconvgen
 
 # A brief description of the change.  Surround your text with quotes ("") if it needs to start with a backtick (`).
-note: Make semconvgen working for the new semantic conventions repository.
+note: Fix semconvgen to work for the new semantic conventions repository.
 
 # One or more tracking issues related to the change
 issues: [374]
