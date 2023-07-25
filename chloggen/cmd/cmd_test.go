@@ -98,36 +98,28 @@ func entryWithSubtext() *chlog.Entry {
 	}
 }
 
-func setupTestDir(t *testing.T, entries []*chlog.Entry) config.Config {
-	cfg := config.New(t.TempDir())
+func setupTestDir(t *testing.T, entries []*chlog.Entry) {
+	require.NotNil(t, globalCfg, "test should instantiate globalCfg before calling setupTestDir")
 
 	// Create a known dummy changelog which may be updated by the test
 	changelogBytes, err := os.ReadFile(filepath.Join("testdata", config.DefaultChangelogMD))
 	require.NoError(t, err)
-	require.NoError(t, os.WriteFile(cfg.ChangelogMD, changelogBytes, os.FileMode(0755)))
+	require.NoError(t, os.WriteFile(globalCfg.ChangelogMD, changelogBytes, os.FileMode(0755)))
 
-	require.NoError(t, os.Mkdir(cfg.ChlogsDir, os.FileMode(0755)))
+	require.NoError(t, os.Mkdir(globalCfg.ChlogsDir, os.FileMode(0755)))
 
 	// Copy the entry template, for tests that ensure it is not deleted
 	templateInRootDir := config.New("testdata").TemplateYAML
 	templateBytes, err := os.ReadFile(filepath.Clean(templateInRootDir))
 	require.NoError(t, err)
-	require.NoError(t, os.WriteFile(cfg.TemplateYAML, templateBytes, os.FileMode(0755)))
+	require.NoError(t, os.WriteFile(globalCfg.TemplateYAML, templateBytes, os.FileMode(0755)))
 
 	for i, entry := range entries {
-		require.NoError(t, writeEntryYAML(cfg, fmt.Sprintf("%d.yaml", i), entry))
+		entryBytes, err := yaml.Marshal(entry)
+		require.NoError(t, err)
+		path := filepath.Join(globalCfg.ChlogsDir, fmt.Sprintf("%d.yaml", i))
+		require.NoError(t, os.WriteFile(path, entryBytes, os.FileMode(0755)))
 	}
-
-	return cfg
-}
-
-func writeEntryYAML(cfg config.Config, filename string, entry *chlog.Entry) error {
-	entryBytes, err := yaml.Marshal(entry)
-	if err != nil {
-		return err
-	}
-	path := filepath.Join(cfg.ChlogsDir, filename)
-	return os.WriteFile(path, entryBytes, os.FileMode(0755))
 }
 
 func runCobra(t *testing.T, args ...string) (string, string) {

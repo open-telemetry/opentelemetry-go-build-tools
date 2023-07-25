@@ -22,6 +22,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"go.opentelemetry.io/build-tools/chloggen/internal/chlog"
+	"go.opentelemetry.io/build-tools/chloggen/internal/config"
 )
 
 const newUsage = `Usage:
@@ -51,7 +52,8 @@ func TestNewErr(t *testing.T) {
 }
 
 func TestNew(t *testing.T) {
-	globalCfg = setupTestDir(t, []*chlog.Entry{})
+	globalCfg = config.New(t.TempDir())
+	setupTestDir(t, []*chlog.Entry{})
 
 	var out, err string
 

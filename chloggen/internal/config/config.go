@@ -35,23 +35,23 @@ type Config struct {
 	ConfigYAML   string
 }
 
-func New(rootDir string) Config {
-	return Config{
+func New(rootDir string) *Config {
+	return &Config{
 		ChangelogMD:  filepath.Join(rootDir, DefaultChangelogMD),
 		ChlogsDir:    filepath.Join(rootDir, DefaultChloggenDir),
 		TemplateYAML: filepath.Join(rootDir, DefaultChloggenDir, DefaultTemplateYAML),
 	}
 }
 
-func NewFromFile(rootDir string, filename string) (Config, error) {
+func NewFromFile(rootDir string, filename string) (*Config, error) {
 	cfg := New(rootDir)
 	cfg.ConfigYAML = filepath.Clean(filepath.Join(rootDir, filename))
 	cfgBytes, err := os.ReadFile(cfg.ConfigYAML)
 	if err != nil {
-		return Config{}, err
+		return nil, err
 	}
 	if err = yaml.Unmarshal(cfgBytes, &cfg); err != nil {
-		return Config{}, err
+		return nil, err
 	}
 
 	// If the user specified any of the following, interpret as a relative path from rootDir
