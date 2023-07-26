@@ -25,7 +25,7 @@ import (
 
 var (
 	configFile string
-	globalCfg  config.Config
+	globalCfg  *config.Config
 )
 
 func rootCmd() *cobra.Command {
@@ -51,8 +51,7 @@ func init() {
 
 func initConfig() {
 	// Don't override if already set in tests
-	var uninitialized config.Config
-	if globalCfg != uninitialized {
+	if globalCfg != nil {
 		return
 	}
 
