@@ -4,6 +4,31 @@
 
 <!-- next version -->
 
+## v0.10.0
+
+### 🛑 Breaking changes 🛑
+
+- `chloggen`: Remove 'chloggen-directory' flag. Use config file instead. (#371)
+- `multimod`: Update HasChanged to avoid returning unnecessary boolean (#366)
+
+### 🚩 Deprecations 🚩
+
+- `checkdoc`: checkdoc is deprecated in favor of checkfile.  Please use checkfile with argument --file-name README.md instead. (#347)
+
+### 🚀 New components 🚀
+
+- `checkfile`: checkfile checks the components enabled in OpenTelemetry core and contrib repos contain the file provided in argument --file-name. (#347)
+
+### 💡 Enhancements 💡
+
+- `dbotconf`: Add the --ignore flag to the dbotconf root command
+ (#362)
+- `chloggen`: Adds a 'config' flag and option to configure chloggen with a config file. (#371)
+
+### 🧰 Bug fixes 🧰
+
+- `semconvgen`: Fix semconvgen to work for the new semantic conventions repository. (#374)
+
 ## v0.9.0
 
 ### 💡 Enhancements 💡
