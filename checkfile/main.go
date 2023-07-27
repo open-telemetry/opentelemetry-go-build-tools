@@ -51,7 +51,7 @@ func main() {
 	fileName := flag.String(fileNameFlag, "", "specify the file name")
 
 	flag.Parse()
-	
+
 	if *fileName == "" {
 		panic("Missing required argument: --file-name")
 	}
