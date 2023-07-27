@@ -150,7 +150,7 @@ func TestValidate(t *testing.T) {
 				assert.Regexp(t, tc.wantErr, err)
 			} else {
 				assert.Empty(t, err)
-				assert.Contains(t, out, fmt.Sprintf("PASS: all files in %s/ are valid", globalCfg.ChlogsDir))
+				assert.Contains(t, out, fmt.Sprintf("PASS: all files in %s/ are valid", globalCfg.EntriesDir))
 			}
 		})
 	}

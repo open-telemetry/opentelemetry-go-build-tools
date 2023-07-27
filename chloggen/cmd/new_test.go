@@ -58,27 +58,27 @@ func TestNew(t *testing.T) {
 	var out, err string
 
 	out, err = runCobra(t, "new", "--filename", "my-change")
-	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.ChlogsDir, "my-change.yaml")))
+	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.EntriesDir, "my-change.yaml")))
 	assert.Empty(t, err)
 
 	out, err = runCobra(t, "new", "--filename", "some-change.yaml")
-	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.ChlogsDir, "some-change.yaml")))
+	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.EntriesDir, "some-change.yaml")))
 	assert.Empty(t, err)
 
 	out, err = runCobra(t, "new", "--filename", "some-change.yml")
-	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.ChlogsDir, "some-change.yaml")))
+	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.EntriesDir, "some-change.yaml")))
 	assert.Empty(t, err)
 
 	out, err = runCobra(t, "new", "--filename", "replace/forward/slash")
-	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.ChlogsDir, "replace_forward_slash.yaml")))
+	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.EntriesDir, "replace_forward_slash.yaml")))
 	assert.Empty(t, err)
 
 	out, err = runCobra(t, "new", "--filename", "not.an.extension")
-	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.ChlogsDir, "not.an.extension.yaml")))
+	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.EntriesDir, "not.an.extension.yaml")))
 	assert.Empty(t, err)
 
 	out, err = runCobra(t, "new", "--filename", "my-change.txt")
-	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.ChlogsDir, "my-change.txt.yaml")))
+	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.EntriesDir, "my-change.txt.yaml")))
 	assert.Empty(t, err)
 }
 
