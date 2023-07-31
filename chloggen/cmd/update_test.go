@@ -49,11 +49,7 @@ func TestUpdateErr(t *testing.T) {
 	assert.Contains(t, out, updateUsage)
 	assert.Empty(t, err)
 
-	out, err = runCobra(t, "update")
-	assert.Contains(t, out, updateUsage)
-	assert.Contains(t, err, "no entries to add to the changelog")
-
-	badEntry, ioErr := os.CreateTemp(globalCfg.ChlogsDir, "*.yaml")
+	badEntry, ioErr := os.CreateTemp(globalCfg.EntriesDir, "*.yaml")
 	require.NoError(t, ioErr)
 	defer badEntry.Close()
 
@@ -70,10 +66,12 @@ func TestUpdate(t *testing.T) {
 	}
 
 	tests := []struct {
-		name    string
-		entries []*chlog.Entry
-		version string
-		dry     bool
+		name              string
+		entries           []*chlog.Entry
+		changeLogs        map[string]string
+		defaultChangeLogs []string
+		version           string
+		dry               bool
 	}{
 		{
 			name:    "all_change_types",
@@ -121,11 +119,90 @@ func TestUpdate(t *testing.T) {
 			entries: []*chlog.Entry{entryWithSubtext()},
 			version: "v0.45.0",
 		},
+		{
+			name: "multiple_changelogs",
+			entries: []*chlog.Entry{
+				entryForChangelogs(chlog.Deprecation, 123, "user"),
+				entryForChangelogs(chlog.Breaking, 125, "api"),
+				entryForChangelogs(chlog.Enhancement, 333, "api", "user"),
+				entryForChangelogs(chlog.BugFix, 222, "user"),
+				entryForChangelogs(chlog.Deprecation, 223, "api"),
+				entryForChangelogs(chlog.BugFix, 111, "api"),
+				entryForChangelogs(chlog.Breaking, 11, "user", "api"),
+				entryForChangelogs(chlog.Enhancement, 555, "api"),
+				entryForChangelogs(chlog.BugFix, 777, "api"),
+				entryForChangelogs(chlog.Deprecation, 234, "user", "api"),
+				entryForChangelogs(chlog.Enhancement, 21, "user"),
+				entryForChangelogs(chlog.BugFix, 32, "user"),
+			},
+			changeLogs: map[string]string{
+				"user": "CHANGELOG.md",
+				"api":  "CHANGELOG-API.md",
+			},
+			version: "v0.45.0",
+		},
+		{
+			name: "multiple_changelogs_single_default",
+			entries: []*chlog.Entry{
+				entryForChangelogs(chlog.Deprecation, 123),
+				entryForChangelogs(chlog.Breaking, 125, "api"),
+				entryForChangelogs(chlog.Enhancement, 333, "api", "user"),
+				entryForChangelogs(chlog.BugFix, 222),
+				entryForChangelogs(chlog.Deprecation, 223, "api"),
+				entryForChangelogs(chlog.BugFix, 111, "api"),
+				entryForChangelogs(chlog.Breaking, 11, "user", "api"),
+				entryForChangelogs(chlog.Enhancement, 555, "api"),
+				entryForChangelogs(chlog.BugFix, 777, "api"),
+				entryForChangelogs(chlog.Deprecation, 234, "user", "api"),
+				entryForChangelogs(chlog.Enhancement, 21),
+				entryForChangelogs(chlog.BugFix, 32),
+			},
+			changeLogs: map[string]string{
+				"user": "CHANGELOG.md",
+				"api":  "CHANGELOG-API.md",
+			},
+			defaultChangeLogs: []string{"user"},
+			version:           "v0.45.0",
+		},
+		{
+			name: "multiple_changelogs_multiple_defaults",
+			entries: []*chlog.Entry{
+				entryForChangelogs(chlog.Deprecation, 123),
+				entryForChangelogs(chlog.Breaking, 125, "api"),
+				entryForChangelogs(chlog.Enhancement, 333, "api", "user"),
+				entryForChangelogs(chlog.BugFix, 222),
+				entryForChangelogs(chlog.Deprecation, 223, "api"),
+				entryForChangelogs(chlog.BugFix, 111, "api"),
+				entryForChangelogs(chlog.Breaking, 11, "user", "api"),
+				entryForChangelogs(chlog.Enhancement, 555, "api"),
+				entryForChangelogs(chlog.BugFix, 777, "api"),
+				entryForChangelogs(chlog.Deprecation, 234, "user", "api"),
+				entryForChangelogs(chlog.Enhancement, 21),
+				entryForChangelogs(chlog.BugFix, 32),
+			},
+			changeLogs: map[string]string{
+				"user": "CHANGELOG.md",
+				"api":  "CHANGELOG-API.md",
+			},
+			defaultChangeLogs: []string{"user", "api"},
+			version:           "v0.45.0",
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			globalCfg = config.New(t.TempDir())
+			tempDir := t.TempDir()
+			globalCfg = config.New(tempDir)
+			if len(tc.changeLogs) > 0 {
+				globalCfg.ChangeLogs = make(map[string]string)
+				for key, filename := range tc.changeLogs {
+					globalCfg.ChangeLogs[key] = filepath.Join(tempDir, filename)
+				}
+			}
+			if len(tc.defaultChangeLogs) > 0 {
+				globalCfg.DefaultChangeLogs = tc.defaultChangeLogs
+			}
+
 			setupTestDir(t, tc.entries)
 
 			args := []string{"update", "--version", tc.version}
@@ -138,27 +215,31 @@ func TestUpdate(t *testing.T) {
 
 			assert.Empty(t, err)
 			if tc.dry {
-				assert.Contains(t, out, "Generated changelog updates:")
+				assert.Contains(t, out, "Generated changelog updates for")
 			} else {
-				assert.Contains(t, out, fmt.Sprintf("Finished updating %s", globalCfg.ChangelogMD))
+				for _, filename := range globalCfg.ChangeLogs {
+					assert.Contains(t, out, fmt.Sprintf("Finished updating %s", filename))
+				}
 			}
 
-			actualBytes, ioErr := os.ReadFile(globalCfg.ChangelogMD)
-			require.NoError(t, ioErr)
+			for _, filename := range globalCfg.ChangeLogs {
+				actualBytes, ioErr := os.ReadFile(filename) // nolint:gosec
+				require.NoError(t, ioErr)
 
-			expectedChangelogMD := filepath.Join("testdata", tc.name+".md")
-			expectedBytes, ioErr := os.ReadFile(filepath.Clean(expectedChangelogMD))
-			require.NoError(t, ioErr)
+				expectedChangelogMD := filepath.Join("testdata", tc.name, filepath.Base(filename))
+				expectedBytes, ioErr := os.ReadFile(filepath.Clean(expectedChangelogMD))
+				require.NoError(t, ioErr)
 
-			require.Equal(t, string(expectedBytes), string(actualBytes))
+				require.Equal(t, string(expectedBytes), string(actualBytes))
 
-			remainingYAMLs, ioErr := filepath.Glob(filepath.Join(globalCfg.ChlogsDir, "*.yaml"))
-			require.NoError(t, ioErr)
-			if tc.dry {
-				require.Equal(t, 1+len(tc.entries), len(remainingYAMLs))
-			} else {
-				require.Equal(t, 1, len(remainingYAMLs))
-				require.Equal(t, globalCfg.TemplateYAML, remainingYAMLs[0])
+				remainingYAMLs, ioErr := filepath.Glob(filepath.Join(globalCfg.EntriesDir, "*.yaml"))
+				require.NoError(t, ioErr)
+				if tc.dry {
+					require.Equal(t, 1+len(tc.entries), len(remainingYAMLs))
+				} else {
+					require.Equal(t, 1, len(remainingYAMLs))
+					require.Equal(t, globalCfg.TemplateYAML, remainingYAMLs[0])
+				}
 			}
 		})
 	}

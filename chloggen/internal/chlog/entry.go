@@ -34,11 +34,12 @@ const (
 )
 
 type Entry struct {
-	ChangeType string `yaml:"change_type"`
-	Component  string `yaml:"component"`
-	Note       string `yaml:"note"`
-	Issues     []int  `yaml:"issues"`
-	SubText    string `yaml:"subtext"`
+	ChangeLogs []string `yaml:"change_logs"`
+	ChangeType string   `yaml:"change_type"`
+	Component  string   `yaml:"component"`
+	Note       string   `yaml:"note"`
+	Issues     []int    `yaml:"issues"`
+	SubText    string   `yaml:"subtext"`
 }
 
 var changeTypes = []string{
@@ -49,7 +50,22 @@ var changeTypes = []string{
 	BugFix,
 }
 
-func (e Entry) Validate() error {
+func (e Entry) Validate(requireChangelog bool, validChangeLogs ...string) error {
+	if requireChangelog && len(e.ChangeLogs) == 0 {
+		return fmt.Errorf("specify one or more 'change_logs'")
+	}
+	for _, cl := range e.ChangeLogs {
+		var valid bool
+		for _, vcl := range validChangeLogs {
+			if cl == vcl {
+				valid = true
+			}
+		}
+		if !valid {
+			return fmt.Errorf("'%s' is not a valid value in 'change_logs'. Specify one of %v", cl, validChangeLogs)
+		}
+	}
+
 	var validType bool
 	for _, ct := range changeTypes {
 		if e.ChangeType == ct {
@@ -93,19 +109,23 @@ func (e Entry) String() string {
 	return sb.String()
 }
 
-func ReadEntries(cfg *config.Config) ([]*Entry, error) {
-	entryYAMLs, err := filepath.Glob(filepath.Join(cfg.ChlogsDir, "*.yaml"))
+func ReadEntries(cfg *config.Config) (map[string][]*Entry, error) {
+	yamlFiles, err := filepath.Glob(filepath.Join(cfg.EntriesDir, "*.yaml"))
 	if err != nil {
 		return nil, err
 	}
 
-	entries := make([]*Entry, 0, len(entryYAMLs))
-	for _, entryYAML := range entryYAMLs {
-		if entryYAML == cfg.TemplateYAML || entryYAML == cfg.ConfigYAML {
+	entries := make(map[string][]*Entry)
+	for key := range cfg.ChangeLogs {
+		entries[key] = make([]*Entry, 0)
+	}
+
+	for _, file := range yamlFiles {
+		if file == cfg.TemplateYAML || file == cfg.ConfigYAML {
 			continue
 		}
 
-		fileBytes, err := os.ReadFile(filepath.Clean(entryYAML))
+		fileBytes, err := os.ReadFile(filepath.Clean(file))
 		if err != nil {
 			return nil, err
 		}
@@ -114,24 +134,33 @@ func ReadEntries(cfg *config.Config) ([]*Entry, error) {
 		if err = yaml.Unmarshal(fileBytes, entry); err != nil {
 			return nil, err
 		}
-		entries = append(entries, entry)
+
+		if len(entry.ChangeLogs) == 0 {
+			for _, cl := range cfg.DefaultChangeLogs {
+				entries[cl] = append(entries[cl], entry)
+			}
+		} else {
+			for _, cl := range entry.ChangeLogs {
+				entries[cl] = append(entries[cl], entry)
+			}
+		}
 	}
 	return entries, nil
 }
 
 func DeleteEntries(cfg *config.Config) error {
-	entryYAMLs, err := filepath.Glob(filepath.Join(cfg.ChlogsDir, "*.yaml"))
+	yamlFiles, err := filepath.Glob(filepath.Join(cfg.EntriesDir, "*.yaml"))
 	if err != nil {
 		return err
 	}
 
-	for _, entryYAML := range entryYAMLs {
-		if filepath.Base(entryYAML) == filepath.Base(cfg.TemplateYAML) {
+	for _, file := range yamlFiles {
+		if file == cfg.TemplateYAML || file == cfg.ConfigYAML {
 			continue
 		}
 
-		if err := os.Remove(entryYAML); err != nil {
-			fmt.Printf("Failed to delete: %s\n", entryYAML)
+		if err := os.Remove(file); err != nil {
+			fmt.Printf("Failed to delete: %s\n", file)
 		}
 	}
 	return nil
