@@ -28,10 +28,12 @@ import (
 
 func TestEntry(t *testing.T) {
 	testCases := []struct {
-		name      string
-		entry     Entry
-		expectErr string
-		toString  string
+		name             string
+		entry            Entry
+		requireChangeLog bool
+		validChangeLogs  []string
+		expectErr        string
+		toString         string
 	}{
 		{
 			name:      "empty",
@@ -69,6 +71,32 @@ func TestEntry(t *testing.T) {
 			expectErr: "specify one or more issues #'s",
 		},
 		{
+			name: "missing_required_changelog",
+			entry: Entry{
+				ChangeType: "bug_fix",
+				Component:  "bar",
+				Note:       "fix bar",
+				Issues:     []int{123},
+				SubText:    "",
+			},
+			requireChangeLog: true,
+			validChangeLogs:  []string{"foo"},
+			expectErr:        "specify one or more 'change_logs'",
+		},
+		{
+			name: "invalid_changelog",
+			entry: Entry{
+				ChangeLogs: []string{"bar"},
+				ChangeType: "bug_fix",
+				Component:  "bar",
+				Note:       "fix bar",
+				Issues:     []int{123},
+				SubText:    "",
+			},
+			validChangeLogs: []string{"foo"},
+			expectErr:       "'bar' is not a valid value in 'change_logs'. Specify one of [foo]",
+		},
+		{
 			name: "valid",
 			entry: Entry{
 				ChangeType: "breaking",
@@ -101,12 +129,80 @@ func TestEntry(t *testing.T) {
 			},
 			toString: "- `foo`: broke foo (#123)\n  more details",
 		},
+		{
+			name: "required_changelog",
+			entry: Entry{
+				ChangeLogs: []string{"foo"},
+				ChangeType: "breaking",
+				Component:  "foo",
+				Note:       "broke foo",
+				Issues:     []int{123},
+				SubText:    "more details",
+			},
+			requireChangeLog: true,
+			validChangeLogs:  []string{"foo"},
+			toString:         "- `foo`: broke foo (#123)\n  more details",
+		},
+		{
+			name: "default_changelog",
+			entry: Entry{
+				ChangeLogs: []string{"foo"},
+				ChangeType: "breaking",
+				Component:  "foo",
+				Note:       "broke foo",
+				Issues:     []int{123},
+				SubText:    "more details",
+			},
+			requireChangeLog: false,
+			validChangeLogs:  []string{"foo"},
+			toString:         "- `foo`: broke foo (#123)\n  more details",
+		},
+		{
+			name: "subset_of_changelogs",
+			entry: Entry{
+				ChangeLogs: []string{"foo", "bar"},
+				ChangeType: "breaking",
+				Component:  "foo",
+				Note:       "broke foo",
+				Issues:     []int{123},
+				SubText:    "more details",
+			},
+			validChangeLogs: []string{"foo", "bar", "baz"},
+			toString:        "- `foo`: broke foo (#123)\n  more details",
+		},
+		{
+			name: "all_changelogs",
+			entry: Entry{
+				ChangeLogs: []string{"foo", "bar"},
+				ChangeType: "breaking",
+				Component:  "foo",
+				Note:       "broke foo",
+				Issues:     []int{123},
+				SubText:    "more details",
+			},
+			validChangeLogs: []string{"foo", "bar"},
+			toString:        "- `foo`: broke foo (#123)\n  more details",
+		},
+		{
+			name: "all_changelogs",
+			entry: Entry{
+				ChangeLogs: []string{"foo", "bar"},
+				ChangeType: "breaking",
+				Component:  "foo",
+				Note:       "broke foo",
+				Issues:     []int{123},
+				SubText:    "more details",
+			},
+			validChangeLogs: []string{"foo", "bar"},
+			toString:        "- `foo`: broke foo (#123)\n  more details",
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.entry.Validate()
+			err := tc.entry.Validate(tc.requireChangeLog, tc.validChangeLogs...)
 			if tc.expectErr != "" {
+				assert.Error(t, err)
 				assert.Equal(t, tc.expectErr, err.Error())
 				return
 			}
@@ -119,68 +215,97 @@ func TestEntry(t *testing.T) {
 
 func TestReadDeleteEntries(t *testing.T) {
 	tempDir := t.TempDir()
-	entriesDir := filepath.Join(tempDir, config.DefaultChloggenDir)
+	entriesDir := filepath.Join(tempDir, config.DefaultEntriesDir)
 	require.NoError(t, os.Mkdir(entriesDir, os.ModePerm))
 
 	entryA := Entry{
+		ChangeLogs: []string{"foo"},
 		ChangeType: "breaking",
 		Component:  "foo",
 		Note:       "broke foo",
 		Issues:     []int{123},
 	}
-
-	bytesA, err := yaml.Marshal(entryA)
-	require.NoError(t, err)
-
-	fileA, err := os.CreateTemp(entriesDir, "*.yaml")
-	require.NoError(t, err)
-	defer fileA.Close()
-
-	_, err = fileA.Write(bytesA)
-	require.NoError(t, err)
+	writeEntry(t, entriesDir, &entryA)
 
 	entryB := Entry{
+		ChangeLogs: []string{"bar"},
 		ChangeType: "bug_fix",
 		Component:  "bar",
 		Note:       "fix bar",
 		Issues:     []int{345, 678},
 		SubText:    "more details",
 	}
+	writeEntry(t, entriesDir, &entryB)
 
-	bytesB, err := yaml.Marshal(entryB)
-	require.NoError(t, err)
+	entryC := Entry{
+		ChangeLogs: []string{},
+		ChangeType: "enhancement",
+		Component:  "other",
+		Note:       "enhance!",
+		Issues:     []int{555},
+	}
+	writeEntry(t, entriesDir, &entryC)
 
-	fileB, err := os.CreateTemp(entriesDir, "*.yaml")
-	require.NoError(t, err)
-	defer fileB.Close()
+	entryD := Entry{
+		ChangeLogs: []string{"foo", "bar"},
+		ChangeType: "deprecation",
+		Component:  "foobar",
+		Note:       "deprecate something",
+		Issues:     []int{999},
+	}
+	writeEntry(t, entriesDir, &entryD)
 
-	_, err = fileB.Write(bytesB)
-	require.NoError(t, err)
-
-	// Put config and template files in chlogs_dir to ensure they are ignored when reading/deleting entries
-	configYAML, err := os.CreateTemp(entriesDir, "config.yaml")
+	// Put config and template files in entries_dir to ensure they are ignored when reading/deleting entries
+	configYAML, err := os.Create(filepath.Join(entriesDir, "config.yaml")) //nolint:gosec
 	require.NoError(t, err)
 	defer configYAML.Close()
 
-	templateYAML, err := os.CreateTemp(entriesDir, "TEMPLATE.yaml")
+	templateYAML, err := os.Create(filepath.Join(entriesDir, "TEMPLATE.yaml")) //nolint:gosec
 	require.NoError(t, err)
 	defer templateYAML.Close()
 
-	cfg := config.New(tempDir)
-	cfg.ConfigYAML = configYAML.Name()
-	cfg.TemplateYAML = templateYAML.Name()
+	cfg := &config.Config{
+		ConfigYAML:   configYAML.Name(),
+		TemplateYAML: templateYAML.Name(),
+		ChangeLogs: map[string]string{
+			"foo": filepath.Join(entriesDir, "CHANGELOG.foo.md"),
+			"bar": filepath.Join(entriesDir, "CHANGELOG.bar.md"),
+		},
+		DefaultChangeLogs: []string{"foo"},
+		EntriesDir:        entriesDir,
+	}
 
-	entries, err := ReadEntries(cfg)
+	changeLogEntries, err := ReadEntries(cfg)
 	assert.NoError(t, err)
 
-	assert.ElementsMatch(t, []*Entry{&entryA, &entryB}, entries)
+	assert.Equal(t, 2, len(changeLogEntries))
+
+	assert.Contains(t, changeLogEntries, "foo")
+	assert.Contains(t, changeLogEntries, "bar")
+
+	assert.ElementsMatch(t, []*Entry{&entryA, &entryC, &entryD}, changeLogEntries["foo"])
+	assert.ElementsMatch(t, []*Entry{&entryB, &entryD}, changeLogEntries["bar"])
 
 	assert.NoError(t, DeleteEntries(cfg))
-	entries, err = ReadEntries(cfg)
+	changeLogEntries, err = ReadEntries(cfg)
 	assert.NoError(t, err)
-	assert.Empty(t, entries)
+	assert.Equal(t, 2, len(changeLogEntries))
+	assert.Empty(t, changeLogEntries["foo"])
+	assert.Empty(t, changeLogEntries["bar"])
 
 	// Ensure these weren't deleted
 	assert.FileExists(t, cfg.ConfigYAML)
 	assert.FileExists(t, cfg.TemplateYAML)
+}
+
+func writeEntry(t *testing.T, dir string, entry *Entry) {
+	entryBytes, err := yaml.Marshal(entry)
+	require.NoError(t, err)
+
+	entryFile, err := os.CreateTemp(dir, "*.yaml")
+	require.NoError(t, err)
+	defer entryFile.Close()
+
+	_, err = entryFile.Write(entryBytes)
+	require.NoError(t, err)
 }

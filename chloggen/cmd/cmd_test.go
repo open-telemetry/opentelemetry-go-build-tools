@@ -98,15 +98,33 @@ func entryWithSubtext() *chlog.Entry {
 	}
 }
 
+func entryForChangelogs(changeType string, issue int, keys ...string) *chlog.Entry {
+	keyStr := "default"
+	if len(keys) > 0 {
+		keyStr = strings.Join(keys, ",")
+	}
+	return &chlog.Entry{
+		ChangeLogs: keys,
+		ChangeType: changeType,
+		Component:  "receiver/foo",
+		Note:       fmt.Sprintf("Some change relevant to [%s]", keyStr),
+		Issues:     []int{issue},
+	}
+}
+
 func setupTestDir(t *testing.T, entries []*chlog.Entry) {
 	require.NotNil(t, globalCfg, "test should instantiate globalCfg before calling setupTestDir")
 
-	// Create a known dummy changelog which may be updated by the test
-	changelogBytes, err := os.ReadFile(filepath.Join("testdata", config.DefaultChangelogMD))
+	// Create dummy changelogs which may be updated by the test
+	changelogBytes, err := os.ReadFile(filepath.Join("testdata", config.DefaultChangeLogFilename))
 	require.NoError(t, err)
-	require.NoError(t, os.WriteFile(globalCfg.ChangelogMD, changelogBytes, os.FileMode(0755)))
+	for _, filename := range globalCfg.ChangeLogs {
+		require.NoError(t, os.MkdirAll(filepath.Dir(filename), os.FileMode(0755)))
+		require.NoError(t, os.WriteFile(filename, changelogBytes, os.FileMode(0755)))
+	}
 
-	require.NoError(t, os.Mkdir(globalCfg.ChlogsDir, os.FileMode(0755)))
+	// Create the entries directory
+	require.NoError(t, os.MkdirAll(globalCfg.EntriesDir, os.FileMode(0755)))
 
 	// Copy the entry template, for tests that ensure it is not deleted
 	templateInRootDir := config.New("testdata").TemplateYAML
@@ -114,10 +132,11 @@ func setupTestDir(t *testing.T, entries []*chlog.Entry) {
 	require.NoError(t, err)
 	require.NoError(t, os.WriteFile(globalCfg.TemplateYAML, templateBytes, os.FileMode(0755)))
 
+	// Write the entries to the entries directory
 	for i, entry := range entries {
 		entryBytes, err := yaml.Marshal(entry)
 		require.NoError(t, err)
-		path := filepath.Join(globalCfg.ChlogsDir, fmt.Sprintf("%d.yaml", i))
+		path := filepath.Join(globalCfg.EntriesDir, fmt.Sprintf("%d.yaml", i))
 		require.NoError(t, os.WriteFile(path, entryBytes, os.FileMode(0755)))
 	}
 }
