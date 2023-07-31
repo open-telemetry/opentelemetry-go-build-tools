@@ -15,7 +15,18 @@
 package main
 
 import (
-	"go.opentelemetry.io/build-tools/internal/check"
+	"flag"
+)
+
+const (
+	// Absolute root path of the project
+	projectPathFlag = "project-path"
+	// Relative path where imports all default components
+	relativeDefaultComponentsPathFlag = "component-rel-path"
+	// The project Go Module name
+	projectGoModuleFlag = "module-name"
+	// The name of the file to validate
+	fileNameFlag = "file-name"
 )
 
 // The main verifies if filename exists for the enabled default components
@@ -34,12 +45,18 @@ import (
 //				--module-name github.com/open-telemetry/opentelemetry-collector-contrib
 //				--file-name metadata.yaml
 func main() {
-	projectPath, componentPath, moduleName, fileName := check.Flags()
+	projectPath := flag.String(projectPathFlag, "", "specify the project path")
+	componentPath := flag.String(relativeDefaultComponentsPathFlag, "", "specify the relative component path")
+	moduleName := flag.String(projectGoModuleFlag, "", "specify the project go module")
+	fileName := flag.String(fileNameFlag, "", "specify the file name")
+
+	flag.Parse()
+
 	if *fileName == "" {
 		panic("Missing required argument: --file-name")
 	}
 
-	err := check.FileExists(
+	err := FileExists(
 		*projectPath,
 		*componentPath,
 		*moduleName,

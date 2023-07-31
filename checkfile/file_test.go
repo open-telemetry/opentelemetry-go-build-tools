@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // Package tools provides helper functions used in multiple build tools.
-package check
+package main
 
 import (
 	"os"

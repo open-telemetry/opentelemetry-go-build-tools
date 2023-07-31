@@ -17,7 +17,6 @@ module-sets:
     version: v0.10.0
     modules:
       - go.opentelemetry.io/build-tools
-      - go.opentelemetry.io/build-tools/checkdoc
       - go.opentelemetry.io/build-tools/checkfile
       - go.opentelemetry.io/build-tools/chloggen
       - go.opentelemetry.io/build-tools/crosslink

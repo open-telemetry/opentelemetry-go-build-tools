@@ -12,11 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package check provides functions used in checkdoc and checkfile.
-package check
+package main
 
 import (
-	"flag"
 	"fmt"
 	"go/parser"
 	"go/token"
@@ -24,26 +22,6 @@ import (
 	"path/filepath"
 	"strings"
 )
-
-const (
-	// Absolute root path of the project
-	projectPathFlag = "project-path"
-	// Relative path where imports all default components
-	relativeDefaultComponentsPathFlag = "component-rel-path"
-	// The project Go Module name
-	projectGoModuleFlag = "module-name"
-	// The name of the file to validate
-	fileNameFlag = "file-name"
-)
-
-func Flags() (projectPath *string, componentPath *string, moduleName *string, fileName *string) {
-	projectPath = flag.String(projectPathFlag, "", "specify the project path")
-	componentPath = flag.String(relativeDefaultComponentsPathFlag, "", "specify the relative component path")
-	moduleName = flag.String(projectGoModuleFlag, "", "specify the project go module")
-	fileName = flag.String(fileNameFlag, "", "specify the file name")
-	flag.Parse()
-	return
-}
 
 // FileExists returns an error if the given file is missing for at least one
 // enabled component. "projectPath" is the absolute path to the root
@@ -72,10 +50,10 @@ func FileExists(projectPath string, relativeComponentsPath string, projectGoModu
 
 		if isComponentImport(importPath, importPrefixesToCheck) {
 			relativeComponentPath := strings.Replace(importPath, projectGoModule, "", 1)
-			readmePath := filepath.Join(projectPath, relativeComponentPath, filename)
-			_, err := os.Stat(readmePath)
+			filePath := filepath.Join(projectPath, relativeComponentPath, filename)
+			_, err := os.Stat(filePath)
 			if err != nil {
-				return fmt.Errorf("%s does not exist at %s, add one", filename, readmePath)
+				return fmt.Errorf("%s does not exist at %s, add one", filename, filePath)
 			}
 		}
 	}
