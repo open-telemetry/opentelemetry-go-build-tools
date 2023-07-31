@@ -170,11 +170,11 @@ check-clean-work-tree:
 .PHONY: multimod-verify
 multimod-verify: $(MULTIMOD)
 	@echo "Validating versions.yaml"
-	multimod verify
+	$(MULTIMOD) verify
 
 .PHONY: multimod-prerelease
-multimod-prerelease: $(MULTIMOD)
-	multimod prerelease -s=true -v ./versions.yaml -m tools
+multimod-prerelease: multimod-verify $(MULTIMOD)
+	$(MULTIMOD) prerelease -s=true -v ./versions.yaml -m tools
 	$(MAKE) tidy
 
 COMMIT?=HEAD
