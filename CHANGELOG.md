@@ -4,6 +4,16 @@
 
 <!-- next version -->
 
+## v0.11.0
+
+### 🛑 Breaking changes 🛑
+
+- `checkdoc`: checkdoc has been removed in favor of checkfile. Please use checkfile with argument --file-name README.md instead. (#378)
+
+### 💡 Enhancements 💡
+
+- `chloggen`: Add ability to configure separate changelogs for different audiences (#364)
+
 ## v0.10.0
 
 ### 🛑 Breaking changes 🛑
