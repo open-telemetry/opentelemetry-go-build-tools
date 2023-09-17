@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/joshdk/go-junit v1.0.0
-	go.uber.org/zap v1.25.0
+	go.uber.org/zap v1.26.0
 	golang.org/x/oauth2 v0.12.0
 )
 
