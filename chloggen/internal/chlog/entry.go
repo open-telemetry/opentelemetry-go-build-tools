@@ -81,15 +81,15 @@ func (e Entry) Validate(requireChangelog bool, componentPrefixes []string, valid
 		return fmt.Errorf("specify a 'component'")
 	}
 
-	// only apply prefix validation if one or more prefix is present.
-	found := !(len(componentPrefixes) > 0)
+	found := false
 	for _, prefix := range componentPrefixes {
 		if strings.HasPrefix(e.Component, prefix) {
 			found = true
 			break
 		}
 	}
-	if !found {
+	// only apply prefix validation if one or more prefix is present.
+	if len(componentPrefixes) > 0 && !found {
 		return fmt.Errorf("%s is not a valid 'component'. It must start with one of %v", e.Component, componentPrefixes)
 	}
 
