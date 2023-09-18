@@ -28,12 +28,13 @@ import (
 
 func TestEntry(t *testing.T) {
 	testCases := []struct {
-		name             string
-		entry            Entry
-		requireChangeLog bool
-		validChangeLogs  []string
-		expectErr        string
-		toString         string
+		name              string
+		entry             Entry
+		requireChangeLog  bool
+		validChangeLogs   []string
+		componentPrefixes []string
+		expectErr         string
+		toString          string
 	}{
 		{
 			name:      "empty",
@@ -196,11 +197,26 @@ func TestEntry(t *testing.T) {
 			validChangeLogs: []string{"foo", "bar"},
 			toString:        "- `foo`: broke foo (#123)\n  more details",
 		},
+		{
+			name: "with_prefixes",
+			entry: Entry{
+				ChangeLogs: []string{"foo", "bar"},
+				ChangeType: "enhancement",
+				Component:  "foo",
+				Note:       "changed foo",
+				Issues:     []int{123},
+				SubText:    "more details",
+			},
+			componentPrefixes: []string{"bar"},
+			validChangeLogs:   []string{"foo", "bar"},
+			toString:          "- `foo`: changed foo (#123)\n  more details",
+			expectErr:         "foo is not a valid 'component'. It must start with one of [bar]",
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.entry.Validate(tc.requireChangeLog, tc.validChangeLogs...)
+			err := tc.entry.Validate(tc.requireChangeLog, tc.componentPrefixes, tc.validChangeLogs...)
 			if tc.expectErr != "" {
 				assert.Error(t, err)
 				assert.Equal(t, tc.expectErr, err.Error())

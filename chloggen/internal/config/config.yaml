@@ -21,3 +21,7 @@
 # If 'change_logs' is specified in this file, and no value is specified for 'default_change_logs',
 # then 'change_logs' MUST be specified in every entry file.
 # default_change_logs: []
+
+# The prefixes accepted as valid for the component field of a changelog entry.
+# By default, no prefix is present and any value is valid.
+# component_prefixes: []
