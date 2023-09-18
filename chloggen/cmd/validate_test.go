@@ -48,15 +48,18 @@ func TestValidateErr(t *testing.T) {
 func TestValidate(t *testing.T) {
 	tests := []struct {
 		name    string
+		cfg     *config.Config
 		entries []*chlog.Entry
 		wantErr string
 	}{
 		{
 			name:    "all_valid",
+			cfg:     config.New(t.TempDir()),
 			entries: getSampleEntries(),
 		},
 		{
 			name: "invalid_change_type",
+			cfg:  config.New(t.TempDir()),
 			entries: func() []*chlog.Entry {
 				return append(getSampleEntries(), &chlog.Entry{
 					ChangeType: "fake",
@@ -69,6 +72,7 @@ func TestValidate(t *testing.T) {
 		},
 		{
 			name: "missing_component",
+			cfg:  config.New(t.TempDir()),
 			entries: func() []*chlog.Entry {
 				return append(getSampleEntries(), &chlog.Entry{
 					ChangeType: chlog.BugFix,
@@ -81,6 +85,7 @@ func TestValidate(t *testing.T) {
 		},
 		{
 			name: "empty_component",
+			cfg:  config.New(t.TempDir()),
 			entries: func() []*chlog.Entry {
 				return append(getSampleEntries(), &chlog.Entry{
 					ChangeType: chlog.BugFix,
@@ -93,6 +98,7 @@ func TestValidate(t *testing.T) {
 		},
 		{
 			name: "missing_note",
+			cfg:  config.New(t.TempDir()),
 			entries: func() []*chlog.Entry {
 				return append(getSampleEntries(), &chlog.Entry{
 					ChangeType: chlog.BugFix,
@@ -105,6 +111,7 @@ func TestValidate(t *testing.T) {
 		},
 		{
 			name: "empty_note",
+			cfg:  config.New(t.TempDir()),
 			entries: func() []*chlog.Entry {
 				return append(getSampleEntries(), &chlog.Entry{
 					ChangeType: chlog.BugFix,
@@ -117,6 +124,7 @@ func TestValidate(t *testing.T) {
 		},
 		{
 			name: "missing_issue",
+			cfg:  config.New(t.TempDir()),
 			entries: func() []*chlog.Entry {
 				return append(getSampleEntries(), &chlog.Entry{
 					ChangeType: chlog.BugFix,
@@ -129,6 +137,7 @@ func TestValidate(t *testing.T) {
 		},
 		{
 			name: "all_invalid",
+			cfg:  config.New(t.TempDir()),
 			entries: func() []*chlog.Entry {
 				sampleEntries := getSampleEntries()
 				for _, e := range sampleEntries {
@@ -138,10 +147,26 @@ func TestValidate(t *testing.T) {
 			}(),
 			wantErr: "'fake' is not a valid 'change_type'",
 		},
+		{
+			name: "gomodule_validation",
+			cfg: func() *config.Config {
+				cfg := config.New(t.TempDir())
+				cfg.ComponentPrefixes = []string{"github.com/foo/bar/receiver", "github.com/foo/bar/exporter"}
+				return cfg
+			}(),
+			entries: func() []*chlog.Entry {
+				sampleEntries := getSampleEntries()
+				for _, e := range sampleEntries {
+					e.Component = "foo"
+				}
+				return sampleEntries
+			}(),
+			wantErr: "Error: foo is not a valid 'component'. It must start with one of \\[github.com/foo/bar/receiver github.com/foo/bar/exporter\\]",
+		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			globalCfg = config.New(t.TempDir())
+			globalCfg = tc.cfg
 			setupTestDir(t, tc.entries)
 
 			out, err := runCobra(t, "validate")

@@ -42,7 +42,7 @@ func validateCmd() *cobra.Command {
 					for changeLogKey := range globalCfg.ChangeLogs {
 						validChangeLogs = append(validChangeLogs, changeLogKey)
 					}
-					if err = entry.Validate(changelogRequired, validChangeLogs...); err != nil {
+					if err = entry.Validate(changelogRequired, globalCfg.ComponentPrefixes, validChangeLogs...); err != nil {
 						return err
 					}
 				}

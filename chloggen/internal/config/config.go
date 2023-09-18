@@ -29,6 +29,8 @@ const (
 	DefaultTemplateYAML      = "TEMPLATE.yaml"
 	DefaultChangeLogKey      = "default"
 	DefaultChangeLogFilename = "CHANGELOG.md"
+
+	DefaultValidationMode = "none"
 )
 
 type Config struct {
@@ -36,6 +38,7 @@ type Config struct {
 	DefaultChangeLogs []string          `yaml:"default_change_logs"`
 	EntriesDir        string            `yaml:"entries_dir"`
 	TemplateYAML      string            `yaml:"template_yaml"`
+	ComponentPrefixes []string          `yaml:"component_prefixes"`
 	ConfigYAML        string
 }
 
