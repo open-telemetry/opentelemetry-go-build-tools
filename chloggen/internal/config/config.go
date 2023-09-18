@@ -29,8 +29,6 @@ const (
 	DefaultTemplateYAML      = "TEMPLATE.yaml"
 	DefaultChangeLogKey      = "default"
 	DefaultChangeLogFilename = "CHANGELOG.md"
-
-	DefaultValidationMode = "none"
 )
 
 type Config struct {
