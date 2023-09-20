@@ -50,7 +50,7 @@ var changeTypes = []string{
 	BugFix,
 }
 
-func (e Entry) Validate(requireChangelog bool, componentPrefixes []string, validChangeLogs ...string) error {
+func (e Entry) Validate(requireChangelog bool, components []string, validChangeLogs ...string) error {
 	if requireChangelog && len(e.ChangeLogs) == 0 {
 		return fmt.Errorf("specify one or more 'change_logs'")
 	}
@@ -82,15 +82,15 @@ func (e Entry) Validate(requireChangelog bool, componentPrefixes []string, valid
 	}
 
 	found := false
-	for _, prefix := range componentPrefixes {
-		if strings.HasPrefix(e.Component, prefix) {
+	for _, validComp := range components {
+		if e.Component == validComp {
 			found = true
 			break
 		}
 	}
-	// only apply prefix validation if one or more prefix is present.
-	if len(componentPrefixes) > 0 && !found {
-		return fmt.Errorf("%s is not a valid 'component'. It must start with one of %v", e.Component, componentPrefixes)
+	// only apply component validation if one or more values are present.
+	if len(components) > 0 && !found {
+		return fmt.Errorf("%s is not a valid 'component'. It must be one of %v", e.Component, components)
 	}
 
 	if strings.TrimSpace(e.Note) == "" {

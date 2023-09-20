@@ -5,7 +5,7 @@ change_type: enhancement
 component: chloggen
 
 # A brief description of the change.  Surround your text with quotes ("") if it needs to start with a backtick (`).
-note: add compoment prefix validation
+note: add component validation
 
 # One or more tracking issues related to the change
 issues: [401]

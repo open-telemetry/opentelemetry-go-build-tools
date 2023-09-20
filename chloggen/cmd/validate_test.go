@@ -142,7 +142,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "gomodule_validation",
 			cfgFn: func(cfg *config.Config) {
-				cfg.ComponentPrefixes = []string{"github.com/foo/bar/receiver", "github.com/foo/bar/exporter"}
+				cfg.Components = []string{"github.com/foo/bar/receiver", "github.com/foo/bar/exporter"}
 			},
 			entries: func() []*chlog.Entry {
 				sampleEntries := getSampleEntries()
@@ -151,7 +151,7 @@ func TestValidate(t *testing.T) {
 				}
 				return sampleEntries
 			}(),
-			wantErr: "Error: foo is not a valid 'component'. It must start with one of \\[github.com/foo/bar/receiver github.com/foo/bar/exporter\\]",
+			wantErr: "Error: foo is not a valid 'component'. It must be one of \\[github.com/foo/bar/receiver github.com/foo/bar/exporter\\]",
 		},
 	}
 	for _, tc := range tests {

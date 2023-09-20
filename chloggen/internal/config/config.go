@@ -36,7 +36,7 @@ type Config struct {
 	DefaultChangeLogs []string          `yaml:"default_change_logs"`
 	EntriesDir        string            `yaml:"entries_dir"`
 	TemplateYAML      string            `yaml:"template_yaml"`
-	ComponentPrefixes []string          `yaml:"component_prefixes"`
+	Components        []string          `yaml:"components"`
 	ConfigYAML        string
 }
 

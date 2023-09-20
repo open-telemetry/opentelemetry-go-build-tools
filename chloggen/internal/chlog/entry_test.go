@@ -28,13 +28,13 @@ import (
 
 func TestEntry(t *testing.T) {
 	testCases := []struct {
-		name              string
-		entry             Entry
-		requireChangeLog  bool
-		validChangeLogs   []string
-		componentPrefixes []string
-		expectErr         string
-		toString          string
+		name             string
+		entry            Entry
+		requireChangeLog bool
+		validChangeLogs  []string
+		components       []string
+		expectErr        string
+		toString         string
 	}{
 		{
 			name:      "empty",
@@ -198,7 +198,7 @@ func TestEntry(t *testing.T) {
 			toString:        "- `foo`: broke foo (#123)\n  more details",
 		},
 		{
-			name: "with_prefixes",
+			name: "with_components",
 			entry: Entry{
 				ChangeLogs: []string{"foo", "bar"},
 				ChangeType: "enhancement",
@@ -207,16 +207,16 @@ func TestEntry(t *testing.T) {
 				Issues:     []int{123},
 				SubText:    "more details",
 			},
-			componentPrefixes: []string{"bar"},
-			validChangeLogs:   []string{"foo", "bar"},
-			toString:          "- `foo`: changed foo (#123)\n  more details",
-			expectErr:         "foo is not a valid 'component'. It must start with one of [bar]",
+			components:      []string{"bar"},
+			validChangeLogs: []string{"foo", "bar"},
+			toString:        "- `foo`: changed foo (#123)\n  more details",
+			expectErr:       "foo is not a valid 'component'. It must be one of [bar]",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.entry.Validate(tc.requireChangeLog, tc.componentPrefixes, tc.validChangeLogs...)
+			err := tc.entry.Validate(tc.requireChangeLog, tc.components, tc.validChangeLogs...)
 			if tc.expectErr != "" {
 				assert.Error(t, err)
 				assert.Equal(t, tc.expectErr, err.Error())
