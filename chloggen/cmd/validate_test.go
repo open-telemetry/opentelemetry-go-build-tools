@@ -48,6 +48,7 @@ func TestValidateErr(t *testing.T) {
 func TestValidate(t *testing.T) {
 	tests := []struct {
 		name    string
+		cfgFn   func(*config.Config)
 		entries []*chlog.Entry
 		wantErr string
 	}{
@@ -138,10 +139,28 @@ func TestValidate(t *testing.T) {
 			}(),
 			wantErr: "'fake' is not a valid 'change_type'",
 		},
+		{
+			name: "gomodule_validation",
+			cfgFn: func(cfg *config.Config) {
+				cfg.Components = []string{"github.com/foo/bar/receiver", "github.com/foo/bar/exporter"}
+			},
+			entries: func() []*chlog.Entry {
+				sampleEntries := getSampleEntries()
+				for _, e := range sampleEntries {
+					e.Component = "foo"
+				}
+				return sampleEntries
+			}(),
+			wantErr: "Error: foo is not a valid 'component'. It must be one of \\[github.com/foo/bar/receiver github.com/foo/bar/exporter\\]",
+		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			globalCfg = config.New(t.TempDir())
+			cfg := config.New(t.TempDir())
+			if tc.cfgFn != nil {
+				tc.cfgFn(cfg)
+			}
+			globalCfg = cfg
 			setupTestDir(t, tc.entries)
 
 			out, err := runCobra(t, "validate")

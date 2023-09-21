@@ -21,3 +21,6 @@
 # If 'change_logs' is specified in this file, and no value is specified for 'default_change_logs',
 # then 'change_logs' MUST be specified in every entry file.
 # default_change_logs: []
+
+# The component values accepted. If empty, any component value is accepted.
+# components: []

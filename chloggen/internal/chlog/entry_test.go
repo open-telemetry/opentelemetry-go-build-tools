@@ -32,6 +32,7 @@ func TestEntry(t *testing.T) {
 		entry            Entry
 		requireChangeLog bool
 		validChangeLogs  []string
+		components       []string
 		expectErr        string
 		toString         string
 	}{
@@ -196,11 +197,26 @@ func TestEntry(t *testing.T) {
 			validChangeLogs: []string{"foo", "bar"},
 			toString:        "- `foo`: broke foo (#123)\n  more details",
 		},
+		{
+			name: "with_components",
+			entry: Entry{
+				ChangeLogs: []string{"foo", "bar"},
+				ChangeType: "enhancement",
+				Component:  "foo",
+				Note:       "changed foo",
+				Issues:     []int{123},
+				SubText:    "more details",
+			},
+			components:      []string{"bar"},
+			validChangeLogs: []string{"foo", "bar"},
+			toString:        "- `foo`: changed foo (#123)\n  more details",
+			expectErr:       "foo is not a valid 'component'. It must be one of [bar]",
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.entry.Validate(tc.requireChangeLog, tc.validChangeLogs...)
+			err := tc.entry.Validate(tc.requireChangeLog, tc.components, tc.validChangeLogs...)
 			if tc.expectErr != "" {
 				assert.Error(t, err)
 				assert.Equal(t, tc.expectErr, err.Error())
