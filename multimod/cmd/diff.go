@@ -32,9 +32,10 @@ var diffCmd = &cobra.Command{
 		}
 
 		if len(changedFiles) > 0 {
-			log.Fatalf("The following files changed in %s modules since %s: \n%s\nRelease is required for %s modset", moduleSetName, previousVersion, strings.Join(changedFiles, "\n"), moduleSetName)
+			log.Printf("The following files changed in %s modules since %s: \n%s\nRelease is required for %s modset", moduleSetName, previousVersion, strings.Join(changedFiles, "\n"), moduleSetName)
+		} else {
+			log.Fatalf("No %s modules have changed since %s", moduleSetName, previousVersion)
 		}
-		log.Printf("No %s modules have changed since %s", moduleSetName, previousVersion)
 	},
 }
 

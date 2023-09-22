@@ -1,0 +1,9 @@
+change_type: bugfix
+
+component: multimod
+
+note: Changes the return code for diff to match the behaviour it is replacing
+
+issues: []
+
+subtext:
