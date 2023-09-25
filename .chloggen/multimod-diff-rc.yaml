@@ -2,8 +2,8 @@ change_type: bug_fix
 
 component: multimod
 
-note: Changes the return code for diff to match the behaviour it is replacing
+note: Return a non-0 exit code if there are no changes to ensure the build does not proceed with the release
 
 issues: [404]
 
-subtext:
+subtext:  This changes the exit code for `diff` to match the behaviour it is replacing in the Collector
