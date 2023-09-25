@@ -4,6 +4,12 @@
 
 <!-- next version -->
 
+## 0.12.0
+
+### 💡 Enhancements 💡
+
+- `chloggen`: add component validation (#401)
+
 ## v0.11.0
 
 ### 🛑 Breaking changes 🛑
