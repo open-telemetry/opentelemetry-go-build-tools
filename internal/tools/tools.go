@@ -25,4 +25,5 @@ import (
 	_ "go.opentelemetry.io/build-tools/crosslink"
 	_ "go.opentelemetry.io/build-tools/dbotconf"
 	_ "go.opentelemetry.io/build-tools/multimod"
+	_ "golang.org/x/vuln/cmd/govulncheck"
 )

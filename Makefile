@@ -57,6 +57,9 @@ $(TOOLS)/crosslink: PACKAGE=go.opentelemetry.io/build-tools/crosslink
 CHLOGGEN = $(TOOLS)/chloggen
 $(TOOLS)/chloggen: PACKAGE=go.opentelemetry.io/build-tools/chloggen
 
+GOVULNCHECK = $(TOOLS)/govulncheck
+ $(TOOLS)/govulncheck: PACKAGE=golang.org/x/vuln/cmd/govulncheck
+
 .PHONY: tools
 tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD) $(CROSSLINK) $(CHLOGGEN)
 
@@ -118,12 +121,23 @@ test-coverage:
 	sed -i.bak -e '2,$$ { /^mode: /d; }' coverage.txt
 
 .PHONY: lint
-lint: misspell | $(GOLANGCI_LINT)
+lint: misspell golangci-lint govulncheck
+
+.PHONY: golangci-lint
+golangci-lint: | $(GOLANGCI_LINT)
 	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
 	  echo "golangci-lint in $${dir}"; \
 	  (cd "$${dir}" && \
 	    $(GOLANGCI_LINT) run --fix && \
 	    $(GOLANGCI_LINT) run); \
+	done
+
+.PHONY: govulncheck
+govulncheck: | $(GOVULNCHECK)
+	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
+	  echo "golvulncheck in $${dir}"; \
+	  (cd "$${dir}" && \
+	    $(GOVULNCHECK) ./...); \
 	done
 
 .PHONY: tidy
