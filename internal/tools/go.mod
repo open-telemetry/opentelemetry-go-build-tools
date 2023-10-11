@@ -10,6 +10,7 @@ require (
 	go.opentelemetry.io/build-tools/crosslink v0.7.0
 	go.opentelemetry.io/build-tools/dbotconf v0.7.0
 	go.opentelemetry.io/build-tools/multimod v0.7.0
+	golang.org/x/vuln v1.0.1
 )
 
 require (
@@ -200,7 +201,6 @@ require (
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
-	golang.org/x/vuln v1.0.1 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
