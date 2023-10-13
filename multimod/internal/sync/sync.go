@@ -130,7 +130,7 @@ func (s sync) parseVersionInfo(pkg, tag string) (string, error) {
 	var data map[string]interface{}
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		return "", fmt.Errorf("failed to unmarshal response: %q", err)
+		return "", fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 	return fmt.Sprint(data["Version"]), err
 }
