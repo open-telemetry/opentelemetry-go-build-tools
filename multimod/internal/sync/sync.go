@@ -127,12 +127,13 @@ func (s sync) parseVersionInfo(pkg, tag string) (string, error) {
 	if err != nil {
 		return "", nil
 	}
-	var data map[string]interface{}
+	var data struct{ Version string }
 	err = json.Unmarshal(body, &data)
 	if err != nil {
 		return "", fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-	return fmt.Sprint(data["Version"]), err
+	
+	return fmt.Sprint(data.Version), err
 }
 
 // updateAllGoModFiles updates ALL modules' requires sections to use the newVersion number
