@@ -139,7 +139,6 @@ func TestNewSync(t *testing.T) {
 	testCases := []struct {
 		modSetName          string
 		expectedOtherModSet common.ModuleSet
-		tag                 string
 	}{
 		{
 			modSetName: "other-mod-set-1",
@@ -170,7 +169,7 @@ func TestNewSync(t *testing.T) {
 				otherVersioningFilename,
 				tc.modSetName,
 				tmpRootDir,
-				tc.tag,
+				"",
 			)
 			require.NoError(t, err)
 
@@ -199,7 +198,7 @@ func TestUpdateAllGoModFilesWithCommitHash(t *testing.T) {
 	testCases := []struct {
 		modSetName             string
 		expectedOutputModFiles map[string][]byte
-		tag                    string
+		commit                 string
 		client                 *http.Client
 		expectedErr            error
 	}{
@@ -235,7 +234,7 @@ func TestUpdateAllGoModFilesWithCommitHash(t *testing.T) {
 					"go.opentelemetry.io/other/test/test1 v1.2.4-RC1+meta\n" +
 					")"),
 			},
-			tag: "main",
+			commit: "main",
 			client: &http.Client{
 				Transport: roundTripFunc(func(req *http.Request) *http.Response {
 					return &http.Response{
@@ -248,7 +247,7 @@ func TestUpdateAllGoModFilesWithCommitHash(t *testing.T) {
 		},
 		{
 			modSetName: "other-mod-set-1",
-			tag:        "main",
+			commit:     "main",
 			client: &http.Client{
 				Transport: roundTripFunc(func(req *http.Request) *http.Response {
 					return &http.Response{
@@ -309,7 +308,7 @@ func TestUpdateAllGoModFilesWithCommitHash(t *testing.T) {
 				otherVersioningFilename,
 				tc.modSetName,
 				tmpRootDir,
-				tc.tag,
+				tc.commit,
 			)
 			s.client = tc.client
 			require.NoError(t, err)
@@ -338,7 +337,6 @@ func TestUpdateAllGoModFiles(t *testing.T) {
 	testCases := []struct {
 		modSetName             string
 		expectedOutputModFiles map[string][]byte
-		tag                    string
 	}{
 		{
 			modSetName: "other-mod-set-1",
@@ -488,7 +486,7 @@ func TestUpdateAllGoModFiles(t *testing.T) {
 				otherVersioningFilename,
 				tc.modSetName,
 				tmpRootDir,
-				tc.tag,
+				"",
 			)
 			require.NoError(t, err)
 

@@ -91,11 +91,11 @@ Then, if necessary, commit changes and push to upstream/make a pull request.`)
 
 // sync holds fields needed to update one module set at a time.
 type sync struct {
-	OtherModuleSetName    string
-	OtherModuleVersionTag string
-	OtherModuleSet        common.ModuleSet
-	MyModuleVersioning    common.ModuleVersioning
-	client                *http.Client
+	OtherModuleSetName       string
+	OtherModuleVersionCommit string
+	OtherModuleSet           common.ModuleSet
+	MyModuleVersioning       common.ModuleVersioning
+	client                   *http.Client
 }
 
 func newSync(myVersioningFilename, otherVersioningFilename, modSetToUpdate, myRepoRoot string, otherVersionCommit string) (sync, error) {
@@ -110,11 +110,11 @@ func newSync(myVersioningFilename, otherVersioningFilename, modSetToUpdate, myRe
 	}
 
 	return sync{
-		OtherModuleSetName:    modSetToUpdate,
-		OtherModuleSet:        otherModuleSet,
-		MyModuleVersioning:    myModVersioning,
-		OtherModuleVersionTag: otherVersionCommit,
-		client:                http.DefaultClient,
+		OtherModuleSetName:       modSetToUpdate,
+		OtherModuleSet:           otherModuleSet,
+		MyModuleVersioning:       myModVersioning,
+		OtherModuleVersionCommit: otherVersionCommit,
+		client:                   http.DefaultClient,
 	}, nil
 }
 
@@ -146,8 +146,8 @@ func (s sync) updateAllGoModFiles() error {
 	}
 
 	ver := s.OtherModuleSet.Version
-	if s.OtherModuleVersionTag != "" {
-		version, err := s.parseVersionInfo(string(s.OtherModuleSet.Modules[0]), s.OtherModuleVersionTag)
+	if s.OtherModuleVersionCommit != "" {
+		version, err := s.parseVersionInfo(string(s.OtherModuleSet.Modules[0]), s.OtherModuleVersionCommit)
 		if err != nil {
 			return err
 		}
