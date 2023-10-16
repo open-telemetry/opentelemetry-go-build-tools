@@ -5,7 +5,7 @@ change_type: enhancement
 component: multimod
 
 # A brief description of the change.  Surround your text with quotes ("") if it needs to start with a backtick (`).
-note: "add support for `--tag` to allow users to overwrite the tag in a versions.yaml file"
+note: "add support for `--commit-hash` to allow users to overwrite the tag in a versions.yaml file"
 
 # One or more tracking issues related to the change
 issues: [422]

@@ -188,9 +188,9 @@ func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 	return f(req), nil
 }
 
-func TestUpdateAllGoModFilesWithTag(t *testing.T) {
+func TestUpdateAllGoModFilesWithCommitHash(t *testing.T) {
 
-	testName := "update_all_go_mod_files_with_tag"
+	testName := "update_all_go_mod_files_with_commit_hash"
 	versionsYamlDir := filepath.Join(testDataDir, testName)
 
 	myVersioningFilename := filepath.Join(versionsYamlDir, "versions_valid.yaml")
