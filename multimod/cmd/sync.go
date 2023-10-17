@@ -27,6 +27,7 @@ import (
 var (
 	otherVersioningFile string
 	otherRepoRoot       string
+	otherVersionCommit  string
 	allModuleSetsSync   bool
 	moduleSetNamesSync  []string
 	skipGoModTidySync   bool
@@ -61,7 +62,7 @@ var syncCmd = &cobra.Command{
 			otherVersioningFile = filepath.Join(otherRepoRoot,
 				fmt.Sprintf("%v.%v", defaultVersionsConfigName, defaultVersionsConfigType))
 		}
-		sync.Run(versioningFile, otherVersioningFile, otherRepoRoot, moduleSetNamesSync, allModuleSetsSync, skipGoModTidySync)
+		sync.Run(versioningFile, otherVersioningFile, otherRepoRoot, moduleSetNamesSync, otherVersionCommit, allModuleSetsSync, skipGoModTidySync)
 	},
 }
 
@@ -80,6 +81,10 @@ func init() {
 	syncCmd.Flags().StringVar(&otherVersioningFile, "other-versioning-file", "",
 		"Path to other versioning file that contains all module set versions to sync. "+
 			"If unspecified, defaults to versions.yaml in the other Git repo root.")
+
+	syncCmd.Flags().StringVar(&otherVersionCommit, "commit-hash", "",
+		"Supports specifying to a commit hash or branch name to sync the modules to. "+
+			"If unspecified, defaults to version in versions.yaml.")
 
 	syncCmd.Flags().BoolVarP(&allModuleSetsSync, "all-module-sets", "a", false,
 		"Specify this flag to update versions of modules in all sets listed in the versioning file.",

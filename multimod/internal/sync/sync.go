@@ -15,8 +15,11 @@
 package sync
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 
 	"github.com/go-git/go-git/v5"
 
@@ -24,7 +27,7 @@ import (
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
 
-func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot string, otherModuleSetNames []string, allModuleSets bool, skipModTidy bool) {
+func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot string, otherModuleSetNames []string, otherVersionCommit string, allModuleSets bool, skipModTidy bool) {
 	myRepoRoot, err := repo.FindRoot()
 	if err != nil {
 		log.Fatalf("unable to find repo root: %v", err)
@@ -48,7 +51,7 @@ func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot stri
 	}
 
 	for _, moduleSetName := range otherModuleSetNames {
-		s, err := newSync(myVersioningFile, otherVersioningFile, moduleSetName, myRepoRoot)
+		s, err := newSync(myVersioningFile, otherVersioningFile, moduleSetName, myRepoRoot, otherVersionCommit)
 		if err != nil {
 			log.Fatalf("error creating new sync struct: %v", err)
 		}
@@ -88,12 +91,14 @@ Then, if necessary, commit changes and push to upstream/make a pull request.`)
 
 // sync holds fields needed to update one module set at a time.
 type sync struct {
-	OtherModuleSetName string
-	OtherModuleSet     common.ModuleSet
-	MyModuleVersioning common.ModuleVersioning
+	OtherModuleSetName       string
+	OtherModuleVersionCommit string
+	OtherModuleSet           common.ModuleSet
+	MyModuleVersioning       common.ModuleVersioning
+	client                   *http.Client
 }
 
-func newSync(myVersioningFilename, otherVersioningFilename, modSetToUpdate, myRepoRoot string) (sync, error) {
+func newSync(myVersioningFilename, otherVersioningFilename, modSetToUpdate, myRepoRoot string, otherVersionCommit string) (sync, error) {
 	otherModuleSet, err := common.GetModuleSet(modSetToUpdate, otherVersioningFilename)
 	if err != nil {
 		return sync{}, fmt.Errorf("error creating new sync struct: %w", err)
@@ -105,10 +110,30 @@ func newSync(myVersioningFilename, otherVersioningFilename, modSetToUpdate, myRe
 	}
 
 	return sync{
-		OtherModuleSetName: modSetToUpdate,
-		OtherModuleSet:     otherModuleSet,
-		MyModuleVersioning: myModVersioning,
+		OtherModuleSetName:       modSetToUpdate,
+		OtherModuleSet:           otherModuleSet,
+		MyModuleVersioning:       myModVersioning,
+		OtherModuleVersionCommit: otherVersionCommit,
+		client:                   http.DefaultClient,
 	}, nil
+}
+
+func (s sync) parseVersionInfo(pkg, tag string) (string, error) {
+	res, err := s.client.Get(fmt.Sprintf("https://proxy.golang.org/%s/@v/%s.info", pkg, tag))
+	if err != nil {
+		return "", err
+	}
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return "", nil
+	}
+	var data struct{ Version string }
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		return "", fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return fmt.Sprint(data.Version), err
 }
 
 // updateAllGoModFiles updates ALL modules' requires sections to use the newVersion number
@@ -120,10 +145,20 @@ func (s sync) updateAllGoModFiles() error {
 		modFilePaths = append(modFilePaths, filePath)
 	}
 
+	ver := s.OtherModuleSet.Version
+	if s.OtherModuleVersionCommit != "" {
+		version, err := s.parseVersionInfo(string(s.OtherModuleSet.Modules[0]), s.OtherModuleVersionCommit)
+		if err != nil {
+			return err
+		}
+		ver = version
+	}
+	log.Printf("Version: %s\n", ver)
+
 	if err := common.UpdateGoModFiles(
 		modFilePaths,
 		s.OtherModuleSet.Modules,
-		s.OtherModuleSet.Version,
+		ver,
 	); err != nil {
 		return fmt.Errorf("could not update all go mod files: %w", err)
 	}

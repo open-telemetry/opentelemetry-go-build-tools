@@ -15,8 +15,10 @@
 package sync
 
 import (
+	"bytes"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
@@ -166,6 +168,7 @@ func TestNewSync(t *testing.T) {
 				otherVersioningFilename,
 				tc.modSetName,
 				tmpRootDir,
+				"",
 			)
 			require.NoError(t, err)
 
@@ -175,6 +178,156 @@ func TestNewSync(t *testing.T) {
 			assert.Equal(t, expectedMyModuleVersioning, actual.MyModuleVersioning)
 		})
 	}
+}
+
+type roundTripFunc func(req *http.Request) *http.Response
+
+func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req), nil
+}
+
+func TestUpdateAllGoModFilesWithCommitHash(t *testing.T) {
+
+	testName := "update_all_go_mod_files_with_commit_hash"
+	versionsYamlDir := filepath.Join(testDataDir, testName)
+
+	myVersioningFilename := filepath.Join(versionsYamlDir, "versions_valid.yaml")
+	otherVersioningFilename := filepath.Join(versionsYamlDir, "other_versions_valid.yaml")
+
+	testCases := []struct {
+		modSetName             string
+		expectedOutputModFiles map[string][]byte
+		commit                 string
+		client                 *http.Client
+		expectedErr            string
+	}{
+		{
+			modSetName: "other-mod-set-1",
+			expectedOutputModFiles: map[string][]byte{
+				filepath.Join("my", "test", "test1", "go.mod"): []byte("module go.opentelemetry.io/build-tools/multimod/internal/sync/test/test1\n\n" +
+					"go 1.16\n\n" +
+					"require (\n\t" +
+					"go.opentelemetry.io/build-tools/multimod/internal/sync/test/test2 v1.2.3-RC1+meta\n\t" +
+					"go.opentelemetry.io/other/test/test1 v1.2.4-RC1+meta\n\t" +
+					"go.opentelemetry.io/other/testroot/v2 v2.2.2\n" +
+					")"),
+				filepath.Join("my", "test", "test2", "go.mod"): []byte("module go.opentelemetry.io/build-tools/multimod/internal/sync/test/test2\n\n" +
+					"go 1.16\n\n" +
+					"require (\n\t" +
+					"go.opentelemetry.io/build-tools/multimod/internal/sync/test/test1 v1.2.3-RC1+meta\n\t" +
+					"go.opentelemetry.io/other/test/test1 v1.2.4-RC1+meta\n\t" +
+					"go.opentelemetry.io/other/testroot/v2 v2.2.2\n" +
+					")"),
+				filepath.Join("my", "test", "go.mod"): []byte("module go.opentelemetry.io/build-tools/multimod/internal/sync/test3\n\n" +
+					"go 1.16\n\n" +
+					"require (\n\t" +
+					"go.opentelemetry.io/build-tools/multimod/internal/sync/test/test1 v1.2.3-RC1+meta\n\t" +
+					"go.opentelemetry.io/build-tools/multimod/internal/sync/test/test2 v1.2.3-RC1+meta\n\t" +
+					"go.opentelemetry.io/other/test2 v0.1.0-old\n" +
+					")"),
+				filepath.Join("my", "go.mod"): []byte("module go.opentelemetry.io/build-tools/multimod/internal/sync/testroot/v2\n\n" +
+					"go 1.16\n\n" +
+					"require (\n\t" +
+					"go.opentelemetry.io/build-tools/multimod/internal/sync/test/test1 v1.2.3-RC1+meta\n\t" +
+					"go.opentelemetry.io/build-tools/multimod/internal/sync/test/test2 v1.2.3-RC1+meta\n\t" +
+					"go.opentelemetry.io/other/test/test1 v1.2.4-RC1+meta\n" +
+					")"),
+			},
+			commit: "main",
+			client: &http.Client{
+				Transport: roundTripFunc(func(req *http.Request) *http.Response {
+					return &http.Response{
+						StatusCode: 200,
+						Body:       io.NopCloser(bytes.NewBufferString(`{"Version":"v1.2.4-RC1+meta","Time":"2023-10-12T21:04:47Z","Origin":{"VCS":"git","URL":"https://github.com/opentelemetry-go-build-tools/multimod/internal/sync/test/test2","Hash":"35cee309328ac126861ae6f554971aeb85a08bba"}}`)),
+						Header:     make(http.Header),
+					}
+				}),
+			},
+		},
+		{
+			modSetName: "other-mod-set-1",
+			commit:     "main",
+			client: &http.Client{
+				Transport: roundTripFunc(func(req *http.Request) *http.Response {
+					return &http.Response{
+						StatusCode: 500,
+						Body:       io.NopCloser(bytes.NewBufferString(`server error`)),
+						Header:     make(http.Header),
+					}
+				}),
+			},
+			expectedErr: "failed to unmarshal response",
+		},
+	}
+
+	for _, tc := range testCases {
+		tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
+		if err != nil {
+			t.Fatal("creating temp dir:", err)
+		}
+
+		defer os.RemoveAll(tmpRootDir)
+
+		modFiles := map[string][]byte{
+			filepath.Join(tmpRootDir, "my", "test", "test1", "go.mod"): []byte("module go.opentelemetry.io/build-tools/multimod/internal/sync/test/test1\n\n" +
+				"go 1.16\n\n" +
+				"require (\n\t" +
+				"go.opentelemetry.io/build-tools/multimod/internal/sync/test/test2 v1.2.3-RC1+meta\n\t" +
+				"go.opentelemetry.io/other/test/test1 v1.0.0-old\n\t" +
+				"go.opentelemetry.io/other/testroot/v2 v2.2.2\n" +
+				")"),
+			filepath.Join(tmpRootDir, "my", "test", "test2", "go.mod"): []byte("module go.opentelemetry.io/build-tools/multimod/internal/sync/test/test2\n\n" +
+				"go 1.16\n\n" +
+				"require (\n\t" +
+				"go.opentelemetry.io/build-tools/multimod/internal/sync/test/test1 v1.2.3-RC1+meta\n\t" +
+				"go.opentelemetry.io/other/test/test1 v1.0.0-old\n\t" +
+				"go.opentelemetry.io/other/testroot/v2 v2.2.2\n" +
+				")"),
+			filepath.Join(tmpRootDir, "my", "test", "go.mod"): []byte("module go.opentelemetry.io/build-tools/multimod/internal/sync/test3\n\n" +
+				"go 1.16\n\n" +
+				"require (\n\t" +
+				"go.opentelemetry.io/build-tools/multimod/internal/sync/test/test1 v1.2.3-RC1+meta\n\t" +
+				"go.opentelemetry.io/build-tools/multimod/internal/sync/test/test2 v1.2.3-RC1+meta\n\t" +
+				"go.opentelemetry.io/other/test2 v0.1.0-old\n" +
+				")"),
+			filepath.Join(tmpRootDir, "my", "go.mod"): []byte("module go.opentelemetry.io/build-tools/multimod/internal/sync/testroot/v2\n\n" +
+				"go 1.16\n\n" +
+				"require (\n\t" +
+				"go.opentelemetry.io/build-tools/multimod/internal/sync/test/test1 v1.2.3-RC1+meta\n\t" +
+				"go.opentelemetry.io/build-tools/multimod/internal/sync/test/test2 v1.2.3-RC1+meta\n\t" +
+				"go.opentelemetry.io/other/test/test1 v1.0.0-old\n" +
+				")"),
+		}
+
+		t.Run(tc.modSetName, func(t *testing.T) {
+			require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
+
+			s, err := newSync(
+				myVersioningFilename,
+				otherVersioningFilename,
+				tc.modSetName,
+				tmpRootDir,
+				tc.commit,
+			)
+			s.client = tc.client
+			require.NoError(t, err)
+
+			err = s.updateAllGoModFiles()
+			if len(tc.expectedErr) == 0 {
+				require.NoError(t, err)
+			} else {
+				require.ErrorContains(t, err, tc.expectedErr)
+			}
+
+			for modFilePathSuffix, expectedByteOutput := range tc.expectedOutputModFiles {
+				actual, err := os.ReadFile(filepath.Clean(filepath.Join(tmpRootDir, modFilePathSuffix)))
+				require.NoError(t, err)
+
+				assert.Equal(t, expectedByteOutput, actual)
+			}
+		})
+	}
+
 }
 
 func TestUpdateAllGoModFiles(t *testing.T) {
@@ -336,6 +489,7 @@ func TestUpdateAllGoModFiles(t *testing.T) {
 				otherVersioningFilename,
 				tc.modSetName,
 				tmpRootDir,
+				"",
 			)
 			require.NoError(t, err)
 
