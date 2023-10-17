@@ -16,7 +16,6 @@ package sync
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -200,7 +199,7 @@ func TestUpdateAllGoModFilesWithCommitHash(t *testing.T) {
 		expectedOutputModFiles map[string][]byte
 		commit                 string
 		client                 *http.Client
-		expectedErr            error
+		expectedErr            string
 	}{
 		{
 			modSetName: "other-mod-set-1",
@@ -257,7 +256,7 @@ func TestUpdateAllGoModFilesWithCommitHash(t *testing.T) {
 					}
 				}),
 			},
-			expectedErr: fmt.Errorf(`failed to unmarshal response: "invalid character 's' looking for beginning of value"`),
+			expectedErr: "failed to unmarshal response",
 		},
 	}
 
@@ -314,7 +313,11 @@ func TestUpdateAllGoModFilesWithCommitHash(t *testing.T) {
 			require.NoError(t, err)
 
 			err = s.updateAllGoModFiles()
-			require.Equal(t, tc.expectedErr, err)
+			if len(tc.expectedErr) == 0 {
+				require.NoError(t, err)
+			} else {
+				require.ErrorContains(t, err, tc.expectedErr)
+			}
 
 			for modFilePathSuffix, expectedByteOutput := range tc.expectedOutputModFiles {
 				actual, err := os.ReadFile(filepath.Clean(filepath.Join(tmpRootDir, modFilePathSuffix)))
