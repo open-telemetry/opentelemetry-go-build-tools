@@ -27,7 +27,7 @@ import (
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
 
-func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot string, otherModuleSetNames []string, otherVersionCommit string, allModuleSets bool, skipModTidy bool) {
+func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot string, otherModuleSetNames []string, otherVersionCommit string, allModuleSets bool, skipModTidy bool, ignoreExludedModules bool) {
 	myRepoRoot, err := repo.FindRoot()
 	if err != nil {
 		log.Fatalf("unable to find repo root: %v", err)
@@ -51,7 +51,7 @@ func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot stri
 	}
 
 	for _, moduleSetName := range otherModuleSetNames {
-		s, err := newSync(myVersioningFile, otherVersioningFile, moduleSetName, myRepoRoot, otherVersionCommit)
+		s, err := newSync(myVersioningFile, otherVersioningFile, moduleSetName, myRepoRoot, otherVersionCommit, ignoreExludedModules)
 		if err != nil {
 			log.Fatalf("error creating new sync struct: %v", err)
 		}
@@ -98,13 +98,13 @@ type sync struct {
 	client                   *http.Client
 }
 
-func newSync(myVersioningFilename, otherVersioningFilename, modSetToUpdate, myRepoRoot string, otherVersionCommit string) (sync, error) {
+func newSync(myVersioningFilename, otherVersioningFilename, modSetToUpdate, myRepoRoot string, otherVersionCommit string, ignoreExcluded bool) (sync, error) {
 	otherModuleSet, err := common.GetModuleSet(modSetToUpdate, otherVersioningFilename)
 	if err != nil {
 		return sync{}, fmt.Errorf("error creating new sync struct: %w", err)
 	}
 
-	myModVersioning, err := common.NewModuleVersioning(myVersioningFilename, myRepoRoot)
+	myModVersioning, err := common.NewModuleVersioningWithIgnoreExcluded(myVersioningFilename, myRepoRoot, ignoreExcluded)
 	if err != nil {
 		return sync{}, fmt.Errorf("could not get my ModuleVersioning: %w", err)
 	}

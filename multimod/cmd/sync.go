@@ -25,12 +25,13 @@ import (
 )
 
 var (
-	otherVersioningFile string
-	otherRepoRoot       string
-	otherVersionCommit  string
-	allModuleSetsSync   bool
-	moduleSetNamesSync  []string
-	skipGoModTidySync   bool
+	otherVersioningFile   string
+	otherRepoRoot         string
+	otherVersionCommit    string
+	allModuleSetsSync     bool
+	moduleSetNamesSync    []string
+	skipGoModTidySync     bool
+	ignoreExcludedModules bool
 )
 
 // syncCmd represents the sync command
@@ -62,7 +63,7 @@ var syncCmd = &cobra.Command{
 			otherVersioningFile = filepath.Join(otherRepoRoot,
 				fmt.Sprintf("%v.%v", defaultVersionsConfigName, defaultVersionsConfigType))
 		}
-		sync.Run(versioningFile, otherVersioningFile, otherRepoRoot, moduleSetNamesSync, otherVersionCommit, allModuleSetsSync, skipGoModTidySync)
+		sync.Run(versioningFile, otherVersioningFile, otherRepoRoot, moduleSetNamesSync, otherVersionCommit, allModuleSetsSync, skipGoModTidySync, ignoreExcludedModules)
 	},
 }
 
@@ -104,4 +105,8 @@ func init() {
 		"Specify this flag to skip invoking `go mod tidy`. "+
 			"To be used for debugging purposes. Should not be skipped during actual release.",
 	)
+
+	syncCmd.Flags().BoolVarP(&ignoreExcludedModules, "ignore-excluded", "", false,
+		"Specify this flag to ignore the excluded-modules section "+
+			"of the versioning file.")
 }

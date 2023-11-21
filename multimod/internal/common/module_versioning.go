@@ -26,14 +26,17 @@ type ModuleVersioning struct {
 	ModInfoMap ModuleInfoMap
 }
 
-// NewModuleVersioning returns a ModuleVersioning struct from a versioning file and repo root.
-func NewModuleVersioning(versioningFilename string, repoRoot string) (ModuleVersioning, error) {
+// NewModuleVersioningWithIgnoreExcluded returns a ModuleVersioning struct from a versioning file and repo root and supports
+// ignoring the excluded-modules configuration.
+func NewModuleVersioningWithIgnoreExcluded(versioningFilename string, repoRoot string, ignoreExcluded bool) (ModuleVersioning, error) {
 	repoRoot, err := filepath.Abs(repoRoot)
 	if err != nil {
 		return ModuleVersioning{}, fmt.Errorf("could not get absolute path of repo root: %w", err)
 	}
 
 	vCfg, err := readVersioningFile(versioningFilename)
+	vCfg.ignoreExcluded = ignoreExcluded
+
 	if err != nil {
 		return ModuleVersioning{}, fmt.Errorf("error reading versioning file %v: %w", versioningFilename, err)
 	}
@@ -55,4 +58,9 @@ func NewModuleVersioning(versioningFilename string, repoRoot string) (ModuleVers
 		ModPathMap: modPathMap,
 		ModInfoMap: modInfoMap,
 	}, nil
+}
+
+// NewModuleVersioning returns a ModuleVersioning struct from a versioning file and repo root.
+func NewModuleVersioning(versioningFilename string, repoRoot string) (ModuleVersioning, error) {
+	return NewModuleVersioningWithIgnoreExcluded(versioningFilename, repoRoot, false)
 }
