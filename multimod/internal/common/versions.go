@@ -118,7 +118,7 @@ func (versionCfg versionConfig) buildModuleMap() (ModuleInfoMap, error) {
 			}
 
 			// Check if module is in excluded modules section
-			if !versionCfg.ignoreExcluded && versionCfg.shouldExcludeModule(modPath) {
+			if versionCfg.shouldExcludeModule(modPath) {
 				return nil, fmt.Errorf("module %v is an excluded module and should not be versioned", modPath)
 			}
 			modMap[modPath] = ModuleInfo{setName, moduleSet.Version}
