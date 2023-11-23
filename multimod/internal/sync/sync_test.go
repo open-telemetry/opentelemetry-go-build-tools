@@ -342,7 +342,7 @@ func TestUpdateAllGoModFiles(t *testing.T) {
 	testCases := []struct {
 		modSetName             string
 		expectedOutputModFiles map[string][]byte
-		ignoreExcluded         bool
+		allModules             bool
 	}{
 		{
 			modSetName: "other-mod-set-1",
@@ -503,7 +503,7 @@ func TestUpdateAllGoModFiles(t *testing.T) {
 					"go.opentelemetry.io/other/test/test1 v1.0.0-old\n" +
 					")"),
 			},
-			ignoreExcluded: true,
+			allModules: true,
 		},
 	}
 
@@ -562,7 +562,7 @@ func TestUpdateAllGoModFiles(t *testing.T) {
 				tc.modSetName,
 				tmpRootDir,
 				"",
-				tc.ignoreExcluded,
+				tc.allModules,
 			)
 			require.NoError(t, err)
 

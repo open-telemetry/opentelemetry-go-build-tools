@@ -27,7 +27,7 @@ import (
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
 
-func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot string, otherModuleSetNames []string, otherVersionCommit string, allModuleSets bool, skipModTidy bool, ignoreExludedModules bool) {
+func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot string, otherModuleSetNames []string, otherVersionCommit string, allModuleSets bool, skipModTidy bool) {
 	myRepoRoot, err := repo.FindRoot()
 	if err != nil {
 		log.Fatalf("unable to find repo root: %v", err)
@@ -51,7 +51,7 @@ func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot stri
 	}
 
 	for _, moduleSetName := range otherModuleSetNames {
-		s, err := newSync(myVersioningFile, otherVersioningFile, moduleSetName, myRepoRoot, otherVersionCommit, ignoreExludedModules)
+		s, err := newSync(myVersioningFile, otherVersioningFile, moduleSetName, myRepoRoot, otherVersionCommit, allModuleSets)
 		if err != nil {
 			log.Fatalf("error creating new sync struct: %v", err)
 		}

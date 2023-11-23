@@ -5,7 +5,7 @@ change_type: enhancement
 component: multimod
 
 # A brief description of the change.  Surround your text with quotes ("") if it needs to start with a backtick (`).
-note: add ignore-excluded flag to support 
+note: ignore excluded-modules when -a flag is enabled
 
 # One or more tracking issues related to the change
 issues: [442]
@@ -14,7 +14,7 @@ issues: [442]
 # These lines will be padded with 2 spaces and then inserted directly into the document.
 # Use pipe (|) for multiline entries.
 subtext: |
-  This flag allows users of the sync command to sync all modules in a monorepo, including
+  This allows users of the sync command to sync all modules in a monorepo, including
   those listed in the excluded-modules. This is useful for repositories where some modules
   may not yet be ready for releasing (therefore listed under excluded-modules) but their
   dependencies still need to be managed via multimod.
