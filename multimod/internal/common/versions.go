@@ -33,6 +33,7 @@ const (
 type versionConfig struct {
 	ModuleSets      ModuleSetMap `mapstructure:"module-sets"`
 	ExcludedModules []ModulePath `mapstructure:"excluded-modules"`
+	ignoreExcluded  bool
 }
 
 // excludedModules functions as a set containing all module paths that are excluded
@@ -129,6 +130,10 @@ func (versionCfg versionConfig) buildModuleMap() (ModuleInfoMap, error) {
 
 // getExcludedModules returns if a given module path is listed in the excluded modules section of a versioning file.
 func (versionCfg versionConfig) shouldExcludeModule(modPath ModulePath) bool {
+	if versionCfg.ignoreExcluded {
+		return false
+	}
+
 	excludedModules := versionCfg.getExcludedModules()
 	_, exists := excludedModules[modPath]
 
@@ -138,6 +143,9 @@ func (versionCfg versionConfig) shouldExcludeModule(modPath ModulePath) bool {
 // getExcludedModules returns a map structure containing all excluded module paths as keys and empty values.
 func (versionCfg versionConfig) getExcludedModules() excludedModulesSet {
 	excludedModules := make(excludedModulesSet)
+	if versionCfg.ignoreExcluded {
+		return excludedModules
+	}
 	// add all excluded modules to the excludedModulesSet
 	for _, mod := range versionCfg.ExcludedModules {
 		excludedModules[mod] = struct{}{}
