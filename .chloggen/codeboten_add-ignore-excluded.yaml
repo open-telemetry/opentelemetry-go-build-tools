@@ -5,7 +5,7 @@ change_type: enhancement
 component: multimod
 
 # A brief description of the change.  Surround your text with quotes ("") if it needs to start with a backtick (`).
-note: ignore excluded-modules when -a flag is enabled
+note: ignore excluded-modules when using sync to update dependencies
 
 # One or more tracking issues related to the change
 issues: [442]
