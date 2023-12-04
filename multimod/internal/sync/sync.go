@@ -51,7 +51,7 @@ func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot stri
 	}
 
 	for _, moduleSetName := range otherModuleSetNames {
-		s, err := newSync(myVersioningFile, otherVersioningFile, moduleSetName, myRepoRoot, otherVersionCommit, allModuleSets)
+		s, err := newSync(myVersioningFile, otherVersioningFile, moduleSetName, myRepoRoot, otherVersionCommit)
 		if err != nil {
 			log.Fatalf("error creating new sync struct: %v", err)
 		}
@@ -98,13 +98,14 @@ type sync struct {
 	client                   *http.Client
 }
 
-func newSync(myVersioningFilename, otherVersioningFilename, modSetToUpdate, myRepoRoot string, otherVersionCommit string, ignoreExcluded bool) (sync, error) {
+func newSync(myVersioningFilename, otherVersioningFilename, modSetToUpdate, myRepoRoot string, otherVersionCommit string) (sync, error) {
 	otherModuleSet, err := common.GetModuleSet(modSetToUpdate, otherVersioningFilename)
 	if err != nil {
 		return sync{}, fmt.Errorf("error creating new sync struct: %w", err)
 	}
 
-	myModVersioning, err := common.NewModuleVersioningWithIgnoreExcluded(myVersioningFilename, myRepoRoot, ignoreExcluded)
+	// when synching, always sync deps for modules, including the excluded-modules
+	myModVersioning, err := common.NewModuleVersioningWithIgnoreExcluded(myVersioningFilename, myRepoRoot, true)
 	if err != nil {
 		return sync{}, fmt.Errorf("could not get my ModuleVersioning: %w", err)
 	}
