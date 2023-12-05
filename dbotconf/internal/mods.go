@@ -41,6 +41,7 @@ func allMods(ignore []string) (string, []*modfile.File, error) {
 	if err != nil {
 		return "", nil, err
 	}
+	root = filepath.ToSlash(root) // Ensure forward slashes on Windows.
 	mods, err := repo.FindModules(root, ignore)
 	if err != nil {
 		return "", nil, err
@@ -69,6 +70,7 @@ func localPath(root, path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	absPath = filepath.ToSlash(absPath) // Ensure forward slashes on Windows.
 	local := strings.TrimPrefix(absPath, root)
 	if local == "" {
 		local = "/"

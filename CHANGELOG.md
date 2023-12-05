@@ -3,6 +3,7 @@
 # Changelog
 
 <!-- next version -->
+- `dbotconf`: Fix Windows produces backslashes instead of slashes (#264)
 
 ## 0.12.0
 
