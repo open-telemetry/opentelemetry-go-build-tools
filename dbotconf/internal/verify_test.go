@@ -17,8 +17,6 @@ package internal
 import (
 	"fmt"
 	"path/filepath"
-	"runtime"
-	"syscall"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -34,14 +32,7 @@ func TestRunVerifyErrors(t *testing.T) {
 
 // TestRunVerify tests the happy path of verify.
 func TestRunVerify(t *testing.T) {
-	root := "/home/user/repo"
-	if runtime.GOOS == "windows" {
-		// Ensure forward slashes on Windows and add drive letter.
-		// e.g. c:/home/user/repo
-		drive, err := syscall.FullPath("/")
-		require.NoError(t, err)
-		root = filepath.ToSlash(filepath.Join(drive, root))
-	}
+	root := filepath.ToSlash(t.TempDir())
 
 	// We need to override the functions that finds the files
 	t.Cleanup(func(f func([]string) (string, []*modfile.File, error)) func() {
@@ -103,14 +94,7 @@ func TestRunVerify(t *testing.T) {
 
 // TestRunVerifyMissingRepo tests when there are missing mods
 func TestRunVerifyMissingMods(t *testing.T) {
-	root := "/home/user/repo"
-	if runtime.GOOS == "windows" {
-		// Ensure forward slashes on Windows and add drive letter.
-		// e.g. c:/home/user/repo
-		drive, err := syscall.FullPath("/")
-		require.NoError(t, err)
-		root = filepath.ToSlash(filepath.Join(drive, root))
-	}
+	root := filepath.ToSlash(t.TempDir())
 
 	t.Cleanup(func(f func([]string) (string, []*modfile.File, error)) func() {
 		return func() { allModsFunc = f }
@@ -147,14 +131,7 @@ func TestRunVerifyMissingMods(t *testing.T) {
 
 // TestRunVerifyMissingDocker tests when there are missing docker files
 func TestRunVerifyMissingDocker(t *testing.T) {
-	root := "/home/user/repo"
-	if runtime.GOOS == "windows" {
-		// Ensure forward slashes on Windows and add drive letter.
-		// e.g. c:/home/user/repo
-		drive, err := syscall.FullPath("/")
-		require.NoError(t, err)
-		root = filepath.ToSlash(filepath.Join(drive, root))
-	}
+	root := filepath.ToSlash(t.TempDir())
 
 	t.Cleanup(func(f func([]string) (string, []*modfile.File, error)) func() {
 		return func() { allModsFunc = f }
@@ -189,14 +166,7 @@ func TestRunVerifyMissingDocker(t *testing.T) {
 
 // TestRunVerifyMissingPip tests when there are missing Pip files
 func TestRunVerifyMissingPip(t *testing.T) {
-	root := "/home/user/repo"
-	if runtime.GOOS == "windows" {
-		// Ensure forward slashes on Windows and add drive letter.
-		// e.g. c:/home/user/repo
-		drive, err := syscall.FullPath("/")
-		require.NoError(t, err)
-		root = filepath.ToSlash(filepath.Join(drive, root))
-	}
+	root := filepath.ToSlash(t.TempDir())
 
 	t.Cleanup(func(f func([]string) (string, []*modfile.File, error)) func() {
 		return func() { allModsFunc = f }

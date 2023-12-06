@@ -19,9 +19,7 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
-	"runtime"
 	"strings"
-	"syscall"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -62,14 +60,8 @@ func newUpdate(pkgEco, dir string, labels []string) update {
 }
 
 func TestBuildConfig(t *testing.T) {
-	root := "/home/user/repo"
-	if runtime.GOOS == "windows" {
-		// Ensure forward slashes on Windows and add drive letter.
-		// e.g. c:/home/user/repo
-		drive, err := syscall.FullPath("/")
-		require.NoError(t, err)
-		root = filepath.ToSlash(filepath.Join(drive, root))
-	}
+	root := filepath.ToSlash(t.TempDir())
+
 	mods := []*modfile.File{
 		{Syntax: &modfile.FileSyntax{Name: fmt.Sprintf("%s/go.mod", root)}},
 		{Syntax: &modfile.FileSyntax{Name: fmt.Sprintf("%s/a/go.mod", root)}},

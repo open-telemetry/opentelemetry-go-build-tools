@@ -14,10 +14,18 @@ crosslink/internal/test_data/
 !crosslink/internal/test_data/.placeholder
 
 checkfile/checkfile
+checkfile/checkfile.exe
 chloggen/chloggen
+chloggen/chloggen.exe
 crosslink/crosslink
+crosslink/crosslink.exe
 dbotconf/dbotconf
+dbotconf/dbotconf.exe
 issuegenerator/issuegenerator
+issuegenerator/issuegenerator.exe
 gotmpl/gotmpl
+gotmpl/gotmpl.exe
 multimod/multimod
+multimod/multimod.exe
 semconvgen/semconvgen
+semconvgen/semconvgen.exe
