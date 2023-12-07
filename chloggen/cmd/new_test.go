@@ -17,6 +17,7 @@ package cmd
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -48,7 +49,13 @@ func TestNewErr(t *testing.T) {
 
 	out, err = runCobra(t, "new", "--filename", "my-change")
 	assert.Contains(t, out, newUsage)
-	assert.Contains(t, err, `no such file or directory`)
+	switch {
+	case strings.Contains(err, "cannot find the path specified"):
+		// Windows returns a different error message
+		assert.Contains(t, err, "cannot find the path specified")
+	default:
+		assert.Contains(t, err, "no such file or directory")
+	}
 }
 
 func TestNew(t *testing.T) {
