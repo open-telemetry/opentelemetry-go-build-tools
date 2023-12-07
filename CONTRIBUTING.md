@@ -63,7 +63,7 @@ A PR is considered to be **ready to merge** when:
   Your pull-request should add a new .yaml file to this directory. The name of 
   your file must be unique since the last release.
 
-  During the collector release process, all `./chloggen/*.yaml` files are 
+  During the release process, all `./chloggen/*.yaml` files are 
   transcribed into `CHANGELOG.md` and then deleted.
 
   **Recommended Steps**
