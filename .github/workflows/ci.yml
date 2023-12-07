@@ -52,6 +52,7 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: ${{ env.DEFAULT_GO_VERSION }}
+        check-latest: true
     - name: Checkout Repo
       uses: actions/checkout@v4
     - name: Setup Environment
@@ -75,6 +76,7 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: ${{ env.DEFAULT_GO_VERSION }}
+        check-latest: true
     - name: Checkout Repo
       uses: actions/checkout@v4
     - name: Setup Environment
