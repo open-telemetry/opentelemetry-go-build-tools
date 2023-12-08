@@ -39,7 +39,8 @@ Flags:
 Use "chloggen [command] --help" for more information about a command.`
 
 func TestRoot(t *testing.T) {
-	var out, err string
+	var out string
+	var err error
 
 	out, err = runCobra(t)
 	assert.Contains(t, out, rootUsage)

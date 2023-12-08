@@ -16,8 +16,8 @@ package cmd
 
 import (
 	"fmt"
+	"io/fs"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -37,7 +37,8 @@ Global Flags:
       --config string   (optional) chloggen config file`
 
 func TestNewErr(t *testing.T) {
-	var out, err string
+	var out string
+	var err error
 
 	out, err = runCobra(t, "new", "--help")
 	assert.Contains(t, out, newUsage)
@@ -45,24 +46,19 @@ func TestNewErr(t *testing.T) {
 
 	out, err = runCobra(t, "new")
 	assert.Contains(t, out, newUsage)
-	assert.Contains(t, err, `required flag(s) "filename" not set`)
+	assert.ErrorContains(t, err, `required flag(s) "filename" not set`)
 
 	out, err = runCobra(t, "new", "--filename", "my-change")
 	assert.Contains(t, out, newUsage)
-	switch {
-	case strings.Contains(err, "cannot find the path specified"):
-		// Windows returns a different error message
-		assert.Contains(t, err, "cannot find the path specified")
-	default:
-		assert.Contains(t, err, "no such file or directory")
-	}
+	assert.ErrorIs(t, err, fs.ErrNotExist)
 }
 
 func TestNew(t *testing.T) {
 	globalCfg = config.New(t.TempDir())
 	setupTestDir(t, []*chlog.Entry{})
 
-	var out, err string
+	var out string
+	var err error
 
 	out, err = runCobra(t, "new", "--filename", "my-change")
 	assert.Contains(t, out, fmt.Sprintf("Changelog entry template copied to: %s", filepath.Join(globalCfg.EntriesDir, "my-change.yaml")))

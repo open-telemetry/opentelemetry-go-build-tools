@@ -43,11 +43,12 @@ func TestUpdateErr(t *testing.T) {
 	globalCfg = config.New(t.TempDir())
 	setupTestDir(t, []*chlog.Entry{})
 
-	var out, err string
+	var out string
+	var err error
 
 	out, err = runCobra(t, "update", "--help")
 	assert.Contains(t, out, updateUsage)
-	assert.Empty(t, err)
+	assert.NoError(t, err)
 
 	badEntry, ioErr := os.CreateTemp(globalCfg.EntriesDir, "*.yaml")
 	require.NoError(t, ioErr)
@@ -57,7 +58,7 @@ func TestUpdateErr(t *testing.T) {
 	require.NoError(t, ioErr)
 	out, err = runCobra(t, "update")
 	assert.Contains(t, out, updateUsage)
-	assert.Contains(t, err, "yaml: unmarshal errors")
+	assert.ErrorContains(t, err, "yaml: unmarshal errors")
 }
 
 func TestUpdate(t *testing.T) {
@@ -210,7 +211,9 @@ func TestUpdate(t *testing.T) {
 				args = append(args, "--dry")
 			}
 
-			var out, err string
+			var out string
+			var err error
+
 			out, err = runCobra(t, args...)
 
 			assert.Empty(t, err)
