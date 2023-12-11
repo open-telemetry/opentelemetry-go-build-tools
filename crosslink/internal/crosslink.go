@@ -76,6 +76,8 @@ func insertReplace(module *moduleInfo, rc RunConfig) error {
 		if err != nil {
 			return fmt.Errorf("failed to retrieve relative path: %w", err)
 		}
+		localPath = filepath.ToSlash(localPath) // Ensure forward slashes on Windows.
+
 		if localPath == "." || localPath == ".." {
 			localPath += "/"
 		} else if !strings.HasPrefix(localPath, "..") {
