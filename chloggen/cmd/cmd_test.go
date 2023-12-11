@@ -119,45 +119,39 @@ func setupTestDir(t *testing.T, entries []*chlog.Entry) {
 	changelogBytes, err := os.ReadFile(filepath.Join("testdata", config.DefaultChangeLogFilename))
 	require.NoError(t, err)
 	for _, filename := range globalCfg.ChangeLogs {
-		require.NoError(t, os.MkdirAll(filepath.Dir(filename), os.FileMode(0755)))
-		require.NoError(t, os.WriteFile(filename, changelogBytes, os.FileMode(0755)))
+		require.NoError(t, os.MkdirAll(filepath.Dir(filename), os.FileMode(0o755)))
+		require.NoError(t, os.WriteFile(filename, changelogBytes, os.FileMode(0o755)))
 	}
 
 	// Create the entries directory
-	require.NoError(t, os.MkdirAll(globalCfg.EntriesDir, os.FileMode(0755)))
+	require.NoError(t, os.MkdirAll(globalCfg.EntriesDir, os.FileMode(0o755)))
 
 	// Copy the entry template, for tests that ensure it is not deleted
 	templateInRootDir := config.New("testdata").TemplateYAML
 	templateBytes, err := os.ReadFile(filepath.Clean(templateInRootDir))
 	require.NoError(t, err)
-	require.NoError(t, os.WriteFile(globalCfg.TemplateYAML, templateBytes, os.FileMode(0755)))
+	require.NoError(t, os.WriteFile(globalCfg.TemplateYAML, templateBytes, os.FileMode(0o755)))
 
 	// Write the entries to the entries directory
 	for i, entry := range entries {
 		entryBytes, err := yaml.Marshal(entry)
 		require.NoError(t, err)
 		path := filepath.Join(globalCfg.EntriesDir, fmt.Sprintf("%d.yaml", i))
-		require.NoError(t, os.WriteFile(path, entryBytes, os.FileMode(0755)))
+		require.NoError(t, os.WriteFile(path, entryBytes, os.FileMode(0o755)))
 	}
 }
 
-func runCobra(t *testing.T, args ...string) (string, string) {
+func runCobra(t *testing.T, args ...string) (string, error) {
 	cmd := rootCmd()
 
 	outBytes := bytes.NewBufferString("")
 	cmd.SetOut(outBytes)
 
-	errBytes := bytes.NewBufferString("")
-	cmd.SetErr(errBytes)
-
 	cmd.SetArgs(args)
-	cmd.Execute() // nolint:errcheck
+	err := cmd.Execute()
 
 	out, ioErr := io.ReadAll(outBytes)
 	require.NoError(t, ioErr, "read stdout")
 
-	err, ioErr := io.ReadAll(errBytes)
-	require.NoError(t, ioErr, "read stderr")
-
-	return string(out), string(err)
+	return string(out), err
 }
