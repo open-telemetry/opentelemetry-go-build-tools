@@ -8,13 +8,13 @@ env:
   # Path to where test results will be saved.
   TEST_RESULTS: /tmp/test-results
   # Default minimum version of Go to support.
-  DEFAULT_GO_VERSION: "~1.21.1"
+  DEFAULT_GO_VERSION: "~1.21.5"
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
     - name: Install Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: ${{ env.DEFAULT_GO_VERSION }}
         check-latest: true
@@ -49,9 +49,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Install Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: ${{ env.DEFAULT_GO_VERSION }}
+        check-latest: true
     - name: Checkout Repo
       uses: actions/checkout@v4
     - name: Setup Environment
@@ -72,9 +73,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Install Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: ${{ env.DEFAULT_GO_VERSION }}
+        check-latest: true
     - name: Checkout Repo
       uses: actions/checkout@v4
     - name: Setup Environment

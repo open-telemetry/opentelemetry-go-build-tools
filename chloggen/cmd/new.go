@@ -46,7 +46,7 @@ func newCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			err = os.WriteFile(pathWithExt, templateBytes, os.FileMode(0755))
+			err = os.WriteFile(pathWithExt, templateBytes, os.FileMode(0644))
 			if err != nil {
 				return err
 			}
