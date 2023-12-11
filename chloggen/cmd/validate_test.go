@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"fmt"
+	"io/fs"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -34,7 +35,8 @@ Global Flags:
       --config string   (optional) chloggen config file`
 
 func TestValidateErr(t *testing.T) {
-	var out, err string
+	var out string
+	var err error
 
 	out, err = runCobra(t, "validate", "--help")
 	assert.Contains(t, out, validateUsage)
@@ -42,7 +44,7 @@ func TestValidateErr(t *testing.T) {
 
 	out, err = runCobra(t, "validate")
 	assert.Contains(t, out, validateUsage)
-	assert.Contains(t, err, "no such file or directory")
+	assert.ErrorIs(t, err, fs.ErrNotExist)
 }
 
 func TestValidate(t *testing.T) {
@@ -151,7 +153,7 @@ func TestValidate(t *testing.T) {
 				}
 				return sampleEntries
 			}(),
-			wantErr: "Error: foo is not a valid 'component'. It must be one of \\[github.com/foo/bar/receiver github.com/foo/bar/exporter\\]",
+			wantErr: "foo is not a valid 'component'. It must be one of [github.com/foo/bar/receiver github.com/foo/bar/exporter]",
 		},
 	}
 	for _, tc := range tests {
@@ -166,7 +168,7 @@ func TestValidate(t *testing.T) {
 			out, err := runCobra(t, "validate")
 
 			if tc.wantErr != "" {
-				assert.Regexp(t, tc.wantErr, err)
+				assert.ErrorContains(t, err, tc.wantErr)
 			} else {
 				assert.Empty(t, err)
 				assert.Contains(t, out, fmt.Sprintf("PASS: all files in %s/ are valid", globalCfg.EntriesDir))
