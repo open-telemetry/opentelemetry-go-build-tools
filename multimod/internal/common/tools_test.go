@@ -139,9 +139,9 @@ func TestUpdateGoModVersions(t *testing.T) {
 	}
 }
 
-func TestFilePathToRegex(t *testing.T) {
+func TestModulePathToRegex(t *testing.T) {
 	testCases := []struct {
-		fpath    string
+		fpath    ModulePath
 		expected string
 	}{
 		{
@@ -155,7 +155,7 @@ func TestFilePathToRegex(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		actual := filePathToRegex(tc.fpath)
+		actual := modulePathToRegex(tc.fpath)
 
 		assert.Equal(t, tc.expected, actual)
 	}

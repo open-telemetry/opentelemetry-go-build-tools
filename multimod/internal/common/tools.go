@@ -79,7 +79,7 @@ func updateGoModVersions(modFilePath ModuleFilePath, newModPaths []ModulePath, n
 	}
 
 	// once all module versions have been updated, overwrite the go.mod file
-	if err := os.WriteFile(string(modFilePath), newGoModFile, 0600); err != nil {
+	if err := os.WriteFile(string(modFilePath), newGoModFile, 0o600); err != nil {
 		return fmt.Errorf("error overwriting go.mod file: %w", err)
 	}
 
@@ -87,7 +87,7 @@ func updateGoModVersions(modFilePath ModuleFilePath, newModPaths []ModulePath, n
 }
 
 func replaceModVersion(modPath ModulePath, version string, newGoModFile []byte) ([]byte, error) {
-	oldVersionRegex := `(?m:` + filePathToRegex(string(modPath)) + `\s+` + SemverRegex + `(\s*\/\/\s*indirect\s*?)?$)`
+	oldVersionRegex := `(?m:` + modulePathToRegex(modPath) + `\s+` + SemverRegex + `(\s*\/\/\s*indirect\s*?)?$)`
 	r, err := regexp.Compile(oldVersionRegex)
 	if err != nil {
 		return nil, fmt.Errorf("error compiling regex: %w", err)
@@ -116,9 +116,11 @@ func UpdateGoModFiles(modFilePaths []ModuleFilePath, newModPaths []ModulePath, n
 	return nil
 }
 
-func filePathToRegex(fpath string) string {
-	quotedMeta := regexp.QuoteMeta(fpath)
-	replacedSlashes := strings.ReplaceAll(quotedMeta, string(filepath.Separator), `\/`)
+// modulePathToRegex escapes all regular expression characters and replaces all slashes with escaped slashes.
+// ModulePath is expected to only have forward slashes, even on Windows.
+func modulePathToRegex(fpath ModulePath) string {
+	quotedMeta := regexp.QuoteMeta(string(fpath))
+	replacedSlashes := strings.ReplaceAll(quotedMeta, "/", `\/`)
 	return replacedSlashes
 }
 

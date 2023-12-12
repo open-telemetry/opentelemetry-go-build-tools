@@ -16,6 +16,7 @@ package common
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 )
 
@@ -72,14 +73,18 @@ func modulePathsToFilePaths(modPaths []ModulePath, modPathMap ModulePathMap) ([]
 // moduleFilePathToTagName returns the module tag names of an input ModuleFilePath
 // by removing the repoRoot prefix from the ModuleFilePath.
 func moduleFilePathToTagName(modFilePath ModuleFilePath, repoRoot string) (ModuleTagName, error) {
-	if !strings.HasPrefix(string(modFilePath), repoRoot+"/") {
+	// convert to slash to make sure the prefix and suffix checks work on Windows
+	modFilePathSlash := filepath.ToSlash(string(modFilePath))
+	repoRootSlash := filepath.ToSlash(repoRoot)
+
+	if !strings.HasPrefix(modFilePathSlash, repoRootSlash+"/") {
 		return "", fmt.Errorf("modFilePath %v not contained in repo with root %v", modFilePath, repoRoot)
 	}
-	if !strings.HasSuffix(string(modFilePath), "go.mod") {
+	if !strings.HasSuffix(modFilePathSlash, "go.mod") {
 		return "", fmt.Errorf("modFilePath %v does not end with 'go.mod'", modFilePath)
 	}
 
-	modTagNameWithGoMod := strings.TrimPrefix(string(modFilePath), repoRoot+"/")
+	modTagNameWithGoMod := strings.TrimPrefix(modFilePathSlash, repoRootSlash+"/")
 	modTagName := strings.TrimSuffix(modTagNameWithGoMod, "/go.mod")
 
 	// if the modTagName is equal to go.mod, it is the root repo
@@ -87,7 +92,8 @@ func moduleFilePathToTagName(modFilePath ModuleFilePath, repoRoot string) (Modul
 		return RepoRootTag, nil
 	}
 
-	return ModuleTagName(modTagName), nil
+	// ModuleTagName is always forward slash separated, even on Windows
+	return ModuleTagName(filepath.ToSlash(modTagName)), nil
 }
 
 // moduleFilePathsToTagNames returns a list of module tag names from the input full module file paths
