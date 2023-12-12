@@ -16,7 +16,9 @@ package internal
 
 import (
 	"bytes"
+	"fmt"
 	"io"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -58,19 +60,20 @@ func newUpdate(pkgEco, dir string, labels []string) update {
 }
 
 func TestBuildConfig(t *testing.T) {
-	root := "/home/user/repo"
+	root := filepath.ToSlash(t.TempDir())
+
 	mods := []*modfile.File{
-		{Syntax: &modfile.FileSyntax{Name: "/home/user/repo/go.mod"}},
-		{Syntax: &modfile.FileSyntax{Name: "/home/user/repo/a/go.mod"}},
-		{Syntax: &modfile.FileSyntax{Name: "/home/user/repo/b/go.mod"}},
+		{Syntax: &modfile.FileSyntax{Name: fmt.Sprintf("%s/go.mod", root)}},
+		{Syntax: &modfile.FileSyntax{Name: fmt.Sprintf("%s/a/go.mod", root)}},
+		{Syntax: &modfile.FileSyntax{Name: fmt.Sprintf("%s/b/go.mod", root)}},
 	}
 	dockerFiles := []string{
-		"/home/user/repo/",
-		"/home/user/repo/a/",
-		"/home/user/repo/b/",
+		fmt.Sprintf("%s/", root),
+		fmt.Sprintf("%s/a/", root),
+		fmt.Sprintf("%s/b/", root),
 	}
 	pipFiles := []string{
-		"/home/user/repo/requirements.txt",
+		fmt.Sprintf("%s/requirements.txt", root),
 	}
 
 	got, err := buildConfig(root, mods, dockerFiles, pipFiles)

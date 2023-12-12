@@ -16,6 +16,7 @@ package internal
 
 import (
 	"fmt"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -31,15 +32,17 @@ func TestRunVerifyErrors(t *testing.T) {
 
 // TestRunVerify tests the happy path of verify.
 func TestRunVerify(t *testing.T) {
+	root := filepath.ToSlash(t.TempDir())
+
 	// We need to override the functions that finds the files
 	t.Cleanup(func(f func([]string) (string, []*modfile.File, error)) func() {
 		return func() { allModsFunc = f }
 	}(allModsFunc))
 	allModsFunc = func([]string) (string, []*modfile.File, error) {
-		return "/home/user/repo", []*modfile.File{
-			{Syntax: &modfile.FileSyntax{Name: "/home/user/repo/go.mod"}},
-			{Syntax: &modfile.FileSyntax{Name: "/home/user/repo/a/go.mod"}},
-			{Syntax: &modfile.FileSyntax{Name: "/home/user/repo/b/go.mod"}},
+		return root, []*modfile.File{
+			{Syntax: &modfile.FileSyntax{Name: fmt.Sprintf("%s/go.mod", root)}},
+			{Syntax: &modfile.FileSyntax{Name: fmt.Sprintf("%s/a/go.mod", root)}},
+			{Syntax: &modfile.FileSyntax{Name: fmt.Sprintf("%s/b/go.mod", root)}},
 		}, nil
 	}
 
@@ -48,9 +51,9 @@ func TestRunVerify(t *testing.T) {
 	}(allDockerFunc))
 	allDockerFunc = func(string, []string) ([]string, error) {
 		return []string{
-			"/home/user/repo/",
-			"/home/user/repo/a/",
-			"/home/user/repo/b/",
+			fmt.Sprintf("%s/", root),
+			fmt.Sprintf("%s/a/", root),
+			fmt.Sprintf("%s/b/", root),
 		}, nil
 	}
 
@@ -59,7 +62,7 @@ func TestRunVerify(t *testing.T) {
 	}(allPipFunc))
 	allPipFunc = func(string, []string) ([]string, error) {
 		return []string{
-			"/home/user/repo/requirements.txt",
+			fmt.Sprintf("%s/requirements.txt", root),
 		}, nil
 	}
 
@@ -91,12 +94,14 @@ func TestRunVerify(t *testing.T) {
 
 // TestRunVerifyMissingRepo tests when there are missing mods
 func TestRunVerifyMissingMods(t *testing.T) {
+	root := filepath.ToSlash(t.TempDir())
+
 	t.Cleanup(func(f func([]string) (string, []*modfile.File, error)) func() {
 		return func() { allModsFunc = f }
 	}(allModsFunc))
 	allModsFunc = func([]string) (string, []*modfile.File, error) {
-		return "/home/user/repo", []*modfile.File{
-			{Syntax: &modfile.FileSyntax{Name: "/home/user/repo/go.mod"}},
+		return root, []*modfile.File{
+			{Syntax: &modfile.FileSyntax{Name: fmt.Sprintf("%s/go.mod", root)}},
 		}, nil
 	}
 
@@ -126,18 +131,20 @@ func TestRunVerifyMissingMods(t *testing.T) {
 
 // TestRunVerifyMissingDocker tests when there are missing docker files
 func TestRunVerifyMissingDocker(t *testing.T) {
+	root := filepath.ToSlash(t.TempDir())
+
 	t.Cleanup(func(f func([]string) (string, []*modfile.File, error)) func() {
 		return func() { allModsFunc = f }
 	}(allModsFunc))
 	allModsFunc = func([]string) (string, []*modfile.File, error) {
-		return "/home/user/repo", []*modfile.File{}, nil
+		return root, []*modfile.File{}, nil
 	}
 
 	t.Cleanup(func(f func(string, []string) ([]string, error)) func() {
 		return func() { allDockerFunc = f }
 	}(allDockerFunc))
 	allDockerFunc = func(string, []string) ([]string, error) {
-		return []string{"/home/user/repo/"}, nil
+		return []string{fmt.Sprintf("%s/", root)}, nil
 	}
 
 	t.Cleanup(func(f func(string, []string) ([]string, error)) func() {
@@ -159,11 +166,13 @@ func TestRunVerifyMissingDocker(t *testing.T) {
 
 // TestRunVerifyMissingPip tests when there are missing Pip files
 func TestRunVerifyMissingPip(t *testing.T) {
+	root := filepath.ToSlash(t.TempDir())
+
 	t.Cleanup(func(f func([]string) (string, []*modfile.File, error)) func() {
 		return func() { allModsFunc = f }
 	}(allModsFunc))
 	allModsFunc = func([]string) (string, []*modfile.File, error) {
-		return "/home/user/repo", []*modfile.File{}, nil
+		return root, []*modfile.File{}, nil
 	}
 
 	t.Cleanup(func(f func(string, []string) ([]string, error)) func() {
@@ -177,7 +186,7 @@ func TestRunVerifyMissingPip(t *testing.T) {
 		return func() { allPipFunc = f }
 	}(allPipFunc))
 	allPipFunc = func(string, []string) ([]string, error) {
-		return []string{"/home/user/repo/requirements.txt"}, nil
+		return []string{fmt.Sprintf("%s/requirements.txt", root)}, nil
 	}
 
 	t.Cleanup(func(f func(string) (updates, error)) func() {
