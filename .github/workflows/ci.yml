@@ -39,14 +39,20 @@ jobs:
         path: ~/.tools
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('./internal/tools/**') }}
     - name: Run linters
-      run: make multimod-verify dependabot-check license-check lint
+      run: |
+        make multimod-verify dependabot-check license-check lint
+        echo "Running golangci-lint against go:build windows"
+        GOOS=windows make golangci-lint
     - name: Build
       run: make build
     - name: Check clean repository
       run: make check-clean-work-tree
 
   test-race:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
     - name: Install Go
       uses: actions/setup-go@v5

@@ -19,6 +19,7 @@ import (
 	_ "embed"
 	"fmt"
 	"sort"
+	"strings"
 	"text/template"
 )
 
@@ -75,5 +76,7 @@ func (s summary) String() (string, error) {
 		return "", fmt.Errorf("failed executing template: %w", err)
 	}
 
-	return buf.String(), nil
+	// Replace all \r\n with \n to ensure consistent output across platforms.
+	str := strings.ReplaceAll(buf.String(), "\r\n", "\n")
+	return str, nil
 }
