@@ -41,7 +41,6 @@ jobs:
     - name: Run linters
       run: |
         make multimod-verify dependabot-check license-check lint
-        echo "Running golangci-lint against go:build windows"
         GOOS=windows make golangci-lint
     - name: Build
       run: make build
