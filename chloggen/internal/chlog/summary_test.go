@@ -15,7 +15,6 @@
 package chlog
 
 import (
-	"bytes"
 	"os"
 	"path/filepath"
 	"testing"
@@ -97,8 +96,6 @@ func TestSummary(t *testing.T) {
 	// This file is not meant to be the entire changelog so will not pass markdownlint if named with .md extension.
 	expected, err := os.ReadFile(filepath.Join("testdata", "CHANGELOG"))
 	require.NoError(t, err)
-	// Replace all \r\n with \n to ensure consistent output across platforms.
-	expected = bytes.ReplaceAll(expected, []byte("\r\n"), []byte("\n"))
 
 	assert.Equal(t, string(expected), actual)
 }
