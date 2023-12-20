@@ -43,6 +43,7 @@ jobs:
       run: make build
     - name: Check clean repository
       run: make check-clean-work-tree
+
   test-race:
     strategy:
       matrix:

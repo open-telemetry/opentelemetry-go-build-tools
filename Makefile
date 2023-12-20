@@ -132,15 +132,6 @@ golangci-lint: | $(GOLANGCI_LINT)
 	    $(GOLANGCI_LINT) run); \
 	done
 
-.PHONY: golangci-lint-windows
-golangci-lint-windows: | $(GOLANGCI_LINT)
-	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
-	  echo "golangci-lint in $${dir}"; \
-	  (cd "$${dir}" && \
-	    GOOS=windows $(GOLANGCI_LINT) run --fix && \
-	    GOOS=windows $(GOLANGCI_LINT) run); \
-	done
-
 .PHONY: govulncheck
 govulncheck: | $(GOVULNCHECK)
 	set -e; for dir in $(ALL_GO_MOD_DIRS); do \

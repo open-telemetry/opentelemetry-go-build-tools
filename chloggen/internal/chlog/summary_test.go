@@ -24,6 +24,7 @@ import (
 )
 
 func TestSummary(t *testing.T) {
+
 	brk1 := Entry{
 		ChangeType: Breaking,
 		Component:  "foo",
