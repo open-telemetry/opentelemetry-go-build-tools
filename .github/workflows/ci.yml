@@ -39,14 +39,41 @@ jobs:
         path: ~/.tools
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('./internal/tools/**') }}
     - name: Run linters
-      run: |
-        make multimod-verify dependabot-check license-check lint
-        GOOS=windows make golangci-lint
+      run: make multimod-verify dependabot-check license-check lint
     - name: Build
       run: make build
     - name: Check clean repository
       run: make check-clean-work-tree
-
+  lint-windows:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.DEFAULT_GO_VERSION }}
+          check-latest: true
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+      - name: Setup Environment
+        run: |
+          echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+      - name: Module cache
+        uses: actions/cache@v3
+        env:
+          cache-name: go-mod-cache
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/go.sum') }}
+      - name: Tools cache
+        uses: actions/cache@v3
+        env:
+          cache-name: go-tools-cache
+        with:
+          path: ~/.tools
+          key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('./internal/tools/**') }}
+      - name: Run linters
+        run: GOOS=windows make golangci-lint
   test-race:
     strategy:
       matrix:
