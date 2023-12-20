@@ -63,6 +63,9 @@ GOVULNCHECK = $(TOOLS)/govulncheck
 .PHONY: tools
 tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD) $(CROSSLINK) $(CHLOGGEN) $(GOVULNCHECK)
 
+.PHONY: tools-golangci-lint
+tools-golangci-lint: $(GOLANGCI_LINT)
+
 # Build
 
 .PHONY: generate build
