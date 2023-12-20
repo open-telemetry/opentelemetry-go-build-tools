@@ -63,9 +63,6 @@ GOVULNCHECK = $(TOOLS)/govulncheck
 .PHONY: tools
 tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD) $(CROSSLINK) $(CHLOGGEN) $(GOVULNCHECK)
 
-.PHONY: tools-golangci-lint
-tools-golangci-lint: $(GOLANGCI_LINT)
-
 # Build
 
 .PHONY: generate build
@@ -133,6 +130,15 @@ golangci-lint: | $(GOLANGCI_LINT)
 	  (cd "$${dir}" && \
 	    $(GOLANGCI_LINT) run --fix && \
 	    $(GOLANGCI_LINT) run); \
+	done
+
+.PHONY: golangci-lint-windows
+golangci-lint-windows: | $(GOLANGCI_LINT)
+	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
+	  echo "golangci-lint in $${dir}"; \
+	  (cd "$${dir}" && \
+	    GOOS=windows $(GOLANGCI_LINT) run --fix && \
+	    GOOS=windows $(GOLANGCI_LINT) run); \
 	done
 
 .PHONY: govulncheck

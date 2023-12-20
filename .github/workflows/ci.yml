@@ -73,9 +73,7 @@ jobs:
           path: ~/.tools
           key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('./internal/tools/**') }}
       - name: Run linters
-        run: |
-          make tools-golangci-lint
-          GOOS=windows make golangci-lint
+        run: make golangci-lint-windows
   test-race:
     strategy:
       matrix:
