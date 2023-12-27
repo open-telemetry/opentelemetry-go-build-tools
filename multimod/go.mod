@@ -1,6 +1,6 @@
 module go.opentelemetry.io/build-tools/multimod
 
-go 1.19
+go 1.20
 
 require (
 	github.com/go-git/go-git/v5 v5.11.0

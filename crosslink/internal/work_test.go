@@ -32,7 +32,7 @@ func TestWorkUpdate(t *testing.T) {
 	config := RunConfig{Logger: lg, GoVersion: "1.20"}
 
 	mockDir := "testWork"
-	want := `go 1.19
+	want := `go 1.20
 // new statement added by crosslink
 use ./
 // existing valid use statements under root should remain
