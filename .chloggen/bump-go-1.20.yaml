@@ -5,7 +5,7 @@ change_type: 'breaking'
 component: all
 
 # A brief description of the change.  Surround your text with quotes ("") if it needs to start with a backtick (`).
-note: "Bump Go version to 1.20"
+note: "bump minimal Go version to 1.20"
 
 # One or more tracking issues related to the change
 issues: [474]
@@ -14,4 +14,3 @@ issues: [474]
 # These lines will be padded with 2 spaces and then inserted directly into the document.
 # Use pipe (|) for multiline entries.
 subtext:
-  This updates all modules in the repo to go 1.20.
