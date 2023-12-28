@@ -6,6 +6,7 @@ package diff
 import (
 	"errors"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/go-git/go-git/v5"
@@ -61,6 +62,10 @@ func TestNormalizeTag(t *testing.T) {
 }
 
 func TestHasChanged(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("diff does not work on Windows. Tracked under: https://github.com/open-telemetry/opentelemetry-go-build-tools/issues/467.")
+	}
+
 	tests := []struct {
 		name         string
 		tag          string
@@ -135,9 +140,11 @@ type MockClient struct {
 func (c MockClient) HeadCommit(_ *git.Repository) (*object.Commit, error) {
 	return nil, c.headCommitErr
 }
+
 func (c MockClient) TagCommit(_ *git.Repository, _ string) (*object.Commit, error) {
 	return nil, c.tagCommitErr
 }
+
 func (c MockClient) FilesChanged(_ *object.Commit, _ *object.Commit, _ string, _ string) ([]string, error) {
 	return c.files, nil
 }

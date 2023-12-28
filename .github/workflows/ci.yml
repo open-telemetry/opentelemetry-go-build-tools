@@ -11,7 +11,10 @@ env:
   DEFAULT_GO_VERSION: "~1.21.5"
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
     - name: Install Go
       uses: actions/setup-go@v5
@@ -20,10 +23,6 @@ jobs:
         check-latest: true
     - name: Checkout Repo
       uses: actions/checkout@v4
-    - name: Setup Environment
-      run: |
-        echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
-        echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
     - name: Module cache
       uses: actions/cache@v3
       env:
@@ -46,7 +45,10 @@ jobs:
       run: make check-clean-work-tree
 
   test-race:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
     - name: Install Go
       uses: actions/setup-go@v5
