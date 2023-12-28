@@ -1,6 +1,6 @@
 module go.opentelemetry.io/build-tools/issuegenerator
 
-go 1.19
+go 1.20
 
 require (
 	github.com/google/go-github v17.0.0+incompatible

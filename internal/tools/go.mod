@@ -1,6 +1,6 @@
 module go.opentelemetry.io/build-tools/internal/tools
 
-go 1.19
+go 1.20
 
 require (
 	github.com/client9/misspell v0.3.4
@@ -170,7 +170,7 @@ require (
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/spf13/cobra v1.8.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/spf13/viper v1.18.1 // indirect
+	github.com/spf13/viper v1.18.2 // indirect
 	github.com/ssgreg/nlreturn/v2 v2.2.1 // indirect
 	github.com/stbenjam/no-sprintf-host-port v0.1.1 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
