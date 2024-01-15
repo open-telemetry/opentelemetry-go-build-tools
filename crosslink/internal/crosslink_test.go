@@ -18,12 +18,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"golang.org/x/mod/modfile"
 )
@@ -440,4 +442,119 @@ func TestBadRootPath(t *testing.T) {
 		})
 	}
 
+}
+
+// Testing skipping specified go modules.
+func TestSkip(t *testing.T) {
+	testName := "testSkip"
+	lg, _ := zap.NewDevelopment()
+	tests := []struct {
+		testCase string
+		config   RunConfig
+	}{
+		{
+			testCase: "No skipped go.mod",
+			config: RunConfig{
+				Prune:   true,
+				Verbose: true,
+				Logger:  lg,
+			},
+		},
+		{
+			testCase: "Include skipped go.mod",
+			config: RunConfig{
+				Prune: true,
+				SkippedPaths: map[string]struct{}{
+					"testA/go.mod": {},
+				},
+				Logger:  lg,
+				Verbose: true,
+			},
+		},
+		{
+			testCase: "Include non-existent go.mod",
+			config: RunConfig{
+				Prune: true,
+				SkippedPaths: map[string]struct{}{
+					"non-existent/go.mod": {},
+				},
+				Logger:  lg,
+				Verbose: true,
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.testCase, func(t *testing.T) {
+			tmpRootDir, err := createTempTestDir(testName)
+			if err != nil {
+				t.Fatal("creating temp dir:", err)
+			}
+			t.Cleanup(func() { os.RemoveAll(tmpRootDir) })
+
+			err = renameGoMod(tmpRootDir)
+			if err != nil {
+				t.Errorf("error renaming gomod files: %v", err)
+			}
+
+			test.config.RootPath = tmpRootDir
+
+			err = Crosslink(test.config)
+			require.NoError(t, err, "error message on execution %s")
+
+			modFilesExpected := map[string][]byte{
+				filepath.Join(tmpRootDir, "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\n" +
+					"go 1.20\n\n" +
+					"require (\n\t" +
+					"go.opentelemetry.io/build-tools/crosslink/testroot/testA v1.0.0\n" +
+					")\n" +
+					"replace go.opentelemetry.io/build-tools/crosslink/testroot/testA => ./testA\n\n" +
+					"replace go.opentelemetry.io/build-tools/excludeme => ../excludeme\n\n"),
+				filepath.Join(tmpRootDir, "testA", "go.mod"): []byte("module go.opentelemetry.io/build-tools/crosslink/testroot/testA\n\n" +
+					"go 1.20\n\n" +
+					"require (\n\t" +
+					"go.opentelemetry.io/build-tools/crosslink/testroot/testB v1.0.0\n" +
+					")\n" +
+					"replace go.opentelemetry.io/build-tools/crosslink/testroot/testB => ../testB"),
+			}
+
+			for modFilePath, modFilesExpected := range modFilesExpected {
+				shouldDiffer := false
+				for path := range test.config.SkippedPaths {
+					if strings.HasSuffix(modFilePath, path) {
+						shouldDiffer = true
+					}
+				}
+				modFileActual, err := os.ReadFile(filepath.Clean(modFilePath))
+
+				if err != nil {
+					t.Fatalf("TestCase: %s, error reading actual mod files: %v", test.testCase, err)
+				}
+
+				actual, err := modfile.Parse("go.mod", modFileActual, nil)
+				if err != nil {
+					t.Fatalf("error decoding original mod files: %v", err)
+				}
+				actual.Cleanup()
+
+				expected, err := modfile.Parse("go.mod", modFilesExpected, nil)
+				if err != nil {
+					t.Fatalf("TestCase: %s ,error decoding expected mod file: %v", test.testCase, err)
+				}
+				expected.Cleanup()
+
+				// replace structs need to be assorted to avoid flaky fails in test
+				replaceSortFunc := func(x, y *modfile.Replace) bool {
+					return x.Old.Path < y.Old.Path
+				}
+
+				if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(modfile.Replace{}, "Syntax"),
+					cmpopts.IgnoreFields(modfile.File{}, "Require", "Exclude", "Retract", "Syntax"),
+					cmpopts.SortSlices(replaceSortFunc),
+				); diff != "" && shouldDiffer {
+					t.Errorf("TestCase: %s \n Replace{} mismatch (-want +got):\n%s", test.testCase, diff)
+				}
+			}
+		})
+	}
 }
