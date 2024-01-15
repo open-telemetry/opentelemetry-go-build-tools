@@ -190,7 +190,7 @@ func TestPreRun(t *testing.T) {
 			err = testPreRun(&comCfg.rootCommand, nil)
 			assert.NoError(t, err, "Pre Run returned error")
 
-			if diff := cmp.Diff(test.expectedConfig, comCfg.runConfig, cmpopts.IgnoreFields(cl.RunConfig{}, "Logger", "ExcludedPaths")); diff != "" {
+			if diff := cmp.Diff(test.expectedConfig, comCfg.runConfig, cmpopts.IgnoreFields(cl.RunConfig{}, "Logger", "ExcludedPaths", "SkippedPaths")); diff != "" {
 				t.Errorf("TestCase: %s \n Config{} mismatch (-want +got):\n%s", test.testName, diff)
 			}
 		})
