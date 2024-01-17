@@ -114,6 +114,24 @@ Multiple calls to exclude can also be made
     --exclude=example.com/foo/bar/modC \
     --exclude=example.com/foo/bar/modJ,example.com/modZ
 
+### --skip
+
+Skip is a set of go.mod files that will not be changed by crosslink.
+It is expected that a list of comma-separated values will be provided in one or
+multiple calls to skip. These go.mod files will be left unchanged by
+crosslink. An example where using this may be appropriate is to avoid
+adding replace statements in a go module that is intended to be installed
+via `go install`.
+
+A single call to skip
+
+    crosslink --skip cmd/example/go.mod,cmd/example2/go.mod,
+
+Multiple calls to exclude can also be made
+
+    crosslink --skip cmd/example/go.mod \
+    --skip cmd/example2/go.mod
+
 ### –-verbose / -v
 
 Verbose enables crosslink to log all replace (destructive and non-destructive) and
