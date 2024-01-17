@@ -37,6 +37,7 @@ type RunConfig struct {
 	RootPath      string
 	Verbose       bool
 	ExcludedPaths map[string]struct{}
+	SkippedPaths  map[string]struct{}
 	Overwrite     bool
 	Prune         bool
 	GoVersion     string

@@ -31,6 +31,7 @@ import (
 type commandConfig struct {
 	runConfig    cl.RunConfig
 	excludeFlags []string
+	skipFlags    []string
 	rootCommand  cobra.Command
 	pruneCommand cobra.Command
 	workCommand  cobra.Command
@@ -43,6 +44,7 @@ func newCommandConfig() *commandConfig {
 
 	preRunSetup := func(cmd *cobra.Command, args []string) error {
 		c.runConfig.ExcludedPaths = transformExclude(c.excludeFlags)
+		c.runConfig.SkippedPaths = transformExclude(c.skipFlags)
 
 		if c.runConfig.RootPath == "" {
 			rp, err := repo.FindRoot()
@@ -139,6 +141,8 @@ func init() {
 	comCfg.rootCommand.PersistentFlags().BoolVarP(&comCfg.runConfig.Verbose, "verbose", "v", false, "verbose output")
 	comCfg.rootCommand.Flags().StringSliceVar(&comCfg.excludeFlags, "exclude", []string{}, "list of comma separated go modules that crosslink will ignore in operations."+
 		"multiple calls of --exclude can be made")
+	comCfg.rootCommand.Flags().StringSliceVar(&comCfg.skipFlags, "skip", []string{}, "list of comma separated go.mod files that will not be affected (changed) by crosslink."+
+		"multiple calls of --skip can be made")
 	comCfg.rootCommand.Flags().BoolVar(&comCfg.runConfig.Overwrite, "overwrite", false, "overwrite flag allows crosslink to make destructive (replacing or updating) actions to existing go.mod files")
 	comCfg.rootCommand.Flags().BoolVarP(&comCfg.runConfig.Prune, "prune", "p", false, "enables pruning operations on all go.mod files inside root repository")
 	comCfg.pruneCommand.Flags().StringSliceVar(&comCfg.excludeFlags, "exclude", []string{}, "list of comma separated go modules that crosslink will ignore in operations."+

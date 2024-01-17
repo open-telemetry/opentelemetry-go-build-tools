@@ -31,6 +31,10 @@ func buildDepedencyGraph(rc RunConfig, rootModulePath string) (map[string]*modul
 	moduleMap := make(map[string]*moduleInfo)
 
 	err := forGoModules(rc.Logger, rc.RootPath, func(path string) error {
+		if _, ok := rc.SkippedPaths[path]; ok {
+			rc.Logger.Debug("skipping", zap.String("path", path))
+			return nil
+		}
 		fullPath := filepath.Join(rc.RootPath, path)
 		modFile, err := os.ReadFile(filepath.Clean(fullPath))
 		if err != nil {
