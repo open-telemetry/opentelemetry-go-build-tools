@@ -33,6 +33,7 @@ func TestEntry(t *testing.T) {
 		requireChangeLog bool
 		validChangeLogs  []string
 		components       []string
+		config           config.Config
 		expectErr        string
 		toString         string
 	}{
@@ -212,6 +213,20 @@ func TestEntry(t *testing.T) {
 			toString:        "- `foo`: changed foo (#123)\n  more details",
 			expectErr:       "foo is not a valid 'component'. It must be one of [bar]",
 		},
+		{
+			name: "with issue link",
+			entry: Entry{
+				ChangeType: "breaking",
+				Component:  "foo",
+				Note:       "broke foo",
+				Issues:     []int{123},
+				SubText:    "",
+			},
+			config: config.Config{
+				IssueLink: "https://github.com/open-telemetry/opentelemetry-go-build-tools/issues/{{issue}}",
+			},
+			toString: "- `foo`: broke foo ([#123](https://github.com/open-telemetry/opentelemetry-go-build-tools/issues/123))",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -223,7 +238,8 @@ func TestEntry(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
-			assert.Equal(t, tc.toString, tc.entry.String())
+			cfg := tc.config
+			assert.Equal(t, tc.toString, tc.entry.String(&cfg))
 		})
 	}
 

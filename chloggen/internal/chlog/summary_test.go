@@ -21,6 +21,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"go.opentelemetry.io/build-tools/chloggen/internal/config"
 )
 
 func TestSummary(t *testing.T) {
@@ -91,7 +93,7 @@ func TestSummary(t *testing.T) {
 		SubText:    "more details",
 	}
 
-	actual, err := GenerateSummary("1.0", []*Entry{&brk1, &brk2, &dep1, &dep2, &enh1, &enh2, &bug1, &bug2, &new1, &new2})
+	actual, err := GenerateSummary("1.0", []*Entry{&brk1, &brk2, &dep1, &dep2, &enh1, &enh2, &bug1, &bug2, &new1, &new2}, &config.Config{})
 	assert.NoError(t, err)
 
 	// This file is not meant to be the entire changelog so will not pass markdownlint if named with .md extension.

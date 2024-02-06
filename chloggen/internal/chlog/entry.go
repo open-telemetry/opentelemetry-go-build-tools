@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -104,10 +105,15 @@ func (e Entry) Validate(requireChangelog bool, components []string, validChangeL
 	return nil
 }
 
-func (e Entry) String() string {
+func (e Entry) String(cfg *config.Config) string {
 	issueStrs := make([]string, 0, len(e.Issues))
 	for _, issue := range e.Issues {
-		issueStrs = append(issueStrs, fmt.Sprintf("#%d", issue))
+		if cfg.IssueLink != "" {
+			link := strings.Replace(cfg.IssueLink, "{{issue}}", strconv.Itoa(issue), 1)
+			issueStrs = append(issueStrs, fmt.Sprintf("[#%d](%s)", issue, link))
+		} else {
+			issueStrs = append(issueStrs, fmt.Sprintf("#%d", issue))
+		}
 	}
 	issueStr := strings.Join(issueStrs, ", ")
 

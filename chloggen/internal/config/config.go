@@ -37,6 +37,7 @@ type Config struct {
 	EntriesDir        string            `yaml:"entries_dir"`
 	TemplateYAML      string            `yaml:"template_yaml"`
 	Components        []string          `yaml:"components"`
+	IssueLink         string            `yaml:"issue_link"`
 	ConfigYAML        string
 }
 
@@ -78,7 +79,7 @@ func NewFromFile(rootDir string, cfgFilename string) (*Config, error) {
 	}
 
 	if len(cfg.ChangeLogs) == 0 {
-		cfg.ChangeLogs[DefaultChangeLogKey] = filepath.Join(rootDir, DefaultChangeLogFilename)
+		cfg.ChangeLogs = map[string]string{DefaultChangeLogKey: filepath.Join(rootDir, DefaultChangeLogFilename)}
 		cfg.DefaultChangeLogs = []string{DefaultChangeLogKey}
 		return cfg, nil
 	}

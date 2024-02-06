@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"sort"
 	"text/template"
+
+	"go.opentelemetry.io/build-tools/chloggen/internal/config"
 )
 
 //go:embed summary.tmpl
@@ -34,7 +36,7 @@ type summary struct {
 	BugFixes        []string
 }
 
-func GenerateSummary(version string, entries []*Entry) (string, error) {
+func GenerateSummary(version string, entries []*Entry, cfg *config.Config) (string, error) {
 	s := summary{
 		Version: version,
 	}
@@ -42,15 +44,15 @@ func GenerateSummary(version string, entries []*Entry) (string, error) {
 	for _, entry := range entries {
 		switch entry.ChangeType {
 		case Breaking:
-			s.BreakingChanges = append(s.BreakingChanges, entry.String())
+			s.BreakingChanges = append(s.BreakingChanges, entry.String(cfg))
 		case Deprecation:
-			s.Deprecations = append(s.Deprecations, entry.String())
+			s.Deprecations = append(s.Deprecations, entry.String(cfg))
 		case NewComponent:
-			s.NewComponents = append(s.NewComponents, entry.String())
+			s.NewComponents = append(s.NewComponents, entry.String(cfg))
 		case Enhancement:
-			s.Enhancements = append(s.Enhancements, entry.String())
+			s.Enhancements = append(s.Enhancements, entry.String(cfg))
 		case BugFix:
-			s.BugFixes = append(s.BugFixes, entry.String())
+			s.BugFixes = append(s.BugFixes, entry.String(cfg))
 		}
 	}
 
