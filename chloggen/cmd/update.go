@@ -39,7 +39,7 @@ func updateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "Updates CHANGELOG.MD to include all new changes",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			entriesByChangelog, err := chlog.ReadEntries(globalCfg)
 			if err != nil {
 				return err

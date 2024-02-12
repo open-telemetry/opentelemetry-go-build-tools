@@ -42,7 +42,7 @@ var prereleaseCmd = &cobra.Command{
 - Updates module versions in all go.mod files.
 - Attempts to call 'go mod tidy' in the directory of each modified go.mod file.
 - Adds and commits changes to Git branch`,
-	PreRun: func(cmd *cobra.Command, args []string) {
+	PreRun: func(cmd *cobra.Command, _ []string) {
 		if allModuleSets {
 			// do not require module set names if operating on all module sets
 			if err := cmd.Flags().SetAnnotation(
@@ -54,7 +54,7 @@ var prereleaseCmd = &cobra.Command{
 			}
 		}
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(*cobra.Command, []string) {
 		fmt.Println("Using versioning file", versioningFile)
 
 		prerelease.Run(versioningFile, moduleSetNames, allModuleSets, skipGoModTidy, commitToDifferentBranch)

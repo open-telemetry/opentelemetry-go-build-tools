@@ -33,7 +33,7 @@ var verifyCmd = &cobra.Command{
 - No more than one set of modules exists for any non-zero major version.
 - Script warns if any stable modules depend on any unstable modules.
 `,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(*cobra.Command, []string) {
 		fmt.Println("Using versioning file", versioningFile)
 
 		verify.Run(versioningFile)

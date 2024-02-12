@@ -37,7 +37,7 @@ var tagCmd = &cobra.Command{
 	Long: `Tag script to add Git tags to a specified commit hash created by prerelease script:
 - Creates new Git tags for all modules being updated.
 - If tagging fails in the middle of the script, the recently created tags will be deleted.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(*cobra.Command, []string) {
 		fmt.Println("Using versioning file", versioningFile)
 
 		tag.Run(versioningFile, moduleSetName, commitHash, deleteModuleSetTags, printTags)

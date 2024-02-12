@@ -30,9 +30,7 @@ import (
 	"go.opentelemetry.io/build-tools/multimod/internal/common/commontest"
 )
 
-var (
-	testDataDir, _ = filepath.Abs("./test_data")
-)
+var testDataDir, _ = filepath.Abs("./test_data")
 
 // TestMain performs setup for the tests and suppress printing logs.
 func TestMain(m *testing.M) {
@@ -187,7 +185,6 @@ func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 func TestUpdateAllGoModFilesWithCommitHash(t *testing.T) {
-
 	testName := "update_all_go_mod_files_with_commit_hash"
 	versionsYamlDir := filepath.Join(testDataDir, testName)
 
@@ -235,7 +232,7 @@ func TestUpdateAllGoModFilesWithCommitHash(t *testing.T) {
 			},
 			commit: "main",
 			client: &http.Client{
-				Transport: roundTripFunc(func(req *http.Request) *http.Response {
+				Transport: roundTripFunc(func(*http.Request) *http.Response {
 					return &http.Response{
 						StatusCode: 200,
 						Body:       io.NopCloser(bytes.NewBufferString(`{"Version":"v1.2.4-RC1+meta","Time":"2023-10-12T21:04:47Z","Origin":{"VCS":"git","URL":"https://github.com/opentelemetry-go-build-tools/multimod/internal/sync/test/test2","Hash":"35cee309328ac126861ae6f554971aeb85a08bba"}}`)),
@@ -248,7 +245,7 @@ func TestUpdateAllGoModFilesWithCommitHash(t *testing.T) {
 			modSetName: "other-mod-set-1",
 			commit:     "main",
 			client: &http.Client{
-				Transport: roundTripFunc(func(req *http.Request) *http.Response {
+				Transport: roundTripFunc(func(*http.Request) *http.Response {
 					return &http.Response{
 						StatusCode: 500,
 						Body:       io.NopCloser(bytes.NewBufferString(`server error`)),
@@ -327,7 +324,6 @@ func TestUpdateAllGoModFilesWithCommitHash(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestUpdateAllGoModFiles(t *testing.T) {

@@ -13,14 +13,12 @@ import (
 	"go.opentelemetry.io/build-tools/multimod/internal/diff"
 )
 
-var (
-	previousVersion string
-)
+var previousVersion string
 
 var diffCmd = &cobra.Command{
 	Use:   "diff",
 	Short: "Determines if any files in a module have changed",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(*cobra.Command, []string) {
 		repoRoot, err := repo.FindRoot()
 		if err != nil {
 			log.Fatalf("could not find repo root: %v", err)

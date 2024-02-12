@@ -43,7 +43,7 @@ var syncCmd = &cobra.Command{
 - Updates module versions in all go.mod files.
 - Attempts to call go mod tidy on the files.
 - Adds and commits changes to Git branch`,
-	PreRun: func(cmd *cobra.Command, args []string) {
+	PreRun: func(cmd *cobra.Command, _ []string) {
 		if allModuleSetsSync {
 			// do not require module set names if operating on all module sets
 			if err := cmd.Flags().SetAnnotation(
@@ -55,7 +55,7 @@ var syncCmd = &cobra.Command{
 			}
 		}
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(*cobra.Command, []string) {
 		fmt.Println("Using versioning file", versioningFile)
 
 		if otherVersioningFile == "" {

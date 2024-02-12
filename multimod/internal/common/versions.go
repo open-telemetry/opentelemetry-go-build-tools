@@ -158,7 +158,7 @@ func (versionCfg versionConfig) getExcludedModules() excludedModulesSet {
 func (versionCfg versionConfig) BuildModulePathMap(root string) (ModulePathMap, error) {
 	modPathMap := make(ModulePathMap)
 
-	findGoMod := func(filePath string, info fs.FileInfo, err error) error {
+	findGoMod := func(filePath string, _ fs.FileInfo, err error) error {
 		if err != nil {
 			fmt.Printf("Warning: file could not be read during filepath.Walk(): %v", err)
 			return nil

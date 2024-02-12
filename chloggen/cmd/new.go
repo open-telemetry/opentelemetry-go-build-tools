@@ -22,15 +22,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	filename string
-)
+var filename string
 
 func newCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "new",
 		Short: "Creates new change file",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			path := filepath.Join(globalCfg.EntriesDir, cleanFileName(filename))
 			var pathWithExt string
 			switch ext := filepath.Ext(path); ext {
