@@ -35,7 +35,7 @@ var (
 // dependabot check would fail. Dependabot does not allow us to ignore directories
 // so instead we rename the gomod files to go.mod after directories are copied.
 func renameGoMod(fp string) error {
-	renameFunc := func(filePath string, info fs.FileInfo, err error) error {
+	renameFunc := func(filePath string, _ fs.FileInfo, err error) error {
 		if err != nil {
 			fmt.Printf("Warning: file could not be read during filepath.Walk: %v", err)
 			return nil
@@ -72,5 +72,4 @@ func createTempTestDir(testName string) (string, error) {
 	}
 
 	return tmpRootDir, nil
-
 }

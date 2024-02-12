@@ -42,7 +42,7 @@ func newCommandConfig() *commandConfig {
 		runConfig: cl.DefaultRunConfig(),
 	}
 
-	preRunSetup := func(cmd *cobra.Command, args []string) error {
+	preRunSetup := func(cmd *cobra.Command, _ []string) error {
 		c.runConfig.ExcludedPaths = transformExclude(c.excludeFlags)
 		c.runConfig.SkippedPaths = transformExclude(c.skipFlags)
 
@@ -75,7 +75,7 @@ func newCommandConfig() *commandConfig {
 		return nil
 	}
 
-	postRunSetup := func(cmd *cobra.Command, args []string) error {
+	postRunSetup := func(*cobra.Command, []string) error {
 		err := c.runConfig.Logger.Sync()
 		if err != nil && !syncerror.KnownSyncError(err) {
 			return fmt.Errorf("failed to sync logger: %w", err)
@@ -91,7 +91,7 @@ func newCommandConfig() *commandConfig {
 		for all intra-repository dependencies including transitive dependencies so the local module is used.`,
 		PersistentPreRunE:  preRunSetup,
 		PersistentPostRunE: postRunSetup,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(*cobra.Command, []string) error {
 			return cl.Crosslink(c.runConfig)
 		},
 	}
@@ -103,7 +103,7 @@ func newCommandConfig() *commandConfig {
 		go.mod files that are not direct or transitive dependencies for intra-repository modules. 
 		This is a destructive action and will overwrite existing go.mod files. 
 		Prune will not remove modules that fall outside of the root module namespace.`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(*cobra.Command, []string) error {
 			return cl.Prune(c.runConfig)
 		},
 	}
@@ -112,7 +112,7 @@ func newCommandConfig() *commandConfig {
 	c.workCommand = cobra.Command{
 		Use:   "work",
 		Short: "Generate or update the go.work file with use statements for intra-repository dependencies",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(*cobra.Command, []string) error {
 			return cl.Work(c.runConfig)
 		},
 	}
@@ -121,9 +121,7 @@ func newCommandConfig() *commandConfig {
 	return c
 }
 
-var (
-	comCfg = newCommandConfig()
-)
+var comCfg = newCommandConfig()
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.

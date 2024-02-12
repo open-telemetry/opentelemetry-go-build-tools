@@ -26,7 +26,7 @@ func validateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validate",
 		Short: "Validates the files in the changelog directory",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			if _, err := os.Stat(globalCfg.EntriesDir); err != nil {
 				return err
 			}
