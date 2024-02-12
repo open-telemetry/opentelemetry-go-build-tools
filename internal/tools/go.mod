@@ -10,7 +10,7 @@ require (
 	go.opentelemetry.io/build-tools/crosslink v0.7.0
 	go.opentelemetry.io/build-tools/dbotconf v0.7.0
 	go.opentelemetry.io/build-tools/multimod v0.7.0
-	golang.org/x/vuln v1.0.3
+	golang.org/x/vuln v1.0.4
 )
 
 require (
