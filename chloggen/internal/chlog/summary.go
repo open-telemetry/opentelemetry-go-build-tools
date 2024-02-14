@@ -18,23 +18,26 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
-	"sort"
+	"path/filepath"
 	"text/template"
+
+	"github.com/Masterminds/sprig/v3"
+	"go.opentelemetry.io/build-tools/chloggen/internal/config"
 )
 
 //go:embed summary.tmpl
-var tmpl []byte
+var defaultTmpl []byte
 
 type summary struct {
 	Version         string
-	BreakingChanges []string
-	Deprecations    []string
-	NewComponents   []string
-	Enhancements    []string
-	BugFixes        []string
+	BreakingChanges []*Entry
+	Deprecations    []*Entry
+	NewComponents   []*Entry
+	Enhancements    []*Entry
+	BugFixes        []*Entry
 }
 
-func GenerateSummary(version string, entries []*Entry) (string, error) {
+func GenerateSummary(version string, entries []*Entry, cfg *config.Config) (string, error) {
 	s := summary{
 		Version: version,
 	}
@@ -42,33 +45,41 @@ func GenerateSummary(version string, entries []*Entry) (string, error) {
 	for _, entry := range entries {
 		switch entry.ChangeType {
 		case Breaking:
-			s.BreakingChanges = append(s.BreakingChanges, entry.String())
+			s.BreakingChanges = append(s.BreakingChanges, entry)
 		case Deprecation:
-			s.Deprecations = append(s.Deprecations, entry.String())
+			s.Deprecations = append(s.Deprecations, entry)
 		case NewComponent:
-			s.NewComponents = append(s.NewComponents, entry.String())
+			s.NewComponents = append(s.NewComponents, entry)
 		case Enhancement:
-			s.Enhancements = append(s.Enhancements, entry.String())
+			s.Enhancements = append(s.Enhancements, entry)
 		case BugFix:
-			s.BugFixes = append(s.BugFixes, entry.String())
+			s.BugFixes = append(s.BugFixes, entry)
 		}
 	}
 
-	s.BreakingChanges = sort.StringSlice(s.BreakingChanges)
-	s.Deprecations = sort.StringSlice(s.Deprecations)
-	s.NewComponents = sort.StringSlice(s.NewComponents)
-	s.Enhancements = sort.StringSlice(s.Enhancements)
-	s.BugFixes = sort.StringSlice(s.BugFixes)
-
-	return s.String()
+	return s.String(cfg.SummaryTemplate)
 }
 
-func (s summary) String() (string, error) {
-	tmpl := template.Must(
-		template.
-			New("summary.tmpl").
+func (s summary) String(summaryTemplate string) (string, error) {
+	var tmpl *template.Template
+	var err error
+
+	if summaryTemplate != "" {
+		tmpl, err = template.
+			New(filepath.Base(summaryTemplate)).
+			Funcs(sprig.FuncMap()).
 			Option("missingkey=error").
-			Parse(string(tmpl)))
+			ParseFiles(summaryTemplate)
+	} else {
+		tmpl, err = template.
+			New("summary.tmpl").
+			Funcs(sprig.FuncMap()).
+			Option("missingkey=error").
+			Parse(string(defaultTmpl))
+	}
+	if err != nil {
+		return "", err
+	}
 
 	buf := bytes.Buffer{}
 	if err := tmpl.Execute(&buf, s); err != nil {

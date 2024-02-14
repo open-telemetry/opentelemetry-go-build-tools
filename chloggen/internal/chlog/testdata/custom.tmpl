@@ -2,7 +2,7 @@
 - `{{ .Component }}`: {{ .Note }} (
 {{- range $i, $issue := .Issues }}
 {{- if $i }}, {{ end -}}
-#{{ $issue }}
+[#{{ $issue }}](https://github.com/open-telemetry/opentelemetry-go-build-tools/issues/{{ $issue }})
 {{- end -}}
 )
 

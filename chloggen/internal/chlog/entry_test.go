@@ -15,10 +15,13 @@
 package chlog
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"testing"
+	"text/template"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
@@ -27,6 +30,13 @@ import (
 )
 
 func TestEntry(t *testing.T) {
+	tmpl := template.Must(
+		template.
+			New("summary.tmpl").
+			Funcs(sprig.FuncMap()).
+			Option("missingkey=error").
+			Parse(string(defaultTmpl)))
+
 	testCases := []struct {
 		name             string
 		entry            Entry
@@ -131,6 +141,17 @@ func TestEntry(t *testing.T) {
 			toString: "- `foo`: broke foo (#123)\n  more details",
 		},
 		{
+			name: "multiline subtext",
+			entry: Entry{
+				ChangeType: "breaking",
+				Component:  "foo",
+				Note:       "broke foo",
+				Issues:     []int{123},
+				SubText:    "more details\nsecond line",
+			},
+			toString: "- `foo`: broke foo (#123)\n  more details\n  second line",
+		},
+		{
 			name: "required_changelog",
 			entry: Entry{
 				ChangeLogs: []string{"foo"},
@@ -223,7 +244,11 @@ func TestEntry(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
-			assert.Equal(t, tc.toString, tc.entry.String())
+
+			buf := bytes.Buffer{}
+			err = tmpl.ExecuteTemplate(&buf, "entry", tc.entry)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.toString, buf.String())
 		})
 	}
 
