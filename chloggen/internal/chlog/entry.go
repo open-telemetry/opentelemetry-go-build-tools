@@ -104,23 +104,6 @@ func (e Entry) Validate(requireChangelog bool, components []string, validChangeL
 	return nil
 }
 
-func (e Entry) String() string {
-	issueStrs := make([]string, 0, len(e.Issues))
-	for _, issue := range e.Issues {
-		issueStrs = append(issueStrs, fmt.Sprintf("#%d", issue))
-	}
-	issueStr := strings.Join(issueStrs, ", ")
-
-	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("- `%s`: %s (%s)", e.Component, e.Note, issueStr))
-	if e.SubText != "" {
-		sb.WriteString("\n  ")
-		lines := strings.Split(strings.ReplaceAll(e.SubText, "\r\n", "\n"), "\n")
-		sb.WriteString(strings.Join(lines, "\n  "))
-	}
-	return sb.String()
-}
-
 func ReadEntries(cfg *config.Config) (map[string][]*Entry, error) {
 	yamlFiles, err := filepath.Glob(filepath.Join(cfg.EntriesDir, "*.yaml"))
 	if err != nil {
@@ -146,6 +129,7 @@ func ReadEntries(cfg *config.Config) (map[string][]*Entry, error) {
 		if err = yaml.Unmarshal(fileBytes, entry); err != nil {
 			return nil, err
 		}
+		entry.SubText = strings.ReplaceAll(entry.SubText, "\r\n", "\n")
 
 		if len(entry.ChangeLogs) == 0 {
 			for _, cl := range cfg.DefaultChangeLogs {

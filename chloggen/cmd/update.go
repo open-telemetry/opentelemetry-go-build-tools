@@ -46,7 +46,7 @@ func updateCmd() *cobra.Command {
 			}
 
 			for changeLogKey, entries := range entriesByChangelog {
-				chlogUpdate, err := chlog.GenerateSummary(version, entries)
+				chlogUpdate, err := chlog.GenerateSummary(version, entries, globalCfg)
 				if err != nil {
 					return err
 				}
