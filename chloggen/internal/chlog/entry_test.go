@@ -21,7 +21,6 @@ import (
 	"testing"
 	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
@@ -33,7 +32,7 @@ func TestEntry(t *testing.T) {
 	tmpl := template.Must(
 		template.
 			New("summary.tmpl").
-			Funcs(sprig.FuncMap()).
+			Funcs(TemplateFuncMap()).
 			Option("missingkey=error").
 			Parse(string(defaultTmpl)))
 

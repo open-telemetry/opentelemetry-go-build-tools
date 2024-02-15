@@ -19,9 +19,9 @@ import (
 	_ "embed"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
 	"go.opentelemetry.io/build-tools/chloggen/internal/config"
 )
 
@@ -60,6 +60,15 @@ func GenerateSummary(version string, entries []*Entry, cfg *config.Config) (stri
 	return s.String(cfg.SummaryTemplate)
 }
 
+func TemplateFuncMap() template.FuncMap {
+	return template.FuncMap{
+		"indent": func(n int, s string) string {
+			indent := strings.Repeat(" ", n)
+			return indent + strings.ReplaceAll(s, "\n", "\n"+indent)
+		},
+	}
+}
+
 func (s summary) String(summaryTemplate string) (string, error) {
 	var tmpl *template.Template
 	var err error
@@ -67,13 +76,13 @@ func (s summary) String(summaryTemplate string) (string, error) {
 	if summaryTemplate != "" {
 		tmpl, err = template.
 			New(filepath.Base(summaryTemplate)).
-			Funcs(sprig.FuncMap()).
+			Funcs(TemplateFuncMap()).
 			Option("missingkey=error").
 			ParseFiles(summaryTemplate)
 	} else {
 		tmpl, err = template.
 			New("summary.tmpl").
-			Funcs(sprig.FuncMap()).
+			Funcs(TemplateFuncMap()).
 			Option("missingkey=error").
 			Parse(string(defaultTmpl))
 	}

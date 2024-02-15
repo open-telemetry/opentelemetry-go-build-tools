@@ -10,47 +10,59 @@
 {{ .SubText | indent 2 }}
 {{- end }}
 {{- end }}
-
-{{- define "section" -}}
-{{- range $i, $entry := . }}
-{{- if eq $i 0}}
-{{ end }}
-{{ template "entry" . }}
-{{- end }}
-{{- end }}
 ## {{ .Version }}
 
 {{- if .BreakingChanges }}
 
 ### 🛑 Breaking changes 🛑
 
-{{- template "section" .BreakingChanges }}
+{{- range $i, $change := .BreakingChanges }}
+{{- if eq $i 0}}
+{{end}}
+{{ template "entry" $change }}
+{{- end }}
 {{- end }}
 
 {{- if .Deprecations }}
 
 ### 🚩 Deprecations 🚩
 
-{{- template "section" .Deprecations }}
+{{- range $i, $change := .Deprecations }}
+{{- if eq $i 0}}
+{{end}}
+{{ template "entry" $change }}
+{{- end }}
 {{- end }}
 
 {{- if .NewComponents }}
 
 ### 🚀 New components 🚀
 
-{{- template "section" .NewComponents }}
+{{- range $i, $change := .NewComponents }}
+{{- if eq $i 0}}
+{{end}}
+{{ template "entry" $change }}
+{{- end }}
 {{- end }}
 
 {{- if .Enhancements }}
 
 ### 💡 Enhancements 💡
 
-{{- template "section" .Enhancements }}
+{{- range $i, $change := .Enhancements }}
+{{- if eq $i 0}}
+{{end}}
+{{ template "entry" $change }}
+{{- end }}
 {{- end }}
 
 {{- if .BugFixes }}
 
 ### 🧰 Bug fixes 🧰
 
-{{- template "section" .BugFixes }}
+{{- range $i, $change := .BugFixes }}
+{{- if eq $i 0}}
+{{end}}
+{{ template "entry" $change }}
+{{- end }}
 {{- end }}
