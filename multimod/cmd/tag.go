@@ -15,7 +15,6 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/spf13/cobra"
@@ -38,7 +37,7 @@ var tagCmd = &cobra.Command{
 - Creates new Git tags for all modules being updated.
 - If tagging fails in the middle of the script, the recently created tags will be deleted.`,
 	Run: func(*cobra.Command, []string) {
-		fmt.Println("Using versioning file", versioningFile)
+		log.Println("Using versioning file", versioningFile)
 
 		tag.Run(versioningFile, moduleSetName, commitHash, deleteModuleSetTags, printTags)
 	},
