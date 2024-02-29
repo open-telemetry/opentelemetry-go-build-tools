@@ -56,7 +56,7 @@ var syncCmd = &cobra.Command{
 		}
 	},
 	Run: func(*cobra.Command, []string) {
-		fmt.Println("Using versioning file", versioningFile)
+		log.Println("Using versioning file", versioningFile)
 
 		if otherVersioningFile == "" {
 			otherVersioningFile = filepath.Join(otherRepoRoot,

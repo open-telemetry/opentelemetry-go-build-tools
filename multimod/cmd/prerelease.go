@@ -15,7 +15,6 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/spf13/cobra"
@@ -55,7 +54,7 @@ var prereleaseCmd = &cobra.Command{
 		}
 	},
 	Run: func(*cobra.Command, []string) {
-		fmt.Println("Using versioning file", versioningFile)
+		log.Println("Using versioning file", versioningFile)
 
 		prerelease.Run(versioningFile, moduleSetNames, allModuleSets, skipGoModTidy, commitToDifferentBranch)
 	},

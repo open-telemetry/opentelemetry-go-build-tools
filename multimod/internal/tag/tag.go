@@ -49,7 +49,7 @@ func Run(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags b
 			log.Fatalf("Error deleting tags for the specified module set: %v", err)
 		}
 
-		fmt.Println("Successfully deleted module tags")
+		log.Println("Successfully deleted module tags")
 	} else {
 		if err := t.tagAllModules(nil); err != nil {
 			log.Fatalf("unable to tag modules: %v", err)

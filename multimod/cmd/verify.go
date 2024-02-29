@@ -15,7 +15,6 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/spf13/cobra"
@@ -34,7 +33,7 @@ var verifyCmd = &cobra.Command{
 - Script warns if any stable modules depend on any unstable modules.
 `,
 	Run: func(*cobra.Command, []string) {
-		fmt.Println("Using versioning file", versioningFile)
+		log.Println("Using versioning file", versioningFile)
 
 		verify.Run(versioningFile)
 	},
