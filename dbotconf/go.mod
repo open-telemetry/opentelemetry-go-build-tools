@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
-	go.opentelemetry.io/build-tools v0.12.0
+	go.opentelemetry.io/build-tools v0.13.0
 	golang.org/x/mod v0.15.0
 	gopkg.in/yaml.v3 v3.0.1
 )
