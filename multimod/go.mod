@@ -9,7 +9,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	go.opentelemetry.io/build-tools v0.13.0
 	go.uber.org/multierr v1.11.0
-	golang.org/x/mod v0.15.0
+	golang.org/x/mod v0.16.0
 )
 
 require (
