@@ -15,6 +15,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -48,6 +49,7 @@ func main() {
 	flag.StringVarP(&cfg.outputFilename, "filename", "f", "", "Filename for templated output. If not specified 'basename(inputPath).go' will be used.")
 	flag.StringVarP(&cfg.templateFilename, "template", "t", "template.j2", "Template filename")
 	flag.StringVarP(&cfg.templateParameters, "parameters", "p", "", "List of key=value pairs separated by comma. These values are fed into the template as-is.")
+	flag.StringVarP(&cfg.capitalizationsPath, "capitalizations-path", "z", "", "Path to a file of newline separated capitalization strings.")
 	flag.Parse()
 
 	cfg, err := validateConfig(cfg)
@@ -74,14 +76,15 @@ func main() {
 }
 
 type config struct {
-	inputPath          string
-	outputPath         string
-	outputFilename     string
-	templateFilename   string
-	templateParameters string
-	onlyType           string
-	containerImage     string
-	specVersion        string
+	inputPath           string
+	outputPath          string
+	outputFilename      string
+	templateFilename    string
+	templateParameters  string
+	onlyType            string
+	containerImage      string
+	specVersion         string
+	capitalizationsPath string
 }
 
 func validateConfig(cfg config) (config, error) {
@@ -124,6 +127,12 @@ func validateConfig(cfg config) (config, error) {
 			return config{}, err
 		}
 		cfg.templateFilename = path.Join(pwd, cfg.templateFilename)
+	}
+
+	if cfg.capitalizationsPath != "" {
+		if _, err := os.Stat(cfg.capitalizationsPath); os.IsNotExist(err) {
+			return config{}, fmt.Errorf("capitalizations file does not exist: %w", err)
+		}
 	}
 
 	return cfg, nil
@@ -282,7 +291,7 @@ func checkoutSpecToDir(cfg config, toDir string) (doneFunc func(), err error) {
 	return doneFunc, nil
 }
 
-var capitalizations = []string{
+var staticCapitalizations = []string{
 	"ACL",
 	"AIX",
 	"AKS",
@@ -379,6 +388,30 @@ var capitalizations = []string{
 	"OTel",
 }
 
+func capitalizations(cfg config) ([]string, error) {
+	c := append([]string(nil), staticCapitalizations...)
+
+	if cfg.capitalizationsPath != "" {
+		file, err := os.Open(cfg.capitalizationsPath)
+		if err != nil {
+			return nil, fmt.Errorf("unable to open capitalizations file: %w", err)
+		}
+		defer file.Close()
+
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			capitalization := strings.TrimSpace(scanner.Text())
+			c = append(c, capitalization)
+		}
+
+		if err := scanner.Err(); err != nil {
+			return nil, fmt.Errorf("unable to read capitalizations file: %w", err)
+		}
+	}
+
+	return c, nil
+}
+
 // These are not simple capitalization fixes, but require string replacement.
 // All occurrences of the key will be replaced with the corresponding value.
 var replacements = map[string]string{
@@ -394,6 +427,10 @@ func fixIdentifiers(cfg config) error {
 		return fmt.Errorf("unable to read file: %w", err)
 	}
 
+	capitalizations, err := capitalizations(cfg)
+	if err != nil {
+		return fmt.Errorf("unable to combine custom and static capitalizations: %w", err)
+	}
 	caser := cases.Title(language.Und)
 	for _, init := range capitalizations {
 		// Match the title-cased capitalization target, asserting that its followed by
