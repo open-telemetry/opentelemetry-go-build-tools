@@ -49,7 +49,7 @@ func main() {
 	flag.StringVarP(&cfg.outputFilename, "filename", "f", "", "Filename for templated output. If not specified 'basename(inputPath).go' will be used.")
 	flag.StringVarP(&cfg.templateFilename, "template", "t", "template.j2", "Template filename")
 	flag.StringVarP(&cfg.templateParameters, "parameters", "p", "", "List of key=value pairs separated by comma. These values are fed into the template as-is.")
-	flag.StringVarP(&cfg.capitalizationsPath, "capitalizations-path", "z", "", "Path to a file of newline separated capitalization strings.")
+	flag.StringVarP(&cfg.capitalizationsPath, "capitalizations-path", "z", "", "Path to a file containing additional newline-separated capitalization strings.")
 	flag.Parse()
 
 	cfg, err := validateConfig(cfg)
