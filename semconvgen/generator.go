@@ -388,11 +388,12 @@ var staticCapitalizations = []string{
 	"OTel",
 }
 
-func capitalizations(cfg config) ([]string, error) {
+func capitalizations(capitalizationsPath string) ([]string, error) {
 	c := append([]string(nil), staticCapitalizations...)
 
-	if cfg.capitalizationsPath != "" {
-		file, err := os.Open(cfg.capitalizationsPath)
+	if capitalizationsPath != "" {
+		// #nosec G304
+		file, err := os.Open(capitalizationsPath)
 		if err != nil {
 			return nil, fmt.Errorf("unable to open capitalizations file: %w", err)
 		}
@@ -427,7 +428,7 @@ func fixIdentifiers(cfg config) error {
 		return fmt.Errorf("unable to read file: %w", err)
 	}
 
-	capitalizations, err := capitalizations(cfg)
+	capitalizations, err := capitalizations(cfg.capitalizationsPath)
 	if err != nil {
 		return fmt.Errorf("unable to combine custom and static capitalizations: %w", err)
 	}
