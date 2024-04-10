@@ -23,7 +23,7 @@ semconvgen -i <path to spec YAML> -t <path to template> -o <path to output>
 A full list of available options:
 
 ````txt
-  -z, --capitalizations-path string   Path to a file of newline separated capitalization strings.
+  -z, --capitalizations-path string   Path to a file of newline separated capitalization strings that will be appended to the default list.
   -c, --container string              Container image ID (default "otel/semconvgen")
   -f, --filename string               Filename for templated output. If not specified 'basename(inputPath).go' will be used.
   -i, --input string                  Path to semantic convention definition YAML. Should be a directory in the specification git repository.
