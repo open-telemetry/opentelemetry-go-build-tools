@@ -10,22 +10,34 @@ func TestCapitalizations(t *testing.T) {
 	tests := []struct {
 		name            string
 		capitalizations string
-		expected        []string
+		want            []string
 	}{
 		{
 			name:            "No additional capitalizations",
 			capitalizations: "",
-			expected:        staticCapitalizations,
+			want:            staticCapitalizations,
 		},
 		{
 			name:            "Some additional capitalizations",
 			capitalizations: "ASPNETCore\nJVM",
-			expected:        append(staticCapitalizations, "ASPNETCore", "JVM"),
+			want:            append(staticCapitalizations, "ASPNETCore", "JVM"),
 		},
 		{
 			name:            "Wrong separator for capitalizations",
 			capitalizations: "ASPNETCore,JVM",
-			expected:        append(staticCapitalizations, "ASPNETCore,JVM"),
+			want:            append(staticCapitalizations, "ASPNETCore,JVM"),
+		},
+		{
+			name: "Copius amounts of whitespace",
+			capitalizations: `
+
+			 ASPNETCore
+
+			    JVM
+
+
+			`,
+			want: append(staticCapitalizations, "ASPNETCore", "JVM"),
 		},
 	}
 
@@ -49,8 +61,8 @@ func TestCapitalizations(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if !reflect.DeepEqual(customCapitalizations, tt.expected) {
-				t.Errorf("customCapitalizations() = %v, want %v", customCapitalizations, tt.expected)
+			if !reflect.DeepEqual(customCapitalizations, tt.want) {
+				t.Errorf("capitalizations() = %v, want %v", customCapitalizations, tt.want)
 			}
 		})
 	}

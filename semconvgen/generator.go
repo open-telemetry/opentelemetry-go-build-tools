@@ -402,6 +402,9 @@ func capitalizations(capitalizationsPath string) ([]string, error) {
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
 			capitalization := strings.TrimSpace(scanner.Text())
+			if capitalization == "" {
+				continue
+			}
 			c = append(c, capitalization)
 		}
 
