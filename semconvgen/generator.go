@@ -392,7 +392,7 @@ func capitalizations(capitalizationsPath string) ([]string, error) {
 	c := append([]string(nil), staticCapitalizations...)
 
 	if capitalizationsPath != "" {
-		// #nosec G304
+		// #nosec G304 -- We expect the file path to be provided by the user.
 		file, err := os.Open(capitalizationsPath)
 		if err != nil {
 			return nil, fmt.Errorf("unable to open capitalizations file: %w", err)
