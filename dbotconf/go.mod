@@ -3,7 +3,7 @@ module go.opentelemetry.io/build-tools/dbotconf
 go 1.20
 
 require (
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
 	go.opentelemetry.io/build-tools v0.13.0
 	golang.org/x/mod v0.18.0
