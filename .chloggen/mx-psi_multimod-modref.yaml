@@ -8,7 +8,7 @@ component: multimod
 note: Get pseudoversion for each module in a module set separately to support moving modules between module sets.
 
 # One or more tracking issues related to the change
-issues: []
+issues: [582]
 
 # (Optional) One or more lines of additional information to render under the primary note.
 # These lines will be padded with 2 spaces and then inserted directly into the document.
