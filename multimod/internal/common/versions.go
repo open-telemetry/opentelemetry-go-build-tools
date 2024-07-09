@@ -52,6 +52,12 @@ type ModuleSet struct {
 // ModulePath holds the module import path, such as "go.opentelemetry.io/otel".
 type ModulePath string
 
+// ModuleRef holds a module import path and a version for that module.
+type ModuleRef struct {
+	Path    ModulePath
+	Version string
+}
+
 // ModuleInfoMap is a mapping from a module's import path to its ModuleInfo struct.
 type ModuleInfoMap map[ModulePath]ModuleInfo
 

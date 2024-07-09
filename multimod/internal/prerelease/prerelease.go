@@ -194,7 +194,12 @@ func (p prerelease) updateAllGoModFiles() error {
 		modFilePaths = append(modFilePaths, filePath)
 	}
 
-	if err := common.UpdateGoModFiles(modFilePaths, p.ModuleSetRelease.ModSetPaths(), p.ModuleSetRelease.ModSetVersion()); err != nil {
+	var newModRefs []common.ModuleRef
+	ver := p.ModuleSetRelease.ModSetVersion()
+	for _, mod := range p.ModuleSetRelease.ModSetPaths() {
+		newModRefs = append(newModRefs, common.ModuleRef{Path: mod, Version: ver})
+	}
+	if err := common.UpdateGoModFiles(modFilePaths, newModRefs); err != nil {
 		return fmt.Errorf("could not update all go mod files: %w", err)
 	}
 

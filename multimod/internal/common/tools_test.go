@@ -124,13 +124,13 @@ func TestUpdateGoModVersions(t *testing.T) {
 			")"),
 	}
 
-	newModPaths := []ModulePath{
-		"go.opentelemetry.io/build-tools/multimod/internal/prerelease/test/test1",
-		"go.opentelemetry.io/build-tools/multimod/internal/prerelease/test/test2",
-	}
 	newVersion := "v1.2.3-RC1+meta"
+	newModRefs := []ModuleRef{
+		{Path: "go.opentelemetry.io/build-tools/multimod/internal/prerelease/test/test1", Version: newVersion},
+		{Path: "go.opentelemetry.io/build-tools/multimod/internal/prerelease/test/test2", Version: newVersion},
+	}
 
-	require.NoError(t, UpdateGoModFiles(modFilePaths, newModPaths, newVersion))
+	require.NoError(t, UpdateGoModFiles(modFilePaths, newModRefs))
 	for modFilePath, expectedByteOutput := range expectedModFiles {
 		actual, err := os.ReadFile(filepath.Clean(modFilePath))
 		require.NoError(t, err)
