@@ -61,7 +61,7 @@ func GetModuleSet(modSetName, versioningFilename string) (ModuleSet, error) {
 
 // updateGoModVersions updates one go.mod file, given by modFilePath, by updating all modules listed in
 // newModPaths to use the newVersion given.
-func updateGoModVersions(modFilePath ModuleFilePath, newModPaths []ModulePath, newVersion string) error {
+func updateGoModVersions(modFilePath ModuleFilePath, newModRefs []ModuleRef) error {
 	if !strings.HasSuffix(string(modFilePath), "go.mod") {
 		return errors.New("cannot update file passed that does not end with go.mod")
 	}
@@ -71,8 +71,8 @@ func updateGoModVersions(modFilePath ModuleFilePath, newModPaths []ModulePath, n
 		panic(err)
 	}
 
-	for _, modPath := range newModPaths {
-		newGoModFile, err = replaceModVersion(modPath, newVersion, newGoModFile)
+	for _, modRef := range newModRefs {
+		newGoModFile, err = replaceModVersion(modRef.Path, modRef.Version, newGoModFile)
 		if err != nil {
 			return err
 		}
@@ -101,14 +101,13 @@ func replaceModVersion(modPath ModulePath, version string, newGoModFile []byte) 
 }
 
 // UpdateGoModFiles updates the go.mod files in modFilePaths by updating all modules listed in
-// newModPaths to use the newVersion given.
-func UpdateGoModFiles(modFilePaths []ModuleFilePath, newModPaths []ModulePath, newVersion string) error {
+// moduleRefs to use the versions given.
+func UpdateGoModFiles(modFilePaths []ModuleFilePath, newModuleRefs []ModuleRef) error {
 	log.Println("Updating all module versions in go.mod files...")
 	for _, modFilePath := range modFilePaths {
 		if err := updateGoModVersions(
 			modFilePath,
-			newModPaths,
-			newVersion,
+			newModuleRefs,
 		); err != nil {
 			return fmt.Errorf("could not update module versions in file %v: %w", modFilePath, err)
 		}

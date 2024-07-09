@@ -146,20 +146,23 @@ func (s sync) updateAllGoModFiles() error {
 		modFilePaths = append(modFilePaths, filePath)
 	}
 
-	ver := s.OtherModuleSet.Version
-	if s.OtherModuleVersionCommit != "" {
-		version, err := s.parseVersionInfo(string(s.OtherModuleSet.Modules[0]), s.OtherModuleVersionCommit)
-		if err != nil {
-			return err
+	var newModRefs []common.ModuleRef
+	for _, mod := range s.OtherModuleSet.Modules {
+		ver := s.OtherModuleSet.Version
+		if s.OtherModuleVersionCommit != "" {
+			version, err := s.parseVersionInfo(string(mod), s.OtherModuleVersionCommit)
+			if err != nil {
+				return err
+			}
+			ver = version
 		}
-		ver = version
+		log.Printf("Version for module %q: %s\n", mod, ver)
+		newModRefs = append(newModRefs, common.ModuleRef{Path: mod, Version: ver})
 	}
-	log.Printf("Version: %s\n", ver)
 
 	if err := common.UpdateGoModFiles(
 		modFilePaths,
-		s.OtherModuleSet.Modules,
-		ver,
+		newModRefs,
 	); err != nil {
 		return fmt.Errorf("could not update all go mod files: %w", err)
 	}
