@@ -60,7 +60,7 @@ func GetModuleSet(modSetName, versioningFilename string) (ModuleSet, error) {
 }
 
 // updateGoModVersions updates one go.mod file, given by modFilePath, by updating all modules listed in
-// newModPaths to use the newVersion given.
+// newModRefs to use the new versions given.
 func updateGoModVersions(modFilePath ModuleFilePath, newModRefs []ModuleRef) error {
 	if !strings.HasSuffix(string(modFilePath), "go.mod") {
 		return errors.New("cannot update file passed that does not end with go.mod")
