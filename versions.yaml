@@ -14,7 +14,7 @@
 
 module-sets:
   tools:
-    version: v0.13.0
+    version: v0.14.0
     modules:
       - go.opentelemetry.io/build-tools
       - go.opentelemetry.io/build-tools/checkfile
