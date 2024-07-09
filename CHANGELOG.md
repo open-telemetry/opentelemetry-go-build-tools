@@ -4,6 +4,16 @@
 
 <!-- next version -->
 
+## v0.14.0
+
+### 💡 Enhancements 💡
+
+- `semconvgen`: Add `--capitalizations-path` to allow users to add additional strings to the static capitalizations slice in generator.go (#528)
+
+### 🧰 Bug fixes 🧰
+
+- `multimod`: Get pseudoversion for each module in a module set separately to support moving modules between module sets. (#582)
+
 ## v0.13.0
 
 ### 🛑 Breaking changes 🛑
