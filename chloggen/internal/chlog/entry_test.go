@@ -256,7 +256,7 @@ func TestEntry(t *testing.T) {
 func TestReadDeleteEntries(t *testing.T) {
 	tempDir := t.TempDir()
 	entriesDir := filepath.Join(tempDir, config.DefaultEntriesDir)
-	require.NoError(t, os.Mkdir(entriesDir, os.ModePerm))
+	require.NoError(t, os.Mkdir(entriesDir, 0750))
 
 	entryA := Entry{
 		ChangeLogs: []string{"foo"},

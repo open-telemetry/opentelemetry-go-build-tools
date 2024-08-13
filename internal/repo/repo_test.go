@@ -50,7 +50,7 @@ func setupGoMod(t *testing.T, dirs []string) string {
 
 	paths := append([]string{root}, prepend(root, dirs...)...)
 	for _, d := range paths {
-		require.NoError(t, os.MkdirAll(d, os.ModePerm))
+		require.NoError(t, os.MkdirAll(d, 0750))
 		goMod := filepath.Join(d, "go.mod")
 		f, err := os.Create(filepath.Clean(goMod))
 		require.NoError(t, err)
@@ -65,7 +65,7 @@ func TestFindModules(t *testing.T) {
 	dirs := []string{"a", "a/b", "c"}
 	root := setupGoMod(t, dirs)
 	// Add a non-module dir.
-	require.NoError(t, os.MkdirAll(filepath.Join(root, "tools"), os.ModePerm))
+	require.NoError(t, os.MkdirAll(filepath.Join(root, "tools"), 0750))
 
 	got, err := FindModules(root, nil)
 	require.NoError(t, err)
@@ -114,7 +114,7 @@ func setupDocker(t *testing.T, layout []*fPath) string {
 
 	}
 	for _, path := range layout {
-		require.NoError(t, os.MkdirAll(path.dir, os.ModePerm))
+		require.NoError(t, os.MkdirAll(path.dir, 0750))
 
 		dFile := filepath.Join(path.dir, path.file)
 		f, err := os.Create(filepath.Clean(dFile))
@@ -134,7 +134,7 @@ func TestFindDockerfiles(t *testing.T) {
 	}
 	root := setupDocker(t, layout)
 	// Add an empty dir.
-	require.NoError(t, os.MkdirAll(filepath.Join(root, "tools"), os.ModePerm))
+	require.NoError(t, os.MkdirAll(filepath.Join(root, "tools"), 0750))
 
 	got, err := FindFilePatternDirs(root, "*Dockerfile*", nil)
 	require.NoError(t, err)
@@ -159,7 +159,7 @@ func TestFindDockerfilesIgnore(t *testing.T) {
 	}
 	root := setupDocker(t, layout)
 	// Add an empty dir.
-	require.NoError(t, os.MkdirAll(filepath.Join(root, "tools"), os.ModePerm))
+	require.NoError(t, os.MkdirAll(filepath.Join(root, "tools"), 0750))
 
 	got, err := FindFilePatternDirs(root, "*Dockerfile*", []string{"a/b", "aa/b?", "c"})
 	require.NoError(t, err)
