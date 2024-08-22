@@ -136,6 +136,7 @@ golangci-lint: | $(GOLANGCI_LINT)
 govulncheck: | $(GOVULNCHECK)
 	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
 	  echo "golvulncheck in $${dir}"; \
+	  ls $(TOOLS)/; \
 	  (cd "$${dir}" && \
 	    $(GOVULNCHECK) ./...); \
 	done
