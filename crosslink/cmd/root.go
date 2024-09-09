@@ -145,7 +145,7 @@ func init() {
 	comCfg.rootCommand.Flags().BoolVarP(&comCfg.runConfig.Prune, "prune", "p", false, "enables pruning operations on all go.mod files inside root repository")
 	comCfg.pruneCommand.Flags().StringSliceVar(&comCfg.excludeFlags, "exclude", []string{}, "list of comma separated go modules that crosslink will ignore in operations."+
 		"multiple calls of --exclude can be made")
-	comCfg.workCommand.Flags().StringVar(&comCfg.runConfig.GoVersion, "go", "1.20", "Go version applied when new go.work file is created")
+	comCfg.workCommand.Flags().StringVar(&comCfg.runConfig.GoVersion, "go", "1.22", "Go version applied when new go.work file is created")
 }
 
 // transform array slice into map
