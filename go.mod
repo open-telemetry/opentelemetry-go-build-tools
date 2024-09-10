@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/mod v0.20.0
-	golang.org/x/sys v0.24.0
+	golang.org/x/sys v0.25.0
 )
 
 require (
