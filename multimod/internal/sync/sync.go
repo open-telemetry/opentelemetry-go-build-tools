@@ -128,10 +128,16 @@ func (s sync) parseVersionInfo(pkg, tag string) (string, error) {
 	if err != nil {
 		return "", nil
 	}
+
+	if res.StatusCode >= 400 {
+		return "", fmt.Errorf("request to proxy for package %q at version %q failed with status %d (%s): %s",
+			pkg, tag, res.StatusCode, res.Status, string(body))
+	}
+
 	var data struct{ Version string }
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		return "", fmt.Errorf("failed to unmarshal response: %w", err)
+		return "", fmt.Errorf("failed to unmarshal response for package %q at version %q: %w", pkg, tag, err)
 	}
 
 	return fmt.Sprint(data.Version), err
