@@ -253,6 +253,21 @@ func TestUpdateAllGoModFilesWithCommitHash(t *testing.T) {
 					}
 				}),
 			},
+			expectedErr: "request to proxy for package \"go.opentelemetry.io/other/test/test1\" at version \"main\" failed with status 500",
+		},
+
+		{
+			modSetName: "other-mod-set-1",
+			commit:     "main",
+			client: &http.Client{
+				Transport: roundTripFunc(func(*http.Request) *http.Response {
+					return &http.Response{
+						StatusCode: 200,
+						Body:       io.NopCloser(bytes.NewBufferString(`invalid message`)),
+						Header:     make(http.Header),
+					}
+				}),
+			},
 			expectedErr: "failed to unmarshal response",
 		},
 	}
