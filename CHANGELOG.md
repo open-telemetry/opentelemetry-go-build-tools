@@ -4,6 +4,17 @@
 
 <!-- next version -->
 
+## v0.15.0
+
+### 💡 Enhancements 💡
+
+- `all`: bump minimum Go version to 1.22 (#605)
+- `multimod`: Improve error message when the Go proxy misbehaves (#610)
+
+### 🧰 Bug fixes 🧰
+
+- `chloggen`: Fix bug that directed all output to stderr (#612)
+
 ## v0.14.0
 
 ### 💡 Enhancements 💡
