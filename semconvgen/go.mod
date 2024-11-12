@@ -6,7 +6,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	go.opentelemetry.io/build-tools v0.15.0
 	golang.org/x/mod v0.21.0
-	golang.org/x/text v0.19.0
+	golang.org/x/text v0.20.0
 )
 
 replace go.opentelemetry.io/build-tools => ../
