@@ -34,12 +34,13 @@ const (
 )
 
 type Entry struct {
-	ChangeLogs []string `yaml:"change_logs"`
-	ChangeType string   `yaml:"change_type"`
-	Component  string   `yaml:"component"`
-	Note       string   `yaml:"note"`
-	Issues     []int    `yaml:"issues"`
-	SubText    string   `yaml:"subtext"`
+	ChangeLogs   []string `yaml:"change_logs"`
+	ChangeType   string   `yaml:"change_type"`
+	Component    string   `yaml:"component"`
+	Note         string   `yaml:"note"`
+	Issues       []int    `yaml:"issues"`
+	PullRequests []int    `yaml:"pull_requests"`
+	SubText      string   `yaml:"subtext"`
 }
 
 var changeTypes = []string{
@@ -97,8 +98,8 @@ func (e Entry) Validate(requireChangelog bool, components []string, validChangeL
 		return fmt.Errorf("specify a 'note'")
 	}
 
-	if len(e.Issues) == 0 {
-		return fmt.Errorf("specify one or more issues #'s")
+	if len(e.Issues) == 0 && len(e.PullRequests) == 0 {
+		return fmt.Errorf("specify one or more issues or pull requests #'s")
 	}
 
 	return nil

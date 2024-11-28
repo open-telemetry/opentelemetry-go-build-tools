@@ -1,8 +1,15 @@
 {{- define "entry" -}}
+{{- $first := true -}}
 - `{{ .Component }}`: {{ .Note }} (
 {{- range $i, $issue := .Issues }}
-{{- if $i }}, {{ end -}}
+{{- if not $first }}, {{ end -}}
 #{{ $issue }}
+{{- $first = false -}}
+{{- end -}}
+{{- range $i, $pr := .PullRequests }}
+{{- if not $first }}, {{ end -}}
+#{{ $pr }}
+{{- $first = false -}}
 {{- end -}}
 )
 

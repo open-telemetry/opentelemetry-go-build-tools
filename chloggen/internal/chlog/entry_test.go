@@ -71,14 +71,14 @@ func TestEntry(t *testing.T) {
 			expectErr: "specify a 'note'",
 		},
 		{
-			name: "missing_issue",
+			name: "missing_issue_and_pull_request",
 			entry: Entry{
 				ChangeType: "bug_fix",
 				Component:  "bar",
 				Note:       "fix bar",
 				SubText:    "",
 			},
-			expectErr: "specify one or more issues #'s",
+			expectErr: "specify one or more issues or pull requests #'s",
 		},
 		{
 			name: "missing_required_changelog",
@@ -127,6 +127,41 @@ func TestEntry(t *testing.T) {
 				SubText:    "",
 			},
 			toString: "- `foo`: broke foo (#123, #345)",
+		},
+		{
+			name: "multiple_pull_requests",
+			entry: Entry{
+				ChangeType:   "breaking",
+				Component:    "foo",
+				Note:         "broke foo",
+				PullRequests: []int{123, 345},
+				SubText:      "",
+			},
+			toString: "- `foo`: broke foo (#123, #345)",
+		},
+		{
+			name: "single_issues_and_pull_requests",
+			entry: Entry{
+				ChangeType:   "breaking",
+				Component:    "foo",
+				Note:         "broke foo",
+				Issues:       []int{123},
+				PullRequests: []int{456},
+				SubText:      "",
+			},
+			toString: "- `foo`: broke foo (#123, #456)",
+		},
+		{
+			name: "multiple_issues_and_pull_requests",
+			entry: Entry{
+				ChangeType:   "breaking",
+				Component:    "foo",
+				Note:         "broke foo",
+				Issues:       []int{123, 456},
+				PullRequests: []int{789, 1011},
+				SubText:      "",
+			},
+			toString: "- `foo`: broke foo (#123, #456, #789, #1011)",
 		},
 		{
 			name: "subtext",
@@ -259,39 +294,43 @@ func TestReadDeleteEntries(t *testing.T) {
 	require.NoError(t, os.Mkdir(entriesDir, 0750))
 
 	entryA := Entry{
-		ChangeLogs: []string{"foo"},
-		ChangeType: "breaking",
-		Component:  "foo",
-		Note:       "broke foo",
-		Issues:     []int{123},
+		ChangeLogs:   []string{"foo"},
+		ChangeType:   "breaking",
+		Component:    "foo",
+		Note:         "broke foo",
+		Issues:       []int{123},
+		PullRequests: []int{},
 	}
 	writeEntry(t, entriesDir, &entryA)
 
 	entryB := Entry{
-		ChangeLogs: []string{"bar"},
-		ChangeType: "bug_fix",
-		Component:  "bar",
-		Note:       "fix bar",
-		Issues:     []int{345, 678},
-		SubText:    "more details",
+		ChangeLogs:   []string{"bar"},
+		ChangeType:   "bug_fix",
+		Component:    "bar",
+		Note:         "fix bar",
+		Issues:       []int{345, 678},
+		SubText:      "more details",
+		PullRequests: []int{},
 	}
 	writeEntry(t, entriesDir, &entryB)
 
 	entryC := Entry{
-		ChangeLogs: []string{},
-		ChangeType: "enhancement",
-		Component:  "other",
-		Note:       "enhance!",
-		Issues:     []int{555},
+		ChangeLogs:   []string{},
+		ChangeType:   "enhancement",
+		Component:    "other",
+		Note:         "enhance!",
+		Issues:       []int{555},
+		PullRequests: []int{},
 	}
 	writeEntry(t, entriesDir, &entryC)
 
 	entryD := Entry{
-		ChangeLogs: []string{"foo", "bar"},
-		ChangeType: "deprecation",
-		Component:  "foobar",
-		Note:       "deprecate something",
-		Issues:     []int{999},
+		ChangeLogs:   []string{"foo", "bar"},
+		ChangeType:   "deprecation",
+		Component:    "foobar",
+		Note:         "deprecate something",
+		Issues:       []int{999},
+		PullRequests: []int{},
 	}
 	writeEntry(t, entriesDir, &entryD)
 

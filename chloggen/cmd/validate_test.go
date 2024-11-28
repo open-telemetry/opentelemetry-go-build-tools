@@ -119,16 +119,17 @@ func TestValidate(t *testing.T) {
 			wantErr: "specify a 'note'",
 		},
 		{
-			name: "missing_issue",
+			name: "missing_issue_and_pull_request",
 			entries: func() []*chlog.Entry {
 				return append(getSampleEntries(), &chlog.Entry{
-					ChangeType: chlog.BugFix,
-					Component:  "receiver/foo",
-					Note:       "Add some bar",
-					Issues:     []int{},
+					ChangeType:   chlog.BugFix,
+					Component:    "receiver/foo",
+					Note:         "Add some bar",
+					Issues:       []int{},
+					PullRequests: []int{},
 				})
 			}(),
-			wantErr: "specify one or more issues #'s",
+			wantErr: "specify one or more issues or pull requests #'s",
 		},
 		{
 			name: "all_invalid",
