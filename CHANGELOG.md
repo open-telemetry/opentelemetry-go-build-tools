@@ -38,30 +38,30 @@
   those listed in the excluded-modules. This is useful for repositories where some modules
   may not yet be ready for releasing (therefore listed under excluded-modules) but their
   dependencies still need to be managed via multimod.
-
+  
 - `crosslink`: Add `--skip` flag to ignore specified go modules (#480)
 - `multimod`: add support for `--commit-hash` to allow users to overwrite the tag in a versions.yaml file (#422)
   This feature allows users to specify a tag (i.e. main) when they want to update
   modules.
-
+  
 - `chloggen`: support a custom changelog summary template (#501)
   The changelog summary template can be customized by configuring a custom template with the `summary_template` configuration setting.
   The default template provides a starting point for a custom template: https://github.com/open-telemetry/opentelemetry-go-build-tools/blob/v0.13.0/chloggen/internal/chlog/summary.tmpl
-
+  
 
 ### 🧰 Bug fixes 🧰
 
 - `crosslink`: Fix Windows produces backslashes instead of slashes (#458)
   This fixes the issue of Windows produces backslashes instead of slashes when crosslinking
   dependencies in go.mod files on Windows.
-
+  
 - `dbotconf`: Fix Windows produces backslashes instead of slashes (#264)
-  This fixes the issue of Windows produces backslashes instead of slashes when generating
+  This fixes the issue of Windows produces backslashes instead of slashes when generating 
   Dependabot configuration files on Windows.
-
+  
 - `multimod`: Fix tagging on Windows (#464)
   This fixes the issue of `multimod tag` failing on Windows.
-
+  
 - `multimod`: Fix to log 'Using versioning file' and 'Successfully deleted module tags' to stderr instead of stdout (#507)
 - `chloggen`: change generated files permissions from 0755 to 0644 (#457)
 
