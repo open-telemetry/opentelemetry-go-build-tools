@@ -15,5 +15,3 @@ Usage:
     # updates the changelog file
     chloggen update -version <version>
 ```
-
-
