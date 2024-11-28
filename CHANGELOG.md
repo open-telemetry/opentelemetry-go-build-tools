@@ -10,7 +10,6 @@
 
 - `all`: bump minimum Go version to 1.22 (#605)
 - `multimod`: Improve error message when the Go proxy misbehaves (#610)
-- `chloggen`: Allow specifiying pull request numbers in change log entries (#634)
 
 ### 🧰 Bug fixes 🧰
 
