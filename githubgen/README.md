@@ -1,6 +1,6 @@
 # githubgen
 
-This executable is used to generate the `.github/CODEOWNERS` and
+This executable is used to generate `.github/CODEOWNERS` and
 `.github/ALLOWLIST` files.
 
 It reads status metadata from `metadata.yaml` files located throughout the
@@ -11,13 +11,12 @@ It checks that codeowners are known members of the OpenTelemetry organization.
 ## Usage
 
 ```shell
-$> make gengithub
+$> ./githubgen
 ```
 
 The equivalent of:
 
 ```shell
-$> cd cmd/githubgen && $(GOCMD) install .
 $> GITHUB_TOKEN=<mypattoken> githubgen --folder . [--allowlist cmd/githubgen/allowlist.txt] 
 ```
 
