@@ -20,15 +20,6 @@ updates:
       interval: weekly
       day: sunday
   - package-ecosystem: gomod
-    directory: /checkdoc
-    labels:
-      - dependencies
-      - go
-      - Skip Changelog
-    schedule:
-      interval: weekly
-      day: sunday
-  - package-ecosystem: gomod
     directory: /checkfile
     labels:
       - dependencies
@@ -57,6 +48,15 @@ updates:
       day: sunday
   - package-ecosystem: gomod
     directory: /dbotconf
+    labels:
+      - dependencies
+      - go
+      - Skip Changelog
+    schedule:
+      interval: weekly
+      day: sunday
+  - package-ecosystem: gomod
+    directory: /githubgen
     labels:
       - dependencies
       - go
