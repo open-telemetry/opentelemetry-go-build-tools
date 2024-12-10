@@ -140,9 +140,8 @@ func run(folder string, allowlistFilePath string, generators []generator) error 
 			if m.Status.Codeowners == nil {
 				return fmt.Errorf("component %q has no codeowners section", currentFolder)
 			}
-			for _, id := range m.Status.Codeowners.Active {
-				allCodeowners = append(allCodeowners, id)
-			}
+
+			allCodeowners = append(allCodeowners, m.Status.Codeowners.Active...)
 			if len(currentFolder) > maxLength {
 				maxLength = len(currentFolder)
 			}
