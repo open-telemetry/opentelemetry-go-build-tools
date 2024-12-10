@@ -1,6 +1,6 @@
 module go.opentelemetry.io/build-tools/githubgen
 
-go 1.22.0
+go 1.22
 
 require (
 	github.com/google/go-github/v66 v66.0.0

@@ -31,7 +31,7 @@ type generator interface {
 // reports/distributions/*
 func main() {
 	folder := flag.String("folder", ".", "folder investigated for codeowners")
-	allowlistFilePath := flag.String("allowlist", "cmd/githubgen/allowlist.txt", "path to a file containing an allowlist of members outside the OpenTelemetry organization")
+	allowlistFilePath := flag.String("allowlist", "allowlist.txt", "path to a file containing an allowlist of members outside the OpenTelemetry organization")
 	skipGithubCheck := flag.Bool("skipgithub", false, "skip checking GitHub membership check for CODEOWNERS generator")
 	flag.Parse()
 	var generators []generator
