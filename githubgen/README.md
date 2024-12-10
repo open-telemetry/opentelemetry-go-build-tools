@@ -36,4 +36,3 @@ These can be added to allowlist.txt as a workaround.
 
 If a codeowner is present in allowlist.txt and also a member of the
 OpenTelemetry organization, the script will error out.
-

@@ -161,7 +161,7 @@ func run(folder string, allowlistFilePath string, generators []generator) error 
 	sort.Strings(codeownersList)
 
 	var distributions []distributionData
-	dd, err := os.ReadFile(filepath.Join(folder, "distributions.yaml"))
+	dd, err := os.ReadFile(filepath.Join(folder, "distributions.yaml")) // nolint: gosec
 	if err != nil {
 		return err
 	}
