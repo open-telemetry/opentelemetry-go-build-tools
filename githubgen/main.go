@@ -11,7 +11,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 
 	"go.opentelemetry.io/collector/confmap"
 	"go.opentelemetry.io/collector/confmap/provider/fileprovider"
@@ -24,14 +24,14 @@ type generator interface {
 	generate(data *githubData) error
 }
 
-// Generates files specific to Github according to status metadata:
+// Generates files specific to GitHub according to status metadata:
 // .github/CODEOWNERS
 // .github/ALLOWLIST
 // .github/ISSUE_TEMPLATES/*.yaml (list of components)
 // reports/distributions/*
 func main() {
 	folder := flag.String("folder", ".", "folder investigated for codeowners")
-	allowlistFilePath := flag.String("allowlist", "allowlist.txt", "path to a file containing an allowlist of members outside the OpenTelemetry organization")
+	allowlistFilePath := flag.String("allowlist", "cmd/githubgen/allowlist.txt", "path to a file containing an allowlist of members outside the OpenTelemetry organization")
 	skipGithubCheck := flag.Bool("skipgithub", false, "skip checking GitHub membership check for CODEOWNERS generator")
 	flag.Parse()
 	var generators []generator
@@ -116,7 +116,7 @@ func run(folder string, allowlistFilePath string, generators []generator) error 
 	components := map[string]metadata{}
 	var foldersList []string
 	maxLength := 0
-	allCodeowners := map[string]struct{}{}
+	var allCodeowners []string
 	err := filepath.Walk(folder, func(path string, info fs.FileInfo, _ error) error {
 		if info.Name() == "metadata.yaml" {
 			m, err := loadMetadata(path)
@@ -127,9 +127,9 @@ func run(folder string, allowlistFilePath string, generators []generator) error 
 				return nil
 			}
 			currentFolder := filepath.Dir(path)
-			key := currentFolder
-			components[key] = m
-			foldersList = append(foldersList, key)
+
+			components[currentFolder] = m
+			foldersList = append(foldersList, currentFolder)
 
 			for stability := range m.Status.Stability {
 				if stability == unmaintainedStatus {
@@ -138,13 +138,13 @@ func run(folder string, allowlistFilePath string, generators []generator) error 
 				}
 			}
 			if m.Status.Codeowners == nil {
-				return fmt.Errorf("component %q has no codeowners section", key)
+				return fmt.Errorf("component %q has no codeowners section", currentFolder)
 			}
 			for _, id := range m.Status.Codeowners.Active {
-				allCodeowners[id] = struct{}{}
+				allCodeowners = append(allCodeowners, id)
 			}
-			if len(key) > maxLength {
-				maxLength = len(key)
+			if len(currentFolder) > maxLength {
+				maxLength = len(currentFolder)
 			}
 		}
 		return nil
@@ -153,12 +153,9 @@ func run(folder string, allowlistFilePath string, generators []generator) error 
 		return err
 	}
 
-	sort.Strings(foldersList)
-	codeownersList := make([]string, 0, len(allCodeowners))
-	for c := range allCodeowners {
-		codeownersList = append(codeownersList, c)
-	}
-	sort.Strings(codeownersList)
+	slices.Sort(foldersList)
+	slices.Sort(allCodeowners)
+	allCodeowners = slices.Compact(allCodeowners)
 
 	var distributions []distributionData
 	dd, err := os.ReadFile(filepath.Join(folder, "distributions.yaml")) // nolint: gosec
@@ -172,7 +169,7 @@ func run(folder string, allowlistFilePath string, generators []generator) error 
 
 	data := &githubData{
 		folders:           foldersList,
-		codeowners:        codeownersList,
+		codeowners:        allCodeowners,
 		allowlistFilePath: allowlistFilePath,
 		maxLength:         maxLength,
 		components:        components,
