@@ -10,13 +10,13 @@ It checks that codeowners are known members of the OpenTelemetry organization.
 
 ## Usage
 
-```
+```shell
 $> make gengithub
 ```
 
 The equivalent of:
 
-```
+```shell
 $> cd cmd/githubgen && $(GOCMD) install .
 $> GITHUB_TOKEN=<mypattoken> githubgen --folder . [--allowlist cmd/githubgen/allowlist.txt] 
 ```
