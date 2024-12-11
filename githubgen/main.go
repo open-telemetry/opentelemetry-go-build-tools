@@ -156,12 +156,7 @@ func run(folder string, allowlistFilePath string, generators []generator) error 
 	slices.Sort(allCodeowners)
 	allCodeowners = slices.Compact(allCodeowners)
 
-	var distributions []distributionData
-	dd, err := os.ReadFile(filepath.Join(folder, "distributions.yaml")) // nolint: gosec
-	if err != nil {
-		return err
-	}
-	err = yaml.Unmarshal(dd, &distributions)
+	distributions, err := getDistributions(folder)
 	if err != nil {
 		return err
 	}
@@ -181,4 +176,17 @@ func run(folder string, allowlistFilePath string, generators []generator) error 
 		}
 	}
 	return nil
+}
+
+func getDistributions(folder string) ([]distributionData, error) {
+	var distributions []distributionData
+	dd, err := os.ReadFile(filepath.Join(folder, "distributions.yaml")) // nolint: gosec
+	if err != nil {
+		return nil, err
+	}
+	err = yaml.Unmarshal(dd, &distributions)
+	if err != nil {
+		return nil, err
+	}
+	return distributions, nil
 }
