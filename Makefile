@@ -20,7 +20,7 @@ ALL_DOCS := $(shell find . -name '*.md' -type f | sort)
 ALL_GO_MOD_DIRS := $(filter-out $(TOOLS_MOD_DIR), $(shell find . -type f -name 'go.mod' -exec dirname {} \; | sort))
 ALL_COVERAGE_MOD_DIRS := $(shell find . -type f -name 'go.mod' -exec dirname {} \; | egrep -v '^$(TOOLS_MOD_DIR)' | sort)
 
-GO = go
+GO ?= go
 TIMEOUT = 60
 
 .DEFAULT_GOAL := precommit
