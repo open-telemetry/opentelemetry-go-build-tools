@@ -57,14 +57,14 @@ $(TOOLS)/crosslink: PACKAGE=go.opentelemetry.io/build-tools/crosslink
 CHLOGGEN = $(TOOLS)/chloggen
 $(TOOLS)/chloggen: PACKAGE=go.opentelemetry.io/build-tools/chloggen
 
-GITHUBGEN = $(TOOLS)/githubgen
- $(TOOLS)/githubgen: PACKAGE=go.opentelemetry.io/build-tools/githubgen
-
 GOVULNCHECK = $(TOOLS)/govulncheck
  $(TOOLS)/govulncheck: PACKAGE=golang.org/x/vuln/cmd/govulncheck
 
+MOQ = $(TOOLS)/moq
+ $(TOOLS)/moq: PACKAGE=github.com/matryer/moq
+
 .PHONY: tools
-tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD) $(CROSSLINK) $(CHLOGGEN) $(GOVULNCHECK)
+tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD) $(CROSSLINK) $(CHLOGGEN) $(GOVULNCHECK) $(MOQ)
 
 # Build
 
