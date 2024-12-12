@@ -33,7 +33,7 @@ func folderToShortName(folder string) string {
 
 type issueTemplatesGenerator struct{}
 
-func (itg issueTemplatesGenerator) generate(data *githubData) error {
+func (itg *issueTemplatesGenerator) Generate(data GithubData) error {
 	keys := map[string]struct{}{}
 	for _, f := range data.folders {
 		keys[folderToShortName(f)] = struct{}{}

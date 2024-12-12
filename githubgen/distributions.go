@@ -21,7 +21,7 @@ type distOutput struct {
 	Components  map[string][]string `yaml:"components"`
 }
 
-func (cg distributionsGenerator) generate(data *githubData) error {
+func (cg *distributionsGenerator) Generate(data GithubData) error {
 	for _, dist := range data.distributions {
 		components := map[string][]string{}
 		for _, c := range data.components {

@@ -20,8 +20,9 @@ import (
 
 const unmaintainedStatus = "unmaintained"
 
-type generator interface {
-	generate(data *githubData) error
+//go:generate moq -pkg fake -skip-ensure -out ./fake/mock_generator.go . Generator:MockGenerator
+type Generator interface {
+	Generate(data GithubData) error
 }
 
 // Generates files specific to GitHub according to status metadata:
@@ -32,23 +33,23 @@ type generator interface {
 func main() {
 	folder := flag.String("folder", ".", "folder investigated for codeowners")
 	allowlistFilePath := flag.String("allowlist", "cmd/githubgen/allowlist.txt", "path to a file containing an allowlist of members outside the OpenTelemetry organization")
-	skipGithubCheck := flag.Bool("skipgithub", false, "skip checking GitHub membership check for CODEOWNERS generator")
+	skipGithubCheck := flag.Bool("skipgithub", false, "skip checking GitHub membership check for CODEOWNERS Generator")
 	flag.Parse()
-	var generators []generator
+	var generators []Generator
 	for _, arg := range flag.Args() {
 		switch arg {
-		case "issue-templates":
-			generators = append(generators, issueTemplatesGenerator{})
+		// case "issue-templates":
+		// 	generators = append(generators, issueTemplatesGenerator{})
 		case "codeowners":
-			generators = append(generators, codeownersGenerator{skipGithub: *skipGithubCheck})
-		case "distributions":
-			generators = append(generators, distributionsGenerator{})
+			generators = append(generators, &codeownersGenerator{skipGithub: *skipGithubCheck})
+		// case "distributions":
+		// 	generators = append(generators, distributionsGenerator{})
 		default:
-			panic(fmt.Sprintf("Unknown generator: %s", arg))
+			panic(fmt.Sprintf("Unknown Generator: %s", arg))
 		}
 	}
 	if len(generators) == 0 {
-		generators = []generator{issueTemplatesGenerator{}, codeownersGenerator{skipGithub: *skipGithubCheck}}
+		generators = []Generator{&issueTemplatesGenerator{}, &codeownersGenerator{skipGithub: *skipGithubCheck}}
 	}
 	if err := run(*folder, *allowlistFilePath, generators); err != nil {
 		log.Fatal(err)
@@ -84,7 +85,7 @@ type distributionData struct {
 	Maintainers []string `yaml:"maintainers,omitempty"`
 }
 
-type githubData struct {
+type GithubData struct {
 	folders           []string
 	codeowners        []string
 	allowlistFilePath string
@@ -112,7 +113,7 @@ func loadMetadata(filePath string) (metadata, error) {
 	return md, nil
 }
 
-func run(folder string, allowlistFilePath string, generators []generator) error {
+func run(folder string, allowlistFilePath string, generators []Generator) error {
 	components := map[string]metadata{}
 	var foldersList []string
 	maxLength := 0
@@ -161,7 +162,7 @@ func run(folder string, allowlistFilePath string, generators []generator) error 
 		return err
 	}
 
-	data := &githubData{
+	data := GithubData{
 		folders:           foldersList,
 		codeowners:        allCodeowners,
 		allowlistFilePath: allowlistFilePath,
@@ -171,7 +172,7 @@ func run(folder string, allowlistFilePath string, generators []generator) error 
 	}
 
 	for _, g := range generators {
-		if err = g.generate(data); err != nil {
+		if err = g.Generate(data); err != nil {
 			return err
 		}
 	}

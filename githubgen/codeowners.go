@@ -74,7 +74,7 @@ type codeownersGenerator struct {
 	skipGithub bool
 }
 
-func (cg codeownersGenerator) generate(data *githubData) error {
+func (cg *codeownersGenerator) Generate(data GithubData) error {
 	allowlistData, err := os.ReadFile(data.allowlistFilePath)
 	if err != nil {
 		return err
@@ -190,7 +190,7 @@ LOOP:
 	return nil
 }
 
-func (cg codeownersGenerator) getGithubMembers() (map[string]struct{}, error) {
+func (cg *codeownersGenerator) getGithubMembers() (map[string]struct{}, error) {
 	if cg.skipGithub {
 		// don't try to get organization members if no token is expected
 		return map[string]struct{}{}, nil

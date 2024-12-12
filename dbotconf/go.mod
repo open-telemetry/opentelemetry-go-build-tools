@@ -1,6 +1,8 @@
 module go.opentelemetry.io/build-tools/dbotconf
 
-go 1.22.0
+go 1.23
+
+toolchain go1.23.4
 
 require (
 	github.com/spf13/cobra v1.8.1
