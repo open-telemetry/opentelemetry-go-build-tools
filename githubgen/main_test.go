@@ -1,8 +1,6 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-// nolint
-
 package main
 
 import (
@@ -32,7 +30,7 @@ func Test_run(t *testing.T) {
 				folder:            ".",
 				allowlistFilePath: "cmd/githubgen/allowlist.txt",
 				generators: fake.MockGenerator{
-					GenerateFunc: func(data datatype.GithubData) error {
+					GenerateFunc: func(_ datatype.GithubData) error {
 						return nil
 					},
 				},
@@ -47,6 +45,8 @@ func Test_run(t *testing.T) {
 			wantErr: false,
 		},
 	}
+	
+	// nolint:govet
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := run(tt.args.folder, tt.args.allowlistFilePath, []datatype.Generator{&tt.args.generators}, tt.args.distributions); (err != nil) != tt.wantErr {
