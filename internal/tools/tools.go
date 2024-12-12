@@ -26,4 +26,5 @@ import (
 	_ "go.opentelemetry.io/build-tools/dbotconf"
 	_ "go.opentelemetry.io/build-tools/multimod"
 	_ "golang.org/x/vuln/cmd/govulncheck"
+	_ "github.com/matryer/moq"
 )
