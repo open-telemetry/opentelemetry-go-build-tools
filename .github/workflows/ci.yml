@@ -31,12 +31,16 @@ jobs:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/go.sum') }}
     - name: Tools cache
+      id: cache-tools
       uses: actions/cache@v4
       env:
         cache-name: go-tools-cache
       with:
         path: ~/.tools
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('./internal/tools/**') }}
+    - name: Install tools
+      if: steps.cache-tools.outputs.cache-hit != true
+      run: make tools
     - name: Run linters
       run: make multimod-verify dependabot-check license-check lint
     - name: Build
