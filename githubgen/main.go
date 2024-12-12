@@ -13,10 +13,11 @@ import (
 	"path/filepath"
 	"slices"
 
-	"go.opentelemetry.io/build-tools/githubgen/datatype"
 	"go.opentelemetry.io/collector/confmap"
 	"go.opentelemetry.io/collector/confmap/provider/fileprovider"
 	"gopkg.in/yaml.v3"
+
+	"go.opentelemetry.io/build-tools/githubgen/datatype"
 )
 
 const unmaintainedStatus = "unmaintained"

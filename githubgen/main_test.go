@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	"go.opentelemetry.io/build-tools/githubgen/datatype"
 	"go.opentelemetry.io/build-tools/githubgen/datatype/fake"
 )
@@ -45,7 +46,7 @@ func Test_run(t *testing.T) {
 			wantErr: false,
 		},
 	}
-	
+
 	// nolint:govet
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
