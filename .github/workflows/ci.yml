@@ -41,6 +41,7 @@ jobs:
     - name: Install tools
       if: steps.cache-tools.outputs.cache-hit != true
       run: make tools
+    - run: ls -la .tools
     - name: Run linters
       run: make multimod-verify dependabot-check license-check lint
     - name: Build
