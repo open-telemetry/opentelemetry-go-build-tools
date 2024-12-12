@@ -10,6 +10,8 @@ import (
 	"sort"
 
 	"gopkg.in/yaml.v3"
+
+	"go.opentelemetry.io/build-tools/githubgen/datatype"
 )
 
 type distributionsGenerator struct{}
@@ -21,10 +23,10 @@ type distOutput struct {
 	Components  map[string][]string `yaml:"components"`
 }
 
-func (cg *distributionsGenerator) Generate(data GithubData) error {
-	for _, dist := range data.distributions {
+func (cg *distributionsGenerator) Generate(data datatype.GithubData) error {
+	for _, dist := range data.Distributions {
 		components := map[string][]string{}
-		for _, c := range data.components {
+		for _, c := range data.Components {
 			inDistro := false
 			for _, componentDistro := range c.Status.Distributions {
 				if dist.Name == componentDistro {

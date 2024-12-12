@@ -9,6 +9,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	"go.opentelemetry.io/build-tools/githubgen/datatype"
 )
 
 const (
@@ -33,9 +35,9 @@ func folderToShortName(folder string) string {
 
 type issueTemplatesGenerator struct{}
 
-func (itg *issueTemplatesGenerator) Generate(data GithubData) error {
+func (itg *issueTemplatesGenerator) Generate(data datatype.GithubData) error {
 	keys := map[string]struct{}{}
-	for _, f := range data.folders {
+	for _, f := range data.Folders {
 		keys[folderToShortName(f)] = struct{}{}
 	}
 	shortNames := make([]string, 0, len(keys))

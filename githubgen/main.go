@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"slices"
 
+	"go.opentelemetry.io/build-tools/githubgen/datatype"
 	"go.opentelemetry.io/collector/confmap"
 	"go.opentelemetry.io/collector/confmap/provider/fileprovider"
 	"gopkg.in/yaml.v3"
@@ -20,12 +21,7 @@ import (
 
 const unmaintainedStatus = "unmaintained"
 
-//go:generate moq -pkg fake -skip-ensure -out ./fake/mock_generator.go . Generator:MockGenerator
-type Generator interface {
-	Generate(data GithubData) error
-}
-
-// Generates files specific to GitHub according to status metadata:
+// Generates files specific to GitHub according to status datatype.Metadata:
 // .github/CODEOWNERS
 // .github/ALLOWLIST
 // .github/ISSUE_TEMPLATES/*.yaml (list of components)
@@ -33,9 +29,9 @@ type Generator interface {
 func main() {
 	folder := flag.String("folder", ".", "folder investigated for codeowners")
 	allowlistFilePath := flag.String("allowlist", "cmd/githubgen/allowlist.txt", "path to a file containing an allowlist of members outside the OpenTelemetry organization")
-	skipGithubCheck := flag.Bool("skipgithub", false, "skip checking GitHub membership check for CODEOWNERS Generator")
+	skipGithubCheck := flag.Bool("skipgithub", false, "skip checking GitHub membership check for CODEOWNERS datatype.Generator")
 	flag.Parse()
-	var generators []Generator
+	var generators []datatype.Generator
 	for _, arg := range flag.Args() {
 		switch arg {
 		// case "issue-templates":
@@ -45,67 +41,29 @@ func main() {
 		// case "distributions":
 		// 	generators = append(generators, distributionsGenerator{})
 		default:
-			panic(fmt.Sprintf("Unknown Generator: %s", arg))
+			panic(fmt.Sprintf("Unknown datatype.Generator: %s", arg))
 		}
 	}
 	if len(generators) == 0 {
-		generators = []Generator{&issueTemplatesGenerator{}, &codeownersGenerator{skipGithub: *skipGithubCheck}}
+		generators = []datatype.Generator{&issueTemplatesGenerator{}, &codeownersGenerator{skipGithub: *skipGithubCheck}}
 	}
 	if err := run(*folder, *allowlistFilePath, generators); err != nil {
 		log.Fatal(err)
 	}
 }
 
-type codeowners struct {
-	// Active codeowners
-	Active []string `mapstructure:"active"`
-	// Emeritus codeowners
-	Emeritus []string `mapstructure:"emeritus"`
-}
-
-type Status struct {
-	Stability     map[string][]string `mapstructure:"stability"`
-	Distributions []string            `mapstructure:"distributions"`
-	Class         string              `mapstructure:"class"`
-	Warnings      []string            `mapstructure:"warnings"`
-	Codeowners    *codeowners         `mapstructure:"codeowners"`
-}
-type metadata struct {
-	// Type of the component.
-	Type string `mapstructure:"type"`
-	// Type of the parent component (applicable to subcomponents).
-	Parent string `mapstructure:"parent"`
-	// Status information for the component.
-	Status *Status `mapstructure:"status"`
-}
-
-type distributionData struct {
-	Name        string   `yaml:"name"`
-	URL         string   `yaml:"url"`
-	Maintainers []string `yaml:"maintainers,omitempty"`
-}
-
-type GithubData struct {
-	folders           []string
-	codeowners        []string
-	allowlistFilePath string
-	maxLength         int
-	components        map[string]metadata
-	distributions     []distributionData
-}
-
-func loadMetadata(filePath string) (metadata, error) {
+func loadMetadata(filePath string) (datatype.Metadata, error) {
 	cp, err := fileprovider.NewFactory().Create(confmap.ProviderSettings{}).Retrieve(context.Background(), "file:"+filePath, nil)
 	if err != nil {
-		return metadata{}, err
+		return datatype.Metadata{}, err
 	}
 
 	conf, err := cp.AsConf()
 	if err != nil {
-		return metadata{}, err
+		return datatype.Metadata{}, err
 	}
 
-	md := metadata{}
+	md := datatype.Metadata{}
 	if err := conf.Unmarshal(&md, confmap.WithIgnoreUnused()); err != nil {
 		return md, err
 	}
@@ -113,13 +71,13 @@ func loadMetadata(filePath string) (metadata, error) {
 	return md, nil
 }
 
-func run(folder string, allowlistFilePath string, generators []Generator) error {
-	components := map[string]metadata{}
+func run(folder string, allowlistFilePath string, generators []datatype.Generator) error {
+	components := map[string]datatype.Metadata{}
 	var foldersList []string
 	maxLength := 0
 	var allCodeowners []string
 	err := filepath.Walk(folder, func(path string, info fs.FileInfo, _ error) error {
-		if info.Name() == "metadata.yaml" {
+		if info.Name() == "datatype.Metadata.yaml" {
 			m, err := loadMetadata(path)
 			if err != nil {
 				return err
@@ -162,13 +120,13 @@ func run(folder string, allowlistFilePath string, generators []Generator) error 
 		return err
 	}
 
-	data := GithubData{
-		folders:           foldersList,
-		codeowners:        allCodeowners,
-		allowlistFilePath: allowlistFilePath,
-		maxLength:         maxLength,
-		components:        components,
-		distributions:     distributions,
+	data := datatype.GithubData{
+		Folders:           foldersList,
+		Codeowners:        allCodeowners,
+		AllowlistFilePath: allowlistFilePath,
+		MaxLength:         maxLength,
+		Components:        components,
+		Distributions:     distributions,
 	}
 
 	for _, g := range generators {
@@ -179,8 +137,8 @@ func run(folder string, allowlistFilePath string, generators []Generator) error 
 	return nil
 }
 
-func getDistributions(folder string) ([]distributionData, error) {
-	var distributions []distributionData
+func getDistributions(folder string) ([]datatype.DistributionData, error) {
+	var distributions []datatype.DistributionData
 	dd, err := os.ReadFile(filepath.Join(folder, "distributions.yaml")) // nolint: gosec
 	if err != nil {
 		return nil, err

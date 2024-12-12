@@ -4,54 +4,54 @@
 package fake
 
 import (
-	"go.opentelemetry.io/build-tools/githubgen"
+	"go.opentelemetry.io/build-tools/githubgen/datatype"
 	"sync"
 )
 
-// MockGenerator is a mock implementation of main.Generator.
+// MockGenerator is a mock implementation of datatype.Generator.
 //
 //	func TestSomethingThatUsesGenerator(t *testing.T) {
 //
-//		// make and configure a mocked main.Generator
+//		// make and configure a mocked datatype.Generator
 //		mockedGenerator := &MockGenerator{
-//			GenerateFunc: func(data main.GithubData) error {
+//			GenerateFunc: func(dataMoqParam datatype.GithubData) error {
 //				panic("mock out the Generate method")
 //			},
 //		}
 //
-//		// use mockedGenerator in code that requires main.Generator
+//		// use mockedGenerator in code that requires datatype.Generator
 //		// and then make assertions.
 //
 //	}
 type MockGenerator struct {
 	// GenerateFunc mocks the Generate method.
-	GenerateFunc func(data main.GithubData) error
+	GenerateFunc func(dataMoqParam datatype.GithubData) error
 
 	// calls tracks calls to the methods.
 	calls struct {
 		// Generate holds details about calls to the Generate method.
 		Generate []struct {
-			// Data is the data argument value.
-			Data main.GithubData
+			// DataMoqParam is the dataMoqParam argument value.
+			DataMoqParam datatype.GithubData
 		}
 	}
 	lockGenerate sync.RWMutex
 }
 
 // Generate calls GenerateFunc.
-func (mock *MockGenerator) Generate(data main.GithubData) error {
+func (mock *MockGenerator) Generate(dataMoqParam datatype.GithubData) error {
 	if mock.GenerateFunc == nil {
 		panic("MockGenerator.GenerateFunc: method is nil but Generator.Generate was just called")
 	}
 	callInfo := struct {
-		Data main.GithubData
+		DataMoqParam datatype.GithubData
 	}{
-		Data: data,
+		DataMoqParam: dataMoqParam,
 	}
 	mock.lockGenerate.Lock()
 	mock.calls.Generate = append(mock.calls.Generate, callInfo)
 	mock.lockGenerate.Unlock()
-	return mock.GenerateFunc(data)
+	return mock.GenerateFunc(dataMoqParam)
 }
 
 // GenerateCalls gets all the calls that were made to Generate.
@@ -59,10 +59,10 @@ func (mock *MockGenerator) Generate(data main.GithubData) error {
 //
 //	len(mockedGenerator.GenerateCalls())
 func (mock *MockGenerator) GenerateCalls() []struct {
-	Data main.GithubData
+	DataMoqParam datatype.GithubData
 } {
 	var calls []struct {
-		Data main.GithubData
+		DataMoqParam datatype.GithubData
 	}
 	mock.lockGenerate.RLock()
 	calls = mock.calls.Generate
