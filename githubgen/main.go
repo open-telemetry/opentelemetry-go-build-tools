@@ -47,7 +47,13 @@ func main() {
 	if len(generators) == 0 {
 		generators = []datatype.Generator{&issueTemplatesGenerator{}, &codeownersGenerator{skipGithub: *skipGithubCheck}}
 	}
-	if err := run(*folder, *allowlistFilePath, generators); err != nil {
+
+	distributions, err := getDistributions(*folder)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err = run(*folder, *allowlistFilePath, generators, distributions); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -71,13 +77,13 @@ func loadMetadata(filePath string) (datatype.Metadata, error) {
 	return md, nil
 }
 
-func run(folder string, allowlistFilePath string, generators []datatype.Generator) error {
+func run(folder string, allowlistFilePath string, generators []datatype.Generator, distros []datatype.DistributionData) error {
 	components := map[string]datatype.Metadata{}
 	var foldersList []string
 	maxLength := 0
 	var allCodeowners []string
 	err := filepath.Walk(folder, func(path string, info fs.FileInfo, _ error) error {
-		if info.Name() == "datatype.Metadata.yaml" {
+		if info.Name() == "metadata.yaml" {
 			m, err := loadMetadata(path)
 			if err != nil {
 				return err
@@ -115,18 +121,13 @@ func run(folder string, allowlistFilePath string, generators []datatype.Generato
 	slices.Sort(allCodeowners)
 	allCodeowners = slices.Compact(allCodeowners)
 
-	distributions, err := getDistributions(folder)
-	if err != nil {
-		return err
-	}
-
 	data := datatype.GithubData{
 		Folders:           foldersList,
 		Codeowners:        allCodeowners,
 		AllowlistFilePath: allowlistFilePath,
 		MaxLength:         maxLength,
 		Components:        components,
-		Distributions:     distributions,
+		Distributions:     distros,
 	}
 
 	for _, g := range generators {

@@ -14,6 +14,7 @@ func Test_run(t *testing.T) {
 		folder            string
 		allowlistFilePath string
 		generators        fake.MockGenerator
+		distributions     []datatype.DistributionData
 	}
 	tests := []struct {
 		name    string
@@ -25,17 +26,28 @@ func Test_run(t *testing.T) {
 			args: args{
 				folder:            ".",
 				allowlistFilePath: "cmd/githubgen/allowlist.txt",
-				generators:        fake.MockGenerator{},
+				generators: fake.MockGenerator{
+					GenerateFunc: func(data datatype.GithubData) error {
+						return nil
+					},
+				},
+				distributions: []datatype.DistributionData{
+					{
+						Name:        "my-distro",
+						URL:         "some-url",
+						Maintainers: nil,
+					},
+				},
 			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := run(tt.args.folder, tt.args.allowlistFilePath, []datatype.Generator{&tt.args.generators}); (err != nil) != tt.wantErr {
+			if err := run(tt.args.folder, tt.args.allowlistFilePath, []datatype.Generator{&tt.args.generators}, tt.args.distributions); (err != nil) != tt.wantErr {
 				t.Errorf("run() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			require.Equal(t, tt.args.generators.GenerateCalls(), 1)
+			require.Equal(t, len(tt.args.generators.GenerateCalls()), 1)
 		})
 	}
 }
