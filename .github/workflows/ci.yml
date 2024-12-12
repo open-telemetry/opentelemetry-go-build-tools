@@ -39,7 +39,7 @@ jobs:
         path: .tools
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('./internal/tools/**') }}
     - name: Install tools
-      if: steps.cache-tools.outputs.cache-hit != true
+      if: steps.cache-tools.outputs.cache-hit != 'true'
       run: make tools
     - run: ls .tools
     - name: Run linters
