@@ -14,7 +14,7 @@ import (
 //
 //		// make and configure a mocked datatype.Generator
 //		mockedGenerator := &MockGenerator{
-//			GenerateFunc: func(dataMoqParam datatype.GithubData) error {
+//			GenerateFunc: func(data datatype.GithubData) error {
 //				panic("mock out the Generate method")
 //			},
 //		}
@@ -25,33 +25,33 @@ import (
 //	}
 type MockGenerator struct {
 	// GenerateFunc mocks the Generate method.
-	GenerateFunc func(dataMoqParam datatype.GithubData) error
+	GenerateFunc func(data datatype.GithubData) error
 
 	// calls tracks calls to the methods.
 	calls struct {
 		// Generate holds details about calls to the Generate method.
 		Generate []struct {
-			// DataMoqParam is the dataMoqParam argument value.
-			DataMoqParam datatype.GithubData
+			// Data is the data argument value.
+			Data datatype.GithubData
 		}
 	}
 	lockGenerate sync.RWMutex
 }
 
 // Generate calls GenerateFunc.
-func (mock *MockGenerator) Generate(dataMoqParam datatype.GithubData) error {
+func (mock *MockGenerator) Generate(data datatype.GithubData) error {
 	if mock.GenerateFunc == nil {
 		panic("MockGenerator.GenerateFunc: method is nil but Generator.Generate was just called")
 	}
 	callInfo := struct {
-		DataMoqParam datatype.GithubData
+		Data datatype.GithubData
 	}{
-		DataMoqParam: dataMoqParam,
+		Data: data,
 	}
 	mock.lockGenerate.Lock()
 	mock.calls.Generate = append(mock.calls.Generate, callInfo)
 	mock.lockGenerate.Unlock()
-	return mock.GenerateFunc(dataMoqParam)
+	return mock.GenerateFunc(data)
 }
 
 // GenerateCalls gets all the calls that were made to Generate.
@@ -59,10 +59,10 @@ func (mock *MockGenerator) Generate(dataMoqParam datatype.GithubData) error {
 //
 //	len(mockedGenerator.GenerateCalls())
 func (mock *MockGenerator) GenerateCalls() []struct {
-	DataMoqParam datatype.GithubData
+	Data datatype.GithubData
 } {
 	var calls []struct {
-		DataMoqParam datatype.GithubData
+		Data datatype.GithubData
 	}
 	mock.lockGenerate.RLock()
 	calls = mock.calls.Generate
