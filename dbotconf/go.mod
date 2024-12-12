@@ -2,8 +2,6 @@ module go.opentelemetry.io/build-tools/dbotconf
 
 go 1.22.0
 
-toolchain go1.23.4
-
 require (
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.10.0

@@ -2,8 +2,6 @@ module go.opentelemetry.io/build-tools/semconvgen
 
 go 1.22.0
 
-toolchain go1.23.4
-
 require (
 	github.com/spf13/pflag v1.0.5
 	go.opentelemetry.io/build-tools v0.15.0
