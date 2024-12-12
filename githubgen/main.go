@@ -34,12 +34,12 @@ func main() {
 	var generators []datatype.Generator
 	for _, arg := range flag.Args() {
 		switch arg {
-		// case "issue-templates":
-		// 	generators = append(generators, issueTemplatesGenerator{})
+		case "issue-templates":
+			generators = append(generators, &issueTemplatesGenerator{})
 		case "codeowners":
 			generators = append(generators, &codeownersGenerator{skipGithub: *skipGithubCheck})
-		// case "distributions":
-		// 	generators = append(generators, distributionsGenerator{})
+		case "distributions":
+			generators = append(generators, &distributionsGenerator{})
 		default:
 			panic(fmt.Sprintf("Unknown datatype.Generator: %s", arg))
 		}
