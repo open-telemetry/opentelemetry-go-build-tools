@@ -3,7 +3,7 @@
 
 package datatype
 
-//go:generate go run github.com/matryer/moq@v0.4.0 -pkg fake -skip-ensure -out ./fake/mock_generator.go . Generator:MockGenerator
+//go:generate moq -pkg fake -skip-ensure -out ./fake/mock_generator.go . Generator:MockGenerator
 type Generator interface {
 	Generate(data GithubData) error
 }
