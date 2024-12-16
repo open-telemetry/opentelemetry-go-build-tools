@@ -43,10 +43,10 @@ jobs:
       run: make tools
 #    - name: Run linters
 #      run: make multimod-verify dependabot-check license-check lint
-#    - name: Build
-#      run: make build
-#    - name: Check clean repository
-#      run: make check-clean-work-tree
+    - name: Build
+      run: make build
+    - name: Check clean repository
+      run: make check-clean-work-tree
 
   test-race:
     strategy:
