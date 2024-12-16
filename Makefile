@@ -88,11 +88,10 @@ NEW_PATH := $(UPDATED_PATH)$(PATH_SEPARATOR)$(PATH)
 
 .PHONY: generate build
 generate:
-	export PATH="$(UPDATED_PATH)$(PATH_SEPARATOR)$${PATH}"; \
 	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
 	  echo "$(GO) generate $${dir}/..."; \
 	  (cd "$${dir}" && \
-	    $(GO) generate ./...); \
+	    PATH="$(UPDATED_PATH)$(PATH_SEPARATOR)$${PATH}" $(GO) generate ./...); \
 	done
 
 build: generate
