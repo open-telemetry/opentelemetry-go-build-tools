@@ -82,12 +82,13 @@ tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD) $(CROSSLINK) $(CHLOG
 # Build
 
 UPDATED_PATH := $(shell echo "$(TOOLS)" | $(NORMALIZE_DIRS))
+NEW_PATH := "$(UPDATED_PATH):$PATH"
 
 .PHONY: generate build
 generate:
 	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
 	  echo "$(GO) generate $${dir}/..."; \
-	  echo "Updated TOOLS PATH: $(UPDATED_PATH)"; \
+	  echo "new path: $(NEW_PATH)"; \
 	  echo "Old TOOLS PATH: $(TOOLS)"; \
 	  (cd "$${dir}" && \
 	    PATH="$(UPDATED_PATH):$${PATH}" $(GO) generate ./...); \
