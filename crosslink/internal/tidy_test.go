@@ -28,6 +28,8 @@ func TestTidy(t *testing.T) {
 	defaultConfig := DefaultRunConfig()
 	defaultConfig.Logger, _ = zap.NewDevelopment()
 	defaultConfig.Verbose = true
+	defaultConfig.Validate = true
+
 	tests := []struct {
 		name     string
 		mock     string
