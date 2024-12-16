@@ -21,8 +21,10 @@ ifeq ($(UNIX_SHELL_ON_WINDOWS),true)
 	# used by the Makefile shell.
 	# The backslash needs to be doubled so its passed correctly to the shell.
 	NORMALIZE_DIRS = sed -e 's/^/\\//' -e 's/://' -e 's/\\\\/\\//g' | sort
+	PATH_SEPARATOR=";"
 else
 	NORMALIZE_DIRS = sort
+	PATH_SEPARATOR=":"
 endif
 
 TOOLS_MOD_DIR := ./internal/tools
@@ -82,7 +84,7 @@ tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD) $(CROSSLINK) $(CHLOG
 # Build
 
 UPDATED_PATH := $(shell echo "$(TOOLS)" | $(NORMALIZE_DIRS))
-NEW_PATH := "$(UPDATED_PATH):$(PATH)"
+NEW_PATH := "$(UPDATED_PATH)$(PATH_SEPARATOR)$(PATH)"
 
 .PHONY: generate build
 generate:
@@ -91,7 +93,7 @@ generate:
 	  echo "new path: $(NEW_PATH)"; \
 	  echo "Old TOOLS PATH: $(TOOLS)"; \
 	  (cd "$${dir}" && \
-	    PATH="$(UPDATED_PATH):$${PATH}" $(GO) generate ./...); \
+	    PATH="$(UPDATED_PATH)$(PATH_SEPARATOR)$${PATH}" $(GO) generate ./...); \
 	done
 
 build: generate
