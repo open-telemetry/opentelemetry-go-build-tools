@@ -90,8 +90,9 @@ NEW_PATH := $(UPDATED_PATH)$(PATH_SEPARATOR)$(PATH)
 generate:
 	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
 	  echo "$(GO) generate $${dir}/..."; \
+	  export PATH="$(UPDATED_PATH)$(PATH_SEPARATOR)$${PATH}"; \
 	  (cd "$${dir}" && \
-	    PATH="$(UPDATED_PATH)$(PATH_SEPARATOR)$${PATH}" $(GO) generate ./...); \
+	    $(GO) generate ./...); \
 	done
 
 build: generate
