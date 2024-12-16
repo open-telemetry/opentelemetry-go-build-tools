@@ -87,6 +87,8 @@ UPDATED_PATH := $(shell echo "$(TOOLS)" | $(NORMALIZE_DIRS))
 generate:
 	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
 	  echo "$(GO) generate $${dir}/..."; \
+	  echo "Current PATH: $${PATH}"; \
+	  echo "Updated TOOLS PATH: $${UPDATED_PATH}"; \
 	  (cd "$${dir}" && \
 	    PATH="$(UPDATED_PATH):$${PATH}" $(GO) generate ./...); \
 	done
