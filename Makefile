@@ -21,7 +21,7 @@ ifeq ($(UNIX_SHELL_ON_WINDOWS),true)
 	# used by the Makefile shell.
 	# The backslash needs to be doubled so its passed correctly to the shell.
 	NORMALIZE_DIRS = sed -e 's/^/\\//' -e 's/://' -e 's/\\\\/\\//g' | sort
-	PATH_SEPARATOR=;
+	PATH_SEPARATOR=:
 else
 	NORMALIZE_DIRS = sort
 	PATH_SEPARATOR=:
