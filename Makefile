@@ -83,7 +83,7 @@ tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD) $(CROSSLINK) $(CHLOG
 
 # Build
 
-UPDATED_PATH := $(shell echo "$(TOOLS)" | $(NORMALIZE_DIRS))
+UPDATED_PATH := $(shell echo $(TOOLS) | $(NORMALIZE_DIRS))
 NEW_PATH := $(UPDATED_PATH)$(PATH_SEPARATOR)$(PATH)
 
 .PHONY: generate build
