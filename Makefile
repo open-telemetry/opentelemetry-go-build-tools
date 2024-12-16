@@ -12,6 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+SHELL_CASE_EXP = case "$$(uname -s)" in CYGWIN*|MINGW*|MSYS*) echo "true";; esac;
+UNIX_SHELL_ON_WINDOWS := $(shell $(SHELL_CASE_EXP))
+
+ifeq ($(UNIX_SHELL_ON_WINDOWS),true)
+	# The "sed" transformation below is needed on Windows, since commands like `go list -f '{{ .Dir }}'`
+	# return Windows paths and such paths are incompatible with other *nix tools, like `find`,
+	# used by the Makefile shell.
+	# The backslash needs to be doubled so its passed correctly to the shell.
+	NORMALIZE_DIRS = sed -e 's/^/\\//' -e 's/://' -e 's/\\\\/\\//g' | sort
+else
+	NORMALIZE_DIRS = sort
+endif
+
 TOOLS_MOD_DIR := ./internal/tools
 
 # All source code and documents. Used in spell check.
@@ -68,12 +81,14 @@ tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD) $(CROSSLINK) $(CHLOG
 
 # Build
 
+UPDATED_PATH := $(shell echo "$(TOOLS)" | $(NORMALIZE_DIRS))
+
 .PHONY: generate build
 generate:
 	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
 	  echo "$(GO) generate $${dir}/..."; \
 	  (cd "$${dir}" && \
-	    PATH="$(TOOLS):$${PATH}" $(GO) generate ./...); \
+	    PATH="$(UPDATED_PATH):$${PATH}" $(GO) generate ./...); \
 	done
 
 build: generate
