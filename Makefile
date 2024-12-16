@@ -86,9 +86,9 @@ UPDATED_PATH := $(shell echo "$(TOOLS)" | $(NORMALIZE_DIRS))
 .PHONY: generate build
 generate:
 	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
-  	  echo "$(UPDATE_PATH)"; \
 	  echo "$(GO) generate $${dir}/..."; \
 	  echo "Updated TOOLS PATH: $(UPDATED_PATH)"; \
+	  echo "Old TOOLS PATH: $(TOOLS)"; \
 	  (cd "$${dir}" && \
 	    PATH="$(UPDATED_PATH):$${PATH}" $(GO) generate ./...); \
 	done
