@@ -21,10 +21,10 @@ ifeq ($(UNIX_SHELL_ON_WINDOWS),true)
 	# used by the Makefile shell.
 	# The backslash needs to be doubled so its passed correctly to the shell.
 	NORMALIZE_DIRS = sed -e 's/^/\\//' -e 's/://' -e 's/\\\\/\\//g' | sort
-	PATH_SEPARATOR=";"
+	PATH_SEPARATOR=;
 else
 	NORMALIZE_DIRS = sort
-	PATH_SEPARATOR=":"
+	PATH_SEPARATOR=:
 endif
 
 TOOLS_MOD_DIR := ./internal/tools
@@ -90,8 +90,6 @@ NEW_PATH := $(UPDATED_PATH)$(PATH_SEPARATOR)$(PATH)
 generate:
 	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
 	  echo "$(GO) generate $${dir}/..."; \
-	  echo "new path: $(NEW_PATH)"; \
-	  echo "Old TOOLS PATH: $(TOOLS)"; \
 	  (cd "$${dir}" && \
 	    PATH="$(UPDATED_PATH)$(PATH_SEPARATOR)$${PATH}" $(GO) generate ./...); \
 	done
