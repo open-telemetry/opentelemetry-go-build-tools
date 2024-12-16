@@ -1,0 +1,5 @@
+# This file lists the modules that are expected to have circular dependencies.
+# If it does not match the actual list, `crosslink tidy` will return an error.
+testA
+testB
+testC

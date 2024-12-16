@@ -18,6 +18,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path"
 	"slices"
 	"strings"
 
@@ -56,7 +57,7 @@ func Tidy(rc RunConfig, outputPath string) error {
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
 			line := scanner.Text()
-			if line != "" {
+			if line != "" && !strings.HasPrefix(line, "#") {
 				allowCircular = append(allowCircular, line)
 			}
 		}
@@ -74,8 +75,11 @@ func Tidy(rc RunConfig, outputPath string) error {
 			rc.Logger.Debug("ignoring module outside root module namespace", zap.String("mod_name", name))
 			return nil
 		}
+		if !strings.HasSuffix(filePath, "go.mod") {
+			return fmt.Errorf("logic error: 'forGoModFiles' should iterate over 'go.mod' files")
+		}
 		modsAlpha = append(modsAlpha, name)
-		modPath, _ := strings.CutSuffix(filePath, "/go.mod")
+		modPath := path.Dir(filePath)
 		graph[name] = &graphNode{
 			file:    file,
 			path:    modPath,
@@ -91,10 +95,10 @@ func Tidy(rc RunConfig, outputPath string) error {
 		return fmt.Errorf("failed during file walk: %w", err)
 	}
 
-	for _, deps := range graph {
-		for _, req := range deps.file.Require {
+	for _, node := range graph {
+		for _, req := range node.file.Require {
 			if _, ok := graph[req.Mod.Path]; ok {
-				deps.deps = append(deps.deps, req.Mod.Path)
+				node.deps = append(node.deps, req.Mod.Path)
 			}
 		}
 	}
@@ -107,7 +111,7 @@ func Tidy(rc RunConfig, outputPath string) error {
 
 	var modsTopo []string
 	nextIdx := 0
-	unauthorizedRec := false
+	var circular []string
 	var stack []*graphNode
 
 	var visit func(mod *graphNode)
@@ -141,12 +145,7 @@ func Tidy(rc RunConfig, outputPath string) error {
 			}
 			if len(scc) > 1 { // circular dependencies
 				rc.Logger.Debug("found SCC in module graph", zap.Any("scc", scc))
-				for _, mod2 := range scc {
-					if !slices.Contains(allowCircular, mod2) {
-						fmt.Printf("module depends on itself: %s\n", mod2)
-						unauthorizedRec = true
-					}
-				}
+				circular = append(circular, scc...)
 			}
 
 			// Apply a naive solution for each SCC
@@ -158,13 +157,29 @@ func Tidy(rc RunConfig, outputPath string) error {
 		}
 	}
 	for _, modName := range modsAlpha {
-		visit(graph[modName])
+		mod := graph[modName]
+		if mod.index == -1 {
+			visit(mod)
+		}
 	}
 
 	rc.Logger.Debug("computed tidy schedule", zap.Int("schedule_len", len(modsTopo)))
 
-	if unauthorizedRec {
-		return fmt.Errorf("circular dependencies were found that are not allowlisted")
+	circularMismatch := false
+	for _, mod := range circular {
+		if !slices.Contains(allowCircular, mod) {
+			fmt.Printf("module has circular dependencies but is not allowlisted: %s\n", mod)
+			circularMismatch = true
+		}
+	}
+	for _, mod := range allowCircular {
+		if !slices.Contains(circular, mod) {
+			fmt.Printf("module is allowlisted but has no circular dependencies: %s\n", mod)
+			circularMismatch = true
+		}
+	}
+	if circularMismatch {
+		return fmt.Errorf("list of circular dependencies does not match allowlist")
 	}
 
 	// Writing out schedule
