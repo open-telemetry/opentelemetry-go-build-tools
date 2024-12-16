@@ -1,3 +1,17 @@
+// Copyright The OpenTelemetry Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package crosslink
 
 import (
@@ -24,13 +38,13 @@ func TestTidy(t *testing.T) {
 		{ // A -> B -> C should give CBA
 			name:     "testTidyAcyclic",
 			mock:     "testTidyAcyclic",
-			config:   func(config *RunConfig) {},
+			config:   func(*RunConfig) {},
 			expSched: []string{".", "testC", "testB", "testA"},
 		},
 		{ // A <=> B -> C without allowlist should error
 			name:   "testTidyNotAllowlisted",
 			mock:   "testTidyCyclic",
-			config: func(config *RunConfig) {},
+			config: func(*RunConfig) {},
 			expErr: "list of circular dependencies does not match allowlist",
 		},
 		{ // A <=> B -> C with an over-permissive allowlist should error
@@ -68,11 +82,10 @@ func TestTidy(t *testing.T) {
 			if test.expErr != "" {
 				require.ErrorContains(t, err, test.expErr, "expected error in Tidy")
 				return
-			} else {
-				require.NoError(t, err, "unexpected error in Tidy")
 			}
+			require.NoError(t, err, "unexpected error in Tidy")
 
-			outputBytes, err := os.ReadFile(outputPath)
+			outputBytes, err := os.ReadFile(outputPath) // #nosec G304 -- Path comes from os.MkdirTemp
 			require.NoError(t, err, "error reading output file")
 			schedule := strings.Split(string(outputBytes), "\n")
 			require.Equal(t, test.expSched, schedule, "generated schedule differs from expectation")
