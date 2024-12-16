@@ -90,8 +90,6 @@ NEW_PATH := $(UPDATED_PATH)$(PATH_SEPARATOR)$(PATH)z
 generate:
 	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
 	  echo "$(GO) generate $${dir}/..."; \
-	  echo "%path%"; \
-	  echo "%PATH%"; \
 	  (cd "$${dir}" && \
 	    PATH="$(UPDATED_PATH)$(PATH_SEPARATOR)$${PATH}" $(GO) generate ./...); \
 	done
