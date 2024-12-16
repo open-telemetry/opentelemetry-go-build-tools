@@ -88,7 +88,7 @@ generate:
 	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
   	  echo "$(UPDATE_PATH)"; \
 	  echo "$(GO) generate $${dir}/..."; \
-	  echo "Updated TOOLS PATH: $${UPDATED_PATH}"; \
+	  echo "Updated TOOLS PATH: $(UPDATED_PATH)"; \
 	  (cd "$${dir}" && \
 	    PATH="$(UPDATED_PATH):$${PATH}" $(GO) generate ./...); \
 	done
