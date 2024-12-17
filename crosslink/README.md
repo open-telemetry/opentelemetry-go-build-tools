@@ -163,9 +163,9 @@ for out-dated intra-repository Go modules.
 
     crosslink work --go=1.23
 
-### tidy
+### tidylist
 
-The 'tidy' command generates a sequence of intra-repository modules, such that
+The 'tidylist' command generates a sequence of intra-repository modules, such that
 running 'go mod tidy' on each module in this sequence guarantees that changes
 in the 'go.mod' of one module will be propagated to all of its dependent
 modules. This ensures that no modules are left in a broken 'updates to go.mod

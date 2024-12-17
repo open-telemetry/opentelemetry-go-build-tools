@@ -38,28 +38,28 @@ func TestTidy(t *testing.T) {
 		expSched []string
 	}{
 		{ // A -> B -> C should give CBA
-			name:     "testTidyAcyclic",
-			mock:     "testTidyAcyclic",
+			name:     "testTidyListAcyclic",
+			mock:     "testTidyListAcyclic",
 			config:   func(*RunConfig) {},
 			expSched: []string{".", "testC", "testB", "testA"},
 		},
 		{ // A <=> B -> C without allowlist should error
-			name:   "testTidyNotAllowlisted",
-			mock:   "testTidyCyclic",
+			name:   "testTidyListNotAllowlisted",
+			mock:   "testTidyListCyclic",
 			config: func(*RunConfig) {},
 			expErr: "list of circular dependencies does not match allowlist",
 		},
 		{ // A <=> B -> C with an over-permissive allowlist should error
-			name: "testTidyOverpermissive",
-			mock: "testTidyCyclic",
+			name: "testTidyListOverpermissive",
+			mock: "testTidyListCyclic",
 			config: func(config *RunConfig) {
 				config.AllowCircular = path.Join(config.RootPath, "allow-circular-overpermissive.txt")
 			},
 			expErr: "list of circular dependencies does not match allowlist",
 		},
 		{ // A <=> B -> C should give CBAB
-			name: "testTidyCyclic",
-			mock: "testTidyCyclic",
+			name: "testTidyListCyclic",
+			mock: "testTidyListCyclic",
 			config: func(config *RunConfig) {
 				config.AllowCircular = path.Join(config.RootPath, "allow-circular.txt")
 			},
@@ -79,13 +79,13 @@ func TestTidy(t *testing.T) {
 			config.RootPath = testDir
 			test.config(&config)
 
-			err = Tidy(config, outputPath)
+			err = TidyList(config, outputPath)
 
 			if test.expErr != "" {
-				require.ErrorContains(t, err, test.expErr, "expected error in Tidy")
+				require.ErrorContains(t, err, test.expErr, "expected error in TidyList")
 				return
 			}
-			require.NoError(t, err, "unexpected error in Tidy")
+			require.NoError(t, err, "unexpected error in TidyList")
 
 			outputBytes, err := os.ReadFile(outputPath) // #nosec G304 -- Path comes from os.MkdirTemp
 			require.NoError(t, err, "error reading output file")

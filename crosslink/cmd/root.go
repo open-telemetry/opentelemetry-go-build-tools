@@ -29,13 +29,13 @@ import (
 )
 
 type commandConfig struct {
-	runConfig    cl.RunConfig
-	excludeFlags []string
-	skipFlags    []string
-	rootCommand  cobra.Command
-	pruneCommand cobra.Command
-	workCommand  cobra.Command
-	tidyCommand  cobra.Command
+	runConfig       cl.RunConfig
+	excludeFlags    []string
+	skipFlags       []string
+	rootCommand     cobra.Command
+	pruneCommand    cobra.Command
+	workCommand     cobra.Command
+	tidyListCommand cobra.Command
 }
 
 func newCommandConfig() *commandConfig {
@@ -119,10 +119,10 @@ func newCommandConfig() *commandConfig {
 	}
 	c.rootCommand.AddCommand(&c.workCommand)
 
-	c.tidyCommand = cobra.Command{
-		Use:   "tidy output_path",
+	c.tidyListCommand = cobra.Command{
+		Use:   "tidylist output_path",
 		Short: "Generate a schedule of modules to tidy that guarantees full propagation of changes",
-		Long: "The 'tidy' command generates a sequence of intra-repository modules, such that\n" +
+		Long: "The 'tidylist' command generates a sequence of intra-repository modules, such that\n" +
 			"running 'go mod tidy' on each module in this sequence guarantees that changes\n" +
 			"in the 'go.mod' of one module will be propagated to all of its dependent\n" +
 			"modules. This ensures that no modules are left in a broken 'updates to go.mod\n" +
@@ -131,10 +131,10 @@ func newCommandConfig() *commandConfig {
 			"be checked against a provided allowlist.",
 		Args: cobra.ExactArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
-			return cl.Tidy(c.runConfig, args[0])
+			return cl.TidyList(c.runConfig, args[0])
 		},
 	}
-	c.rootCommand.AddCommand(&c.tidyCommand)
+	c.rootCommand.AddCommand(&c.tidyListCommand)
 
 	return c
 }
@@ -164,8 +164,8 @@ func init() {
 	comCfg.pruneCommand.Flags().StringSliceVar(&comCfg.excludeFlags, "exclude", []string{}, "list of comma separated go modules that crosslink will ignore in operations."+
 		"multiple calls of --exclude can be made")
 	comCfg.workCommand.Flags().StringVar(&comCfg.runConfig.GoVersion, "go", "1.22", "Go version applied when new go.work file is created")
-	comCfg.tidyCommand.Flags().StringVar(&comCfg.runConfig.AllowCircular, "allow-circular", "", "path to list of go modules that are allowed to have circular dependencies")
-	comCfg.tidyCommand.Flags().BoolVar(&comCfg.runConfig.Validate, "validate", false, "enables brute force validation of the tidy schedule")
+	comCfg.tidyListCommand.Flags().StringVar(&comCfg.runConfig.AllowCircular, "allow-circular", "", "path to list of go modules that are allowed to have circular dependencies")
+	comCfg.tidyListCommand.Flags().BoolVar(&comCfg.runConfig.Validate, "validate", false, "enables brute force validation of the tidy schedule")
 }
 
 // transform array slice into map

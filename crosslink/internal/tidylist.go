@@ -36,7 +36,7 @@ type graphNode struct {
 	onStack bool
 }
 
-func Tidy(rc RunConfig, outputPath string) error {
+func TidyList(rc RunConfig, outputPath string) error {
 	rc.Logger.Debug("crosslink run config", zap.Any("run_config", rc))
 
 	rootModule, err := identifyRootModule(rc.RootPath)
