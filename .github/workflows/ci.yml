@@ -43,6 +43,7 @@ jobs:
       run: make tools
     - name: Add .exe to tools on Windows
       if: matrix.os == 'windows-latest'
+      shell: bash
       run: |
         for file in ./.tools/*; do
           cp "$file" "${file}.exe"
