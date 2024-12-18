@@ -76,3 +76,26 @@ func forGoModules(logger *zap.Logger, rootPath string, fn func(path string) erro
 		return fn(path)
 	})
 }
+
+func forGoModFiles(rc RunConfig, fn func(modPath string, modName string, modFile *modfile.File) error) error {
+	return forGoModules(rc.Logger, rc.RootPath, func(path string) error {
+		if _, ok := rc.SkippedPaths[path]; ok {
+			rc.Logger.Debug("skipping", zap.String("path", path))
+			return nil
+		}
+		fullPath := filepath.Join(rc.RootPath, path)
+		modFile, err := os.ReadFile(filepath.Clean(fullPath))
+		if err != nil {
+			return fmt.Errorf("failed to read file: %w", err)
+		}
+
+		modContents, err := modfile.Parse(fullPath, modFile, nil)
+		if err != nil {
+			rc.Logger.Error("Modfile could not be parsed",
+				zap.Error(err),
+				zap.String("file_path", path))
+		}
+
+		return fn(path, modfile.ModulePath(modFile), modContents)
+	})
+}

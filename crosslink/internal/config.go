@@ -41,6 +41,8 @@ type RunConfig struct {
 	Overwrite     bool
 	Prune         bool
 	GoVersion     string
+	AllowCircular string
+	Validate      bool
 	Logger        *zap.Logger
 }
 
