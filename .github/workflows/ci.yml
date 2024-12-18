@@ -48,6 +48,7 @@ jobs:
         for file in ./.tools/*; do
           cp "$file" "${file}.exe"
         done
+    - run: ls ./.tools
 #    - name: Run linters
 #      run: make multimod-verify dependabot-check license-check lint
     - name: Build
