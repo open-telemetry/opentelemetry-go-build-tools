@@ -21,8 +21,10 @@ jobs:
       with:
         go-version: ${{ env.DEFAULT_GO_VERSION }}
         check-latest: true
+
     - name: Checkout Repo
       uses: actions/checkout@v4
+
     - name: Module cache
       uses: actions/cache@v4
       env:
@@ -30,17 +32,34 @@ jobs:
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/go.sum') }}
+
     - name: Tools cache
+      id: cache-tools
       uses: actions/cache@v4
       env:
         cache-name: go-tools-cache
       with:
-        path: ~/.tools
+        path: .tools
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('./internal/tools/**') }}
+
+    - name: Install tools
+      if: steps.cache-tools.outputs.cache-hit != 'true'
+      run: make tools
+
+    - name: Add .exe to tools on Windows
+      if: matrix.os == 'windows-latest'
+      shell: bash
+      run: |
+        for file in ./.tools/*; do
+          cp "$file" "${file}.exe"
+        done
+
     - name: Run linters
       run: make multimod-verify dependabot-check license-check lint
+
     - name: Build
       run: make build
+
     - name: Check clean repository
       run: make check-clean-work-tree
 
@@ -55,12 +74,15 @@ jobs:
       with:
         go-version: ${{ env.DEFAULT_GO_VERSION }}
         check-latest: true
+
     - name: Checkout Repo
       uses: actions/checkout@v4
+
     - name: Setup Environment
       run: |
         echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
         echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
     - name: Module cache
       uses: actions/cache@v4
       env:
@@ -68,6 +90,7 @@ jobs:
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/go.sum') }}
+
     - name: Run tests with race detector
       run: make test-race
 
@@ -79,12 +102,15 @@ jobs:
       with:
         go-version: ${{ env.DEFAULT_GO_VERSION }}
         check-latest: true
+
     - name: Checkout Repo
       uses: actions/checkout@v4
+
     - name: Setup Environment
       run: |
         echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
         echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
     - name: Module cache
       uses: actions/cache@v4
       env:
@@ -92,6 +118,7 @@ jobs:
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/go.sum') }}
+
     - name: Run coverage tests
       run: |
         make test-coverage
@@ -99,6 +126,7 @@ jobs:
         cp coverage.out $TEST_RESULTS
         cp coverage.txt $TEST_RESULTS
         cp coverage.html $TEST_RESULTS
+
     - name: Upload coverage report
       uses: codecov/codecov-action@v5.1.1
       with:
@@ -106,6 +134,7 @@ jobs:
         fail_ci_if_error: true
         verbose: true
         token: ${{ secrets.CODECOV_TOKEN }}
+
     - name: Store coverage test output
       uses: actions/upload-artifact@v4
       with:
