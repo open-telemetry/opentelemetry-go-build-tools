@@ -162,3 +162,13 @@ for out-dated intra-repository Go modules.
  Go version applied when new `go.work` file is created (default "1.22").
 
     crosslink work --go=1.23
+
+### tidylist
+
+The 'tidylist' command generates a sequence of intra-repository modules, such that
+running 'go mod tidy' on each module in this sequence guarantees that changes
+in the 'go.mod' of one module will be propagated to all of its dependent
+modules. This ensures that no modules are left in a broken 'updates to go.mod
+needed' state at the end. For an acyclic dependency graph, this corresponds to
+topological order. If modules are found to have circular dependencies, they will
+be checked against a provided allowlist.
