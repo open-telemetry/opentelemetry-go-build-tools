@@ -6,7 +6,7 @@ require (
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/joshdk/go-junit v1.0.0
 	go.uber.org/zap v1.27.0
-	golang.org/x/oauth2 v0.24.0
+	golang.org/x/oauth2 v0.25.0
 )
 
 require (
