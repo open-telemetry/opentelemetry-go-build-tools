@@ -4,6 +4,16 @@
 
 <!-- next version -->
 
+## v0.16.0
+
+### 🚀 New components 🚀
+
+- `githubgen`: Moved githubgen tool here from open-telemetry/opentelemetry-collector-contrib (#639)
+
+### 💡 Enhancements 💡
+
+- `crosslink`: Adds a 'tidy' subcommand to generate 'go mod tidy' schedules (#642)
+
 ## v0.15.0
 
 ### 💡 Enhancements 💡
