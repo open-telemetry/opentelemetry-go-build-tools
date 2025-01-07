@@ -32,7 +32,6 @@ func main() {
 	allowlistFilePath := flag.String("allowlist", "cmd/githubgen/allowlist.txt", "path to a file containing an allowlist of members outside the OpenTelemetry organization")
 	skipGithubCheck := flag.Bool("skipgithub", false, "skip checking GitHub membership check for CODEOWNERS datatype.Generator")
 	repoName := flag.String("repo-name", "", "name of the repository (e.g. \"OpenTelemetry Collector Contrib\")")
-	templateFolder := flag.String("template-folder", "", "path to a folder containing templates for githubgen")
 
 	flag.Parse()
 	var generators []datatype.Generator
