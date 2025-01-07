@@ -32,6 +32,7 @@ func main() {
 	allowlistFilePath := flag.String("allowlist", "cmd/githubgen/allowlist.txt", "path to a file containing an allowlist of members outside the OpenTelemetry organization")
 	skipGithubCheck := flag.Bool("skipgithub", false, "skip checking GitHub membership check for CODEOWNERS datatype.Generator")
 	repoName := flag.String("repo-name", "", "name of the repository (e.g. \"OpenTelemetry Collector Contrib\")")
+	defaultCodeOwner := flag.String("default-codeowners", "", "GitHub user or team name that will be used as default codeowner")
 
 	flag.Parse()
 	var generators []datatype.Generator
@@ -56,7 +57,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err = run(*folder, *allowlistFilePath, *repoName, generators, distributions); err != nil {
+	if err = run(*folder, *allowlistFilePath, *repoName, generators, distributions, *defaultCodeOwner); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -80,7 +81,7 @@ func loadMetadata(filePath string) (datatype.Metadata, error) {
 	return md, nil
 }
 
-func run(folder string, allowlistFilePath string, repoName string, generators []datatype.Generator, distros []datatype.DistributionData) error {
+func run(folder string, allowlistFilePath string, repoName string, generators []datatype.Generator, distros []datatype.DistributionData, defaultCodeOwner string) error {
 	components := map[string]datatype.Metadata{}
 	var foldersList []string
 	maxLength := 0
@@ -132,6 +133,7 @@ func run(folder string, allowlistFilePath string, repoName string, generators []
 		Components:        components,
 		Distributions:     distros,
 		RepoName:          repoName,
+		DefaultCodeOwner:  defaultCodeOwner,
 	}
 
 	for _, g := range generators {

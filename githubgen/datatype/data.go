@@ -16,6 +16,7 @@ type GithubData struct {
 	Components        map[string]Metadata
 	Distributions     []DistributionData
 	RepoName          string
+	DefaultCodeOwner  string
 }
 
 type Codeowners struct {
