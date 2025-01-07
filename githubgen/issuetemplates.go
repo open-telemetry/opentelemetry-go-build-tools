@@ -13,11 +13,6 @@ import (
 	"go.opentelemetry.io/build-tools/githubgen/datatype"
 )
 
-const (
-	startComponentList = `# Start Collector components list`
-	endComponentList   = `# End Collector components list`
-)
-
 func folderToShortName(folder string) string {
 	if folder == "internal/coreinternal" {
 		return "internal/core"
