@@ -20,59 +20,9 @@ type codeownersGenerator struct {
 }
 
 func (cg *codeownersGenerator) Generate(data datatype.GithubData) error {
-	allowlistData, err := os.ReadFile(data.AllowlistFilePath)
+	err := cg.verifyCodeRunnerOrgMembership(data)
 	if err != nil {
 		return err
-	}
-	allowlistLines := strings.Split(string(allowlistData), "\n")
-
-	allowlist := make(map[string]struct{}, len(allowlistLines))
-	unusedAllowlist := make(map[string]struct{}, len(allowlistLines))
-
-	for _, line := range allowlistLines {
-		if line == "" {
-			continue
-		}
-		allowlist[line] = struct{}{}
-		unusedAllowlist[line] = struct{}{}
-	}
-	var missingCodeowners []string
-	var duplicateCodeowners []string
-
-	members, err := cg.getGithubMembers()
-	if err != nil {
-		return err
-	}
-
-	for _, codeowner := range data.Codeowners {
-		_, present := members[codeowner]
-
-		if !present {
-			_, allowed := allowlist[codeowner]
-			delete(unusedAllowlist, codeowner)
-			allowed = allowed || strings.HasPrefix(codeowner, "open-telemetry/")
-			if !allowed {
-				missingCodeowners = append(missingCodeowners, codeowner)
-			}
-		} else if _, ok := allowlist[codeowner]; ok {
-			duplicateCodeowners = append(duplicateCodeowners, codeowner)
-		}
-	}
-	if len(missingCodeowners) > 0 && !cg.skipGithub {
-		sort.Strings(missingCodeowners)
-		return fmt.Errorf("codeowners are not members: %s", strings.Join(missingCodeowners, ", "))
-	}
-	if len(duplicateCodeowners) > 0 {
-		sort.Strings(duplicateCodeowners)
-		return fmt.Errorf("codeowners members duplicate in allowlist: %s", strings.Join(duplicateCodeowners, ", "))
-	}
-	if len(unusedAllowlist) > 0 {
-		var unused []string
-		for k := range unusedAllowlist {
-			unused = append(unused, k)
-		}
-		sort.Strings(unused)
-		return fmt.Errorf("unused members in allowlist: %s", strings.Join(unused, ", "))
 	}
 
 	codeowners := fmt.Sprintf(codeownersHeader, data.RepoName, data.DefaultCodeOwner)
@@ -137,6 +87,68 @@ LOOP:
 		return err
 	}
 	return nil
+}
+
+func (cg *codeownersGenerator) verifyCodeRunnerOrgMembership(data datatype.GithubData) error {
+	allowlistData, err := os.ReadFile(data.AllowlistFilePath)
+	if err != nil {
+		return err
+	}
+	allowlistLines := strings.Split(string(allowlistData), "\n")
+
+	allowlist := make(map[string]struct{}, len(allowlistLines))
+	unusedAllowlist := make(map[string]struct{}, len(allowlistLines))
+
+	for _, line := range allowlistLines {
+		if line == "" {
+			continue
+		}
+		allowlist[line] = struct{}{}
+		unusedAllowlist[line] = struct{}{}
+	}
+
+	var missingCodeowners []string
+	var duplicateCodeowners []string
+
+	members, err := cg.getGithubMembers()
+	if err != nil {
+		return err
+	}
+
+	// sort codeowners
+	for _, codeowner := range data.Codeowners {
+		_, present := members[codeowner]
+
+		if !present {
+			_, allowed := allowlist[codeowner]
+			delete(unusedAllowlist, codeowner)
+			allowed = allowed || strings.HasPrefix(codeowner, "open-telemetry/")
+			if !allowed {
+				missingCodeowners = append(missingCodeowners, codeowner)
+			}
+		} else if _, exists := allowlist[codeowner]; exists {
+			duplicateCodeowners = append(duplicateCodeowners, codeowner)
+		}
+	}
+
+	// error cases
+	if len(missingCodeowners) > 0 && !cg.skipGithub {
+		sort.Strings(missingCodeowners)
+		return fmt.Errorf("codeowners are not members: %s", strings.Join(missingCodeowners, ", "))
+	}
+	if len(duplicateCodeowners) > 0 {
+		sort.Strings(duplicateCodeowners)
+		return fmt.Errorf("codeowners members duplicate in allowlist: %s", strings.Join(duplicateCodeowners, ", "))
+	}
+	if len(unusedAllowlist) > 0 {
+		var unused []string
+		for k := range unusedAllowlist {
+			unused = append(unused, k)
+		}
+		sort.Strings(unused)
+		return fmt.Errorf("unused members in allowlist: %s", strings.Join(unused, ", "))
+	}
+	return err
 }
 
 func (cg *codeownersGenerator) getGithubMembers() (map[string]struct{}, error) {
