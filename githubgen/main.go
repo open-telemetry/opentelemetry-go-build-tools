@@ -31,6 +31,9 @@ func main() {
 	folder := flag.String("folder", ".", "folder investigated for codeowners")
 	allowlistFilePath := flag.String("allowlist", "cmd/githubgen/allowlist.txt", "path to a file containing an allowlist of members outside the OpenTelemetry organization")
 	skipGithubCheck := flag.Bool("skipgithub", false, "skip checking GitHub membership check for CODEOWNERS datatype.Generator")
+	repoName := flag.String("repo-name", "", "name of the repository (e.g. \"OpenTelemetry Collector Contrib\")")
+	templateFolder := flag.String("template-folder", "", "path to a folder containing templates for githubgen")
+
 	flag.Parse()
 	var generators []datatype.Generator
 	for _, arg := range flag.Args() {
@@ -54,7 +57,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err = run(*folder, *allowlistFilePath, generators, distributions); err != nil {
+	if err = run(*folder, *allowlistFilePath, *repoName, generators, distributions); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -78,7 +81,7 @@ func loadMetadata(filePath string) (datatype.Metadata, error) {
 	return md, nil
 }
 
-func run(folder string, allowlistFilePath string, generators []datatype.Generator, distros []datatype.DistributionData) error {
+func run(folder string, allowlistFilePath string, repoName string, generators []datatype.Generator, distros []datatype.DistributionData) error {
 	components := map[string]datatype.Metadata{}
 	var foldersList []string
 	maxLength := 0
@@ -129,6 +132,7 @@ func run(folder string, allowlistFilePath string, generators []datatype.Generato
 		MaxLength:         maxLength,
 		Components:        components,
 		Distributions:     distros,
+		RepoName:          repoName,
 	}
 
 	for _, g := range generators {

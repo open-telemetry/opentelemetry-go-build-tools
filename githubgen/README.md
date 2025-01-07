@@ -17,7 +17,7 @@ $> ./githubgen
 The equivalent of:
 
 ```shell
-$> GITHUB_TOKEN=<mypattoken> githubgen --folder . [--allowlist cmd/githubgen/allowlist.txt] 
+$> GITHUB_TOKEN=<mypattoken> githubgen --folder . [--allowlist cmd/githubgen/allowlist.txt]
 ```
 
 ## Checking codeowners against OpenTelemetry membership via GitHub API
