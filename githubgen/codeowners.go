@@ -16,7 +16,8 @@ import (
 )
 
 type codeownersGenerator struct {
-	skipGithub bool
+	skipGithub       bool
+	getGitHubMembers func(skipGithub bool) (map[string]struct{}, error)
 }
 
 func (cg *codeownersGenerator) Generate(data datatype.GithubData) error {
@@ -111,7 +112,7 @@ func (cg *codeownersGenerator) verifyCodeOwnerOrgMembership(allowlistData []byte
 	var missingCodeowners []string
 	var duplicateCodeowners []string
 
-	members, err := cg.GetGithubMembers()
+	members, err := cg.getGitHubMembers(cg.skipGithub)
 	if err != nil {
 		return err
 	}
@@ -152,8 +153,8 @@ func (cg *codeownersGenerator) verifyCodeOwnerOrgMembership(allowlistData []byte
 	return err
 }
 
-func (cg *codeownersGenerator) GetGithubMembers() (map[string]struct{}, error) {
-	if cg.skipGithub {
+func GetGithubMembers(skipGithub bool) (map[string]struct{}, error) {
+	if skipGithub {
 		// don't try to get organization members if no token is expected
 		return map[string]struct{}{}, nil
 	}

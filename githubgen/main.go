@@ -35,22 +35,7 @@ func main() {
 	defaultCodeOwner := flag.String("default-codeowners", "", "GitHub user or team name that will be used as default codeowner")
 
 	flag.Parse()
-	var generators []datatype.Generator
-	for _, arg := range flag.Args() {
-		switch arg {
-		case "issue-templates":
-			generators = append(generators, &issueTemplatesGenerator{})
-		case "codeowners":
-			generators = append(generators, &codeownersGenerator{skipGithub: *skipGithubCheck})
-		case "distributions":
-			generators = append(generators, &distributionsGenerator{})
-		default:
-			panic(fmt.Sprintf("Unknown datatype.Generator: %s", arg))
-		}
-	}
-	if len(generators) == 0 {
-		generators = []datatype.Generator{&issueTemplatesGenerator{}, &codeownersGenerator{skipGithub: *skipGithubCheck}}
-	}
+	generators := generatorFactory(flag.Args(), *skipGithubCheck)
 
 	distributions, err := getDistributions(*folder)
 	if err != nil {
@@ -60,6 +45,28 @@ func main() {
 	if err = run(*folder, *allowlistFilePath, *repoName, generators, distributions, *defaultCodeOwner); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func generatorFactory(args []string, skipGithubCheck bool) []datatype.Generator {
+	var generators []datatype.Generator
+
+	for _, arg := range args {
+		switch arg {
+		case "issue-templates":
+			generators = append(generators, &issueTemplatesGenerator{})
+		case "codeowners":
+			generators = append(generators, &codeownersGenerator{skipGithub: skipGithubCheck, getGitHubMembers: GetGithubMembers})
+		case "distributions":
+			generators = append(generators, &distributionsGenerator{})
+		default:
+			panic(fmt.Sprintf("Unknown datatype.Generator: %s", arg))
+		}
+	}
+	if len(generators) == 0 {
+		generators = []datatype.Generator{&issueTemplatesGenerator{}, &codeownersGenerator{skipGithub: skipGithubCheck}}
+	}
+
+	return generators
 }
 
 func loadMetadata(filePath string) (datatype.Metadata, error) {
