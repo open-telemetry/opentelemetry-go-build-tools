@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
@@ -96,18 +97,11 @@ LOOP:
 }
 
 func (cg *codeownersGenerator) verifyCodeOwnerOrgMembership(allowlistData []byte, data datatype.GithubData) error {
-	allowlistLines := strings.Split(string(allowlistData), "\n")
-
-	allowlist := make(map[string]struct{}, len(allowlistLines))
-	unusedAllowlist := make(map[string]struct{}, len(allowlistLines))
-
-	for _, line := range allowlistLines {
-		if line == "" {
-			continue
-		}
-		allowlist[line] = struct{}{}
-		unusedAllowlist[line] = struct{}{}
-	}
+	allowlist := strings.Split(string(allowlistData), "\n")
+	allowlist = slices.DeleteFunc(allowlist, func(s string) bool {
+		return s == ""
+	})
+	unusedAllowlist := append([]string{}, allowlist...)
 
 	var missingCodeowners []string
 	var duplicateCodeowners []string
@@ -122,13 +116,17 @@ func (cg *codeownersGenerator) verifyCodeOwnerOrgMembership(allowlistData []byte
 		_, ownerPresentInMembers := members[codeowner]
 
 		if !ownerPresentInMembers {
-			_, ownerInAllowlist := allowlist[codeowner]
-			delete(unusedAllowlist, codeowner)
+			ownerInAllowlist := slices.Contains(allowlist, codeowner)
+			unusedAllowlist = slices.DeleteFunc(unusedAllowlist, func(s string) bool {
+				return s == codeowner
+			})
+
 			ownerInAllowlist = ownerInAllowlist || strings.HasPrefix(codeowner, "open-telemetry/")
+
 			if !ownerInAllowlist {
 				missingCodeowners = append(missingCodeowners, codeowner)
 			}
-		} else if _, exists := allowlist[codeowner]; exists {
+		} else if slices.Contains(allowlist, codeowner) {
 			duplicateCodeowners = append(duplicateCodeowners, codeowner)
 		}
 	}
@@ -143,10 +141,7 @@ func (cg *codeownersGenerator) verifyCodeOwnerOrgMembership(allowlistData []byte
 		return fmt.Errorf("codeowners members duplicate in allowlist: %s", strings.Join(duplicateCodeowners, ", "))
 	}
 	if len(unusedAllowlist) > 0 {
-		var unused []string
-		for k := range unusedAllowlist {
-			unused = append(unused, k)
-		}
+		unused := append([]string{}, unusedAllowlist...)
 		sort.Strings(unused)
 		return fmt.Errorf("unused members in allowlist: %s", strings.Join(unused, ", "))
 	}

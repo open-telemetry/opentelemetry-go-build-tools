@@ -4,6 +4,7 @@
 package main
 
 import (
+	"strings"
 	"testing"
 
 	"go.opentelemetry.io/build-tools/githubgen/datatype"
@@ -15,10 +16,11 @@ func Test_codeownersGenerator_verifyCodeOwnerOrgMembership(t *testing.T) {
 		data          datatype.GithubData
 	}
 	tests := []struct {
-		name       string
-		skipGithub bool
-		args       args
-		wantErr    bool
+		name        string
+		skipGithub  bool
+		args        args
+		wantErr     bool
+		errContains string
 	}{
 		{
 			name:       "happy path",
@@ -44,7 +46,8 @@ func Test_codeownersGenerator_verifyCodeOwnerOrgMembership(t *testing.T) {
 					},
 				},
 			},
-			wantErr: true,
+			wantErr:     true,
+			errContains: "codeowners members duplicate in allowlist",
 		},
 		{
 			name:       "codeowner is not a member but exists in allowlist",
@@ -70,7 +73,8 @@ func Test_codeownersGenerator_verifyCodeOwnerOrgMembership(t *testing.T) {
 					},
 				},
 			},
-			wantErr: true,
+			wantErr:     true,
+			errContains: "codeowners are not members",
 		},
 		{
 			name:       "user in allowlist but is not a codeowner",
@@ -83,7 +87,8 @@ func Test_codeownersGenerator_verifyCodeOwnerOrgMembership(t *testing.T) {
 					},
 				},
 			},
-			wantErr: true,
+			wantErr:     true,
+			errContains: "unused members in allowlist",
 		},
 	}
 	for _, tt := range tests {
@@ -92,7 +97,8 @@ func Test_codeownersGenerator_verifyCodeOwnerOrgMembership(t *testing.T) {
 				skipGithub:       tt.skipGithub,
 				getGitHubMembers: mockGithubMembers,
 			}
-			if err := cg.verifyCodeOwnerOrgMembership(tt.args.allowlistData, tt.args.data); (err != nil) != tt.wantErr {
+			err := cg.verifyCodeOwnerOrgMembership(tt.args.allowlistData, tt.args.data)
+			if (err != nil) != tt.wantErr && strings.Contains(err.Error(), tt.errContains) {
 				t.Errorf("verifyCodeOwnerOrgMembership() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
