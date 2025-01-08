@@ -20,7 +20,12 @@ type codeownersGenerator struct {
 }
 
 func (cg *codeownersGenerator) Generate(data datatype.GithubData) error {
-	err := cg.verifyCodeRunnerOrgMembership(data)
+	allowlistData, err := os.ReadFile(data.AllowlistFilePath)
+	if err != nil {
+		return err
+	}
+
+	err = cg.verifyCodeOwnerOrgMembership(allowlistData, data)
 	if err != nil {
 		return err
 	}
@@ -89,11 +94,7 @@ LOOP:
 	return nil
 }
 
-func (cg *codeownersGenerator) verifyCodeRunnerOrgMembership(data datatype.GithubData) error {
-	allowlistData, err := os.ReadFile(data.AllowlistFilePath)
-	if err != nil {
-		return err
-	}
+func (cg *codeownersGenerator) verifyCodeOwnerOrgMembership(allowlistData []byte, data datatype.GithubData) error {
 	allowlistLines := strings.Split(string(allowlistData), "\n")
 
 	allowlist := make(map[string]struct{}, len(allowlistLines))
