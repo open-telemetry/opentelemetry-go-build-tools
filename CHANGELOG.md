@@ -4,6 +4,12 @@
 
 <!-- next version -->
 
+## v0.16.0
+
+### 💡 Enhancements 💡
+
+- `crosslink`: Adds a 'tidy' subcommand to generate 'go mod tidy' schedules (#642)
+
 ## v0.15.0
 
 ### 💡 Enhancements 💡
