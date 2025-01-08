@@ -7,25 +7,34 @@ import (
 )
 
 func Test_codeownersGenerator_verifyCodeOwnerOrgMembership(t *testing.T) {
-	type fields struct {
-		skipGithub bool
-	}
 	type args struct {
 		allowlistData []byte
 		data          datatype.GithubData
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
+		name       string
+		skipGithub bool
+		args       args
+		wantErr    bool
 	}{
-		// TODO: Add test cases.
+		{
+			name:       "happy path",
+			skipGithub: true,
+			args: args{
+				allowlistData: []byte(""),
+				data: datatype.GithubData{
+					Codeowners: []string{
+						"user1", "user2", "user3",
+					},
+				},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cg := &codeownersGenerator{
-				skipGithub: tt.fields.skipGithub,
+				skipGithub: tt.skipGithub,
 			}
 			if err := cg.verifyCodeOwnerOrgMembership(tt.args.allowlistData, tt.args.data); (err != nil) != tt.wantErr {
 				t.Errorf("verifyCodeOwnerOrgMembership() error = %v, wantErr %v", err, tt.wantErr)

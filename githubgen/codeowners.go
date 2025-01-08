@@ -111,20 +111,20 @@ func (cg *codeownersGenerator) verifyCodeOwnerOrgMembership(allowlistData []byte
 	var missingCodeowners []string
 	var duplicateCodeowners []string
 
-	members, err := cg.getGithubMembers()
+	members, err := cg.GetGithubMembers()
 	if err != nil {
 		return err
 	}
 
 	// sort codeowners
 	for _, codeowner := range data.Codeowners {
-		_, present := members[codeowner]
+		_, ownerPresentInMembers := members[codeowner]
 
-		if !present {
-			_, allowed := allowlist[codeowner]
+		if !ownerPresentInMembers {
+			_, ownerInAllowlist := allowlist[codeowner]
 			delete(unusedAllowlist, codeowner)
-			allowed = allowed || strings.HasPrefix(codeowner, "open-telemetry/")
-			if !allowed {
+			ownerInAllowlist = ownerInAllowlist || strings.HasPrefix(codeowner, "open-telemetry/")
+			if !ownerInAllowlist {
 				missingCodeowners = append(missingCodeowners, codeowner)
 			}
 		} else if _, exists := allowlist[codeowner]; exists {
@@ -152,7 +152,7 @@ func (cg *codeownersGenerator) verifyCodeOwnerOrgMembership(allowlistData []byte
 	return err
 }
 
-func (cg *codeownersGenerator) getGithubMembers() (map[string]struct{}, error) {
+func (cg *codeownersGenerator) GetGithubMembers() (map[string]struct{}, error) {
 	if cg.skipGithub {
 		// don't try to get organization members if no token is expected
 		return map[string]struct{}{}, nil
