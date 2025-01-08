@@ -17,12 +17,19 @@ func folderToShortName(folder string) string {
 	if folder == "internal/coreinternal" {
 		return "internal/core"
 	}
+
+	suffixes := []string{"receiver", "exporter", "extension", "processor", "connector"}
+
 	path := strings.Split(folder, "/")
-	switch path[0] {
-	case "receiver", "exporter", "extension", "processor", "connector":
-		path[1] = strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(path[1], "internal"), "extension"), "exporter"), "connector"), "processor"), "receiver")
-		path[len(path)-1] = strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(path[len(path)-1], "internal"), "extension"), "exporter"), "connector"), "processor"), "receiver")
-	default:
+	if strings.Contains(path[0], suffixes[0]) ||
+		strings.Contains(path[0], suffixes[1]) ||
+		strings.Contains(path[0], suffixes[2]) ||
+		strings.Contains(path[0], suffixes[3]) ||
+		strings.Contains(path[0], suffixes[4]) {
+		for _, suffix := range suffixes {
+			path[1] = strings.TrimSuffix(path[1], suffix)
+			path[len(path)-1] = strings.TrimSuffix(path[len(path)-1], suffix)
+		}
 	}
 
 	return strings.Join(path, "/")
@@ -31,16 +38,14 @@ func folderToShortName(folder string) string {
 type issueTemplatesGenerator struct{}
 
 func (itg *issueTemplatesGenerator) Generate(data datatype.GithubData) error {
-	keys := map[string]struct{}{}
-	for _, f := range data.Folders {
-		keys[folderToShortName(f)] = struct{}{}
+	var componentSlugs []string
+
+	for _, folder := range data.Folders {
+		componentSlugs = append(componentSlugs, folderToShortName(folder))
 	}
-	shortNames := make([]string, 0, len(keys))
-	for k := range keys {
-		shortNames = append(shortNames, k)
-	}
-	sort.Strings(shortNames)
-	replacement := []byte(startComponentList + "\n      - " + strings.Join(shortNames, "\n      - ") + "\n      " + endComponentList)
+	sort.Strings(componentSlugs)
+
+	replacement := []byte(startComponentList + "\n      - " + strings.Join(componentSlugs, "\n      - ") + "\n      " + endComponentList)
 	issuesFolder := filepath.Join(".github", "ISSUE_TEMPLATE")
 	entries, err := os.ReadDir(issuesFolder)
 	if err != nil {
