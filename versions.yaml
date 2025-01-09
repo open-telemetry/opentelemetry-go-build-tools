@@ -21,6 +21,7 @@ module-sets:
       - go.opentelemetry.io/build-tools/chloggen
       - go.opentelemetry.io/build-tools/crosslink
       - go.opentelemetry.io/build-tools/dbotconf
+      - go.opentelemetry.io/build-tools/githubgen
       - go.opentelemetry.io/build-tools/gotmpl
       - go.opentelemetry.io/build-tools/issuegenerator
       - go.opentelemetry.io/build-tools/multimod
@@ -28,4 +29,3 @@ module-sets:
 
 excluded-modules:
   - go.opentelemetry.io/build-tools/internal/tools
-  - go.opentelemetry.io/build-tools/githubgen
