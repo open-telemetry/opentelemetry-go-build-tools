@@ -13,20 +13,27 @@ import (
 	"go.opentelemetry.io/build-tools/githubgen/datatype"
 )
 
-func folderToShortName(folder string) string {
-	if folder == "internal/coreinternal" {
-		return "internal/core"
+type issueTemplatesGenerator struct {
+	trimSuffixes []string
+}
+
+// folderToSlug removes redundant suffixes from a path.
+//
+// A path like receiver/myvendorreceiver will be trimmed to receiver/myvendor.
+//
+// All parts of the path except for the first level will be trimmed.
+func (itg *issueTemplatesGenerator) folderToSlug(folder string) string {
+	path := strings.Split(folder, "/")
+	exists := false
+	for _, suffix := range itg.trimSuffixes {
+		if strings.Contains(path[0], suffix) {
+			exists = true
+			break
+		}
 	}
 
-	suffixes := []string{"receiver", "exporter", "extension", "processor", "connector"}
-
-	path := strings.Split(folder, "/")
-	if strings.Contains(path[0], suffixes[0]) ||
-		strings.Contains(path[0], suffixes[1]) ||
-		strings.Contains(path[0], suffixes[2]) ||
-		strings.Contains(path[0], suffixes[3]) ||
-		strings.Contains(path[0], suffixes[4]) {
-		for _, suffix := range suffixes {
+	if exists {
+		for _, suffix := range itg.trimSuffixes {
 			path[1] = strings.TrimSuffix(path[1], suffix)
 			path[len(path)-1] = strings.TrimSuffix(path[len(path)-1], suffix)
 		}
@@ -35,13 +42,13 @@ func folderToShortName(folder string) string {
 	return strings.Join(path, "/")
 }
 
-type issueTemplatesGenerator struct{}
-
+// Generate takes all files in the .github/ISSUE_TEMPLATE folder, looks for a magic start
+// and end string and fills in the list of found components in-between.
 func (itg *issueTemplatesGenerator) Generate(data datatype.GithubData) error {
 	var componentSlugs []string
 
 	for _, folder := range data.Folders {
-		componentSlugs = append(componentSlugs, folderToShortName(folder))
+		componentSlugs = append(componentSlugs, itg.folderToSlug(folder))
 	}
 	sort.Strings(componentSlugs)
 

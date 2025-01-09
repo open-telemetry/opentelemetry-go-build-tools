@@ -18,7 +18,7 @@ import (
 
 type codeownersGenerator struct {
 	skipGithub       bool
-	getGitHubMembers func(skipGithub bool) (map[string]struct{}, error)
+	getGitHubMembers func(skipGithub bool, githubOrg string) (map[string]struct{}, error)
 }
 
 func (cg *codeownersGenerator) Generate(data datatype.GithubData) error {
@@ -96,6 +96,7 @@ LOOP:
 	return nil
 }
 
+// verifyCodeOwnerOrgMembership verifies that all codeOwners are members of
 func (cg *codeownersGenerator) verifyCodeOwnerOrgMembership(allowlistData []byte, data datatype.GithubData) error {
 	allowlist := strings.Split(string(allowlistData), "\n")
 	allowlist = slices.DeleteFunc(allowlist, func(s string) bool {
@@ -106,7 +107,7 @@ func (cg *codeownersGenerator) verifyCodeOwnerOrgMembership(allowlistData []byte
 	var missingCodeowners []string
 	var duplicateCodeowners []string
 
-	members, err := cg.getGitHubMembers(cg.skipGithub)
+	members, err := cg.getGitHubMembers(cg.skipGithub, data.GitHubOrg)
 	if err != nil {
 		return err
 	}
@@ -148,7 +149,7 @@ func (cg *codeownersGenerator) verifyCodeOwnerOrgMembership(allowlistData []byte
 	return err
 }
 
-func GetGithubMembers(skipGithub bool) (map[string]struct{}, error) {
+func GetGithubMembers(skipGithub bool, githubOrg string) (map[string]struct{}, error) {
 	if skipGithub {
 		// don't try to get organization members if no token is expected
 		return map[string]struct{}{}, nil
@@ -161,7 +162,7 @@ func GetGithubMembers(skipGithub bool) (map[string]struct{}, error) {
 	var allUsers []*github.User
 	pageIndex := 0
 	for {
-		users, resp, err := client.Organizations.ListMembers(context.Background(), "open-telemetry",
+		users, resp, err := client.Organizations.ListMembers(context.Background(), githubOrg,
 			&github.ListMembersOptions{
 				PublicOnly: false,
 				ListOptions: github.ListOptions{

@@ -17,6 +17,7 @@ type GithubData struct {
 	Distributions     []DistributionData
 	RepoName          string
 	DefaultCodeOwner  string
+	GitHubOrg         string
 }
 
 type Codeowners struct {

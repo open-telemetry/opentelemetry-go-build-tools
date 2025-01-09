@@ -5,7 +5,7 @@ package main
 
 import "testing"
 
-func Test_folderToShortName(t *testing.T) {
+func Test_folderToSlug(t *testing.T) {
 	type args struct {
 		folder string
 	}
@@ -49,11 +49,21 @@ func Test_folderToShortName(t *testing.T) {
 			},
 			want: "testbed",
 		},
+		{
+			name: "5",
+			args: args{
+				folder: "processor/resourcedetectionprocessor/internal/aws/ec2",
+			},
+			want: "processor/resourcedetection/internal/aws/ec2",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := folderToShortName(tt.args.folder); got != tt.want {
-				t.Errorf("folderToShortName() = %v, want %v", got, tt.want)
+			itg := &issueTemplatesGenerator{
+				trimSuffixes: []string{"receiver", "exporter", "extension", "processor", "connector", "internal"},
+			}
+			if got := itg.folderToSlug(tt.args.folder); got != tt.want {
+				t.Errorf("folderToSlug() = %v, want %v", got, tt.want)
 			}
 		})
 	}

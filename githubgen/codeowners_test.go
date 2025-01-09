@@ -105,7 +105,7 @@ func Test_codeownersGenerator_verifyCodeOwnerOrgMembership(t *testing.T) {
 	}
 }
 
-func mockGithubMembers(_ bool) (map[string]struct{}, error) {
+func mockGithubMembers(bool, string) (map[string]struct{}, error) {
 	return map[string]struct{}{
 		"user1": {},
 		"user2": {},
