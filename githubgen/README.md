@@ -29,8 +29,9 @@ To authenticate, set the environment variable `GITHUB_TOKEN` to a PAT token.
 If a PAT is not available you can use the `--skipgithub` flag to avoid checking
 for membership in the GitHub organization.
 
-Additionally, the GitHub organization name needs to be specified using `--github-org <your-org>`,
-along with `--pretty-repo-name` to be filled into CODEOWNERS files (e.g. "OpenTelemetry Collector Contrib")
+Additionally, the GitHub organization name needs to be specified using
+`--github-org <your-org>`, along with `--pretty-repo-name` to be filled
+into CODEOWNERS files (e.g. "OpenTelemetry Collector Contrib")
 and `--default-codeowner` to be used as the default owner for general files.
 
 For each codeowner, the script will check if the user is registered as a member
