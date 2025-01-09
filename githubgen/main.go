@@ -32,8 +32,8 @@ func main() {
 	folder := flag.String("folder", ".", "folder investigated for codeowners")
 	allowlistFilePath := flag.String("allowlist", "cmd/githubgen/allowlist.txt", "path to a file containing an allowlist of members outside the defined Github organization")
 	skipGithubCheck := flag.Bool("skipgithub", false, "skip checking if codeowners are part of the GitHub organization")
-	prettyRepoName := flag.String("pretty-repo-name", "", "name of the repository (e.g. \"OpenTelemetry Collector Contrib\")")
-	defaultCodeOwner := flag.String("default-codeowner", "", "GitHub user or team name that will be used as default codeowner")
+	prettyRepoName := flag.String("pretty-repo-name", "OpenTelemetry Collector Contrib", "name of the repository (e.g. \"OpenTelemetry Collector Contrib\")")
+	defaultCodeOwner := flag.String("default-codeowner", "@open-telemetry/collector-contrib-approvers", "GitHub user or team name that will be used as default codeowner")
 	trimSuffixes := flag.String("trim-component-suffixes", "receiver, exporter, extension, processor, connector, internal", "Define a comma-separated list of suffixes that should be trimmed from paths during generation of issue templates")
 	githubOrgSlug := flag.String("github-org", "open-telemetry", "GitHub organization name to check if codeowners are org members")
 
