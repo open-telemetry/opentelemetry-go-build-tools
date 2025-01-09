@@ -104,7 +104,6 @@ LOOP:
 // - there are code owners that are not org members and not in the allowlist (only if skipGithub is set to false)
 // - there are redundant entries in the allowlist
 // - there are entries in the allowlist that are unused
-//
 func (cg *codeownersGenerator) verifyCodeOwnerOrgMembership(allowlistData []byte, data datatype.GithubData) error {
 	allowlist := strings.Split(string(allowlistData), "\n")
 	allowlist = slices.DeleteFunc(allowlist, func(s string) bool {
