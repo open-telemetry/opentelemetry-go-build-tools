@@ -18,7 +18,6 @@ The equivalent of:
 
 ```shell
 $> githubgen --skipgithub --folder . --github-org "open-telemetry" \
-  --pretty-repo-name "OpenTelemetry Collector Contrib" \
   --default-codeowner open-telemetry/opentelemetry-collector-approvers \
   --allowlist cmd/githubgen/allowlist.txt
 ```
