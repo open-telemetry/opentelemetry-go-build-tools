@@ -15,7 +15,6 @@ type GithubData struct {
 	MaxLength         int
 	Components        map[string]Metadata
 	Distributions     []DistributionData
-	RepoName          string
 	DefaultCodeOwner  string
 	GitHubOrg         string
 }

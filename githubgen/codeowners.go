@@ -32,7 +32,7 @@ func (cg *codeownersGenerator) Generate(data datatype.GithubData) error {
 		return err
 	}
 
-	codeowners := fmt.Sprintf(codeownersHeader, data.RepoName, data.DefaultCodeOwner)
+	codeowners := fmt.Sprintf(codeownersHeader, data.DefaultCodeOwner)
 	deprecatedList := deprecatedListHeader
 	unmaintainedList := unmaintainedListHeader
 
@@ -69,7 +69,7 @@ LOOP:
 		}
 	}
 
-	codeowners += fmt.Sprintf(distributionCodeownersHeader, data.RepoName)
+	codeowners += distributionCodeownersHeader
 	longestName := 0
 	for _, dist := range data.Distributions {
 		if longestName < len(dist.Name) {
@@ -89,7 +89,7 @@ LOOP:
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(filepath.Join(".github", "ALLOWLIST"), []byte(fmt.Sprintf(allowlistHeader, data.RepoName)+deprecatedList+unmaintainedList), 0o600)
+	err = os.WriteFile(filepath.Join(".github", "ALLOWLIST"), []byte(allowlistHeader+deprecatedList+unmaintainedList), 0o600)
 	if err != nil {
 		return err
 	}

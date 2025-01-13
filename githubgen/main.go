@@ -32,7 +32,6 @@ func main() {
 	folder := flag.String("folder", ".", "folder investigated for codeowners")
 	allowlistFilePath := flag.String("allowlist", "cmd/githubgen/allowlist.txt", "path to a file containing an allowlist of members outside the defined Github organization")
 	skipGithubCheck := flag.Bool("skipgithub", false, "skip checking if codeowners are part of the GitHub organization")
-	prettyRepoName := flag.String("pretty-repo-name", "OpenTelemetry Collector Contrib", "name of the repository (e.g. \"OpenTelemetry Collector Contrib\")")
 	defaultCodeOwner := flag.String("default-codeowner", "@open-telemetry/collector-contrib-approvers", "GitHub user or team name that will be used as default codeowner")
 	trimSuffixes := flag.String("trim-component-suffixes", "receiver, exporter, extension, processor, connector, internal", "Define a comma-separated list of suffixes that should be trimmed from paths during generation of issue templates")
 	githubOrgSlug := flag.String("github-org", "open-telemetry", "GitHub organization name to check if codeowners are org members")
@@ -61,7 +60,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err = run(*folder, *allowlistFilePath, *prettyRepoName, generators, distributions, *defaultCodeOwner, *githubOrgSlug); err != nil {
+	if err = run(*folder, *allowlistFilePath, generators, distributions, *defaultCodeOwner, *githubOrgSlug); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -85,7 +84,7 @@ func loadMetadata(filePath string) (datatype.Metadata, error) {
 	return md, nil
 }
 
-func run(folder string, allowlistFilePath string, repoName string, generators []datatype.Generator, distros []datatype.DistributionData, defaultCodeOwner string, githubOrg string) error {
+func run(folder string, allowlistFilePath string, generators []datatype.Generator, distros []datatype.DistributionData, defaultCodeOwner string, githubOrg string) error {
 	components := map[string]datatype.Metadata{}
 	var foldersList []string
 	maxLength := 0
@@ -136,7 +135,6 @@ func run(folder string, allowlistFilePath string, repoName string, generators []
 		MaxLength:         maxLength,
 		Components:        components,
 		Distributions:     distros,
-		RepoName:          repoName,
 		DefaultCodeOwner:  defaultCodeOwner,
 		GitHubOrg:         githubOrg,
 	}
