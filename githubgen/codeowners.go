@@ -129,7 +129,7 @@ func (cg *codeownersGenerator) verifyCodeOwnerOrgMembership(allowlistData []byte
 				return s == codeowner
 			})
 
-			ownerInAllowlist = ownerInAllowlist || strings.HasPrefix(codeowner, "open-telemetry/")
+			ownerInAllowlist = ownerInAllowlist || strings.HasPrefix(codeowner, data.GitHubOrg+"/")
 
 			if !ownerInAllowlist {
 				missingCodeowners = append(missingCodeowners, codeowner)
