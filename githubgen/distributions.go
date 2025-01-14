@@ -14,7 +14,9 @@ import (
 	"go.opentelemetry.io/build-tools/githubgen/datatype"
 )
 
-type distributionsGenerator struct{}
+type distributionsGenerator struct {
+	writeDistribution func(rootFolder string, distName string, distData distOutput) error
+}
 
 type distOutput struct {
 	Name        string              `yaml:"name"`
@@ -51,14 +53,18 @@ func (cg *distributionsGenerator) Generate(data datatype.GithubData) error {
 			Maintainers: dist.Maintainers,
 			Components:  components,
 		}
-		b, err := yaml.Marshal(output)
+		err := cg.writeDistribution(data.RootFolder, dist.Name, output)
 		if err != nil {
-			return nil
-		}
-		err = os.WriteFile(filepath.Join(data.RootFolder, "reports", "distributions", fmt.Sprintf("%s.yaml", dist.Name)), b, 0o600)
-		if err != nil {
-			return nil
+			return err
 		}
 	}
 	return nil
+}
+
+func WriteDistribution(rootFolder string, distName string, distData distOutput) error {
+	b, err := yaml.Marshal(distData)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filepath.Join(rootFolder, "reports", "distributions", fmt.Sprintf("%s.yaml", distName)), b, 0o600)
 }

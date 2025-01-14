@@ -173,5 +173,5 @@ func newCodeownersGenerator(skipGithubCheck *bool) *codeownersGenerator {
 }
 
 func newDistributionsGenerator() *distributionsGenerator {
-	return &distributionsGenerator{}
+	return &distributionsGenerator{writeDistribution: WriteDistribution}
 }
