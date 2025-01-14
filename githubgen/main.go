@@ -129,6 +129,7 @@ func run(folder string, allowlistFilePath string, generators []datatype.Generato
 	}
 
 	data := datatype.GithubData{
+		RootFolder:        folder,
 		Folders:           foldersList,
 		Codeowners:        allCodeowners,
 		AllowlistFilePath: allowlistFilePath,

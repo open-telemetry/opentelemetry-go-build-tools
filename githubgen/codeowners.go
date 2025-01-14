@@ -40,21 +40,21 @@ func (cg *codeownersGenerator) Generate(data datatype.GithubData) error {
 	currentFirstSegment := ""
 
 LOOP:
-	for _, key := range data.Folders {
-		m := data.Components[key]
+	for _, folder := range data.Folders {
+		m := data.Components[folder]
 		for stability := range m.Status.Stability {
 			if stability == unmaintainedStatus {
-				unmaintainedList += key + "/\n"
-				unmaintainedCodeowners += fmt.Sprintf("%s/%s %s \n", key, strings.Repeat(" ", data.MaxLength-len(key)), data.DefaultCodeOwner)
+				unmaintainedList += folder + "/\n"
+				unmaintainedCodeowners += fmt.Sprintf("%s/%s %s \n", folder, strings.Repeat(" ", data.MaxLength-len(folder)), data.DefaultCodeOwner)
 				continue LOOP
 			}
 			if stability == "deprecated" && (m.Status.Codeowners == nil || len(m.Status.Codeowners.Active) == 0) {
-				deprecatedList += key + "/\n"
+				deprecatedList += folder + "/\n"
 			}
 		}
 
 		if m.Status.Codeowners != nil {
-			parts := strings.Split(key, string(os.PathSeparator))
+			parts := strings.Split(folder, string(os.PathSeparator))
 			firstSegment := parts[0]
 			if firstSegment != currentFirstSegment {
 				currentFirstSegment = firstSegment
@@ -67,7 +67,7 @@ LOOP:
 					owners += "@" + owner
 				}
 			}
-			codeowners += fmt.Sprintf("%s/%s %s%s\n", key, strings.Repeat(" ", data.MaxLength-len(key)), data.DefaultCodeOwner, owners)
+			codeowners += fmt.Sprintf("%s/%s %s%s\n", strings.TrimPrefix(folder, data.RootFolder+"/"), strings.Repeat(" ", data.MaxLength-len(folder)), data.DefaultCodeOwner, owners)
 		}
 	}
 
@@ -87,11 +87,11 @@ LOOP:
 		codeowners += fmt.Sprintf("reports/distributions/%s.yaml%s %s %s\n", dist.Name, strings.Repeat(" ", longestName-len(dist.Name)), data.DefaultCodeOwner, strings.Join(maintainers, " "))
 	}
 
-	err = os.WriteFile(filepath.Join(".github", "CODEOWNERS"), []byte(codeowners+unmaintainedCodeowners), 0o600)
+	err = os.WriteFile(filepath.Join(data.RootFolder, ".github", "CODEOWNERS"), []byte(codeowners+unmaintainedCodeowners), 0o600)
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(filepath.Join(".github", "ALLOWLIST"), []byte(allowlistHeader+deprecatedList+unmaintainedList), 0o600)
+	err = os.WriteFile(filepath.Join(data.RootFolder, ".github", "ALLOWLIST"), []byte(allowlistHeader+deprecatedList+unmaintainedList), 0o600)
 	if err != nil {
 		return err
 	}

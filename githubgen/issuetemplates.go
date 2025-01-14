@@ -48,12 +48,12 @@ func (itg *issueTemplatesGenerator) Generate(data datatype.GithubData) error {
 	var componentSlugs []string
 
 	for _, folder := range data.Folders {
-		componentSlugs = append(componentSlugs, itg.folderToSlug(folder))
+		componentSlugs = append(componentSlugs, itg.folderToSlug(strings.TrimPrefix(folder, data.RootFolder+"/")))
 	}
 	sort.Strings(componentSlugs)
 
 	replacement := []byte(startComponentList + "\n      - " + strings.Join(componentSlugs, "\n      - ") + "\n      " + endComponentList)
-	issuesFolder := filepath.Join(".github", "ISSUE_TEMPLATE")
+	issuesFolder := filepath.Join(data.RootFolder, ".github", "ISSUE_TEMPLATE")
 	entries, err := os.ReadDir(issuesFolder)
 	if err != nil {
 		return err

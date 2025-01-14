@@ -9,6 +9,7 @@ type Generator interface {
 }
 
 type GithubData struct {
+	RootFolder        string
 	Folders           []string
 	Codeowners        []string
 	AllowlistFilePath string
