@@ -99,7 +99,13 @@ func run(folder string, allowlistFilePath string, generators []datatype.Generato
 					return nil
 				}
 			}
-			if m.Status.Codeowners == nil {
+			if m.Status.Codeowners == nil && defaultCodeOwner != "" {
+				log.Printf("component %q has no codeowners section, using default codeowner: %s\n", currentFolder, defaultCodeOwner)
+				defaultOwners := &datatype.Codeowners{
+					Active: []string{},
+				}
+				m.Status.Codeowners = defaultOwners
+			} else if m.Status.Codeowners == nil && defaultCodeOwner == "" {
 				return fmt.Errorf("component %q has no codeowners section", currentFolder)
 			}
 
@@ -117,6 +123,10 @@ func run(folder string, allowlistFilePath string, generators []datatype.Generato
 	slices.Sort(foldersList)
 	slices.Sort(allCodeowners)
 	allCodeowners = slices.Compact(allCodeowners)
+
+	if !strings.HasPrefix(defaultCodeOwner, "@") {
+		defaultCodeOwner = "@" + defaultCodeOwner
+	}
 
 	data := datatype.GithubData{
 		Folders:           foldersList,

@@ -63,7 +63,9 @@ LOOP:
 			owners := ""
 			for _, owner := range m.Status.Codeowners.Active {
 				owners += " "
-				owners += "@" + owner
+				if !strings.HasPrefix(owner, "@") {
+					owners += "@" + owner
+				}
 			}
 			codeowners += fmt.Sprintf("%s/%s %s%s\n", key, strings.Repeat(" ", data.MaxLength-len(key)), data.DefaultCodeOwner, owners)
 		}
