@@ -18,8 +18,6 @@ import (
 	"go.opentelemetry.io/build-tools/githubgen/datatype"
 )
 
-const unmaintainedStatus = "unmaintained"
-
 // Generates files specific to GitHub according to status datatype.Metadata:
 // .github/CODEOWNERS
 // .github/ALLOWLIST
