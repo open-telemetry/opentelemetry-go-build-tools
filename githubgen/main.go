@@ -4,7 +4,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"io/fs"
@@ -14,8 +13,6 @@ import (
 	"slices"
 	"strings"
 
-	"go.opentelemetry.io/collector/confmap"
-	"go.opentelemetry.io/collector/confmap/provider/fileprovider"
 	"gopkg.in/yaml.v3"
 
 	"go.opentelemetry.io/build-tools/githubgen/datatype"
@@ -66,18 +63,13 @@ func main() {
 }
 
 func loadMetadata(filePath string) (datatype.Metadata, error) {
-	cp, err := fileprovider.NewFactory().Create(confmap.ProviderSettings{}).Retrieve(context.Background(), "file:"+filePath, nil)
-	if err != nil {
-		return datatype.Metadata{}, err
-	}
-
-	conf, err := cp.AsConf()
+	yamlFile, err := os.ReadFile(filePath)
 	if err != nil {
 		return datatype.Metadata{}, err
 	}
 
 	md := datatype.Metadata{}
-	if err := conf.Unmarshal(&md, confmap.WithIgnoreUnused()); err != nil {
+	if err = yaml.Unmarshal(yamlFile, &md); err != nil {
 		return md, err
 	}
 
