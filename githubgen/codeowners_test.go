@@ -112,3 +112,40 @@ func mockGithubMembers(bool, string) (map[string]struct{}, error) {
 		"user3": {},
 	}, nil
 }
+
+func Test_codeownersGenerator_longestNameSpaces(t *testing.T) {
+	longName := "name-looooong"
+	type args struct {
+		data datatype.GithubData
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			name: "basic test",
+			args: args{
+				data: datatype.GithubData{
+					Distributions: []datatype.DistributionData{
+						{
+							Name: "name-short",
+						},
+						{
+							Name: longName,
+						},
+					},
+				},
+			},
+			want: len(longName),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cg := &codeownersGenerator{}
+			if got := cg.longestNameSpaces(tt.args.data); got != tt.want {
+				t.Errorf("longestNameSpaces() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

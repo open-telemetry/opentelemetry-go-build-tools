@@ -72,12 +72,7 @@ LOOP:
 	}
 
 	codeowners += distributionCodeownersHeader
-	longestName := 0
-	for _, dist := range data.Distributions {
-		if longestName < len(dist.Name) {
-			longestName = len(dist.Name)
-		}
-	}
+	longestName := cg.longestNameSpaces(data)
 
 	for _, dist := range data.Distributions {
 		var maintainers []string
@@ -96,6 +91,16 @@ LOOP:
 		return err
 	}
 	return nil
+}
+
+func (cg *codeownersGenerator) longestNameSpaces(data datatype.GithubData) int {
+	longestName := 0
+	for _, dist := range data.Distributions {
+		if longestName < len(dist.Name) {
+			longestName = len(dist.Name)
+		}
+	}
+	return longestName
 }
 
 // verifyCodeOwnerOrgMembership verifies that all codeOwners are members of the defined GitHub organization
