@@ -61,7 +61,7 @@ func main() {
 }
 
 func loadMetadata(filePath string) (datatype.Metadata, error) {
-	yamlFile, err := os.ReadFile(filePath)
+	yamlFile, err := os.ReadFile(filePath) // nolint: gosec
 	if err != nil {
 		return datatype.Metadata{}, err
 	}
