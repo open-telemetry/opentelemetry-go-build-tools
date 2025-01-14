@@ -37,7 +37,7 @@ func main() {
 	for _, arg := range flag.Args() {
 		switch arg {
 		case "issue-templates":
-			generators = append(generators, newIssueTemplatesGenerator(trimSuffixes))
+			generators = append(generators, newIssueTemplatesGenerator(*trimSuffixes))
 		case "codeowners":
 			generators = append(generators, newCodeownersGenerator(skipGithubCheck))
 		case "distributions":
@@ -47,7 +47,7 @@ func main() {
 		}
 	}
 	if len(generators) == 0 {
-		generators = []datatype.Generator{newIssueTemplatesGenerator(trimSuffixes), newCodeownersGenerator(skipGithubCheck)}
+		generators = []datatype.Generator{newIssueTemplatesGenerator(*trimSuffixes), newCodeownersGenerator(skipGithubCheck)}
 	}
 
 	distributions, err := getDistributions(*folder)
@@ -161,8 +161,8 @@ func getDistributions(folder string) ([]datatype.DistributionData, error) {
 	return distributions, nil
 }
 
-func newIssueTemplatesGenerator(trimSuffixes *string) *issueTemplatesGenerator {
-	suffixSlice := strings.Split(*trimSuffixes, ", ")
+func newIssueTemplatesGenerator(trimSuffixes string) *issueTemplatesGenerator {
+	suffixSlice := strings.Split(trimSuffixes, ", ")
 	return &issueTemplatesGenerator{
 		trimSuffixes: suffixSlice,
 	}

@@ -4,6 +4,7 @@
 package main
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -58,6 +59,38 @@ func Test_run(t *testing.T) {
 				t.Errorf("run() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			require.Equal(t, len(tt.args.generators.GenerateCalls()), 1)
+		})
+	}
+}
+
+func Test_newIssueTemplatesGenerator(t *testing.T) {
+	type args struct {
+		trimSuffixes string
+	}
+	tests := []struct {
+		name string
+		args args
+		want *issueTemplatesGenerator
+	}{
+		{
+			name: "basic test",
+			args: args{
+				trimSuffixes: "one, two, three",
+			},
+			want: &issueTemplatesGenerator{
+				trimSuffixes: []string{
+					"one",
+					"two",
+					"three",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := newIssueTemplatesGenerator(tt.args.trimSuffixes); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("newIssueTemplatesGenerator() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }
