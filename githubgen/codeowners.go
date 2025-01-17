@@ -141,7 +141,7 @@ LOOP:
 		for stability := range m.Status.Stability {
 			if stability == unmaintainedStatus {
 				unmaintainedList += key + "/\n"
-				unmaintainedCodeowners += fmt.Sprintf("%s/%s @open-telemetry/collector-contrib-approvers \n", key, strings.Repeat(" ", data.MaxLength-len(key)))
+				unmaintainedCodeowners += fmt.Sprintf("%s/%s @open-telemetry/collector-contrib-approvers\n", key, strings.Repeat(" ", data.MaxLength-len(key)))
 				continue LOOP
 			}
 			if stability == "deprecated" && (m.Status.Codeowners == nil || len(m.Status.Codeowners.Active) == 0) {
