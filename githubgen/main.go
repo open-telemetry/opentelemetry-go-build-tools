@@ -83,7 +83,7 @@ func run(folder string, allowlistFilePath string, generators []datatype.Generato
 		if info.Name() == "metadata.yaml" {
 			m, err := loadMetadata(path)
 			if err != nil {
-				return err
+				return fmt.Errorf("error reading %s: %s", path, err)
 			}
 			if m.Status == nil {
 				return nil
