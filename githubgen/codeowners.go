@@ -79,7 +79,13 @@ LOOP:
 		for _, m := range dist.Maintainers {
 			maintainers = append(maintainers, fmt.Sprintf("@%s", m))
 		}
-		codeowners += fmt.Sprintf("reports/distributions/%s.yaml%s %s %s\n", dist.Name, strings.Repeat(" ", longestName-len(dist.Name)), data.DefaultCodeOwner, strings.Join(maintainers, " "))
+
+		distribution := fmt.Sprintf("\nreports/distributions/%s.yaml%s %s", dist.Name, strings.Repeat(" ", longestName-len(dist.Name)), data.DefaultCodeOwner)
+		if len(maintainers) > 0 {
+			distribution += fmt.Sprintf(" %s", strings.Join(maintainers, " "))
+		}
+
+		codeowners += distribution
 	}
 
 	err = os.WriteFile(filepath.Join(data.RootFolder, ".github", "CODEOWNERS"), []byte(codeowners+unmaintainedCodeowners), 0o600)
