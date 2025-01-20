@@ -45,7 +45,7 @@ LOOP:
 		for stability := range m.Status.Stability {
 			if stability == unmaintainedStatus {
 				unmaintainedList += folder + "/\n"
-				unmaintainedCodeowners += fmt.Sprintf("%s/%s %s \n", folder, strings.Repeat(" ", data.MaxLength-len(folder)), data.DefaultCodeOwner)
+				unmaintainedCodeowners += fmt.Sprintf("%s/%s %s\n", folder, strings.Repeat(" ", data.MaxLength-len(folder)), data.DefaultCodeOwner)
 				continue LOOP
 			}
 			if stability == "deprecated" && (m.Status.Codeowners == nil || len(m.Status.Codeowners.Active) == 0) {

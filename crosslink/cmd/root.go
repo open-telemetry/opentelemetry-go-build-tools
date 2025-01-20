@@ -166,6 +166,8 @@ func init() {
 	comCfg.workCommand.Flags().StringVar(&comCfg.runConfig.GoVersion, "go", "1.22", "Go version applied when new go.work file is created")
 	comCfg.tidyListCommand.Flags().StringVar(&comCfg.runConfig.AllowCircular, "allow-circular", "", "path to list of go modules that are allowed to have circular dependencies")
 	comCfg.tidyListCommand.Flags().BoolVar(&comCfg.runConfig.Validate, "validate", false, "enables brute force validation of the tidy schedule")
+	comCfg.tidyListCommand.Flags().StringSliceVar(&comCfg.skipFlags, "skip", []string{}, "list of comma separated go.mod files that will be ignored by crosslink. "+
+		"multiple calls of --skip can be made")
 }
 
 // transform array slice into map

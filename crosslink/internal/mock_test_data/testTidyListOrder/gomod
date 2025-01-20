@@ -1,0 +1,3 @@
+module go.opentelemetry.io/build-tools/crosslink/testroot
+
+go 1.20

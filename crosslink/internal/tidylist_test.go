@@ -65,6 +65,22 @@ func TestTidy(t *testing.T) {
 			},
 			expSched: []string{".", "testC", "testB", "testA", "testB"},
 		},
+		{ // A -> C, B should give CAB (default to alphabetical order when no contraint)
+			name:     "testTidyListOrder",
+			mock:     "testTidyListOrder",
+			config:   func(*RunConfig) {},
+			expSched: []string{".", "testC", "testA", "testB"},
+		},
+		{ // A -> C, B with A skipped should give BC (prune the graph, not just filter the output)
+			name: "testTidyListSkip",
+			mock: "testTidyListOrder",
+			config: func(config *RunConfig) {
+				config.SkippedPaths = map[string]struct{}{
+					"testA/go.mod": {},
+				}
+			},
+			expSched: []string{".", "testB", "testC"},
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
