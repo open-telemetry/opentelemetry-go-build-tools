@@ -13,40 +13,47 @@ import (
 	"go.opentelemetry.io/build-tools/githubgen/datatype"
 )
 
-const (
-	startComponentList = `# Start Collector components list`
-	endComponentList   = `# End Collector components list`
-)
+type issueTemplatesGenerator struct {
+	trimSuffixes []string
+}
 
-func folderToShortName(folder string) string {
-	if folder == "internal/coreinternal" {
-		return "internal/core"
-	}
+// folderToSlug removes redundant suffixes from a path.
+//
+// A path like receiver/myvendorreceiver will be trimmed to receiver/myvendor.
+//
+// All parts of the path except for the first level will be trimmed.
+func (itg *issueTemplatesGenerator) folderToSlug(folder string) string {
 	path := strings.Split(folder, "/")
-	switch path[0] {
-	case "receiver", "exporter", "extension", "processor", "connector":
-		path[1] = strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(path[1], "internal"), "extension"), "exporter"), "connector"), "processor"), "receiver")
-		path[len(path)-1] = strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(path[len(path)-1], "internal"), "extension"), "exporter"), "connector"), "processor"), "receiver")
-	default:
+	exists := false
+	for _, suffix := range itg.trimSuffixes {
+		if strings.Contains(path[0], suffix) {
+			exists = true
+			break
+		}
+	}
+
+	if exists {
+		for _, suffix := range itg.trimSuffixes {
+			path[1] = strings.TrimSuffix(path[1], suffix)
+			path[len(path)-1] = strings.TrimSuffix(path[len(path)-1], suffix)
+		}
 	}
 
 	return strings.Join(path, "/")
 }
 
-type issueTemplatesGenerator struct{}
-
+// Generate takes all files in the .github/ISSUE_TEMPLATE folder, looks for a magic start
+// and end string and fills in the list of found components in-between.
 func (itg *issueTemplatesGenerator) Generate(data datatype.GithubData) error {
-	keys := map[string]struct{}{}
-	for _, f := range data.Folders {
-		keys[folderToShortName(f)] = struct{}{}
+	var componentSlugs []string
+
+	for _, folder := range data.Folders {
+		componentSlugs = append(componentSlugs, itg.folderToSlug(strings.TrimPrefix(folder, data.RootFolder+"/")))
 	}
-	shortNames := make([]string, 0, len(keys))
-	for k := range keys {
-		shortNames = append(shortNames, k)
-	}
-	sort.Strings(shortNames)
-	replacement := []byte(startComponentList + "\n      - " + strings.Join(shortNames, "\n      - ") + "\n      " + endComponentList)
-	issuesFolder := filepath.Join(".github", "ISSUE_TEMPLATE")
+	sort.Strings(componentSlugs)
+
+	replacement := []byte(startComponentList + "\n      - " + strings.Join(componentSlugs, "\n      - ") + "\n      " + endComponentList)
+	issuesFolder := filepath.Join(data.RootFolder, ".github", "ISSUE_TEMPLATE")
 	entries, err := os.ReadDir(issuesFolder)
 	if err != nil {
 		return err
