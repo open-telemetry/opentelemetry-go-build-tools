@@ -4,6 +4,17 @@
 
 <!-- next version -->
 
+## v0.17.0
+
+### 🚀 New components 🚀
+
+- `githubgen`: Moved githubgen tool here from open-telemetry/opentelemetry-collector-contrib (#639)
+
+### 💡 Enhancements 💡
+
+- `crosslink`: Added `--skip` flag to `crosslink tidylist` subcommand (#662)
+- `githubgen`: Enhanced githubgen tool with more options to better fit arbitrary repos, added unit tests (#655)
+
 ## v0.16.0
 
 ### 💡 Enhancements 💡
