@@ -128,7 +128,7 @@ jobs:
         cp coverage.html $TEST_RESULTS
 
     - name: Upload coverage report
-      uses: codecov/codecov-action@v5.1.2
+      uses: codecov/codecov-action@v5.3.1
       with:
         file: ./coverage.txt
         fail_ci_if_error: true
