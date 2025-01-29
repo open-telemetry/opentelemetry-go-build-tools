@@ -12,12 +12,12 @@ func TestIngestArtifacts(t *testing.T) {
 	rg.ingestArtifacts("./testdata/junit")
 
 	expectedTestResults := map[string]junit.Suite{
-		"package1": junit.Suite{
+		"package1": {
 			Name:       "package1",
 			Package:    "",
 			Properties: map[string]string{"go.version": "go1.23.1 darwin/arm64"},
 			Tests: []junit.Test{
-				junit.Test{
+				{
 					Name:      "TestFailure",
 					Classname: "package1",
 					Duration:  0,
@@ -32,7 +32,7 @@ func TestIngestArtifacts(t *testing.T) {
 					SystemOut:  "",
 					SystemErr:  "",
 				},
-				junit.Test{
+				{
 					Name:       "TestSucess",
 					Classname:  "package1",
 					Duration:   0,
@@ -52,12 +52,12 @@ func TestIngestArtifacts(t *testing.T) {
 				Error:    0,
 				Duration: 0,
 			},
-		}, "package2": junit.Suite{
+		}, "package2": {
 			Name:       "package2",
 			Package:    "",
 			Properties: map[string]string{"go.version": "go1.23.1 darwin/arm64"},
 			Tests: []junit.Test{
-				junit.Test{
+				{
 					Name:      "TestFailure",
 					Classname: "package2",
 					Duration:  0,
@@ -70,7 +70,7 @@ func TestIngestArtifacts(t *testing.T) {
 					}, Properties: map[string]string{"classname": "package2", "name": "TestFailure", "time": "0.000000"},
 					SystemOut: "",
 					SystemErr: ""},
-				junit.Test{
+				{
 					Name:       "TestSucess",
 					Classname:  "package2",
 					Duration:   0,

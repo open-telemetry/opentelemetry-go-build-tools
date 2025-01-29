@@ -40,7 +40,6 @@ const (
 
 )
 
-
 func main() {
 	pathToArtifacts := flag.String("path", "", "Path to the directory with test results")
 	flag.Parse()
@@ -137,16 +136,16 @@ func (rg *reportGenerator) processTestResults() {
 			continue
 		}
 
-		report := report{
+		r := report{
 			module:      module,
 			failedTests: make([]string, 0, suite.Totals.Failed),
 		}
 		for _, t := range suite.Tests {
 			if t.Status == junit.StatusFailed {
-				report.failedTests = append(report.failedTests, t.Name)
+				r.failedTests = append(r.failedTests, t.Name)
 			}
 		}
-		rg.reports = append(rg.reports, report)
+		rg.reports = append(rg.reports, r)
 	}
 }
 
