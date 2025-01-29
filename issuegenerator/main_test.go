@@ -3,14 +3,13 @@ package main
 import (
 	"testing"
 
-	cdowners "github.com/hmarr/codeowners"
 	"github.com/joshdk/go-junit"
 	"github.com/stretchr/testify/require"
 )
 
 func TestIngestArtifacts(t *testing.T) {
 	rg := newReportGenerator()
-	rg.ingestArtifacts("./testdata/junit", "./testdata/codeowners/CODEOWNERS_good")
+	rg.ingestArtifacts("./testdata/junit")
 
 	expectedTestResults := map[string]junit.Suite{
 		"package1": junit.Suite{
@@ -94,84 +93,4 @@ func TestIngestArtifacts(t *testing.T) {
 	}
 	require.Equal(t, expectedTestResults, rg.testSuites)
 
-	expectedCodeowners := cdowners.Ruleset{
-		{LineNumber: 1, Owners: []cdowners.Owner{{Value: "User1", Type: "username"}}},
-		{LineNumber: 2, Owners: []cdowners.Owner{{Value: "User2", Type: "username"}}},
-	}
-	// We can't match the whole struct because the regex pattern is not exported.
-	require.Equal(t, expectedCodeowners[0].Owners, rg.codeowners[0].Owners)
-	require.Equal(t, expectedCodeowners[0].LineNumber, rg.codeowners[0].LineNumber)
-	require.Equal(t, expectedCodeowners[1].Owners, rg.codeowners[1].Owners)
-	require.Equal(t, expectedCodeowners[1].LineNumber, rg.codeowners[1].LineNumber)
 }
-
-// func TestProcessTestResults(t *testing.T) {
-// 	testCases := []struct {
-// 		name       string
-// 		testSuite  map[string]junit.Suite
-// 		codeowners cdowners.Ruleset
-
-// 		expectedReports []report
-// 	}{
-// 		{
-// 			name: "Default codeowners",
-// 			testSuite: map[string]junit.Suite{
-// 				"package1": junit.Suite{
-// 					Name:  "package1",
-// 					Tests: []junit.Test{{Name: "TestFailure", Status: junit.StatusFailed}},
-// 					Totals: junit.Totals{
-// 						Failed: 1,
-// 					},
-// 				},
-// 				"package2": junit.Suite{
-// 					Name:  "package2",
-// 					Tests: []junit.Test{{Name: "TestFailure", Status: junit.StatusFailed}},
-// 					Totals: junit.Totals{
-// 						Failed: 1,
-// 					},
-// 				},
-// 			},
-// 			codeowners: func() cdowners.Ruleset {
-// 				f, _ := os.Open("./testdata/codeowners/CODEOWNERS_good")
-// 				rs, _ := cdowners.ParseFile(f)
-// 				return rs
-// 			}(),
-
-// 			expectedReports: []report{
-// 				{module: "package1", codeOwners: "@User1, @User2", failedTests: []string{"TestFailure"}},
-// 				{module: "package2", codeOwners: "@User1, @User2", failedTests: []string{"TestFailure"}},
-// 			},
-// 		},
-// 		{
-// 			name: "Overlapping codeowners",
-// 			testSuite: map[string]junit.Suite{
-// 				"package1": junit.Suite{
-// 					Name:  "package1",
-// 					Tests: []junit.Test{{Name: "TestFailure", Status: junit.StatusFailed}},
-// 					Totals: junit.Totals{
-// 						Failed: 1,
-// 					},
-// 				},
-// 			},
-// 			codeowners: func() cdowners.Ruleset {
-// 				f, _ := os.Open("./testdata/codeowners/CODEOWNERS_good")
-// 				rs, _ := cdowners.ParseFile(f)
-// 				return rs
-// 			}(),
-// 			expectedReports: []report{
-// 				{module: "package1", codeOwners: "@User2", failedTests: []string{"TestFailure"}},
-// 			},
-// 		},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		t.Run(tc.name, func(t *testing.T) {
-// 			rg := newReportGenerator()
-// 			rg.testSuites = tc.testSuite
-// 			rg.codeowners = tc.codeowners
-// 			rg.processTestResults()
-
-// 			require.Equal(t, tc.expectedReports, rg.reports)
-// 		})
-// 	}
-// }
