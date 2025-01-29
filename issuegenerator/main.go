@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
@@ -24,7 +25,6 @@ import (
 	"strings"
 
 	"github.com/google/go-github/github"
-	cdowners "github.com/hmarr/codeowners"
 	"github.com/joshdk/go-junit"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
@@ -40,18 +40,17 @@ const (
 
 )
 
+
 func main() {
-	pathToArtifacts := ""
-	pathToCodeOwners := ""
-	if len(os.Args) > 1 {
-		pathToArtifacts = os.Args[1]
-	}
-	if len(os.Args) > 2 {
-		pathToCodeOwners = os.Args[2]
+	pathToArtifacts := flag.String("path", "", "Path to the directory with test results")
+	flag.Parse()
+	if *pathToArtifacts == "" {
+		fmt.Println("Path to the directory with test results is required")
+		os.Exit(1)
 	}
 
 	rg := newReportGenerator()
-	rg.ingestArtifacts(pathToArtifacts, pathToCodeOwners)
+	rg.ingestArtifacts(*pathToArtifacts)
 	rg.processTestResults()
 	rg.initializeGHClient()
 
@@ -64,9 +63,6 @@ func main() {
 			zap.String("module", report.module),
 			zap.Int("failed_tests", len(report.failedTests)),
 		)
-		if len(report.failedTests) == 0 {
-			continue
-		}
 
 		existingIssue := rg.getExistingIssue(report.module)
 		if existingIssue == nil {
@@ -103,7 +99,7 @@ func newReportGenerator() *reportGenerator {
 	}
 }
 
-func (rg *reportGenerator) ingestArtifacts(pathToArtifacts, pathToCodeOwners string) {
+func (rg *reportGenerator) ingestArtifacts(pathToArtifacts string) {
 	if pathToArtifacts != "" {
 		files, err := os.ReadDir(pathToArtifacts)
 		if err != nil {
@@ -131,27 +127,6 @@ func (rg *reportGenerator) ingestArtifacts(pathToArtifacts, pathToCodeOwners str
 			rg.testSuites[suites[0].Name] = suites[0]
 		}
 	}
-
-	// Read CODEOWNERS file and store the owners for each module.
-	if pathToCodeOwners != "" {
-		f, err := os.Open(pathToCodeOwners)
-		if err != nil {
-			rg.logger.Warn(
-				"Failed to open CODEOWNERS file",
-				zap.Error(err),
-				zap.String("path", pathToCodeOwners),
-			)
-		}
-		c, err := cdowners.ParseFile(f)
-		if err != nil {
-			rg.logger.Warn(
-				"Failed to read CODEOWNERS file",
-				zap.Error(err),
-				zap.String("path", pathToCodeOwners),
-			)
-		}
-		rg.codeowners = c
-	}
 }
 
 // processTestResults iterates over the test results and matches the module
@@ -162,21 +137,8 @@ func (rg *reportGenerator) processTestResults() {
 			continue
 		}
 
-		rule, err := rg.codeowners.Match(module)
-		if err != nil {
-			rg.logger.Warn(
-				"Failed to match module with code owners",
-				zap.Error(err),
-				zap.String("module", module),
-			)
-		}
-		owners := make([]string, 0, len(rule.Owners))
-		for _, o := range rule.Owners {
-			owners = append(owners, "@"+o.Value)
-		}
 		report := report{
 			module:      module,
-			codeOwners:  strings.Join(owners, ", "),
 			failedTests: make([]string, 0, suite.Totals.Failed),
 		}
 		for _, t := range suite.Tests {
@@ -201,7 +163,6 @@ type reportGenerator struct {
 	client       *github.Client
 	envVariables map[string]string
 	testSuites   map[string]junit.Suite
-	codeowners   cdowners.Ruleset
 
 	reports        []report
 	reportIterator int
@@ -209,7 +170,6 @@ type reportGenerator struct {
 
 type report struct {
 	module      string
-	codeOwners  string
 	failedTests []string
 }
 
@@ -248,15 +208,11 @@ ${failedTests}
 
 **Note**: Information about any subsequent build failures that happen while
 this issue is open, will be added as comments with more information to this issue.
-
-Assigned code owners: ${codeOwners}
 `
 	issueCommentTemplate = `
 Link to latest failed build: ${linkToBuild}
 
 ${failedTests}
-
-Assigned code owners: ${codeOwners}
 `
 )
 
@@ -267,9 +223,7 @@ func (rg reportGenerator) templateHelper(param string) string {
 	case "linkToBuild":
 		return os.Getenv(githubWorkflowURL)
 	case "failedTests":
-		return rg.getFailedTests()
-	case "codeOwners":
-		return rg.reports[rg.reportIterator].codeOwners
+		return rg.reports[rg.reportIterator].getFailedTests()
 	default:
 		return ""
 	}
@@ -357,21 +311,16 @@ func (rg *reportGenerator) createIssue(r report) *github.Issue {
 
 // getFailedTests returns information about failed tests if available, otherwise
 // an empty string.
-func (rg reportGenerator) getFailedTests() string {
-	if len(rg.testSuites) == 0 {
+func (r report) getFailedTests() string {
+	if len(r.failedTests) == 0 {
 		return ""
 	}
 
 	var sb strings.Builder
 	sb.WriteString("#### Test Failures\n")
 
-	for _, s := range rg.testSuites {
-		for _, t := range s.Tests {
-			if t.Status != junit.StatusFailed {
-				continue
-			}
-			sb.WriteString("-  " + t.Name + "\n")
-		}
+	for _, s := range r.failedTests {
+		sb.WriteString("-  `" + s + "`\n")
 	}
 
 	return sb.String()
