@@ -115,7 +115,7 @@ LOOP:
 	// if err != nil {
 	// 	return err
 	// }
-	// return nil
+	return nil
 }
 
 func formatGithubUser(user string) string {
