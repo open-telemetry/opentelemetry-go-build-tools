@@ -116,7 +116,7 @@ func (rg *reportGenerator) ingestArtifacts(pathToArtifacts string) {
 			rg.logger.Info("Ingesting test reports", zap.String("path", file.Name()))
 			suites, err := junit.IngestFile(path.Join(pathToArtifacts, file.Name()))
 			if err != nil {
-				rg.logger.Warn(
+				rg.logger.Fatal(
 					"Failed to ingest JUnit xml, omitting test results from report",
 					zap.Error(err),
 				)
