@@ -78,30 +78,30 @@ LOOP:
 		distributions = append(distributions, distribution)
 	}
 
-	codeOwnersReplacement := []byte(startCodeownersComponentList + "\n\n" + strings.Join(ownerComponents, "\n") + "\n\n" + endCodeownersComponentList)
-	distributionsReplacement := []byte(startDistributionList + "\n\n" + strings.Join(distributions, "\n") + "\n\n" + endDistributionList)
-	unmaintainedCompReplacement := []byte(startCodeownersUnmaintainedList + "\n\n" + strings.Join(unmaintainedCodeowners, "\n") + "\n\n" + endCodeownersUnmaintainedList)
-
 	codeownersFile := filepath.Join(data.RootFolder, ".github", "CODEOWNERS")
 	templateContents, err := os.ReadFile(codeownersFile) // nolint: gosec
 	if err != nil {
 		return err
 	}
+
 	matchOldCodeowners := regexp.MustCompile("(?s)" + startCodeownersComponentList + ".*" + endCodeownersComponentList)
-	matchOldDistributions := regexp.MustCompile("(?s)" + startDistributionList + ".*" + endDistributionList)
-	matchOldUnmaintainedComponents := regexp.MustCompile("(?s)" + startCodeownersUnmaintainedList + ".*" + endCodeownersUnmaintainedList)
-
 	oldCodeowners := matchOldCodeowners.FindSubmatch(templateContents)
-	oldDistributions := matchOldDistributions.FindSubmatch(templateContents)
-	oldUnmaintainedComponents := matchOldUnmaintainedComponents.FindSubmatch(templateContents)
-
 	if len(oldCodeowners) > 0 {
+		codeOwnersReplacement := []byte(startCodeownersComponentList + "\n\n" + strings.Join(ownerComponents, "\n") + "\n\n" + endCodeownersComponentList)
 		templateContents = bytes.ReplaceAll(templateContents, oldCodeowners[0], codeOwnersReplacement)
 	}
+
+	matchOldDistributions := regexp.MustCompile("(?s)" + startDistributionList + ".*" + endDistributionList)
+	oldDistributions := matchOldDistributions.FindSubmatch(templateContents)
 	if len(oldDistributions) > 0 {
+		distributionsReplacement := []byte(startDistributionList + "\n\n" + strings.Join(distributions, "\n") + "\n\n" + endDistributionList)
 		templateContents = bytes.ReplaceAll(templateContents, oldDistributions[0], distributionsReplacement)
 	}
+
+	matchOldUnmaintainedComponents := regexp.MustCompile("(?s)" + startCodeownersUnmaintainedList + ".*" + endCodeownersUnmaintainedList)
+	oldUnmaintainedComponents := matchOldUnmaintainedComponents.FindSubmatch(templateContents)
 	if len(oldUnmaintainedComponents) > 0 {
+		unmaintainedCompReplacement := []byte(startCodeownersUnmaintainedList + "\n\n" + strings.Join(unmaintainedCodeowners, "\n") + "\n\n" + endCodeownersUnmaintainedList)
 		templateContents = bytes.ReplaceAll(templateContents, oldUnmaintainedComponents[0], unmaintainedCompReplacement)
 	}
 
@@ -111,9 +111,6 @@ LOOP:
 	}
 
 	// ALLOWLIST file
-	allowListUnmaintainedCompReplacement := []byte(startAllowListUnmaintainedList + "\n\n" + strings.Join(allowListUnmaintainedComponents, "\n") + "\n\n" + endAllowListUnmaintainedList)
-	allowListDeprecatedCompReplacement := []byte(startAllowListDeprecatedList + "\n\n" + strings.Join(allowListDeprecatedComponents, "\n") + "\n\n" + endAllowListDeprecatedList)
-
 	allowListFile := filepath.Join(data.RootFolder, ".github", "ALLOWLIST")
 	allowListContents, err := os.ReadFile(allowListFile) // nolint: gosec
 	if err != nil {
@@ -121,16 +118,16 @@ LOOP:
 	}
 
 	matchOldAllowListUnmaintainedComponents := regexp.MustCompile("(?s)" + startAllowListUnmaintainedList + ".*" + endAllowListUnmaintainedList)
-	matchOldAllowListDeprecatedComponents := regexp.MustCompile("(?s)" + startAllowListDeprecatedList + ".*" + endAllowListDeprecatedList)
-
 	oldAllowListUnmaintainedComponents := matchOldAllowListUnmaintainedComponents.FindSubmatch(allowListContents)
-	oldAllowListDeprecatedComponents := matchOldAllowListDeprecatedComponents.FindSubmatch(allowListContents)
-
 	if len(oldAllowListUnmaintainedComponents) > 0 {
+		allowListUnmaintainedCompReplacement := []byte(startAllowListUnmaintainedList + "\n\n" + strings.Join(allowListUnmaintainedComponents, "\n") + "\n\n" + endAllowListUnmaintainedList)
 		allowListContents = bytes.ReplaceAll(allowListContents, oldAllowListUnmaintainedComponents[0], allowListUnmaintainedCompReplacement)
 	}
 
+	matchOldAllowListDeprecatedComponents := regexp.MustCompile("(?s)" + startAllowListDeprecatedList + ".*" + endAllowListDeprecatedList)
+	oldAllowListDeprecatedComponents := matchOldAllowListDeprecatedComponents.FindSubmatch(allowListContents)
 	if len(oldAllowListDeprecatedComponents) > 0 {
+		allowListDeprecatedCompReplacement := []byte(startAllowListDeprecatedList + "\n\n" + strings.Join(allowListDeprecatedComponents, "\n") + "\n\n" + endAllowListDeprecatedList)
 		allowListContents = bytes.ReplaceAll(allowListContents, oldAllowListDeprecatedComponents[0], allowListDeprecatedCompReplacement)
 	}
 
