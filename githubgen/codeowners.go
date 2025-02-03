@@ -78,32 +78,16 @@ LOOP:
 		distributions = append(distributions, distribution)
 	}
 
+	// CODEOWNERS file
 	codeownersFile := filepath.Join(data.RootFolder, ".github", "CODEOWNERS")
 	templateContents, err := os.ReadFile(codeownersFile) // nolint: gosec
 	if err != nil {
 		return err
 	}
 
-	matchOldCodeowners := regexp.MustCompile("(?s)" + startCodeownersComponentList + ".*" + endCodeownersComponentList)
-	oldCodeowners := matchOldCodeowners.FindSubmatch(templateContents)
-	if len(oldCodeowners) > 0 {
-		codeOwnersReplacement := []byte(startCodeownersComponentList + "\n\n" + strings.Join(ownerComponents, "\n") + "\n\n" + endCodeownersComponentList)
-		templateContents = bytes.ReplaceAll(templateContents, oldCodeowners[0], codeOwnersReplacement)
-	}
-
-	matchOldDistributions := regexp.MustCompile("(?s)" + startDistributionList + ".*" + endDistributionList)
-	oldDistributions := matchOldDistributions.FindSubmatch(templateContents)
-	if len(oldDistributions) > 0 {
-		distributionsReplacement := []byte(startDistributionList + "\n\n" + strings.Join(distributions, "\n") + "\n\n" + endDistributionList)
-		templateContents = bytes.ReplaceAll(templateContents, oldDistributions[0], distributionsReplacement)
-	}
-
-	matchOldUnmaintainedComponents := regexp.MustCompile("(?s)" + startCodeownersUnmaintainedList + ".*" + endCodeownersUnmaintainedList)
-	oldUnmaintainedComponents := matchOldUnmaintainedComponents.FindSubmatch(templateContents)
-	if len(oldUnmaintainedComponents) > 0 {
-		unmaintainedCompReplacement := []byte(startCodeownersUnmaintainedList + "\n\n" + strings.Join(unmaintainedCodeowners, "\n") + "\n\n" + endCodeownersUnmaintainedList)
-		templateContents = bytes.ReplaceAll(templateContents, oldUnmaintainedComponents[0], unmaintainedCompReplacement)
-	}
+	templateContents = injectContent(startCodeownersComponentList, endCodeownersComponentList, templateContents, ownerComponents)
+	templateContents = injectContent(startDistributionList, endDistributionList, templateContents, distributions)
+	templateContents = injectContent(startCodeownersUnmaintainedList, endCodeownersUnmaintainedList, templateContents, unmaintainedCodeowners)
 
 	err = os.WriteFile(codeownersFile, templateContents, 0o600)
 	if err != nil {
@@ -117,25 +101,24 @@ LOOP:
 		return err
 	}
 
-	matchOldAllowListUnmaintainedComponents := regexp.MustCompile("(?s)" + startAllowListUnmaintainedList + ".*" + endAllowListUnmaintainedList)
-	oldAllowListUnmaintainedComponents := matchOldAllowListUnmaintainedComponents.FindSubmatch(allowListContents)
-	if len(oldAllowListUnmaintainedComponents) > 0 {
-		allowListUnmaintainedCompReplacement := []byte(startAllowListUnmaintainedList + "\n\n" + strings.Join(allowListUnmaintainedComponents, "\n") + "\n\n" + endAllowListUnmaintainedList)
-		allowListContents = bytes.ReplaceAll(allowListContents, oldAllowListUnmaintainedComponents[0], allowListUnmaintainedCompReplacement)
-	}
-
-	matchOldAllowListDeprecatedComponents := regexp.MustCompile("(?s)" + startAllowListDeprecatedList + ".*" + endAllowListDeprecatedList)
-	oldAllowListDeprecatedComponents := matchOldAllowListDeprecatedComponents.FindSubmatch(allowListContents)
-	if len(oldAllowListDeprecatedComponents) > 0 {
-		allowListDeprecatedCompReplacement := []byte(startAllowListDeprecatedList + "\n\n" + strings.Join(allowListDeprecatedComponents, "\n") + "\n\n" + endAllowListDeprecatedList)
-		allowListContents = bytes.ReplaceAll(allowListContents, oldAllowListDeprecatedComponents[0], allowListDeprecatedCompReplacement)
-	}
+	allowListContents = injectContent(startAllowListUnmaintainedList, endAllowListUnmaintainedList, allowListContents, allowListUnmaintainedComponents)
+	allowListContents = injectContent(startAllowListDeprecatedList, endAllowListDeprecatedList, allowListContents, allowListDeprecatedComponents)
 
 	err = os.WriteFile(filepath.Join(data.RootFolder, ".github", "ALLOWLIST"), allowListContents, 0o600)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func injectContent(startMagicString, endMagicString string, templateContents []byte, replaceContent []string) []byte {
+	matchOldContent := regexp.MustCompile("(?s)" + startMagicString + ".*" + endMagicString)
+	oldContent := matchOldContent.FindSubmatch(templateContents)
+	if len(oldContent) > 0 {
+		replacement := []byte(startMagicString + "\n\n" + strings.Join(replaceContent, "\n") + "\n\n" + endMagicString)
+		templateContents = bytes.ReplaceAll(templateContents, oldContent[0], replacement)
+	}
+	return templateContents
 }
 
 func formatGithubUser(user string) string {
