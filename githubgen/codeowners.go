@@ -34,7 +34,7 @@ func (cg *codeownersGenerator) Generate(data datatype.GithubData) error {
 		return err
 	}
 
-	var ownerComponents, allowListUnmaintainedComponents, unmaintainedCodeowners, distributions, allowListDeprecatedList []string
+	var ownerComponents, allowListUnmaintainedComponents, unmaintainedCodeowners, distributions, allowListDeprecatedComponents []string
 
 LOOP:
 	for _, folder := range data.Folders {
@@ -42,12 +42,12 @@ LOOP:
 		// check if component is unmaintained or deprecated
 		for stability := range m.Status.Stability {
 			if stability == unmaintainedStatus {
-				allowListUnmaintainedComponents = append(allowListUnmaintainedComponents, folder+"/\n")
+				allowListUnmaintainedComponents = append(allowListUnmaintainedComponents, folder)
 				unmaintainedCodeowners = append(unmaintainedCodeowners, fmt.Sprintf("%s/%s %s", folder, strings.Repeat(" ", data.MaxLength-len(folder)), data.DefaultCodeOwner))
 				continue LOOP
 			}
 			if stability == deprecatedStatus && (m.Status.Codeowners == nil || len(m.Status.Codeowners.Active) == 0) {
-				allowListDeprecatedList = append(allowListDeprecatedList, folder+"/\n")
+				allowListDeprecatedComponents = append(allowListDeprecatedComponents, folder+"/\n")
 			}
 		}
 
@@ -110,11 +110,34 @@ LOOP:
 		return err
 	}
 
-	// TODO implement in the same way
-	// err = os.WriteFile(filepath.Join(data.RootFolder, ".github", "ALLOWLIST"), []byte(allowlistHeader+allowListDeprecatedList+allowListUnmaintainedList), 0o600)
-	// if err != nil {
-	// 	return err
-	// }
+	// ALLOWLIST file
+	allowListUnmaintainedCompReplacement := []byte(startAllowListUnmaintainedList + "\n\n" + strings.Join(allowListUnmaintainedComponents, "\n") + "\n\n" + endAllowListUnmaintainedList)
+	allowListDeprecatedCompReplacement := []byte(startAllowListDeprecatedList + "\n\n" + strings.Join(allowListDeprecatedComponents, "\n") + "\n\n" + endAllowListDeprecatedList)
+
+	allowListFile := filepath.Join(data.RootFolder, ".github", "ALLOWLIST")
+	allowListContents, err := os.ReadFile(allowListFile) // nolint: gosec
+	if err != nil {
+		return err
+	}
+
+	matchOldAllowListUnmaintainedComponents := regexp.MustCompile("(?s)" + startAllowListUnmaintainedList + ".*" + endAllowListUnmaintainedList)
+	matchOldAllowListDeprecatedComponents := regexp.MustCompile("(?s)" + startAllowListDeprecatedList + ".*" + endAllowListDeprecatedList)
+
+	oldAllowListUnmaintainedComponents := matchOldAllowListUnmaintainedComponents.FindSubmatch(allowListContents)
+	oldAllowListDeprecatedComponents := matchOldAllowListDeprecatedComponents.FindSubmatch(allowListContents)
+
+	if len(oldAllowListUnmaintainedComponents) > 0 {
+		allowListContents = bytes.ReplaceAll(allowListContents, oldAllowListUnmaintainedComponents[0], allowListUnmaintainedCompReplacement)
+	}
+
+	if len(oldAllowListDeprecatedComponents) > 0 {
+		allowListContents = bytes.ReplaceAll(allowListContents, oldAllowListDeprecatedComponents[0], allowListDeprecatedCompReplacement)
+	}
+
+	err = os.WriteFile(filepath.Join(data.RootFolder, ".github", "ALLOWLIST"), allowListContents, 0o600)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
