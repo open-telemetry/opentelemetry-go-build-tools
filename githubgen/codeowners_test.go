@@ -239,7 +239,7 @@ func Test_codeownersGenerator_Generate(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "unmaintained/deprecated test",
+			name: "unmaintained/deprecated",
 			fields: fields{
 				skipGithub:       true,
 				getGitHubMembers: mockGithubMembers,
@@ -279,6 +279,30 @@ func Test_codeownersGenerator_Generate(t *testing.T) {
 								Codeowners:    nil,
 							},
 						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "distributions",
+			fields: fields{
+				skipGithub:       true,
+				getGitHubMembers: mockGithubMembers,
+				getFile:          mockGetFile,
+				setFile:          mockSetFile,
+			},
+			args: args{
+				data: datatype.GithubData{
+					RootFolder:        "some-folder",
+					Folders:           []string{},
+					Codeowners:        []string{},
+					AllowlistFilePath: "allowlist",
+					MaxLength:         10,
+					Components:        nil,
+					Distributions: []datatype.DistributionData{
+						{Name: "dist1", URL: "https://dist1", Maintainers: []string{"maintainer1", "maintainer2"}},
+						{Name: "dist2", URL: "https://dist2", Maintainers: []string{"maintainer1", "maintainer2", "maintainer3"}},
 					},
 				},
 			},
