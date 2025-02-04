@@ -26,7 +26,7 @@ type codeownersGenerator struct {
 }
 
 func (cg *codeownersGenerator) Generate(data datatype.GithubData) error {
-	allowlistData, err := os.ReadFile(data.AllowlistFilePath)
+	allowlistData, err := getFile(data.AllowlistFilePath)
 	if err != nil {
 		return err
 	}
