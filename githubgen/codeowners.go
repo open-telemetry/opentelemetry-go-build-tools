@@ -21,6 +21,8 @@ import (
 type codeownersGenerator struct {
 	skipGithub       bool
 	getGitHubMembers func(skipGithub bool, githubOrg string) (map[string]struct{}, error)
+	getFile          func(fileName string) ([]byte, error)
+	setFile          func(fileName string, data []byte) error
 }
 
 func (cg *codeownersGenerator) Generate(data datatype.GithubData) error {
@@ -80,7 +82,7 @@ LOOP:
 
 	// CODEOWNERS file
 	codeownersFile := filepath.Join(data.RootFolder, ".github", "CODEOWNERS")
-	templateContents, err := os.ReadFile(codeownersFile) // nolint: gosec
+	templateContents, err := getFile(codeownersFile)
 	if err != nil {
 		return err
 	}
@@ -89,14 +91,14 @@ LOOP:
 	templateContents = injectContent(startDistributionList, endDistributionList, templateContents, distributions)
 	templateContents = injectContent(startCodeownersUnmaintainedList, endCodeownersUnmaintainedList, templateContents, unmaintainedCodeowners)
 
-	err = os.WriteFile(codeownersFile, templateContents, 0o600)
+	err = setFile(codeownersFile, templateContents)
 	if err != nil {
 		return err
 	}
 
 	// ALLOWLIST file
 	allowListFile := filepath.Join(data.RootFolder, ".github", "ALLOWLIST")
-	allowListContents, err := os.ReadFile(allowListFile) // nolint: gosec
+	allowListContents, err := getFile(allowListFile)
 	if err != nil {
 		return err
 	}
@@ -104,7 +106,7 @@ LOOP:
 	allowListContents = injectContent(startAllowListUnmaintainedList, endAllowListUnmaintainedList, allowListContents, allowListUnmaintainedComponents)
 	allowListContents = injectContent(startAllowListDeprecatedList, endAllowListDeprecatedList, allowListContents, allowListDeprecatedComponents)
 
-	err = os.WriteFile(filepath.Join(data.RootFolder, ".github", "ALLOWLIST"), allowListContents, 0o600)
+	err = setFile(allowListFile, allowListContents)
 	if err != nil {
 		return err
 	}
@@ -198,7 +200,7 @@ func (cg *codeownersGenerator) verifyCodeOwnerOrgMembership(allowlistData []byte
 	return err
 }
 
-func GetGithubMembers(skipGithub bool, githubOrg string) (map[string]struct{}, error) {
+func getGithubMembers(skipGithub bool, githubOrg string) (map[string]struct{}, error) {
 	if skipGithub {
 		// don't try to get organization members if no token is expected
 		return map[string]struct{}{}, nil
@@ -236,4 +238,20 @@ func GetGithubMembers(skipGithub bool, githubOrg string) (map[string]struct{}, e
 		usernames[*u.Login] = struct{}{}
 	}
 	return usernames, nil
+}
+
+func getFile(fileName string) ([]byte, error) {
+	fileContents, err := os.ReadFile(fileName) // nolint: gosec
+	if err != nil {
+		return nil, err
+	}
+	return fileContents, nil
+}
+
+func setFile(fileName string, data []byte) error {
+	err := os.WriteFile(fileName, data, 0o600) // nolint: gosec
+	if err != nil {
+		return err
+	}
+	return nil
 }
