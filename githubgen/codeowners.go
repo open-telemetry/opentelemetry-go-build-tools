@@ -26,7 +26,7 @@ type codeownersGenerator struct {
 }
 
 func (cg *codeownersGenerator) Generate(data datatype.GithubData) error {
-	allowlistData, err := getFile(data.AllowlistFilePath)
+	allowlistData, err := cg.getFile(data.AllowlistFilePath)
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ LOOP:
 
 	// CODEOWNERS file
 	codeownersFile := filepath.Join(data.RootFolder, ".github", "CODEOWNERS")
-	templateContents, err := getFile(codeownersFile)
+	templateContents, err := cg.getFile(codeownersFile)
 	if err != nil {
 		return err
 	}
@@ -91,14 +91,14 @@ LOOP:
 	templateContents = injectContent(startDistributionList, endDistributionList, templateContents, distributions)
 	templateContents = injectContent(startCodeownersUnmaintainedList, endCodeownersUnmaintainedList, templateContents, unmaintainedCodeowners)
 
-	err = setFile(codeownersFile, templateContents)
+	err = cg.setFile(codeownersFile, templateContents)
 	if err != nil {
 		return err
 	}
 
 	// ALLOWLIST file
 	allowListFile := filepath.Join(data.RootFolder, ".github", "ALLOWLIST")
-	allowListContents, err := getFile(allowListFile)
+	allowListContents, err := cg.getFile(allowListFile)
 	if err != nil {
 		return err
 	}
@@ -106,7 +106,7 @@ LOOP:
 	allowListContents = injectContent(startAllowListUnmaintainedList, endAllowListUnmaintainedList, allowListContents, allowListUnmaintainedComponents)
 	allowListContents = injectContent(startAllowListDeprecatedList, endAllowListDeprecatedList, allowListContents, allowListDeprecatedComponents)
 
-	err = setFile(allowListFile, allowListContents)
+	err = cg.setFile(allowListFile, allowListContents)
 	if err != nil {
 		return err
 	}

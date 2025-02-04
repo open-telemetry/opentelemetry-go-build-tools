@@ -143,14 +143,6 @@ func Test_codeownersGenerator_longestNameSpaces(t *testing.T) {
 	}
 }
 
-func mockGithubMembers(bool, string) (map[string]struct{}, error) {
-	return map[string]struct{}{
-		"user1": {},
-		"user2": {},
-		"user3": {},
-	}, nil
-}
-
 func Test_formatGithubUser(t *testing.T) {
 	type args struct {
 		user string
@@ -228,4 +220,103 @@ func Test_injectContent(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_codeownersGenerator_Generate(t *testing.T) {
+	type fields struct {
+		skipGithub       bool
+		getGitHubMembers func(skipGithub bool, githubOrg string) (map[string]struct{}, error)
+		getFile          func(fileName string) ([]byte, error)
+		setFile          func(fileName string, data []byte) error
+	}
+	type args struct {
+		data datatype.GithubData
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "unmaintained/deprecated test",
+			fields: fields{
+				skipGithub:       true,
+				getGitHubMembers: mockGithubMembers,
+				getFile:          mockGetFile,
+				setFile:          mockSetFile,
+			},
+			args: args{
+				data: datatype.GithubData{
+					RootFolder: "some-folder",
+					Folders: []string{
+						"folder1",
+						"folder2",
+					},
+					Codeowners: []string{
+						"user1",
+					},
+					AllowlistFilePath: "allowlist",
+					MaxLength:         10,
+					Components: map[string]datatype.Metadata{
+						"folder1": {
+							Status: &datatype.Status{
+								Stability: map[string][]string{
+									"deprecated": {""},
+								},
+								Distributions: nil,
+								Class:         "",
+								Codeowners:    nil,
+							},
+						},
+						"folder2": {
+							Status: &datatype.Status{
+								Stability: map[string][]string{
+									"unmaintained": {""},
+								},
+								Distributions: nil,
+								Class:         "",
+								Codeowners:    nil,
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cg := &codeownersGenerator{
+				skipGithub:       tt.fields.skipGithub,
+				getGitHubMembers: tt.fields.getGitHubMembers,
+				getFile:          tt.fields.getFile,
+				setFile:          tt.fields.setFile,
+			}
+			if err := cg.Generate(tt.args.data); (err != nil) != tt.wantErr {
+				t.Errorf("Generate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func mockGithubMembers(bool, string) (map[string]struct{}, error) {
+	return map[string]struct{}{
+		"user1": {},
+		"user2": {},
+		"user3": {},
+	}, nil
+}
+
+func mockGetFile(path string) ([]byte, error) {
+	if path == "allowlist" {
+		return []byte(""), nil
+	} else if strings.Contains(path, ".github/CODEOWNERS") {
+		return []byte("aaa\n\n\nbbb"), nil
+	}
+	return []byte(""), nil
+}
+
+func mockSetFile(string, []byte) error {
+	return nil
 }
