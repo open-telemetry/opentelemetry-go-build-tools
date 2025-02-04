@@ -87,9 +87,9 @@ LOOP:
 		return err
 	}
 
-	templateContents = injectContent(startCodeownersComponentList, endCodeownersComponentList, templateContents, ownerComponents)
+	templateContents = injectContent(startComponentList, endComponentList, templateContents, ownerComponents)
 	templateContents = injectContent(startDistributionList, endDistributionList, templateContents, distributions)
-	templateContents = injectContent(startCodeownersUnmaintainedList, endCodeownersUnmaintainedList, templateContents, unmaintainedCodeowners)
+	templateContents = injectContent(startUnmaintainedList, endUnmaintainedList, templateContents, unmaintainedCodeowners)
 
 	err = cg.setFile(codeownersFile, templateContents)
 	if err != nil {
@@ -103,8 +103,8 @@ LOOP:
 		return err
 	}
 
-	allowListContents = injectContent(startAllowListUnmaintainedList, endAllowListUnmaintainedList, allowListContents, allowListUnmaintainedComponents)
-	allowListContents = injectContent(startAllowListDeprecatedList, endAllowListDeprecatedList, allowListContents, allowListDeprecatedComponents)
+	allowListContents = injectContent(startUnmaintainedList, endUnmaintainedList, allowListContents, allowListUnmaintainedComponents)
+	allowListContents = injectContent(startDeprecatedList, endDeprecatedList, allowListContents, allowListDeprecatedComponents)
 
 	err = cg.setFile(allowListFile, allowListContents)
 	if err != nil {
