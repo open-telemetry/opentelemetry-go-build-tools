@@ -241,17 +241,9 @@ func getGithubMembers(skipGithub bool, githubOrg string) (map[string]struct{}, e
 }
 
 func getFile(fileName string) ([]byte, error) {
-	fileContents, err := os.ReadFile(fileName) // nolint: gosec
-	if err != nil {
-		return nil, err
-	}
-	return fileContents, nil
+	return os.ReadFile(fileName) // nolint: gosec
 }
 
 func setFile(fileName string, data []byte) error {
-	err := os.WriteFile(fileName, data, 0o600) // nolint: gosec
-	if err != nil {
-		return err
-	}
-	return nil
+	return os.WriteFile(fileName, data, 0o600) // nolint: gosec
 }
