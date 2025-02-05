@@ -8,7 +8,7 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.6
 	github.com/stretchr/testify v1.10.0
-	go.opentelemetry.io/build-tools v0.17.0
+	go.opentelemetry.io/build-tools v0.18.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/mod v0.22.0
 )
