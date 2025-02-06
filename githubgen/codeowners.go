@@ -3,10 +3,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"sort"
 	"strings"
@@ -19,10 +21,12 @@ import (
 type codeownersGenerator struct {
 	skipGithub       bool
 	getGitHubMembers func(skipGithub bool, githubOrg string) (map[string]struct{}, error)
+	getFile          func(fileName string) ([]byte, error)
+	setFile          func(fileName string, data []byte) error
 }
 
 func (cg *codeownersGenerator) Generate(data datatype.GithubData) error {
-	allowlistData, err := os.ReadFile(data.AllowlistFilePath)
+	allowlistData, err := cg.getFile(data.AllowlistFilePath)
 	if err != nil {
 		return err
 	}
@@ -32,71 +36,98 @@ func (cg *codeownersGenerator) Generate(data datatype.GithubData) error {
 		return err
 	}
 
-	codeowners := fmt.Sprintf(codeownersHeader, data.DefaultCodeOwner)
-	deprecatedList := deprecatedListHeader
-	unmaintainedList := unmaintainedListHeader
-
-	unmaintainedCodeowners := unmaintainedHeader
-	currentFirstSegment := ""
+	var ownerComponents, allowListUnmaintainedComponents, unmaintainedCodeowners, distributions, allowListDeprecatedComponents []string
 
 LOOP:
 	for _, folder := range data.Folders {
 		m := data.Components[folder]
+		// check if component is unmaintained or deprecated
 		for stability := range m.Status.Stability {
 			if stability == unmaintainedStatus {
-				unmaintainedList += folder + "/\n"
-				unmaintainedCodeowners += fmt.Sprintf("%s/%s %s\n", folder, strings.Repeat(" ", data.MaxLength-len(folder)), data.DefaultCodeOwner)
+				allowListUnmaintainedComponents = append(allowListUnmaintainedComponents, folder)
+				unmaintainedCodeowners = append(unmaintainedCodeowners, fmt.Sprintf("%s/%s %s", folder, strings.Repeat(" ", data.MaxLength-len(folder)), data.DefaultCodeOwner))
 				continue LOOP
 			}
-			if stability == "deprecated" && (m.Status.Codeowners == nil || len(m.Status.Codeowners.Active) == 0) {
-				deprecatedList += folder + "/\n"
+			if stability == deprecatedStatus && (m.Status.Codeowners == nil || len(m.Status.Codeowners.Active) == 0) {
+				allowListDeprecatedComponents = append(allowListDeprecatedComponents, folder+"/\n")
 			}
 		}
 
+		// check and handle active codeowners
 		if m.Status.Codeowners != nil {
-			parts := strings.Split(folder, string(os.PathSeparator))
-			firstSegment := parts[0]
-			if firstSegment != currentFirstSegment {
-				currentFirstSegment = firstSegment
-				codeowners += "\n"
-			}
 			owners := ""
 			for _, owner := range m.Status.Codeowners.Active {
 				owners += " "
-				if !strings.HasPrefix(owner, "@") {
-					owners += "@" + owner
-				}
+				owners += formatGithubUser(owner)
 			}
-			codeowners += fmt.Sprintf("%s/%s %s%s\n", strings.TrimPrefix(folder, data.RootFolder+"/"), strings.Repeat(" ", data.MaxLength-len(folder)), data.DefaultCodeOwner, owners)
+			ownerComponents = append(ownerComponents, fmt.Sprintf("%s/%s %s%s", strings.TrimPrefix(folder, data.RootFolder+"/"), strings.Repeat(" ", data.MaxLength-len(folder)), data.DefaultCodeOwner, owners))
 		}
 	}
 
-	codeowners += distributionCodeownersHeader
 	longestName := cg.longestNameSpaces(data)
 
 	for _, dist := range data.Distributions {
 		var maintainers []string
 		for _, m := range dist.Maintainers {
-			maintainers = append(maintainers, fmt.Sprintf("@%s", m))
+			maintainers = append(maintainers, formatGithubUser(m))
 		}
 
-		distribution := fmt.Sprintf("\nreports/distributions/%s.yaml%s %s", dist.Name, strings.Repeat(" ", longestName-len(dist.Name)), data.DefaultCodeOwner)
+		distribution := fmt.Sprintf("reports/distributions/%s.yaml%s %s", dist.Name, strings.Repeat(" ", longestName-len(dist.Name)), data.DefaultCodeOwner)
 		if len(maintainers) > 0 {
 			distribution += fmt.Sprintf(" %s", strings.Join(maintainers, " "))
 		}
 
-		codeowners += distribution
+		distributions = append(distributions, distribution)
 	}
 
-	err = os.WriteFile(filepath.Join(data.RootFolder, ".github", "CODEOWNERS"), []byte(codeowners+unmaintainedCodeowners), 0o600)
+	// CODEOWNERS file
+	codeownersFile := filepath.Join(data.RootFolder, ".github", "CODEOWNERS")
+	templateContents, err := cg.getFile(codeownersFile)
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(filepath.Join(data.RootFolder, ".github", "ALLOWLIST"), []byte(allowlistHeader+deprecatedList+unmaintainedList), 0o600)
+
+	templateContents = injectContent(startComponentList, endComponentList, templateContents, ownerComponents)
+	templateContents = injectContent(startDistributionList, endDistributionList, templateContents, distributions)
+	templateContents = injectContent(startUnmaintainedList, endUnmaintainedList, templateContents, unmaintainedCodeowners)
+
+	err = cg.setFile(codeownersFile, templateContents)
+	if err != nil {
+		return err
+	}
+
+	// ALLOWLIST file
+	allowListFile := filepath.Join(data.RootFolder, ".github", "ALLOWLIST")
+	allowListContents, err := cg.getFile(allowListFile)
+	if err != nil {
+		return err
+	}
+
+	allowListContents = injectContent(startUnmaintainedList, endUnmaintainedList, allowListContents, allowListUnmaintainedComponents)
+	allowListContents = injectContent(startDeprecatedList, endDeprecatedList, allowListContents, allowListDeprecatedComponents)
+
+	err = cg.setFile(allowListFile, allowListContents)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func injectContent(startMagicString, endMagicString string, templateContents []byte, replaceContent []string) []byte {
+	matchOldContent := regexp.MustCompile("(?s)" + startMagicString + ".*" + endMagicString)
+	oldContent := matchOldContent.FindSubmatch(templateContents)
+	if len(oldContent) > 0 {
+		replacement := []byte(startMagicString + "\n\n" + strings.Join(replaceContent, "\n") + "\n\n" + endMagicString)
+		templateContents = bytes.ReplaceAll(templateContents, oldContent[0], replacement)
+	}
+	return templateContents
+}
+
+func formatGithubUser(user string) string {
+	if !strings.HasPrefix(user, "@") {
+		return "@" + user
+	}
+	return user
 }
 
 func (cg *codeownersGenerator) longestNameSpaces(data datatype.GithubData) int {
@@ -169,7 +200,7 @@ func (cg *codeownersGenerator) verifyCodeOwnerOrgMembership(allowlistData []byte
 	return err
 }
 
-func GetGithubMembers(skipGithub bool, githubOrg string) (map[string]struct{}, error) {
+func getGithubMembers(skipGithub bool, githubOrg string) (map[string]struct{}, error) {
 	if skipGithub {
 		// don't try to get organization members if no token is expected
 		return map[string]struct{}{}, nil
@@ -207,4 +238,12 @@ func GetGithubMembers(skipGithub bool, githubOrg string) (map[string]struct{}, e
 		usernames[*u.Login] = struct{}{}
 	}
 	return usernames, nil
+}
+
+func getFile(fileName string) ([]byte, error) {
+	return os.ReadFile(fileName) // nolint: gosec
+}
+
+func setFile(fileName string, data []byte) error {
+	return os.WriteFile(fileName, data, 0o600) // nolint: gosec
 }

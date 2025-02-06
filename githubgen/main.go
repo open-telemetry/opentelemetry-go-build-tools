@@ -169,7 +169,7 @@ func newIssueTemplatesGenerator(trimSuffixes string) *issueTemplatesGenerator {
 }
 
 func newCodeownersGenerator(skipGithubCheck *bool) *codeownersGenerator {
-	return &codeownersGenerator{skipGithub: *skipGithubCheck, getGitHubMembers: GetGithubMembers}
+	return &codeownersGenerator{skipGithub: *skipGithubCheck, getGitHubMembers: getGithubMembers, getFile: getFile, setFile: setFile}
 }
 
 func newDistributionsGenerator() *distributionsGenerator {
