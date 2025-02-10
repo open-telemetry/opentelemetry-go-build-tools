@@ -32,12 +32,14 @@ import (
 
 const (
 	// Keys of required environment variables
-	githubOrg         = "GITHUB_ORG"
-	githubRepository  = "GITHUB_REPOSITORY"
-	githubWorkflowURL = "GITHUB_WORKFLOW_URL"
-	githubWorkflow    = "GITHUB_WORKFLOW"
-	githubAPITokenKey = "GITHUB_TOKEN" // #nosec G101
+	githubRepositoryOwner = "GITHUB_REPOSITORY_OWNER"
+	githubRepository      = "GITHUB_REPOSITORY"
+	githubWorkflow        = "GITHUB_ACTION"
+	githubAPITokenKey     = "GITHUB_TOKEN" // #nosec G101
 
+	// Variables used to build workflow URL.
+	githubServerURL = "GITHUB_SERVER_URL"
+	githubRunID     = "GITHUB_RUN_ID"
 )
 
 func main() {
@@ -172,15 +174,17 @@ type report struct {
 }
 
 // getRequiredEnv loads required environment variables for the main method.
-// Some of the environment variables are built-in in CircleCI, whereas others
-// need to be configured. See https://circleci.com/docs/2.0/env-vars/#built-in-environment-variables
+// Some of the environment variables are built-in in Github Actions, whereas others
+// need to be configured. See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables#default-environment-variables
 // for a list of built-in environment variables.
 func (rg *reportGenerator) getRequiredEnv() {
 	env := map[string]string{}
 
-	env[githubOrg] = os.Getenv(githubOrg)
+	env[githubRepositoryOwner] = os.Getenv(githubRepositoryOwner)
 	env[githubRepository] = os.Getenv(githubRepository)
 	env[githubWorkflow] = os.Getenv(githubWorkflow)
+	env[githubServerURL] = os.Getenv(githubServerURL)
+	env[githubRunID] = os.Getenv(githubRunID)
 	env[githubAPITokenKey] = os.Getenv(githubAPITokenKey)
 
 	for k, v := range env {
@@ -219,7 +223,7 @@ func (rg reportGenerator) templateHelper(param string) string {
 	case "jobName":
 		return "`" + rg.envVariables[githubWorkflow] + "`"
 	case "linkToBuild":
-		return os.Getenv(githubWorkflowURL)
+		return fmt.Sprintf("%s/%s/actions/runs/%s", rg.envVariables[githubServerURL], rg.envVariables[githubRepository], rg.envVariables[githubRunID])
 	case "failedTests":
 		return rg.reports[rg.reportIterator].getFailedTests()
 	default:
@@ -232,7 +236,7 @@ func (rg reportGenerator) templateHelper(param string) string {
 func (rg *reportGenerator) getExistingIssue(module string) *github.Issue {
 	issues, response, err := rg.client.Issues.ListByRepo(
 		rg.ctx,
-		rg.envVariables[githubOrg],
+		rg.envVariables[githubRepositoryOwner],
 		rg.envVariables[githubRepository],
 		&github.IssueListByRepoOptions{
 			State: "open",
@@ -264,7 +268,7 @@ func (rg *reportGenerator) commentOnIssue(issue *github.Issue) *github.IssueComm
 
 	issueComment, response, err := rg.client.Issues.CreateComment(
 		rg.ctx,
-		rg.envVariables[githubOrg],
+		rg.envVariables[githubRepositoryOwner],
 		rg.envVariables[githubRepository],
 		*issue.Number,
 		&github.IssueComment{
@@ -289,7 +293,7 @@ func (rg *reportGenerator) createIssue(r report) *github.Issue {
 
 	issue, response, err := rg.client.Issues.Create(
 		rg.ctx,
-		rg.envVariables[githubOrg],
+		rg.envVariables[githubRepositoryOwner],
 		rg.envVariables[githubRepository],
 		&github.IssueRequest{
 			Title: &title,
