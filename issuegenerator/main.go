@@ -69,7 +69,6 @@ func main() {
 			rg.logger.Info("No existing Issues found, creating a new one.")
 			createdIssue := rg.createIssue(report)
 			rg.logger.Info("New GitHub Issue created", zap.String("html_url", *createdIssue.HTMLURL))
-			rg.reportIterator++
 		} else {
 			// Otherwise, add a comment to the existing Issue.
 			rg.logger.Info(
@@ -78,8 +77,8 @@ func main() {
 			)
 			createdIssueComment := rg.commentOnIssue(existingIssue)
 			rg.logger.Info("GitHub Issue updated", zap.String("html_url", *createdIssueComment.HTMLURL))
-			rg.reportIterator++
 		}
+		rg.reportIterator++
 	}
 }
 
