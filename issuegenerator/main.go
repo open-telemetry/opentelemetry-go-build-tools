@@ -40,7 +40,55 @@ const (
 	// Variables used to build workflow URL.
 	githubServerURL = "GITHUB_SERVER_URL"
 	githubRunID     = "GITHUB_RUN_ID"
+
+	issueTitleTemplate = `[${module}]: Report for failed tests on main`
+	issueBodyTemplate  = `
+Auto-generated report for ${jobName} job build.
+
+Link to failed build: ${linkToBuild}
+
+${failedTests}
+
+**Note**: Information about any subsequent build failures that happen while
+this issue is open, will be added as comments with more information to this issue.
+`
+	issueCommentTemplate = `
+Link to latest failed build: ${linkToBuild}
+
+${failedTests}
+`
 )
+
+type reportGenerator struct {
+	ctx          context.Context
+	logger       *zap.Logger
+	client       *github.Client
+	envVariables map[string]string
+	testSuites   map[string]junit.Suite
+
+	reports        []report
+	reportIterator int
+}
+
+type report struct {
+	module      string
+	failedTests []string
+}
+
+func newReportGenerator() *reportGenerator {
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		fmt.Printf("Failed to set up logger: %v", err)
+		os.Exit(1)
+	}
+
+	return &reportGenerator{
+		ctx:        context.Background(),
+		logger:     logger,
+		testSuites: make(map[string]junit.Suite),
+		reports:    make([]report, 0),
+	}
+}
 
 func main() {
 	pathToArtifacts := flag.String("path", "", "Path to the directory with test results")
@@ -81,21 +129,6 @@ func main() {
 			rg.logger.Info("GitHub Issue updated", zap.String("html_url", *createdIssueComment.HTMLURL))
 		}
 		rg.reportIterator++
-	}
-}
-
-func newReportGenerator() *reportGenerator {
-	logger, err := zap.NewDevelopment()
-	if err != nil {
-		fmt.Printf("Failed to set up logger: %v", err)
-		os.Exit(1)
-	}
-
-	return &reportGenerator{
-		ctx:        context.Background(),
-		logger:     logger,
-		testSuites: make(map[string]junit.Suite),
-		reports:    make([]report, 0),
 	}
 }
 
@@ -157,22 +190,6 @@ func (rg *reportGenerator) initializeGHClient() {
 	rg.client = github.NewClient(tc)
 }
 
-type reportGenerator struct {
-	ctx          context.Context
-	logger       *zap.Logger
-	client       *github.Client
-	envVariables map[string]string
-	testSuites   map[string]junit.Suite
-
-	reports        []report
-	reportIterator int
-}
-
-type report struct {
-	module      string
-	failedTests []string
-}
-
 // getRequiredEnv loads required environment variables for the main method.
 // Some of the environment variables are built-in in Github Actions, whereas others
 // need to be configured. See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables#default-environment-variables
@@ -198,25 +215,6 @@ func (rg *reportGenerator) getRequiredEnv() {
 
 	rg.envVariables = env
 }
-
-const (
-	issueTitleTemplate = `[${module}]: Report for failed tests on main`
-	issueBodyTemplate  = `
-Auto-generated report for ${jobName} job build.
-
-Link to failed build: ${linkToBuild}
-
-${failedTests}
-
-**Note**: Information about any subsequent build failures that happen while
-this issue is open, will be added as comments with more information to this issue.
-`
-	issueCommentTemplate = `
-Link to latest failed build: ${linkToBuild}
-
-${failedTests}
-`
-)
 
 func (rg reportGenerator) templateHelper(param string) string {
 	switch param {
