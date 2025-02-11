@@ -1,5 +1,13 @@
 # Contributing to opentelemetry-go-build-tools
 
+## Pre-requisites
+
+* Go (version required) TBD
+  
+* Any version requirements or compatibility notes TBD
+  
+* Mention additional platform-specific notes (e.g., macOS, Windows, Linux differences). TBD
+
 ## Development
 
 You can view and edit the source code by cloning this repository:
