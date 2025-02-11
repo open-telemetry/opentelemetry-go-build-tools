@@ -9,12 +9,15 @@ type Generator interface {
 }
 
 type GithubData struct {
+	RootFolder        string
 	Folders           []string
 	Codeowners        []string
 	AllowlistFilePath string
 	MaxLength         int
 	Components        map[string]Metadata
 	Distributions     []DistributionData
+	DefaultCodeOwner  string
+	GitHubOrg         string
 }
 
 type Codeowners struct {
