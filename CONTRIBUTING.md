@@ -1,10 +1,5 @@
 # Contributing to opentelemetry-go-build-tools
 
-This repo contains Build tools for use by the Go API/SDK, 
-the collector, and their associated contrib repositories.
-
-New contributors are welcome!
-
 ## Pre-requisites
 
 * Go (version required) TBD
