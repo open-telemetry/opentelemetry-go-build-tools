@@ -216,7 +216,7 @@ func (rg *reportGenerator) getRequiredEnv() {
 	rg.envVariables = env
 }
 
-func (rg reportGenerator) templateHelper(param string) string {
+func (rg *reportGenerator) templateHelper(param string) string {
 	switch param {
 	case "jobName":
 		return "`" + rg.envVariables[githubWorkflow] + "`"
@@ -311,7 +311,7 @@ func (rg *reportGenerator) createIssue(r report) *github.Issue {
 
 // getFailedTests returns information about failed tests if available, otherwise
 // an empty string.
-func (r report) getFailedTests() string {
+func (r *report) getFailedTests() string {
 	if len(r.failedTests) == 0 {
 		return ""
 	}
@@ -326,7 +326,7 @@ func (r report) getFailedTests() string {
 	return sb.String()
 }
 
-func (rg reportGenerator) handleBadResponses(response *github.Response) {
+func (rg *reportGenerator) handleBadResponses(response *github.Response) {
 	body, _ := io.ReadAll(response.Body)
 	rg.logger.Fatal(
 		"Unexpected response from GitHub",
