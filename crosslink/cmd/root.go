@@ -163,7 +163,7 @@ func init() {
 	comCfg.rootCommand.Flags().BoolVarP(&comCfg.runConfig.Prune, "prune", "p", false, "enables pruning operations on all go.mod files inside root repository")
 	comCfg.pruneCommand.Flags().StringSliceVar(&comCfg.excludeFlags, "exclude", []string{}, "list of comma separated go modules that crosslink will ignore in operations."+
 		"multiple calls of --exclude can be made")
-	comCfg.workCommand.Flags().StringVar(&comCfg.runConfig.GoVersion, "go", "1.23", "Go version applied when new go.work file is created")
+	comCfg.workCommand.Flags().StringVar(&comCfg.runConfig.GoVersion, "go", "1.23.0", "Go version applied when new go.work file is created")
 	comCfg.tidyListCommand.Flags().StringVar(&comCfg.runConfig.AllowCircular, "allow-circular", "", "path to list of go modules that are allowed to have circular dependencies")
 	comCfg.tidyListCommand.Flags().BoolVar(&comCfg.runConfig.Validate, "validate", false, "enables brute force validation of the tidy schedule")
 	comCfg.tidyListCommand.Flags().StringSliceVar(&comCfg.skipFlags, "skip", []string{}, "list of comma separated go.mod files that will be ignored by crosslink. "+
