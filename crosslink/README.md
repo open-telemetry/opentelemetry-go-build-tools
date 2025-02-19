@@ -159,7 +159,7 @@ for out-dated intra-repository Go modules.
 
 ### --go
 
- Go version applied when new `go.work` file is created (default "1.22").
+ Go version applied when new `go.work` file is created (default "1.23").
 
     crosslink work --go=1.23
 
