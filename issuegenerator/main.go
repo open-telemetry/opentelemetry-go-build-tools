@@ -16,10 +16,12 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/google/go-github/github"
@@ -30,110 +32,16 @@ import (
 
 const (
 	// Keys of required environment variables
-	projectUsernameKey = "CIRCLE_PROJECT_USERNAME"
-	projectRepoNameKey = "CIRCLE_PROJECT_REPONAME"
-	circleBuildURLKey  = "CIRCLE_BUILD_URL"
-	jobNameKey         = "CIRCLE_JOB"
-	githubAPITokenKey  = "GITHUB_TOKEN" // #nosec G101
-)
+	githubRepositoryOwner = "GITHUB_REPOSITORY_OWNER"
+	githubRepository      = "GITHUB_REPOSITORY"
+	githubWorkflow        = "GITHUB_ACTION"
+	githubAPITokenKey     = "GITHUB_TOKEN" // #nosec G101
 
-func main() {
-	pathToArtifacts := ""
-	if len(os.Args) > 1 {
-		pathToArtifacts = os.Args[1]
-	}
+	// Variables used to build workflow URL.
+	githubServerURL = "GITHUB_SERVER_URL"
+	githubRunID     = "GITHUB_RUN_ID"
 
-	rg := newReportGenerator(pathToArtifacts)
-
-	// Look for existing open GitHub Issue that resulted from previous
-	// failures of this job.
-	rg.logger.Info("Searching GitHub for existing Issues")
-	existingIssue := rg.getExistingIssue()
-
-	if existingIssue == nil {
-		// If none exists, create a new GitHub Issue for the failure.
-		rg.logger.Info("No existing Issues found, creating a new one.")
-		createdIssue := rg.createIssue()
-		rg.logger.Info("New GitHub Issue created", zap.String("html_url", *createdIssue.HTMLURL))
-	} else {
-		// Otherwise, add a comment to the existing Issue.
-		rg.logger.Info(
-			"Updating GitHub Issue with latest failure",
-			zap.String("html_url", *existingIssue.HTMLURL),
-		)
-		createdIssueComment := rg.commentOnIssue(existingIssue)
-		rg.logger.Info("GitHub Issue updated", zap.String("html_url", *createdIssueComment.HTMLURL))
-	}
-}
-
-func newReportGenerator(pathToArtifacts string) *reportGenerator {
-	logger, err := zap.NewDevelopment()
-	if err != nil {
-		fmt.Printf("Failed to set up logger: %v", err)
-		os.Exit(1)
-	}
-
-	rg := &reportGenerator{
-		ctx:    context.Background(),
-		logger: logger,
-	}
-
-	rg.getRequiredEnv()
-
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: rg.envVariables[githubAPITokenKey]})
-	tc := oauth2.NewClient(rg.ctx, ts)
-	rg.client = github.NewClient(tc)
-
-	if pathToArtifacts != "" {
-		rg.logger.Info("Ingesting test reports", zap.String("path", pathToArtifacts))
-		suites, err := junit.IngestFile(pathToArtifacts)
-		if err != nil {
-			rg.logger.Warn(
-				"Failed to ingest JUnit xml, omitting test results from report",
-				zap.Error(err),
-			)
-		}
-
-		rg.testSuites = suites
-	}
-
-	return rg
-}
-
-type reportGenerator struct {
-	ctx          context.Context
-	logger       *zap.Logger
-	client       *github.Client
-	envVariables map[string]string
-	testSuites   []junit.Suite
-}
-
-// getRequiredEnv loads required environment variables for the main method.
-// Some of the environment variables are built-in in CircleCI, whereas others
-// need to be configured. See https://circleci.com/docs/2.0/env-vars/#built-in-environment-variables
-// for a list of built-in environment variables.
-func (rg *reportGenerator) getRequiredEnv() {
-	env := map[string]string{}
-
-	env[projectUsernameKey] = os.Getenv(projectUsernameKey)
-	env[projectRepoNameKey] = os.Getenv(projectRepoNameKey)
-	env[jobNameKey] = os.Getenv(jobNameKey)
-	env[githubAPITokenKey] = os.Getenv(githubAPITokenKey)
-
-	for k, v := range env {
-		if v == "" {
-			rg.logger.Fatal(
-				"Required environment variable not set",
-				zap.String("env_var", k),
-			)
-		}
-	}
-
-	rg.envVariables = env
-}
-
-const (
-	issueTitleTemplate = `Bug report for failed CircleCI build (job: ${jobName})`
+	issueTitleTemplate = `[${module}]: Report for failed tests on main`
 	issueBodyTemplate  = `
 Auto-generated report for ${jobName} job build.
 
@@ -151,26 +59,183 @@ ${failedTests}
 `
 )
 
-func (rg reportGenerator) templateHelper(param string) string {
+type reportGenerator struct {
+	ctx          context.Context
+	logger       *zap.Logger
+	client       *github.Client
+	envVariables map[string]string
+	testSuites   map[string]junit.Suite
+
+	reports        []report
+	reportIterator int
+}
+
+type report struct {
+	module      string
+	failedTests []string
+}
+
+func newReportGenerator() *reportGenerator {
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		fmt.Printf("Failed to set up logger: %v", err)
+		os.Exit(1)
+	}
+
+	return &reportGenerator{
+		ctx:        context.Background(),
+		logger:     logger,
+		testSuites: make(map[string]junit.Suite),
+		reports:    make([]report, 0),
+	}
+}
+
+func main() {
+	pathToArtifacts := flag.String("path", "", "Path to the directory with test results")
+	flag.Parse()
+	if *pathToArtifacts == "" {
+		fmt.Println("Path to the directory with test results is required")
+		os.Exit(1)
+	}
+
+	rg := newReportGenerator()
+	rg.ingestArtifacts(*pathToArtifacts)
+	rg.processTestResults()
+	rg.initializeGHClient()
+
+	// Look for existing open GitHub Issue that resulted from previous
+	// failures of this job.
+	rg.logger.Info("Searching GitHub for existing Issues")
+	for _, report := range rg.reports {
+		rg.logger.Info(
+			"Processing test results",
+			zap.String("module", report.module),
+			zap.Int("failed_tests", len(report.failedTests)),
+		)
+
+		existingIssue := rg.getExistingIssue(report.module)
+		if existingIssue == nil {
+			// If none exists, create a new GitHub Issue for the failure.
+			rg.logger.Info("No existing Issues found, creating a new one.")
+			createdIssue := rg.createIssue(report)
+			rg.logger.Info("New GitHub Issue created", zap.String("html_url", *createdIssue.HTMLURL))
+		} else {
+			// Otherwise, add a comment to the existing Issue.
+			rg.logger.Info(
+				"Updating GitHub Issue with latest failure",
+				zap.String("html_url", *existingIssue.HTMLURL),
+			)
+			createdIssueComment := rg.commentOnIssue(existingIssue)
+			rg.logger.Info("GitHub Issue updated", zap.String("html_url", *createdIssueComment.HTMLURL))
+		}
+		rg.reportIterator++
+	}
+}
+
+func (rg *reportGenerator) ingestArtifacts(pathToArtifacts string) {
+	if pathToArtifacts != "" {
+		files, err := os.ReadDir(pathToArtifacts)
+		if err != nil {
+			rg.logger.Warn(
+				"Failed to read directory with test results",
+				zap.Error(err),
+				zap.String("path", pathToArtifacts),
+			)
+		}
+
+		for _, file := range files {
+			if file.IsDir() {
+				continue
+			}
+			rg.logger.Info("Ingesting test reports", zap.String("path", file.Name()))
+			suites, err := junit.IngestFile(path.Join(pathToArtifacts, file.Name()))
+			if err != nil {
+				rg.logger.Fatal(
+					"Failed to ingest JUnit xml, omitting test results from report",
+					zap.Error(err),
+				)
+			}
+
+			// We only expect one suite per file.
+			rg.testSuites[suites[0].Name] = suites[0]
+		}
+	}
+}
+
+// processTestResults iterates over the test results and matches the module
+// with the code owners, creating a report.
+func (rg *reportGenerator) processTestResults() {
+	for module, suite := range rg.testSuites {
+		if suite.Totals.Failed == 0 {
+			continue
+		}
+
+		r := report{
+			module:      module,
+			failedTests: make([]string, 0, suite.Totals.Failed),
+		}
+		for _, t := range suite.Tests {
+			if t.Status == junit.StatusFailed {
+				r.failedTests = append(r.failedTests, t.Name)
+			}
+		}
+		rg.reports = append(rg.reports, r)
+	}
+}
+
+func (rg *reportGenerator) initializeGHClient() {
+	rg.getRequiredEnv()
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: rg.envVariables[githubAPITokenKey]})
+	tc := oauth2.NewClient(rg.ctx, ts)
+	rg.client = github.NewClient(tc)
+}
+
+// getRequiredEnv loads required environment variables for the main method.
+// Some of the environment variables are built-in in Github Actions, whereas others
+// need to be configured. See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables#default-environment-variables
+// for a list of built-in environment variables.
+func (rg *reportGenerator) getRequiredEnv() {
+	env := map[string]string{}
+
+	env[githubRepositoryOwner] = os.Getenv(githubRepositoryOwner)
+	env[githubRepository] = os.Getenv(githubRepository)
+	env[githubWorkflow] = os.Getenv(githubWorkflow)
+	env[githubServerURL] = os.Getenv(githubServerURL)
+	env[githubRunID] = os.Getenv(githubRunID)
+	env[githubAPITokenKey] = os.Getenv(githubAPITokenKey)
+
+	for k, v := range env {
+		if v == "" {
+			rg.logger.Fatal(
+				"Required environment variable not set",
+				zap.String("env_var", k),
+			)
+		}
+	}
+
+	rg.envVariables = env
+}
+
+func (rg *reportGenerator) templateHelper(param string) string {
 	switch param {
 	case "jobName":
-		return "`" + rg.envVariables[jobNameKey] + "`"
+		return "`" + rg.envVariables[githubWorkflow] + "`"
 	case "linkToBuild":
-		return os.Getenv(circleBuildURLKey)
+		return fmt.Sprintf("%s/%s/actions/runs/%s", rg.envVariables[githubServerURL], rg.envVariables[githubRepository], rg.envVariables[githubRunID])
 	case "failedTests":
-		return rg.getFailedTests()
+		return rg.reports[rg.reportIterator].getFailedTests()
 	default:
 		return ""
 	}
 }
 
 // getExistingIssues gathers an existing GitHub Issue related to previous failures
-// of the same job.
-func (rg *reportGenerator) getExistingIssue() *github.Issue {
+// of the same module.
+func (rg *reportGenerator) getExistingIssue(module string) *github.Issue {
 	issues, response, err := rg.client.Issues.ListByRepo(
 		rg.ctx,
-		rg.envVariables[projectUsernameKey],
-		rg.envVariables[projectRepoNameKey],
+		rg.envVariables[githubRepositoryOwner],
+		rg.envVariables[githubRepository],
 		&github.IssueListByRepoOptions{
 			State: "open",
 		},
@@ -183,7 +248,7 @@ func (rg *reportGenerator) getExistingIssue() *github.Issue {
 		rg.handleBadResponses(response)
 	}
 
-	requiredTitle := rg.getIssueTitle()
+	requiredTitle := strings.Replace(issueTitleTemplate, "${module}", module, 1)
 	for _, issue := range issues {
 		if *issue.Title == requiredTitle {
 			return issue
@@ -201,8 +266,8 @@ func (rg *reportGenerator) commentOnIssue(issue *github.Issue) *github.IssueComm
 
 	issueComment, response, err := rg.client.Issues.CreateComment(
 		rg.ctx,
-		rg.envVariables[projectUsernameKey],
-		rg.envVariables[projectRepoNameKey],
+		rg.envVariables[githubRepositoryOwner],
+		rg.envVariables[githubRepository],
 		*issue.Number,
 		&github.IssueComment{
 			Body: &body,
@@ -220,14 +285,14 @@ func (rg *reportGenerator) commentOnIssue(issue *github.Issue) *github.IssueComm
 }
 
 // createIssue creates a new GitHub Issue corresponding to a build failure.
-func (rg *reportGenerator) createIssue() *github.Issue {
-	title := rg.getIssueTitle()
+func (rg *reportGenerator) createIssue(r report) *github.Issue {
+	title := strings.Replace(issueTitleTemplate, "${module}", r.module, 1)
 	body := os.Expand(issueBodyTemplate, rg.templateHelper)
 
 	issue, response, err := rg.client.Issues.Create(
 		rg.ctx,
-		rg.envVariables[projectUsernameKey],
-		rg.envVariables[projectRepoNameKey],
+		rg.envVariables[githubRepositoryOwner],
+		rg.envVariables[githubRepository],
 		&github.IssueRequest{
 			Title: &title,
 			Body:  &body,
@@ -244,33 +309,24 @@ func (rg *reportGenerator) createIssue() *github.Issue {
 	return issue
 }
 
-func (rg reportGenerator) getIssueTitle() string {
-	return strings.Replace(issueTitleTemplate, "${jobName}", rg.envVariables[jobNameKey], 1)
-}
-
 // getFailedTests returns information about failed tests if available, otherwise
 // an empty string.
-func (rg reportGenerator) getFailedTests() string {
-	if len(rg.testSuites) == 0 {
+func (r *report) getFailedTests() string {
+	if len(r.failedTests) == 0 {
 		return ""
 	}
 
 	var sb strings.Builder
 	sb.WriteString("#### Test Failures\n")
 
-	for _, s := range rg.testSuites {
-		for _, t := range s.Tests {
-			if t.Status != junit.StatusFailed {
-				continue
-			}
-			sb.WriteString("-  " + t.Name + "\n")
-		}
+	for _, s := range r.failedTests {
+		sb.WriteString("-  `" + s + "`\n")
 	}
 
 	return sb.String()
 }
 
-func (rg reportGenerator) handleBadResponses(response *github.Response) {
+func (rg *reportGenerator) handleBadResponses(response *github.Response) {
 	body, _ := io.ReadAll(response.Body)
 	rg.logger.Fatal(
 		"Unexpected response from GitHub",
