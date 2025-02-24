@@ -4,6 +4,13 @@
 
 <!-- next version -->
 
+## v0.19.0
+
+### 💡 Enhancements 💡
+
+- `all`: Bump minimum Go version to 1.23 (#695)
+- `issuegenerator`: IssueGenerator now creates issues based on JUnit test results. (#672)
+
 ## v0.18.0
 
 ### 🛑 Breaking changes 🛑
