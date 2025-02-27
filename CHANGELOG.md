@@ -218,5 +218,3 @@
 
 - `changelog`: Add chloggen tool for creating changelog entries. (#154)
 - `multimod`: Add ability for multimod to publish to tags to remote repository. (#157)
-
-[GO-2025-3487]: https://pkg.go.dev/vuln/GO-2025-3487
