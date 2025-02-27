@@ -6,7 +6,7 @@
 
 ### Security
 
-- Update `golang.org/x/crypto` to `v0.35.0` to address [GO-2025-3487]. (#703)
+- `all`: Update `golang.org/x/crypto` to `v0.35.0` to address [GO-2025-3487]. (#703)
 
 ## v0.19.0
 
