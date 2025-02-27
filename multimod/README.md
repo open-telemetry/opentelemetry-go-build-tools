@@ -14,7 +14,8 @@ When creating a or editing a `versions.yaml` file...
 * For each module set, give it a name and specify its version and modules it
   includes.
 * Specify the Go module's import path (rather than its file path)
-* Specify modules which should be excluded from versioning
+* Specify modules which should be excluded from versioning (excluded modules
+  still get version update for its dependencies).
 * Ensure versions are consistent with the semver versioning requirements.
 * Update version numbers or module groupings as needed for new releases.
 

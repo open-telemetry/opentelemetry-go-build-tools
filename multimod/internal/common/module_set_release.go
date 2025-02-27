@@ -25,9 +25,10 @@ import (
 // ModuleSetRelease contains info about a specific set of modules in the versioning file to be updated.
 type ModuleSetRelease struct {
 	ModuleVersioning
-	ModSetName string
-	ModSet     ModuleSet
-	TagNames   []ModuleTagName
+	ModSetName    string
+	ModSet        ModuleSet
+	TagNames      []ModuleTagName
+	AllModPathMap ModulePathMap
 }
 
 // NewModuleSetRelease returns a ModuleSetRelease struct by specifying a specific set of modules to update.
@@ -58,11 +59,18 @@ func NewModuleSetRelease(versioningFilename, modSetToUpdate, repoRoot string) (M
 		return ModuleSetRelease{}, fmt.Errorf("could not retrieve tag names from module paths: %w", err)
 	}
 
+	// get all module paths
+	allModPathMap, err := newAllModulePathMap(repoRoot)
+	if err != nil {
+		return ModuleSetRelease{}, fmt.Errorf("could not retrieve all module paths: %w", err)
+	}
+
 	return ModuleSetRelease{
 		ModuleVersioning: modVersioning,
 		ModSetName:       modSetToUpdate,
 		ModSet:           modSet,
 		TagNames:         tagNames,
+		AllModPathMap:    allModPathMap,
 	}, nil
 
 }

@@ -190,7 +190,7 @@ func updateVersionGoFile(filePath string, newVersion string) error {
 func (p prerelease) updateAllGoModFiles() error {
 	modFilePaths := make([]common.ModuleFilePath, 0, len(p.ModuleSetRelease.ModuleVersioning.ModPathMap))
 
-	for _, filePath := range p.ModuleSetRelease.ModuleVersioning.ModPathMap {
+	for _, filePath := range p.ModuleSetRelease.AllModPathMap {
 		modFilePaths = append(modFilePaths, filePath)
 	}
 

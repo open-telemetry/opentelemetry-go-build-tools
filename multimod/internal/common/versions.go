@@ -16,12 +16,8 @@ package common
 
 import (
 	"fmt"
-	"io/fs"
-	"os"
-	"path/filepath"
 
 	"github.com/spf13/viper"
-	"golang.org/x/mod/modfile"
 )
 
 const (
@@ -162,37 +158,15 @@ func (versionCfg versionConfig) getExcludedModules() excludedModulesSet {
 
 // BuildModulePathMap creates a map with module paths as keys and go.mod file paths as values.
 func (versionCfg versionConfig) BuildModulePathMap(root string) (ModulePathMap, error) {
-	modPathMap := make(ModulePathMap)
-
-	findGoMod := func(filePath string, _ fs.FileInfo, err error) error {
-		if err != nil {
-			fmt.Printf("Warning: file could not be read during filepath.Walk(): %v", err)
-			return nil
-		}
-		if filepath.Base(filePath) == "go.mod" {
-			// read go.mod file into mod []byte
-			mod, err := os.ReadFile(filepath.Clean(filePath))
-			if err != nil {
-				return err
-			}
-
-			// read path of module from go.mod file
-			modPathString := modfile.ModulePath(mod)
-
-			// convert modPath, filePath string to modulePath and moduleFilePath
-			modPath := ModulePath(modPathString)
-			modFilePath := ModuleFilePath(filePath)
-
-			excludedModules := versionCfg.getExcludedModules()
-			if _, shouldExclude := excludedModules[modPath]; !shouldExclude {
-				modPathMap[modPath] = modFilePath
-			}
-		}
-		return nil
+	modPathMap, err := newAllModulePathMap(root)
+	if err != nil {
+		return nil, err
 	}
 
-	if err := filepath.Walk(root, findGoMod); err != nil {
-		return nil, err
+	for k := range modPathMap {
+		if versionCfg.shouldExcludeModule(k) {
+			delete(modPathMap, k)
+		}
 	}
 
 	return modPathMap, nil
