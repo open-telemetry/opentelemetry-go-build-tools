@@ -4,6 +4,11 @@
 
 <!-- next version -->
 
+### Security
+
+- Update `golang.org/x/crypto` to `v0.35.0` to address [GO-2025-3487]. (#703)
+
+
 ## v0.19.0
 
 ### 💡 Enhancements 💡
@@ -218,3 +223,5 @@
 
 - `changelog`: Add chloggen tool for creating changelog entries. (#154)
 - `multimod`: Add ability for multimod to publish to tags to remote repository. (#157)
+
+[GO-2025-3487]: https://pkg.go.dev/vuln/GO-2025-3487
