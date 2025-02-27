@@ -4,6 +4,10 @@
 
 <!-- next version -->
 
+### 💡 Enhancements 💡
+
+- `multimod`: `prerelease` command will now update the dependencies for excluded modules. (#702)
+
 ## v0.19.0
 
 ### 💡 Enhancements 💡
