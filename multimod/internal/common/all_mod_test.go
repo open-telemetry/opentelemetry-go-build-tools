@@ -15,11 +15,13 @@
 package common
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/build-tools/multimod/internal/common/commontest"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"go.opentelemetry.io/build-tools/multimod/internal/common/commontest"
 )
 
 func TestNewAllModulePathMap(t *testing.T) {
