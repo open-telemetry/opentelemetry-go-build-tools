@@ -324,6 +324,13 @@ func TestUpdateAllGoModFiles(t *testing.T) {
 					"go.opentelemetry.io/build-tools/multimod/internal/prerelease/test3 v0.1.0-OLD\n\t" +
 					"go.opentelemetry.io/other/test/test1 v1.0.0\n\t" +
 					")"),
+				filepath.Join("excluded", "go.mod"): []byte("module go.opentelemetry.io/my/test/testexcluded\n\n" +
+					"go 1.16\n\n" +
+					"require (\n\t" +
+					"go.opentelemetry.io/build-tools/multimod/internal/prerelease/test/test2 v1.2.3-RC1+meta\n\t" +
+					"go.opentelemetry.io/other/test/test1 v1.0.0\n\t" +
+					"go.opentelemetry.io/other/testroot/v2 v2.2.2\n" +
+					")"),
 			},
 		},
 		{
@@ -359,6 +366,13 @@ func TestUpdateAllGoModFiles(t *testing.T) {
 					"go.opentelemetry.io/build-tools/multimod/internal/prerelease/test3 v0.1.0\n\t" +
 					"go.opentelemetry.io/other/test/test1 v1.0.0\n\t" +
 					")"),
+				filepath.Join("excluded", "go.mod"): []byte("module go.opentelemetry.io/my/test/testexcluded\n\n" +
+					"go 1.16\n\n" +
+					"require (\n\t" +
+					"go.opentelemetry.io/build-tools/multimod/internal/prerelease/test/test2 v1.2.3-OLD\n\t" +
+					"go.opentelemetry.io/other/test/test1 v1.0.0\n\t" +
+					"go.opentelemetry.io/other/testroot/v2 v2.2.2\n" +
+					")"),
 			},
 		},
 		{
@@ -393,6 +407,13 @@ func TestUpdateAllGoModFiles(t *testing.T) {
 					"go.opentelemetry.io/build-tools/multimod/internal/prerelease/test/test2 v1.2.3-OLD\n\t" +
 					"go.opentelemetry.io/build-tools/multimod/internal/prerelease/test3 v0.1.0-OLD\n\t" +
 					"go.opentelemetry.io/other/test/test1 v1.0.0\n\t" +
+					")"),
+				filepath.Join("excluded", "go.mod"): []byte("module go.opentelemetry.io/my/test/testexcluded\n\n" +
+					"go 1.16\n\n" +
+					"require (\n\t" +
+					"go.opentelemetry.io/build-tools/multimod/internal/prerelease/test/test2 v1.2.3-OLD\n\t" +
+					"go.opentelemetry.io/other/test/test1 v1.0.0\n\t" +
+					"go.opentelemetry.io/other/testroot/v2 v2.2.2\n" +
 					")"),
 			},
 		},
@@ -433,6 +454,13 @@ func TestUpdateAllGoModFiles(t *testing.T) {
 					"go.opentelemetry.io/build-tools/multimod/internal/prerelease/test/test2 v1.2.3-OLD\n\t" +
 					"go.opentelemetry.io/build-tools/multimod/internal/prerelease/test3 v0.1.0-OLD\n\t" +
 					"go.opentelemetry.io/other/test/test1 v1.0.0\n\t" +
+					")"),
+				filepath.Join(tmpRootDir, "excluded", "go.mod"): []byte("module go.opentelemetry.io/my/test/testexcluded\n\n" +
+					"go 1.16\n\n" +
+					"require (\n\t" +
+					"go.opentelemetry.io/build-tools/multimod/internal/prerelease/test/test2 v1.2.3-OLD\n\t" +
+					"go.opentelemetry.io/other/test/test1 v1.0.0\n\t" +
+					"go.opentelemetry.io/other/testroot/v2 v2.2.2\n" +
 					")"),
 			}
 
