@@ -4,6 +4,13 @@
 
 <!-- next version -->
 
+## v0.20.0
+
+### 💡 Enhancements 💡
+
+- `all`: Update `golang.org/x/crypto` to `v0.35.0` to address [GO-2025-3487](https://pkg.go.dev/vuln/GO-2025-3487) (#703)
+- `multimod`: `prerelease` command will now update the dependencies for excluded modules. (#702)
+
 ## v0.19.0
 
 ### 💡 Enhancements 💡
