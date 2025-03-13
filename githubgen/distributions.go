@@ -68,3 +68,11 @@ func WriteDistribution(rootFolder string, distName string, distData distOutput) 
 	}
 	return os.WriteFile(filepath.Join(rootFolder, "reports", "distributions", fmt.Sprintf("%s.yaml", distName)), b, 0o600)
 }
+
+func WriteChloggenComponents(rootFolder string, cfg datatype.ChloggenConfig) error {
+	b, err := yaml.Marshal(cfg)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filepath.Join(rootFolder, ".chloggen", "config.yaml"), b, 0o600)
+}

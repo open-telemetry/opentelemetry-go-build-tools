@@ -50,6 +50,28 @@ func Test_run(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "chloggen components",
+			args: args{
+				folder:            "testdata/chloggen_components",
+				allowlistFilePath: "cmd/githubgen/allowlist.txt",
+				generators: fake.MockGenerator{
+					GenerateFunc: func(_ datatype.GithubData) error {
+						return nil
+					},
+				},
+				distributions: []datatype.DistributionData{
+					{
+						Name:        "my-distro",
+						URL:         "some-url",
+						Maintainers: nil,
+					},
+				},
+				defaultCodeOwners: "some-code-owners",
+				githubOrg:         "some-org",
+			},
+			wantErr: false,
+		},
 	}
 
 	// nolint:govet
