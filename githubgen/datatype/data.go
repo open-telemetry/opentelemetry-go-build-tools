@@ -18,6 +18,7 @@ type GithubData struct {
 	Distributions     []DistributionData
 	DefaultCodeOwner  string
 	GitHubOrg         string
+	Chloggen          ChloggenConfig
 }
 
 type Codeowners struct {
@@ -47,4 +48,13 @@ type DistributionData struct {
 	Name        string   `yaml:"name"`
 	URL         string   `yaml:"url"`
 	Maintainers []string `yaml:"maintainers,omitempty"`
+}
+
+type ChloggenConfig struct {
+	ChangeLogs        map[string]string `yaml:"change_logs"`
+	DefaultChangeLogs []string          `yaml:"default_change_logs"`
+	EntriesDir        string            `yaml:"entries_dir"`
+	TemplateYAML      string            `yaml:"template_yaml"`
+	SummaryTemplate   string            `yaml:"summary_template"`
+	Components        []string          `yaml:"components"`
 }

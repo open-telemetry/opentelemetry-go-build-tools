@@ -42,6 +42,8 @@ func main() {
 			generators = append(generators, newCodeownersGenerator(skipGithubCheck))
 		case "distributions":
 			generators = append(generators, newDistributionsGenerator())
+		case "chloggen-components":
+			generators = append(generators, newChloggenComponentsGenerator())
 		default:
 			panic(fmt.Sprintf("Unknown datatype.Generator: %s", arg))
 		}
@@ -127,6 +129,17 @@ func run(folder string, allowlistFilePath string, generators []datatype.Generato
 	if !strings.HasPrefix(defaultCodeOwner, "@") {
 		defaultCodeOwner = "@" + defaultCodeOwner
 	}
+	var chloggenCfg datatype.ChloggenConfig
+	if _, err = os.Stat(filepath.Join(folder, ".chloggen", "config.yaml")); !os.IsNotExist(err) {
+		var b []byte
+		var readErr error
+		if b, readErr = os.ReadFile(filepath.Join(folder, ".chloggen", "config.yaml")); readErr != nil { // nolint: gosec
+			return readErr
+		}
+		if readErr = yaml.Unmarshal(b, &chloggenCfg); readErr != nil {
+			return readErr
+		}
+	}
 
 	data := datatype.GithubData{
 		RootFolder:        folder,
@@ -138,6 +151,7 @@ func run(folder string, allowlistFilePath string, generators []datatype.Generato
 		Distributions:     distros,
 		DefaultCodeOwner:  defaultCodeOwner,
 		GitHubOrg:         githubOrg,
+		Chloggen:          chloggenCfg,
 	}
 
 	for _, g := range generators {
@@ -174,4 +188,8 @@ func newCodeownersGenerator(skipGithubCheck *bool) *codeownersGenerator {
 
 func newDistributionsGenerator() *distributionsGenerator {
 	return &distributionsGenerator{writeDistribution: WriteDistribution}
+}
+
+func newChloggenComponentsGenerator() *chloggenComponentsGenerator {
+	return &chloggenComponentsGenerator{writeComponents: WriteChloggenComponents}
 }
