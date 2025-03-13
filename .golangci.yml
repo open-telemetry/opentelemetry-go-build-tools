@@ -131,10 +131,10 @@ linters:
     - misspell
     - revive
     - staticcheck
-    - tenv
     - unconvert
     - unused
     - unparam
+    - usetesting
 
 issues:
   # Excluding configuration per-path, per-linter, per-text and per-source

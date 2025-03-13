@@ -45,12 +45,7 @@ func TestNewSync(t *testing.T) {
 	myVersioningFilename := filepath.Join(versionsYamlDir, "versions_valid.yaml")
 	otherVersioningFilename := filepath.Join(versionsYamlDir, "other_versions_valid.yaml")
 
-	tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
-	if err != nil {
-		t.Fatal("creating temp dir:", err)
-	}
-
-	defer os.RemoveAll(tmpRootDir)
+	tmpRootDir := t.TempDir()
 
 	modFiles := map[string][]byte{
 		filepath.Join(tmpRootDir, "my", "test", "test1", "go.mod"): []byte("module go.opentelemetry.io/build-tools/multimod/internal/sync/test/test1\n\n" +
@@ -273,12 +268,7 @@ func TestUpdateAllGoModFilesWithCommitHash(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
-		if err != nil {
-			t.Fatal("creating temp dir:", err)
-		}
-
-		defer os.RemoveAll(tmpRootDir)
+		tmpRootDir := t.TempDir()
 
 		modFiles := map[string][]byte{
 			filepath.Join(tmpRootDir, "my", "test", "test1", "go.mod"): []byte("module go.opentelemetry.io/build-tools/multimod/internal/sync/test/test1\n\n" +
@@ -475,12 +465,7 @@ func TestUpdateAllGoModFiles(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
-		if err != nil {
-			t.Fatal("creating temp dir:", err)
-		}
-
-		defer os.RemoveAll(tmpRootDir)
+		tmpRootDir := t.TempDir()
 
 		modFiles := map[string][]byte{
 			filepath.Join(tmpRootDir, "my", "test", "test1", "go.mod"): []byte("module go.opentelemetry.io/build-tools/multimod/internal/sync/test/test1\n\n" +

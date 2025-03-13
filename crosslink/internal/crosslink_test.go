@@ -134,10 +134,8 @@ func TestCrosslink(t *testing.T) {
 			err = Crosslink(test.config)
 
 			if assert.NoError(t, err, "error message on execution %s") {
-
 				for modFilePath, modFilesExpected := range test.expected {
 					modFileActual, err := os.ReadFile(filepath.Clean(filepath.Join(tmpRootDir, modFilePath)))
-
 					if err != nil {
 						t.Fatalf("error reading actual mod files: %v", err)
 					}
@@ -167,7 +165,6 @@ func TestCrosslink(t *testing.T) {
 					}
 				}
 			}
-
 		})
 	}
 }
@@ -256,7 +253,6 @@ func TestOverwrite(t *testing.T) {
 
 				for modFilePath, modFilesExpected := range test.expected {
 					modFileActual, err := os.ReadFile(filepath.Clean(filepath.Join(tmpRootDir, modFilePath)))
-
 					if err != nil {
 						t.Fatalf("error reading actual mod files: %v", err)
 					}
@@ -286,14 +282,12 @@ func TestOverwrite(t *testing.T) {
 					}
 				}
 			}
-
 		})
 	}
 	err := lg.Sync()
 	if err != nil {
 		fmt.Printf("failed to sync logger:  %v", err)
 	}
-
 }
 
 // Testing exclude functionality for prune, overwrite, and no overwrite.
@@ -372,7 +366,6 @@ func TestExclude(t *testing.T) {
 
 				for modFilePath, modFilesExpected := range modFilesExpected {
 					modFileActual, err := os.ReadFile(filepath.Clean(modFilePath))
-
 					if err != nil {
 						t.Fatalf("TestCase: %s, error reading actual mod files: %v", test.testCase, err)
 					}
@@ -410,13 +403,11 @@ func TestBadRootPath(t *testing.T) {
 	lg, _ := zap.NewDevelopment()
 	tests := []struct {
 		testName      string
-		mockDir       string
 		setConfigPath bool
 		config        RunConfig
 	}{
 		{
 			testName:      "noGoMod",
-			mockDir:       "noGoMod",
 			setConfigPath: true,
 			config: RunConfig{
 				Logger: lg,
@@ -426,22 +417,17 @@ func TestBadRootPath(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.testName, func(t *testing.T) {
-			tmpRootDir, err := os.MkdirTemp(testDataDir, test.mockDir)
-			if err != nil {
-				t.Fatalf("Failed to create temp dir %v", err)
-			}
+			tmpRootDir := t.TempDir()
 			if test.setConfigPath {
 				test.config.RootPath = tmpRootDir
 			}
 
-			t.Cleanup(func() { os.RemoveAll(tmpRootDir) })
-			err = Crosslink(test.config)
+			err := Crosslink(test.config)
 			assert.Error(t, err)
 			err = Prune(test.config)
 			assert.Error(t, err)
 		})
 	}
-
 }
 
 // Testing skipping specified go modules.
@@ -526,7 +512,6 @@ func TestSkip(t *testing.T) {
 					}
 				}
 				modFileActual, err := os.ReadFile(filepath.Clean(modFilePath))
-
 				if err != nil {
 					t.Fatalf("TestCase: %s, error reading actual mod files: %v", test.testCase, err)
 				}

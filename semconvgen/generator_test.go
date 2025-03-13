@@ -57,11 +57,10 @@ func TestCapitalizations(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tmpfile, err := os.CreateTemp("", "test")
+			tmpfile, err := os.CreateTemp(t.TempDir(), "test")
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer os.Remove(tmpfile.Name())
 
 			if _, err = tmpfile.Write([]byte(tt.capitalizations)); err != nil {
 				t.Fatal(err)
