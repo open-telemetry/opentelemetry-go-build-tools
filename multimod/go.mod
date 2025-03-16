@@ -2,8 +2,6 @@ module go.opentelemetry.io/build-tools/multimod
 
 go 1.23.0
 
-toolchain go1.24.1
-
 require (
 	github.com/go-git/go-git/v5 v5.14.0
 	github.com/spf13/cobra v1.9.1
