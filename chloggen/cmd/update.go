@@ -31,8 +31,9 @@ const (
 )
 
 var (
-	version string
-	dry     bool
+	version         string
+	dry             bool
+	componentFilter string
 )
 
 func updateCmd() *cobra.Command {
@@ -46,6 +47,16 @@ func updateCmd() *cobra.Command {
 			}
 
 			for changeLogKey, entries := range entriesByChangelog {
+
+				if componentFilter != "" {
+					filteredEntries := make([]*chlog.Entry, 0, len(entries))
+					for _, e := range entries {
+						if e.Component == componentFilter {
+							filteredEntries = append(filteredEntries, e)
+						}
+					}
+					entries = filteredEntries
+				}
 				chlogUpdate, err := chlog.GenerateSummary(version, entries, globalCfg)
 				if err != nil {
 					return err
@@ -95,5 +106,6 @@ func updateCmd() *cobra.Command {
 	}
 	cmd.Flags().StringVarP(&version, "version", "v", "vTODO", "will be rendered directly into the update text")
 	cmd.Flags().BoolVarP(&dry, "dry", "d", false, "will generate the update text and print to stdout")
+	cmd.Flags().StringVarP(&componentFilter, "component", "c", "", "only select entries with this exact component")
 	return cmd
 }

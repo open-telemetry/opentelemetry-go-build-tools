@@ -32,9 +32,10 @@ const updateUsage = `Usage:
   chloggen update [flags]
 
 Flags:
-  -d, --dry              will generate the update text and print to stdout
-  -h, --help             help for update
-  -v, --version string   will be rendered directly into the update text (default "vTODO")
+  -c, --component string   only select entries with this exact component
+  -d, --dry                will generate the update text and print to stdout
+  -h, --help               help for update
+  -v, --version string     will be rendered directly into the update text (default "vTODO")
 
 Global Flags:
       --config string   (optional) chloggen config file`
@@ -73,6 +74,7 @@ func TestUpdate(t *testing.T) {
 		defaultChangeLogs []string
 		version           string
 		dry               bool
+		componentFilter   string
 	}{
 		{
 			name:    "all_change_types",
@@ -188,6 +190,68 @@ func TestUpdate(t *testing.T) {
 			defaultChangeLogs: []string{"user", "api"},
 			version:           "v0.45.0",
 		},
+		{
+			name:    "filter_component",
+			version: "v0.45.0",
+			entries: []*chlog.Entry{
+				{
+					ChangeType: "enhancement",
+					Component:  "receiver/foo",
+					Note:       "Some change",
+					Issues:     []int{1},
+				},
+				{
+					ChangeType: "enhancement",
+					Component:  "receiver/bar",
+					Note:       "Some other change",
+					Issues:     []int{2},
+				},
+				{
+					ChangeType: "enhancement",
+					Component:  "receiver/foobar",
+					Note:       "Some other change for foobar",
+					Issues:     []int{3},
+				},
+				{
+					ChangeType: "enhancement",
+					Component:  "receiver/foo",
+					Note:       "One more foo change",
+					Issues:     []int{4},
+				},
+			},
+			componentFilter: "receiver/foo",
+		},
+		{
+			name:    "filter_component_no_match",
+			version: "v0.45.0",
+			entries: []*chlog.Entry{
+				{
+					ChangeType: "enhancement",
+					Component:  "receiver/foo",
+					Note:       "Some change",
+					Issues:     []int{1},
+				},
+				{
+					ChangeType: "enhancement",
+					Component:  "receiver/bar",
+					Note:       "Some other change",
+					Issues:     []int{2},
+				},
+				{
+					ChangeType: "enhancement",
+					Component:  "receiver/foobar",
+					Note:       "Some other change for foobar",
+					Issues:     []int{3},
+				},
+				{
+					ChangeType: "enhancement",
+					Component:  "receiver/foo",
+					Note:       "One more foo change",
+					Issues:     []int{4},
+				},
+			},
+			componentFilter: "receiver/foob",
+		},
 	}
 
 	for _, tc := range tests {
@@ -209,6 +273,9 @@ func TestUpdate(t *testing.T) {
 			args := []string{"update", "--version", tc.version}
 			if tc.dry {
 				args = append(args, "--dry")
+			}
+			if tc.componentFilter != "" {
+				args = append(args, "--component", tc.componentFilter)
 			}
 
 			var out string
