@@ -4,6 +4,17 @@
 
 <!-- next version -->
 
+## v0.21.0
+
+### 💡 Enhancements 💡
+
+- `chloggen`: Add a `--component`, `-c` flag to `chloggen update` to specify a filter of which component to add to the changelog. (#725)
+- `githubgen`: Add support for chloggen components list generation (#717)
+
+### 🧰 Bug fixes 🧰
+
+- `issuegenerator`: Fix duplicated owner when calling GitHub APIs. (#720)
+
 ## v0.20.0
 
 ### 💡 Enhancements 💡
