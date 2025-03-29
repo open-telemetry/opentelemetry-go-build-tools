@@ -1,0 +1,44 @@
+ignored_paths:
+  - extension/observer
+  - extension/encoding
+  - extension/opampcustommessages
+  - processor/tailsamplingprocessor
+  - receiver/pulsarreceiver # 38930
+  - exporter/pulsarexporter # 38929
+  - exporter/elasticsearchexporter/integrationtest
+excluded_files:
+  - ignored_*.go
+unkeyed_literal_initialization:
+  enabled: true
+  limit: 6
+allowed_functions:
+  - classes:
+      - connector
+    name: NewFactory
+    parameters:
+    return_types: [connector.Factory]
+  - classes:
+      - exporter
+    name: NewFactory
+    parameters:
+    return_types: [exporter.Factory]
+  - classes:
+      - extension
+    name: NewFactory
+    parameters:
+    return_types: [extension.Factory]
+  - classes:
+      - processor
+    name: NewFactory
+    parameters:
+    return_types: [processor.Factory]
+  - classes:
+      - receiver
+    name: NewFactory
+    parameters:
+    return_types: [receiver.Factory]
+
+ignored_functions:
+  - ^Test.*
+  - ^Benchmark.*
+  - ^Fuzz.*
