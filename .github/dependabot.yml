@@ -20,6 +20,69 @@ updates:
       interval: weekly
       day: sunday
   - package-ecosystem: gomod
+    directory: /checkapi
+    labels:
+      - dependencies
+      - go
+      - Skip Changelog
+    schedule:
+      interval: weekly
+      day: sunday
+  - package-ecosystem: gomod
+    directory: /checkapi/internal/altpkg/receiver/altreceiver
+    labels:
+      - dependencies
+      - go
+      - Skip Changelog
+    schedule:
+      interval: weekly
+      day: sunday
+  - package-ecosystem: gomod
+    directory: /checkapi/internal/altpkg/receiver/badreceiver
+    labels:
+      - dependencies
+      - go
+      - Skip Changelog
+    schedule:
+      interval: weekly
+      day: sunday
+  - package-ecosystem: gomod
+    directory: /checkapi/internal/badpkg/receiver/bad2receiver
+    labels:
+      - dependencies
+      - go
+      - Skip Changelog
+    schedule:
+      interval: weekly
+      day: sunday
+  - package-ecosystem: gomod
+    directory: /checkapi/internal/badpkg/receiver/badreceiver
+    labels:
+      - dependencies
+      - go
+      - Skip Changelog
+    schedule:
+      interval: weekly
+      day: sunday
+  - package-ecosystem: gomod
+    directory: /checkapi/internal/testpkg/receiver/validreceiver
+    labels:
+      - dependencies
+      - go
+      - Skip Changelog
+    schedule:
+      interval: weekly
+      day: sunday
+  - package-ecosystem: gomod
+    directory: /checkapi/internal/unkeyedpkg/receiver/unkeyedreceiver
+    labels:
+      - dependencies
+      - go
+      - Skip Changelog
+    schedule:
+      interval: weekly
+      day: sunday
+  - package-ecosystem: gomod
     directory: /checkfile
     labels:
       - dependencies
