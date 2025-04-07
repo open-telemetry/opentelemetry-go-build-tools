@@ -11,6 +11,7 @@ import (
 	"go/token"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 )
 
@@ -114,6 +115,21 @@ func Read(folder string, ignoredFunctions []string, excludedFiles []string) (API
 		}
 	}
 
+	slices.Sort(result.Values)
+	slices.SortFunc(result.Functions, func(a, b Function) int {
+		return strings.Compare(a.Receiver+"."+a.Name, b.Receiver+"."+b.Name)
+	})
+	for _, f := range result.Functions {
+		slices.Sort(f.TypeParams)
+		slices.Sort(f.ReturnTypes)
+	}
+	slices.SortFunc(result.Structs, func(a, b Apistruct) int {
+		return strings.Compare(a.Name, b.Name)
+	})
+	for _, s := range result.Structs {
+		slices.Sort(s.Fields)
+	}
+
 	return *result, nil
 }
 
@@ -129,7 +145,8 @@ func readFile(ignoredFunctions []string, f *ast.File, result *API) {
 					}
 				}
 				if t, ok := s.(*ast.TypeSpec); ok {
-					if structType, ok := t.Type.(*ast.StructType); ok {
+					switch structType := t.Type.(type) {
+					case *ast.StructType:
 						var fieldNames []string
 						if structType.Fields != nil {
 							fieldNames = make([]string, 0, len(structType.Fields.List))
@@ -142,6 +159,23 @@ func readFile(ignoredFunctions []string, f *ast.File, result *API) {
 						result.Structs = append(result.Structs, APIstruct{
 							Name:   t.Name.String(),
 							Fields: fieldNames,
+						})
+					case *ast.InterfaceType:
+						methods := make([]Function, 0, len(structType.Methods.List))
+						if structType.Methods != nil {
+							for _, m := range structType.Methods.List {
+								for _, n := range m.Names {
+									f := Function{
+										Name: n.Name,
+									}
+									methods = append(methods, f)
+								}
+							}
+						}
+
+						result.Interfaces = append(result.Interfaces, Interface{
+							Name:    t.Name.String(),
+							Methods: methods,
 						})
 					}
 				}
