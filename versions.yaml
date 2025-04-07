@@ -17,6 +17,7 @@ module-sets:
     version: v0.21.0
     modules:
       - go.opentelemetry.io/build-tools
+      - go.opentelemetry.io/build-tools/checkapi
       - go.opentelemetry.io/build-tools/checkfile
       - go.opentelemetry.io/build-tools/chloggen
       - go.opentelemetry.io/build-tools/crosslink
@@ -29,3 +30,9 @@ module-sets:
 
 excluded-modules:
   - go.opentelemetry.io/build-tools/internal/tools
+  - github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/altpkg/receiver/altreceiver
+  - github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/altpkg/receiver/badreceiver
+  - github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/badpkg/receiver/badreceiver
+  - github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/badpkg/receiver/bad2receiver
+  - github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/testpkg/receiver/validreceiver
+  - github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/testpkg/receiver/unkeyedreceiver
