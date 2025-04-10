@@ -143,7 +143,7 @@ func walkFolder(cfg internal.Config, folder string, componentType string) error 
 	return errors.Join(errs...)
 }
 
-func checkStructDisallowUnkeyedLiteral(cfg internal.Config, s *internal.Apistruct, folder string) error {
+func checkStructDisallowUnkeyedLiteral(cfg internal.Config, s internal.Apistruct, folder string) error {
 	if !unicode.IsUpper(rune(s.Name[0])) {
 		return nil
 	}

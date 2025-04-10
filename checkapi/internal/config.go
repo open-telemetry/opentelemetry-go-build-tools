@@ -17,9 +17,9 @@ type Apistruct struct {
 }
 
 type API struct {
-	Values    []string     `json:"values,omitempty"`
-	Structs   []*Apistruct `json:"structs,omitempty"`
-	Functions []*Function  `json:"functions,omitempty"`
+	Values    []string    `json:"values,omitempty"`
+	Structs   []Apistruct `json:"structs,omitempty"`
+	Functions []Function  `json:"functions,omitempty"`
 }
 
 type FunctionDescription struct {
