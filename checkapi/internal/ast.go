@@ -84,12 +84,12 @@ func ExprToString(expr ast.Expr) string {
 	}
 }
 
-func Read(folder string, ignoredFunctions []string, excludedFiles []string) (*API, error) {
+func Read(folder string, ignoredFunctions []string, excludedFiles []string) (API, error) {
 	result := &API{}
 	set := token.NewFileSet()
 	packs, err := parser.ParseDir(set, folder, nil, 0)
 	if err != nil {
-		return nil, err
+		return API{}, err
 	}
 
 	for _, pack := range packs {
@@ -98,7 +98,7 @@ func Read(folder string, ignoredFunctions []string, excludedFiles []string) (*AP
 			for _, exclusionPattern := range excludedFiles {
 				ok, err2 := filepath.Match(exclusionPattern, filepath.Base(path))
 				if err2 != nil {
-					return nil, err2
+					return API{}, err2
 				}
 				if ok {
 					continue FILE
@@ -108,7 +108,7 @@ func Read(folder string, ignoredFunctions []string, excludedFiles []string) (*AP
 		}
 	}
 
-	return result, nil
+	return *result, nil
 }
 
 func readFile(ignoredFunctions []string, f *ast.File, result *API) {
@@ -133,7 +133,7 @@ func readFile(ignoredFunctions []string, f *ast.File, result *API) {
 								}
 							}
 						}
-						result.Structs = append(result.Structs, &Apistruct{
+						result.Structs = append(result.Structs, Apistruct{
 							Name:   t.Name.String(),
 							Fields: fieldNames,
 						})
@@ -179,7 +179,7 @@ func readFile(ignoredFunctions []string, f *ast.File, result *API) {
 						typeParams = append(typeParams, ExprToString(r.Type))
 					}
 				}
-				f := &Function{
+				f := Function{
 					Name:        fn.Name.Name,
 					Receiver:    receiver,
 					Params:      params,
