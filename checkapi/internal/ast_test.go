@@ -54,7 +54,7 @@ func TestAST(t *testing.T) {
 		{
 			"func",
 			&ast.FuncType{Params: &ast.FieldList{List: []*ast.Field{}}},
-			"func() ",
+			"func()",
 		},
 		{
 			"func with params and return type",
@@ -118,7 +118,7 @@ func TestAST(t *testing.T) {
 					Type: &ast.FuncType{Params: &ast.FieldList{List: []*ast.Field{}}},
 				},
 			}}},
-			"{func func() }",
+			"{func func()}",
 		},
 		{
 			"chan",
@@ -149,7 +149,7 @@ func TestAST(t *testing.T) {
 				},
 				Results: nil,
 			},
-			"func[T ~string](T) ",
+			"func[T ~string](T)",
 		},
 	}
 
