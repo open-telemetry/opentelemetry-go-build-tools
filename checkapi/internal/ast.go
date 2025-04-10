@@ -56,6 +56,9 @@ func ExprToString(expr ast.Expr) string {
 		if len(typeParams) > 0 {
 			generics = fmt.Sprintf("[%s]", strings.Join(typeParams, ","))
 		}
+		if len(results) == 0 {
+			return fmt.Sprintf("func%s(%s)", generics, strings.Join(params, ","))
+		}
 		return fmt.Sprintf("func%s(%s) %s", generics, strings.Join(params, ","), strings.Join(results, ","))
 	case *ast.SelectorExpr:
 		return fmt.Sprintf("%s.%s", ExprToString(e.X), e.Sel.Name)
