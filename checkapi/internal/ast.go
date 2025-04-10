@@ -46,7 +46,17 @@ func ExprToString(expr ast.Expr) string {
 				params = append(params, ExprToString(r.Type))
 			}
 		}
-		return fmt.Sprintf("func(%s) %s", strings.Join(params, ","), strings.Join(results, ","))
+		var typeParams []string
+		if e.TypeParams != nil {
+			for _, r := range e.TypeParams.List {
+				typeParams = append(typeParams, ExprToString(r.Type))
+			}
+		}
+		generics := ""
+		if len(typeParams) > 0 {
+			generics = fmt.Sprintf("[%s]", strings.Join(typeParams, ","))
+		}
+		return fmt.Sprintf("func%s(%s) %s", generics, strings.Join(params, ","), strings.Join(results, ","))
 	case *ast.SelectorExpr:
 		return fmt.Sprintf("%s.%s", ExprToString(e.X), e.Sel.Name)
 	case *ast.Ident:
@@ -67,6 +77,8 @@ func ExprToString(expr ast.Expr) string {
 			exprs = append(exprs, ExprToString(e))
 		}
 		return strings.Join(exprs, ",")
+	case *ast.UnaryExpr:
+		return fmt.Sprintf("%s%s", e.Op.String(), ExprToString(e.X))
 	default:
 		panic(fmt.Sprintf("Unsupported expr type: %#v", expr))
 	}
@@ -161,11 +173,18 @@ func readFile(ignoredFunctions []string, f *ast.File, result *API) {
 						params = append(params, ExprToString(r.Type))
 					}
 				}
+				var typeParams []string
+				if fn.Type.TypeParams.NumFields() > 0 {
+					for _, r := range fn.Type.TypeParams.List {
+						typeParams = append(typeParams, ExprToString(r.Type))
+					}
+				}
 				f := &Function{
 					Name:        fn.Name.Name,
 					Receiver:    receiver,
-					ParamTypes:  params,
+					Params:      params,
 					ReturnTypes: returnTypes,
+					TypeParams:  typeParams,
 				}
 				result.Functions = append(result.Functions, f)
 			}

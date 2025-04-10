@@ -7,7 +7,8 @@ type Function struct {
 	Name        string   `json:"name"`
 	Receiver    string   `json:"receiver"`
 	ReturnTypes []string `json:"return_types,omitempty"`
-	ParamTypes  []string `json:"param_types,omitempty"`
+	Params      []string `json:"params,omitempty"`
+	TypeParams  []string `json:"type_params,omitempty"`
 }
 
 type Apistruct struct {

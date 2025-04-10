@@ -58,23 +58,24 @@ func TestAST(t *testing.T) {
 		},
 		{
 			"func with params and return type",
-			&ast.FuncType{Params: &ast.FieldList{
-				List: []*ast.Field{
+			&ast.FuncType{
+				Params: &ast.FieldList{
+					List: []*ast.Field{
+						{
+							Names: []*ast.Ident{
+								ast.NewIdent("foo"),
+							},
+							Type: ast.NewIdent("bool"),
+						},
+					},
+				}, Results: &ast.FieldList{List: []*ast.Field{
 					{
 						Names: []*ast.Ident{
 							ast.NewIdent("foo"),
 						},
-						Type: ast.NewIdent("bool"),
+						Type: ast.NewIdent("int"),
 					},
-				},
-			}, Results: &ast.FieldList{List: []*ast.Field{
-				{
-					Names: []*ast.Ident{
-						ast.NewIdent("foo"),
-					},
-					Type: ast.NewIdent("int"),
-				},
-			}},
+				}},
 			},
 			"func(bool) int",
 		},
@@ -125,6 +126,30 @@ func TestAST(t *testing.T) {
 				Value: ast.NewIdent("string"),
 			},
 			"chan(string)",
+		},
+		{
+			"generics",
+			&ast.FuncType{
+				TypeParams: &ast.FieldList{List: []*ast.Field{
+					{
+						Names: []*ast.Ident{
+							ast.NewIdent("T"),
+						},
+						Type: ast.NewIdent("T ~string"),
+					},
+				}},
+				Params: &ast.FieldList{List: []*ast.Field{
+					{
+						Names: []*ast.Ident{
+							ast.NewIdent("foo"),
+						},
+						Type: ast.NewIdent("T"),
+					},
+				},
+				},
+				Results: nil,
+			},
+			"func[T ~string](T) ",
 		},
 	}
 
