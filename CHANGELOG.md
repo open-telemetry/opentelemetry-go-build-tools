@@ -4,6 +4,12 @@
 
 <!-- next version -->
 
+## v0.22.0
+
+### 🚀 New components 🚀
+
+- `checkapi`: New tool to check API constraints of Golang modules (#729)
+
 ## v0.21.0
 
 ### 💡 Enhancements 💡
