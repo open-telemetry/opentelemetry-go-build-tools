@@ -185,6 +185,42 @@ func TestDiff(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "add a parameter to a function",
+			a: API{
+				Functions: []Function{{Name: "MyFn", Params: []string{"foo", "bar"}}},
+			},
+			b: API{
+				Functions: []Function{{Name: "MyFn", Params: []string{"foo", "bar", "foobar"}}},
+			},
+			expectedDiff: Diff{
+				Left: API{
+					Functions: []Function{{Name: "MyFn", Params: []string{"foo", "bar"}}},
+				},
+				Equal: API{},
+				Right: API{
+					Functions: []Function{{Name: "MyFn", Params: []string{"foo", "bar", "foobar"}}},
+				},
+			},
+		},
+		{
+			name: "add a type parameter to a function",
+			a: API{
+				Functions: []Function{{Name: "MyFn", Params: []string{"foo", "bar"}, TypeParams: []string{"string"}}},
+			},
+			b: API{
+				Functions: []Function{{Name: "MyFn", Params: []string{"foo", "bar"}, TypeParams: []string{"string", "bool"}}},
+			},
+			expectedDiff: Diff{
+				Left: API{
+					Functions: []Function{{Name: "MyFn", Params: []string{"foo", "bar"}, TypeParams: []string{"string"}}},
+				},
+				Equal: API{},
+				Right: API{
+					Functions: []Function{{Name: "MyFn", Params: []string{"foo", "bar"}, TypeParams: []string{"string", "bool"}}},
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
