@@ -167,6 +167,24 @@ func TestDiff(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "struct field added",
+			a: API{
+				Structs: []Apistruct{{Name: "MyStruct", Fields: []string{"foo", "bar"}}},
+			},
+			b: API{
+				Structs: []Apistruct{{Name: "MyStruct", Fields: []string{"foo", "bar", "foobar"}}},
+			},
+			expectedDiff: Diff{
+				Left: API{
+					Structs: []Apistruct{{Name: "MyStruct", Fields: []string{"foo", "bar"}}},
+				},
+				Equal: API{},
+				Right: API{
+					Structs: []Apistruct{{Name: "MyStruct", Fields: []string{"foo", "bar", "foobar"}}},
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
