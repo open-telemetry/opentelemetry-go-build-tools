@@ -46,7 +46,20 @@ func ExprToString(expr ast.Expr) string {
 				params = append(params, ExprToString(r.Type))
 			}
 		}
-		return fmt.Sprintf("func(%s) %s", strings.Join(params, ","), strings.Join(results, ","))
+		var typeParams []string
+		if e.TypeParams != nil {
+			for _, r := range e.TypeParams.List {
+				typeParams = append(typeParams, ExprToString(r.Type))
+			}
+		}
+		generics := ""
+		if len(typeParams) > 0 {
+			generics = fmt.Sprintf("[%s]", strings.Join(typeParams, ","))
+		}
+		if len(results) == 0 {
+			return fmt.Sprintf("func%s(%s)", generics, strings.Join(params, ","))
+		}
+		return fmt.Sprintf("func%s(%s) %s", generics, strings.Join(params, ","), strings.Join(results, ","))
 	case *ast.SelectorExpr:
 		return fmt.Sprintf("%s.%s", ExprToString(e.X), e.Sel.Name)
 	case *ast.Ident:
@@ -67,17 +80,19 @@ func ExprToString(expr ast.Expr) string {
 			exprs = append(exprs, ExprToString(e))
 		}
 		return strings.Join(exprs, ",")
+	case *ast.UnaryExpr:
+		return fmt.Sprintf("%s%s", e.Op.String(), ExprToString(e.X))
 	default:
 		panic(fmt.Sprintf("Unsupported expr type: %#v", expr))
 	}
 }
 
-func Read(folder string, ignoredFunctions []string, excludedFiles []string) (*API, error) {
+func Read(folder string, ignoredFunctions []string, excludedFiles []string) (API, error) {
 	result := &API{}
 	set := token.NewFileSet()
 	packs, err := parser.ParseDir(set, folder, nil, 0)
 	if err != nil {
-		return nil, err
+		return API{}, err
 	}
 
 	for _, pack := range packs {
@@ -86,7 +101,7 @@ func Read(folder string, ignoredFunctions []string, excludedFiles []string) (*AP
 			for _, exclusionPattern := range excludedFiles {
 				ok, err2 := filepath.Match(exclusionPattern, filepath.Base(path))
 				if err2 != nil {
-					return nil, err2
+					return API{}, err2
 				}
 				if ok {
 					continue FILE
@@ -96,7 +111,7 @@ func Read(folder string, ignoredFunctions []string, excludedFiles []string) (*AP
 		}
 	}
 
-	return result, nil
+	return *result, nil
 }
 
 func readFile(ignoredFunctions []string, f *ast.File, result *API) {
@@ -121,7 +136,7 @@ func readFile(ignoredFunctions []string, f *ast.File, result *API) {
 								}
 							}
 						}
-						result.Structs = append(result.Structs, &Apistruct{
+						result.Structs = append(result.Structs, Apistruct{
 							Name:   t.Name.String(),
 							Fields: fieldNames,
 						})
@@ -161,11 +176,18 @@ func readFile(ignoredFunctions []string, f *ast.File, result *API) {
 						params = append(params, ExprToString(r.Type))
 					}
 				}
-				f := &Function{
+				var typeParams []string
+				if fn.Type.TypeParams.NumFields() > 0 {
+					for _, r := range fn.Type.TypeParams.List {
+						typeParams = append(typeParams, ExprToString(r.Type))
+					}
+				}
+				f := Function{
 					Name:        fn.Name.Name,
 					Receiver:    receiver,
-					ParamTypes:  params,
+					Params:      params,
 					ReturnTypes: returnTypes,
+					TypeParams:  typeParams,
 				}
 				result.Functions = append(result.Functions, f)
 			}
