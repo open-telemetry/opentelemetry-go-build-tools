@@ -5,7 +5,7 @@ go 1.23.0
 require (
 	github.com/go-git/go-git/v5 v5.14.0
 	github.com/spf13/cobra v1.9.1
-	github.com/spf13/viper v1.20.0
+	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
 	go.opentelemetry.io/build-tools v0.22.0
 	go.uber.org/multierr v1.11.0
