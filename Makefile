@@ -42,7 +42,7 @@ TIMEOUT = 60
 .DEFAULT_GOAL := precommit
 
 .PHONY: precommit ci
-precommit: dependabot-check license-check lint build test-default crosslink
+precommit: dependabot-check license-check  crosslink lint build test-default
 ci: precommit check-clean-work-tree test-coverage
 
 # Tools
@@ -74,10 +74,10 @@ CHLOGGEN = $(TOOLS)/chloggen
 $(TOOLS)/chloggen: PACKAGE=go.opentelemetry.io/build-tools/chloggen
 
 GOVULNCHECK = $(TOOLS)/govulncheck
- $(TOOLS)/govulncheck: PACKAGE=golang.org/x/vuln/cmd/govulncheck
+$(TOOLS)/govulncheck: PACKAGE=golang.org/x/vuln/cmd/govulncheck
 
 MOQ = $(TOOLS)/moq
- $(TOOLS)/moq: PACKAGE=github.com/matryer/moq
+$(TOOLS)/moq: PACKAGE=github.com/matryer/moq
 
 .PHONY: tools
 tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD) $(CROSSLINK) $(CHLOGGEN) $(GOVULNCHECK) $(MOQ)
@@ -87,14 +87,15 @@ tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD) $(CROSSLINK) $(CHLOG
 UPDATED_PATH := $(shell echo $(TOOLS) | $(NORMALIZE_DIRS))
 NEW_PATH := $(UPDATED_PATH)$(PATH_SEPARATOR)$(PATH)
 
-.PHONY: generate build
-generate:
+.PHONY: generate
+generate: | $(MOQ)
 	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
 	  echo "$(GO) generate $${dir}/..."; \
 	  (cd "$${dir}" && \
 	    PATH="$(UPDATED_PATH)$(PATH_SEPARATOR)$${PATH}" $(GO) generate ./...); \
 	done
 
+.PHONY: build
 build: generate
 	# Build all package code including testing code.
 	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
@@ -146,7 +147,7 @@ test-coverage:
 lint: misspell golangci-lint govulncheck
 
 .PHONY: golangci-lint
-golangci-lint: | $(GOLANGCI_LINT)
+golangci-lint: generate | $(GOLANGCI_LINT)
 	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
 	  echo "golangci-lint in $${dir}"; \
 	  (cd "$${dir}" && \
