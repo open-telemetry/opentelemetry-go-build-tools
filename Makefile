@@ -34,7 +34,7 @@ CHECKAPI_INTERNAL_MOD_DIRS := $(shell find ./checkapi/internal -type f -name 'go
 ALL_DOCS := $(shell find . -name '*.md' -type f | sort)
 # All directories with go.mod files related to opentelemetry library. Used for building, testing and linting.
 ALL_GO_MOD_DIRS := $(filter-out $(TOOLS_MOD_DIR) $(CHECKAPI_INTERNAL_MOD_DIRS), $(shell find . -type f -name 'go.mod' -exec dirname {} \; | sort))
-ALL_COVERAGE_MOD_DIRS := $(shell find . -type f -name 'go.mod' -exec dirname {} \; | egrep -v '^$(TOOLS_MOD_DIR)' | sort)
+ALL_COVERAGE_MOD_DIRS := $(shell find . -type f -name 'go.mod' -exec dirname {} \; | grep -v '^$(TOOLS_MOD_DIR)' | sort)
 
 GO ?= go
 TIMEOUT = 60
