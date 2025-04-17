@@ -55,7 +55,7 @@ jobs:
         done
 
     - name: Run linters
-      run: make multimod-verify dependabot-check license-check lint
+      run: make multimod-verify license-check lint
 
     - name: Build
       run: make build
