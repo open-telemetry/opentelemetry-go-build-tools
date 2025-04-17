@@ -25,6 +25,103 @@
     {
       "matchPackageNames": ["golang.org/x/**"],
       "groupName": "golang.org/x"
+    },
+    {
+      "matchManagers": [
+        "docker-compose"
+      ],
+      "groupName": "docker-compose deps"
+    },
+    {
+      "matchManagers": [
+        "github-actions"
+      ],
+      "groupName": "github-actions deps"
+    },
+    {
+      "matchManagers": [
+        "gomod"
+      ],
+      "groupName": "All google.golang.org packages",
+      "matchSourceUrls": [
+        "https://google.golang.org{/,}**"
+      ]
+    },
+    {
+      "matchManagers": [
+        "gomod"
+      ],
+      "groupName": "All go.opentelemetry.io/otel packages",
+      "matchSourceUrls": [
+        "https://go.opentelemetry.io/otel{/,}**"
+      ]
+    },
+    {
+      "matchManagers": [
+        "gomod"
+      ],
+      "groupName": "All cloud.google.com/go packages",
+      "matchPackageNames": [
+        "cloud.google.com/go{/,}**"
+      ]
+    },
+    {
+      "matchManagers": [
+        "gomod"
+      ],
+      "groupName": "All github.com/googlecloudplatform packages",
+      "matchSourceUrls": [
+        "https://github.com/googlecloudplatform{/,}**"
+      ]
+    },
+    {
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchSourceUrls": [
+        "https://github.com/open-telemetry/opentelemetry-collector"
+      ],
+      "groupName": "All OpenTelemetry Collector dev packages",
+      "matchUpdateTypes": [
+        "digest"
+      ]
+    },
+    {
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchSourceUrls": [
+        "https://github.com/open-telemetry/opentelemetry-collector"
+      ],
+      "groupName": "All OpenTelemetry Collector packages",
+      "matchUpdateTypes": [
+        "major",
+        "minor",
+        "patch"
+      ]
+    },
+    {
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchSourceUrls": [
+        "https://github.com/open-telemetry/opentelemetry-collector-contrib"
+      ],
+      "groupName": "All OpenTelemetry Collector Contrib packages",
+      "matchUpdateTypes": [
+        "major",
+        "minor",
+        "patch"
+      ]
+    },
+    {
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchSourceUrls": [
+        "https://github.com/open-telemetry/opentelemetry-go-contrib"
+      ],
+      "groupName": "All opentelemetry-go-contrib packages"
     }
   ]
 }
