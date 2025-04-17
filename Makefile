@@ -39,10 +39,14 @@ ALL_COVERAGE_MOD_DIRS := $(shell find . -type f -name 'go.mod' -exec dirname {} 
 GO ?= go
 TIMEOUT = 60
 
+# User to run as in docker images.
+DOCKER_USER=$(shell id -u):$(shell id -g)
+DEPENDENCIES_DOCKERFILE=./dependencies.Dockerfile
+
 .DEFAULT_GOAL := precommit
 
 .PHONY: precommit ci
-precommit: license-check  crosslink lint build test-default
+precommit: license-check crosslink lint build test-default codespell
 ci: precommit check-clean-work-tree test-coverage
 
 # Tools
@@ -81,6 +85,41 @@ $(TOOLS)/moq: PACKAGE=github.com/matryer/moq
 
 .PHONY: tools
 tools: $(DBOTCONF) $(GOLANGCI_LINT) $(MISSPELL) $(MULTIMOD) $(CROSSLINK) $(CHLOGGEN) $(GOVULNCHECK) $(MOQ)
+
+# Virtualized python tools via docker
+
+# The directory where the virtual environment is created.
+VENVDIR := venv
+
+# The directory where the python tools are installed.
+PYTOOLS := $(VENVDIR)/bin
+
+# The pip executable in the virtual environment.
+PIP := $(PYTOOLS)/pip
+
+# The directory in the docker image where the current directory is mounted.
+WORKDIR := /workdir
+
+# The python image to use for the virtual environment.
+PYTHONIMAGE := $(shell awk '$$4=="python" {print $$2}' $(DEPENDENCIES_DOCKERFILE))
+
+# Run the python image with the current directory mounted.
+DOCKERPY := docker run --rm -u $(DOCKER_USER) -v "$(CURDIR):$(WORKDIR)" -w $(WORKDIR) $(PYTHONIMAGE)
+
+# Create a virtual environment for Python tools.
+$(PYTOOLS):
+# The `--upgrade` flag is needed to ensure that the virtual environment is
+# created with the latest pip version.
+	@echo "Setting up python"
+	@$(DOCKERPY) bash -c "python3 -m venv $(VENVDIR) && $(PIP) install --upgrade --cache-dir=$(WORKDIR)/.cache/pip pip"
+
+# Install python packages into the virtual environment.
+$(PYTOOLS)/%: $(PYTOOLS)
+	@echo "Installing $@"
+	@$(DOCKERPY) $(PIP) install --cache-dir=$(WORKDIR)/.cache/pip -r requirements.txt
+
+CODESPELL = $(PYTOOLS)/codespell
+$(CODESPELL): PACKAGE=codespell
 
 # Build
 
@@ -240,3 +279,9 @@ crosslink: | $(CROSSLINK)
 .PHONY: gowork
 gowork: | $(CROSSLINK)
 	$(CROSSLINK) work --root=$(shell pwd)
+
+.PHONY: codespell
+codespell: $(CODESPELL)
+	@echo "Running codespell"
+	@$(DOCKERPY) $(CODESPELL)
+
