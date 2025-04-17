@@ -39,6 +39,7 @@ github.com/alecthomas/repr v0.4.0 h1:GhI2A8MACjfegCPVq9f1FLvIBS+DrQ2KQBFZP1iFzXc
 github.com/alecthomas/repr v0.4.0/go.mod h1:Fr0507jx4eOXV7AlPV6AVZLYrLIuIeSOWtW57eE/O/4=
 github.com/alexkohler/nakedret/v2 v2.0.5 h1:fP5qLgtwbx9EJE8dGEERT02YwS8En4r9nnZ71RK+EVU=
 github.com/alexkohler/nakedret/v2 v2.0.5/go.mod h1:bF5i0zF2Wo2o4X4USt9ntUWve6JbFv02Ff4vlkmS/VU=
+github.com/alexkohler/nakedret/v2 v2.0.6/go.mod h1:l3RKju/IzOMQHmsEvXwkqMDzHHvurNQfAgE1eVmT40Q=
 github.com/alexkohler/prealloc v1.0.0 h1:Hbq0/3fJPQhNkN0dR95AVrr6R7tou91y0uHG5pOcUuw=
 github.com/alexkohler/prealloc v1.0.0/go.mod h1:VetnK3dIgFBBKmg0YnD9F9x6Icjd+9cvfHR56wJVlKE=
 github.com/alingse/asasalint v0.0.11 h1:SFwnQXJ49Kx/1GghOFz1XGqHYKp21Kq1nHad/0WQRnw=
@@ -177,6 +178,7 @@ github.com/golangci/gofmt v0.0.0-20250413222143-f2e10e00591b h1:Aa2SLCpcFsO9PI39
 github.com/golangci/gofmt v0.0.0-20250413222143-f2e10e00591b/go.mod h1:ivJ9QDg0XucIkmwhzCDsqcnxxlDStoTl89jDMIoNxKY=
 github.com/golangci/golangci-lint v1.64.8 h1:y5TdeVidMtBGG32zgSC7ZXTFNHrsJkDnpO4ItB3Am+I=
 github.com/golangci/golangci-lint v1.64.8/go.mod h1:5cEsUQBSr6zi8XI8OjmcY2Xmliqc4iYL7YoPrL+zLJ4=
+github.com/golangci/golangci-lint/v2 v2.1.2/go.mod h1:ApmXnYUmWDGu1CUZRkT3yzzFATmaViCY7BEtytG2AiU=
 github.com/golangci/misspell v0.6.0 h1:JCle2HUTNWirNlDIAUO44hUsKhOFqGPoC4LZxlaSXDs=
 github.com/golangci/misspell v0.6.0/go.mod h1:keMNyY6R9isGaSAu+4Q8NMBwMPkh15Gtc8UCVoDtAWo=
 github.com/golangci/plugin-module-register v0.1.1 h1:TCmesur25LnyJkpsVrupv1Cdzo+2f7zX0H6Jkw1Ol6c=
@@ -185,6 +187,7 @@ github.com/golangci/revgrep v0.8.0 h1:EZBctwbVd0aMeRnNUsFogoyayvKHyxlV3CdUA46FX2
 github.com/golangci/revgrep v0.8.0/go.mod h1:U4R/s9dlXZsg8uJmaR1GrloUr14D7qDl8gi2iPXJH8k=
 github.com/golangci/unconvert v0.0.0-20240309020433-c5143eacb3ed h1:IURFTjxeTfNFP0hTEi1YKjB/ub8zkpaOqFFMApi2EAs=
 github.com/golangci/unconvert v0.0.0-20240309020433-c5143eacb3ed/go.mod h1:XLXN8bNw4CGRPaqgl3bv/lhz7bsGPh4/xSaMTbo2vkQ=
+github.com/golangci/unconvert v0.0.0-20250410112200-a129a6e6413e/go.mod h1:h+wZwLjUTJnm/P2rwlbJdRPZXOzaT36/FwnPnY2inzc=
 github.com/google/go-cmdtest v0.4.1-0.20220921163831-55ab3332a786 h1:rcv+Ippz6RAtvaGgKxc+8FQIpxHgsF+HBzPyYL2cyVU=
 github.com/google/go-cmdtest v0.4.1-0.20220921163831-55ab3332a786/go.mod h1:apVn/GCasLZUVpAJ6oWAuyP7Ne7CEsQbTnc0plM3m+o=
 github.com/google/go-cmp v0.5.1/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
@@ -230,6 +233,7 @@ github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 h1:BQSFePA1RWJOl
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
 github.com/jgautheron/goconst v1.7.1 h1:VpdAG7Ca7yvvJk5n8dMwQhfEZJh95kl/Hl9S1OI5Jkk=
 github.com/jgautheron/goconst v1.7.1/go.mod h1:aAosetZ5zaeC/2EfMeRswtxUFBpe2Hr7HzkgX4fanO4=
+github.com/jgautheron/goconst v1.8.1/go.mod h1:A0oxgBCHy55NQn6sYpO7UdnA9p+h7cPtoOZUmvNIako=
 github.com/jingyugao/rowserrcheck v1.1.1 h1:zibz55j/MJtLsjP1OF4bSdgXxwL1b+Vn7Tjzq7gFzUs=
 github.com/jingyugao/rowserrcheck v1.1.1/go.mod h1:4yvlZSDb3IyDTUZJUmpZfm2Hwok+Dtp+nu2qOq+er9c=
 github.com/jjti/go-spancheck v0.6.4 h1:Tl7gQpYf4/TMU7AT84MN83/6PutY21Nb9fuQjFTpRRc=

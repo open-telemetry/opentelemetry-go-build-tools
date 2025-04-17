@@ -5,7 +5,7 @@ go 1.23.0
 require (
 	github.com/client9/misspell v0.3.4
 	github.com/gogo/protobuf v1.3.2
-	github.com/golangci/golangci-lint v1.64.8
+	github.com/golangci/golangci-lint/v2 v2.1.2
 	github.com/matryer/moq v0.4.0
 	go.opentelemetry.io/build-tools/chloggen v0.22.0
 	go.opentelemetry.io/build-tools/crosslink v0.22.0
@@ -32,7 +32,7 @@ require (
 	github.com/OpenPeeDeeP/depguard/v2 v2.2.1 // indirect
 	github.com/ProtonMail/go-crypto v1.2.0 // indirect
 	github.com/alecthomas/go-check-sumtype v0.3.1 // indirect
-	github.com/alexkohler/nakedret/v2 v2.0.5 // indirect
+	github.com/alexkohler/nakedret/v2 v2.0.6 // indirect
 	github.com/alexkohler/prealloc v1.0.0 // indirect
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/alingse/nilnesserr v0.2.0 // indirect
@@ -88,7 +88,7 @@ require (
 	github.com/golangci/misspell v0.6.0 // indirect
 	github.com/golangci/plugin-module-register v0.1.1 // indirect
 	github.com/golangci/revgrep v0.8.0 // indirect
-	github.com/golangci/unconvert v0.0.0-20240309020433-c5143eacb3ed // indirect
+	github.com/golangci/unconvert v0.0.0-20250410112200-a129a6e6413e // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/gordonklaus/ineffassign v0.1.0 // indirect
 	github.com/gostaticanalysis/analysisutil v0.7.1 // indirect
@@ -101,7 +101,7 @@ require (
 	github.com/hexops/gotextdiff v1.0.3 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
-	github.com/jgautheron/goconst v1.7.1 // indirect
+	github.com/jgautheron/goconst v1.8.1 // indirect
 	github.com/jingyugao/rowserrcheck v1.1.1 // indirect
 	github.com/jjti/go-spancheck v0.6.4 // indirect
 	github.com/julz/importas v0.2.0 // indirect
