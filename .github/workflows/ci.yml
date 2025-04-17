@@ -140,3 +140,21 @@ jobs:
       with:
           name: opentelemetry-go-test-output
           path: ${{ env.TEST_RESULTS }}
+  check-lint:
+    runs-on: ubuntu-latest
+    needs: [lint]
+    if: always()
+    steps:
+      - name: Test if lint passed
+        run: |
+          echo ${{ needs.lint.result }}
+          test ${{ needs.lint.result }} == "success"
+  check-test-race:
+    runs-on: ubuntu-latest
+    needs: [test-race]
+    if: always()
+    steps:
+      - name: Test if test-race passed
+        run: |
+          echo ${{ needs.test-race.result }}
+          test ${{ needs.test-race.result }} == "success"
