@@ -61,6 +61,7 @@ func (cg *distributionsGenerator) Generate(data datatype.GithubData) error {
 	return nil
 }
 
+// WriteDistribution writes the distribution data to a YAML file in the specified root folder.
 func WriteDistribution(rootFolder string, distName string, distData distOutput) error {
 	b, err := yaml.Marshal(distData)
 	if err != nil {
@@ -69,6 +70,7 @@ func WriteDistribution(rootFolder string, distName string, distData distOutput) 
 	return os.WriteFile(filepath.Join(rootFolder, "reports", "distributions", fmt.Sprintf("%s.yaml", distName)), b, 0o600)
 }
 
+// WriteChloggenComponents writes the Chloggen configuration to a YAML file in the specified root folder.
 func WriteChloggenComponents(rootFolder string, cfg datatype.ChloggenConfig) error {
 	b, err := yaml.Marshal(cfg)
 	if err != nil {

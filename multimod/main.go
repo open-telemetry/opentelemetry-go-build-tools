@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Multimod enables the release of Go modules with flexible versioning.
 package main
 
 import "go.opentelemetry.io/build-tools/multimod/cmd"

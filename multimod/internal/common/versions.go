@@ -21,8 +21,10 @@ import (
 )
 
 const (
+	// SemverRegexNumberOnly is a regex that matches a semantic version number.
 	SemverRegexNumberOnly = `(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?`
-	SemverRegex           = `v` + SemverRegexNumberOnly
+	// SemverRegex is a regex that matches a semantic version number with a leading "v".
+	SemverRegex = `v` + SemverRegexNumberOnly
 )
 
 // versionConfig is needed to parse the versions.yaml file with viper.

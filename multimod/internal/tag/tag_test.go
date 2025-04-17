@@ -134,19 +134,19 @@ func TestNewTagger(t *testing.T) {
 		assert.IsType(t, &git.Repository{}, actual.Repo)
 
 		assert.IsType(t, common.ModuleSetRelease{}, actual.ModuleSetRelease)
-		assert.Equal(t, expectedTagNames[expectedModSetName], actual.ModuleSetRelease.TagNames)
-		assert.Equal(t, expectedModSet, actual.ModuleSetRelease.ModSet)
-		assert.Equal(t, expectedModSetName, actual.ModuleSetRelease.ModSetName)
+		assert.Equal(t, expectedTagNames[expectedModSetName], actual.TagNames)
+		assert.Equal(t, expectedModSet, actual.ModSet)
+		assert.Equal(t, expectedModSetName, actual.ModSetName)
 
-		assert.IsType(t, common.ModuleVersioning{}, actual.ModuleSetRelease.ModuleVersioning)
-		assert.Equal(t, expectedModuleSetMap, actual.ModuleSetRelease.ModuleVersioning.ModSetMap)
-		assert.Equal(t, expectedModulePathMap, actual.ModuleSetRelease.ModuleVersioning.ModPathMap)
-		assert.Equal(t, expectedModuleInfoMap, actual.ModuleSetRelease.ModuleVersioning.ModInfoMap)
+		assert.IsType(t, common.ModuleVersioning{}, actual.ModuleVersioning)
+		assert.Equal(t, expectedModuleSetMap, actual.ModSetMap)
+		assert.Equal(t, expectedModulePathMap, actual.ModPathMap)
+		assert.Equal(t, expectedModuleInfoMap, actual.ModInfoMap)
 
 		// property functions
-		assert.Equal(t, expectedFullTagNames[expectedModSetName], actual.ModuleSetRelease.ModuleFullTagNames())
-		assert.Equal(t, expectedModSetVersions[expectedModSetName], actual.ModuleSetRelease.ModSetVersion())
-		assert.Equal(t, expectedModSetPaths[expectedModSetName], actual.ModuleSetRelease.ModSetPaths())
+		assert.Equal(t, expectedFullTagNames[expectedModSetName], actual.ModuleFullTagNames())
+		assert.Equal(t, expectedModSetVersions[expectedModSetName], actual.ModSetVersion())
+		assert.Equal(t, expectedModSetPaths[expectedModSetName], actual.ModSetPaths())
 	}
 }
 

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Issuegenerator generates Github issues for failed tests.
 package main
 
 import (

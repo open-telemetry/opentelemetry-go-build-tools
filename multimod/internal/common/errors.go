@@ -19,18 +19,24 @@ import (
 	"strings"
 )
 
+// ErrGitTagsAlreadyExist is an error that indicates that all git tags checked
+// already exist.
 type ErrGitTagsAlreadyExist struct {
 	tagNames []string
 }
 
+// Error returns a string representation of the error.
 func (e ErrGitTagsAlreadyExist) Error() string {
 	return fmt.Sprintf("all git tags checked already exist:\n%s", strings.Join(e.tagNames, "\n"))
 }
 
+// ErrInconsistentGitTagsExist is an error that indicates that some but not all
+// git tags checked exist.
 type ErrInconsistentGitTagsExist struct {
 	tagNames []string
 }
 
+// Error returns a string representation of the error.
 func (e ErrInconsistentGitTagsExist) Error() string {
 	return fmt.Sprintf("git tags inconsistent for module set (some but not all tags in module set):\n%s", strings.Join(e.tagNames, "\n"))
 }

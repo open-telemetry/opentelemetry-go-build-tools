@@ -27,8 +27,8 @@ import (
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
 
+// Run runs the verification.
 func Run(versioningFile string) {
-
 	repoRoot, err := repo.FindRoot()
 	if err != nil {
 		log.Fatalf("unable to find repo root: %v", err)
@@ -105,8 +105,8 @@ func (v verification) getDependencies() (dependencyMap, error) {
 // verifyAllModulesInSet checks that every module (as defined by a go.mod file) is contained in exactly
 // one module set, unless it is excluded.
 func (v verification) verifyAllModulesInSet() error {
-	for modPath, modFilePath := range v.ModuleVersioning.ModPathMap {
-		if _, exists := v.ModuleVersioning.ModInfoMap[modPath]; !exists {
+	for modPath, modFilePath := range v.ModPathMap {
+		if _, exists := v.ModInfoMap[modPath]; !exists {
 			return &errModuleNotInSet{
 				modPath:     modPath,
 				modFilePath: modFilePath,
@@ -114,8 +114,8 @@ func (v verification) verifyAllModulesInSet() error {
 		}
 	}
 
-	for modPath, modInfo := range v.ModuleVersioning.ModInfoMap {
-		if _, exists := v.ModuleVersioning.ModPathMap[modPath]; !exists {
+	for modPath, modInfo := range v.ModInfoMap {
+		if _, exists := v.ModPathMap[modPath]; !exists {
 			return &errModuleNotInRepo{
 				modPath:    modPath,
 				modSetName: modInfo.ModuleSetName,
@@ -134,7 +134,7 @@ func (v verification) verifyVersions() error {
 	// with the same non-zero major version.
 	setMajorVersions := make(map[string][]string)
 
-	for modSetName, modSet := range v.ModuleVersioning.ModSetMap {
+	for modSetName, modSet := range v.ModSetMap {
 		// Check that module set versions conform to semver semantics
 		if !semver.IsValid(modSet.Version) {
 			return &errInvalidVersion{
@@ -183,7 +183,6 @@ func (v verification) verifyDependencies() error {
 		// check if module is stable
 		modVersion := v.ModuleVersioning.ModInfoMap[modPath].Version
 		if common.IsStableVersion(modVersion) {
-
 			for _, depPath := range modDeps {
 				// check if dependency is on an unstable module
 				depVersion := v.ModuleVersioning.ModInfoMap[depPath].Version

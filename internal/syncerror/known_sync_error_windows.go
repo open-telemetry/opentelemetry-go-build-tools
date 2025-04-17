@@ -15,6 +15,8 @@
 //go:build windows
 // +build windows
 
+// Package syncerror provides functionality to encapsulate synchronization
+// errors.
 package syncerror
 
 import (
@@ -23,7 +25,7 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-// knownSyncError returns true if the given error is one of the known
+// KnownSyncError returns true if the given error is one of the known
 // non-actionable errors returned by Sync on Windows:
 //
 // - sync /dev/stderr: The handle is invalid.

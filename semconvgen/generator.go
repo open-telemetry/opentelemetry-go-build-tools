@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Semconvgen generates semantic convention packages.
 package main
 
 import (

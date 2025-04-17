@@ -37,6 +37,7 @@ type summary struct {
 	BugFixes        []*Entry
 }
 
+// GenerateSummary generates a changelog entry summary.
 func GenerateSummary(version string, entries []*Entry, cfg *config.Config) (string, error) {
 	s := summary{
 		Version: version,
@@ -60,6 +61,7 @@ func GenerateSummary(version string, entries []*Entry, cfg *config.Config) (stri
 	return s.String(cfg.SummaryTemplate)
 }
 
+// TemplateFuncMap returns a map of functions to be used in the template.
 func TemplateFuncMap() template.FuncMap {
 	return template.FuncMap{
 		"indent": func(n int, s string) string {
@@ -69,6 +71,7 @@ func TemplateFuncMap() template.FuncMap {
 	}
 }
 
+// String renders the summary using the provided template.
 func (s summary) String(summaryTemplate string) (string, error) {
 	var tmpl *template.Template
 	var err error

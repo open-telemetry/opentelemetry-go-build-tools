@@ -152,9 +152,9 @@ func TestNewModuleSetRelease(t *testing.T) {
 				assert.Equal(t, expectedModSetName, actual.ModSetName)
 
 				assert.IsType(t, ModuleVersioning{}, actual.ModuleVersioning)
-				assert.Equal(t, tc.expectedModuleSetMap, actual.ModuleVersioning.ModSetMap)
-				assert.Equal(t, tc.expectedModulePathMap, actual.ModuleVersioning.ModPathMap)
-				assert.Equal(t, tc.expectedModuleInfoMap, actual.ModuleVersioning.ModInfoMap)
+				assert.Equal(t, tc.expectedModuleSetMap, actual.ModSetMap)
+				assert.Equal(t, tc.expectedModulePathMap, actual.ModPathMap)
+				assert.Equal(t, tc.expectedModuleInfoMap, actual.ModInfoMap)
 
 				// property functions
 				assert.Equal(t, tc.expectedFullTagNames[expectedModSetName], actual.ModuleFullTagNames())

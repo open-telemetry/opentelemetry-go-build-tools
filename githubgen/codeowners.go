@@ -207,7 +207,7 @@ func getGithubMembers(skipGithub bool, githubOrg string) (map[string]struct{}, e
 	}
 	githubToken := os.Getenv("GITHUB_TOKEN")
 	if githubToken == "" {
-		return nil, fmt.Errorf("Set the environment variable `GITHUB_TOKEN` to a PAT token to authenticate")
+		return nil, fmt.Errorf("set the environment variable `GITHUB_TOKEN` to a PAT token to authenticate")
 	}
 	client := github.NewClient(nil).WithAuthToken(githubToken)
 	var allUsers []*github.User
