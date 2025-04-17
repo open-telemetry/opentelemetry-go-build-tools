@@ -7,7 +7,7 @@
 # (Optional) Default: .chloggen
 # entries_dir:
 
-# This file is used as the input for individul changelog entries.
+# This file is used as the input for individual changelog entries.
 # Specify as relative path from root of repo.
 # (Optional) Default: .chloggen/TEMPLATE.yaml
 # template_yaml:

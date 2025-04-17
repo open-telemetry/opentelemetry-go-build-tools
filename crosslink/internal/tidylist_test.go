@@ -65,7 +65,7 @@ func TestTidy(t *testing.T) {
 			},
 			expSched: []string{".", "testC", "testB", "testA", "testB"},
 		},
-		{ // A -> C, B should give CAB (default to alphabetical order when no contraint)
+		{ // A -> C, B should give CAB (default to alphabetical order when no constraint)
 			name:     "testTidyListOrder",
 			mock:     "testTidyListOrder",
 			config:   func(*RunConfig) {},

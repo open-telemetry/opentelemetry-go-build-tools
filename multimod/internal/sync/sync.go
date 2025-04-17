@@ -104,7 +104,7 @@ func newSync(myVersioningFilename, otherVersioningFilename, modSetToUpdate, myRe
 		return sync{}, fmt.Errorf("error creating new sync struct: %w", err)
 	}
 
-	// when synching, always sync deps for modules, including the excluded-modules
+	// when syncing, always sync deps for modules, including the excluded-modules
 	myModVersioning, err := common.NewModuleVersioningWithIgnoreExcluded(myVersioningFilename, myRepoRoot, true)
 	if err != nil {
 		return sync{}, fmt.Errorf("could not get my ModuleVersioning: %w", err)

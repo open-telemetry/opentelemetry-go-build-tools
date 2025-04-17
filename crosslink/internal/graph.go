@@ -47,7 +47,7 @@ func buildDepedencyGraph(rc RunConfig, rootModulePath string) (map[string]*modul
 		// populate initial list of requirements
 		// Modules should only be queued for replacement if they meet the following criteria
 		// 1. They exist within the set of go.mod files discovered during the filepath walk
-		//		- This prevents uneccessary or erroneous replace statements from being added.
+		//		- This prevents unnecessary or erroneous replace statements from being added.
 		//		- Crosslink will not make an assumption that a module exists even though it falls under the module path.
 		// 2. They fall under the module path of the root module
 		// 3. They are not the same module that we are currently working with.

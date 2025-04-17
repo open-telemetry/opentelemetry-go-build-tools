@@ -57,7 +57,7 @@ func renameGoMod(fp string) error {
 	return nil
 }
 
-// Copies the mocked gomod files into a tempory directory in the test_data folder.
+// Copies the mocked gomod files into a temporary directory in the test_data folder.
 // testName must match the name of a directory within the mock_test_data folder.
 func createTempTestDir(testName string) (string, error) {
 	tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
