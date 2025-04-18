@@ -50,16 +50,11 @@ use ../other-module
 // replace statements should remain
 replace foo.opentelemetery.io/bar => ../bar`
 
-	tmpRootDir, err := createTempTestDir(mockDir)
-	if err != nil {
-		t.Fatal("creating temp dir:", err)
-	}
-
-	err = renameGoMod(tmpRootDir)
+	tmpRootDir := createTempTestDir(t, mockDir)
+	err := renameGoMod(tmpRootDir)
 	if err != nil {
 		t.Errorf("error renaming gomod files: %v", err)
 	}
-	t.Cleanup(func() { os.RemoveAll(tmpRootDir) })
 
 	config.RootPath = tmpRootDir
 
@@ -78,20 +73,15 @@ use ./
 use ./testA
 use ./testB`
 
-	tmpRootDir, err := createTempTestDir(mockDir)
-	if err != nil {
-		t.Fatal("creating temp dir:", err)
-	}
-
+	tmpRootDir := createTempTestDir(t, mockDir)
 	// remove the go.work to make sure new one gets created
-	err = os.Remove(filepath.Join(tmpRootDir, "go.work"))
+	err := os.Remove(filepath.Join(tmpRootDir, "go.work"))
 	require.NoError(t, err)
 
 	err = renameGoMod(tmpRootDir)
 	if err != nil {
 		t.Errorf("error renaming gomod files: %v", err)
 	}
-	t.Cleanup(func() { os.RemoveAll(tmpRootDir) })
 
 	config.RootPath = tmpRootDir
 
@@ -166,7 +156,6 @@ func TestGoVersionInvalid(t *testing.T) {
 		t.Run(goVersion, func(t *testing.T) {
 			err := validateGoVersion(goVersion)
 			assert.Error(t, err)
-
 		})
 	}
 }

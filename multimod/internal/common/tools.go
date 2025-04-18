@@ -49,6 +49,7 @@ func GetAllModuleSetNames(versioningFile string, repoRoot string) ([]string, err
 	return modSetNames, nil
 }
 
+// GetModuleSet returns the module set with the given name from the versioning file.
 func GetModuleSet(modSetName, versioningFilename string) (ModuleSet, error) {
 	vCfg, err := readVersioningFile(versioningFilename)
 	if err != nil {

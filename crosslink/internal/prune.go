@@ -21,7 +21,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// main entry point for the Prune subcommand.
+// Prune prunes the go.mod replace statements.
 func Prune(rc RunConfig) error {
 	var err error
 

@@ -66,13 +66,8 @@ func TestPrune(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.testName, func(t *testing.T) {
-			tmpRootDir, err := createTempTestDir(test.mockDir)
-			if err != nil {
-				t.Fatal("creating temp dir:", err)
-			}
-			t.Cleanup(func() { os.RemoveAll(tmpRootDir) })
-
-			err = renameGoMod(tmpRootDir)
+			tmpRootDir := createTempTestDir(t, test.mockDir)
+			err := renameGoMod(tmpRootDir)
 			if err != nil {
 				t.Errorf("error renaming gomod files: %v", err)
 			}
@@ -81,10 +76,8 @@ func TestPrune(t *testing.T) {
 			err = Prune(test.config)
 
 			if assert.NoError(t, err, "error message on execution %s") {
-
 				for modFilePath, modFilesExpected := range test.expected {
 					modFileActual, err := os.ReadFile(filepath.Clean(filepath.Join(tmpRootDir, modFilePath)))
-
 					if err != nil {
 						t.Fatalf("error reading actual mod files: %v", err)
 					}
@@ -114,7 +107,6 @@ func TestPrune(t *testing.T) {
 					}
 				}
 			}
-
 		})
 	}
 }
@@ -122,14 +114,8 @@ func TestPrune(t *testing.T) {
 func TestPruneReplace(t *testing.T) {
 	testName := "testPrune"
 
-	tmpRootDir, err := createTempTestDir(testName)
-	if err != nil {
-		t.Fatal("creating temp dir:", err)
-	}
-
-	t.Cleanup(func() { os.RemoveAll(tmpRootDir) })
-
-	err = renameGoMod(tmpRootDir)
+	tmpRootDir := createTempTestDir(t, testName)
+	err := renameGoMod(tmpRootDir)
 	if err != nil {
 		t.Errorf("error renaming gomod files: %v", err)
 	}
@@ -205,5 +191,4 @@ func TestPruneReplace(t *testing.T) {
 	); diff != "" {
 		t.Errorf("Replace{} mismatch (-want +got):\n%s", diff)
 	}
-
 }

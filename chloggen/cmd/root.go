@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package cmd provides the command line interface for the chloggen tool.
 package cmd
 
 import (
@@ -42,6 +43,7 @@ func rootCmd() *cobra.Command {
 	return cmd
 }
 
+// Execute executes the root command.
 func Execute() {
 	cobra.CheckErr(rootCmd().Execute())
 }

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Dbotconf configures and validates dependabot configuration.
 package main
 
 import (

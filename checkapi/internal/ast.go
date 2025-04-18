@@ -1,6 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+// Package internal provides internal utilities for the checkapi package.
 package internal
 
 import (
@@ -13,6 +14,7 @@ import (
 	"strings"
 )
 
+// ExprToString converts an AST expression to a string representation.
 func ExprToString(expr ast.Expr) string {
 	switch e := expr.(type) {
 	case *ast.MapType:
@@ -87,6 +89,7 @@ func ExprToString(expr ast.Expr) string {
 	}
 }
 
+// Read reads the Go files in the specified folder and returns an API object.
 func Read(folder string, ignoredFunctions []string, excludedFiles []string) (API, error) {
 	result := &API{}
 	set := token.NewFileSet()
@@ -136,7 +139,7 @@ func readFile(ignoredFunctions []string, f *ast.File, result *API) {
 								}
 							}
 						}
-						result.Structs = append(result.Structs, Apistruct{
+						result.Structs = append(result.Structs, APIstruct{
 							Name:   t.Name.String(),
 							Fields: fieldNames,
 						})

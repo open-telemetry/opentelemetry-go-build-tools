@@ -33,6 +33,7 @@ func newModuleInfo(moduleContents modfile.File) *moduleInfo {
 	}
 }
 
+// RunConfig is the crosslink configuration.
 type RunConfig struct {
 	RootPath      string
 	Verbose       bool
@@ -46,6 +47,7 @@ type RunConfig struct {
 	Logger        *zap.Logger
 }
 
+// DefaultRunConfig returns a default RunConfig.
 func DefaultRunConfig() RunConfig {
 	lg, err := zap.NewProduction()
 	if err != nil {

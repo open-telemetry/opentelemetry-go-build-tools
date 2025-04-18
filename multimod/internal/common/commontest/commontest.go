@@ -25,13 +25,12 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
-var (
-	TestAuthor = &object.Signature{
-		Name:  "test_author",
-		Email: "test_email",
-		When:  time.Now(),
-	}
-)
+// TestAuthor is a test author used for creating commits in the test repository.
+var TestAuthor = &object.Signature{
+	Name:  "test_author",
+	Email: "test_email",
+	When:  time.Now(),
+}
 
 // WriteTempFiles is a helper function to dynamically write files such as go.mod or version.go used for testing.
 func WriteTempFiles(modFiles map[string][]byte) error {
@@ -51,6 +50,8 @@ func WriteTempFiles(modFiles map[string][]byte) error {
 	return nil
 }
 
+// InitNewRepoWithCommit initializes a new git repository in the specified
+// directory and creates an initial commit.
 func InitNewRepoWithCommit(repoRoot string) (*git.Repository, plumbing.Hash, error) {
 	// initialize temporary local git repository
 	repo, err := git.PlainInit(repoRoot, false)

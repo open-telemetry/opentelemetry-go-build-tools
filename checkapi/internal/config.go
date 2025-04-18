@@ -3,6 +3,7 @@
 
 package internal
 
+// Function represents a function in the codebase.
 type Function struct {
 	Name        string   `json:"name"`
 	Receiver    string   `json:"receiver"`
@@ -11,17 +12,20 @@ type Function struct {
 	TypeParams  []string `json:"type_params,omitempty"`
 }
 
-type Apistruct struct {
+// APIstruct represents a struct in the codebase.
+type APIstruct struct {
 	Name   string   `json:"name"`
 	Fields []string `json:"fields"`
 }
 
+// API represents the API of the codebase, including functions and structs.
 type API struct {
 	Values    []string    `json:"values,omitempty"`
-	Structs   []Apistruct `json:"structs,omitempty"`
+	Structs   []APIstruct `json:"structs,omitempty"`
 	Functions []Function  `json:"functions,omitempty"`
 }
 
+// FunctionDescription represents a function description.
 type FunctionDescription struct {
 	Classes     []string `yaml:"classes"`
 	Name        string   `yaml:"name"`
@@ -29,6 +33,7 @@ type FunctionDescription struct {
 	ReturnTypes []string `yaml:"return_types"`
 }
 
+// Config represents the configuration for the codebase analysis.
 type Config struct {
 	IgnoredPaths     []string              `yaml:"ignored_paths"`
 	ExcludedFiles    []string              `yaml:"excluded_files"`
@@ -37,6 +42,7 @@ type Config struct {
 	UnkeyedLiteral   UnkeyedLiteral        `yaml:"unkeyed_literal_initialization"`
 }
 
+// UnkeyedLiteral represents the configuration for unkeyed literal initialization.
 type UnkeyedLiteral struct {
 	Enabled bool `yaml:"enabled"`
 	Limit   int  `yaml:"limit"`

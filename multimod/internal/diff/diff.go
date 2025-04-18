@@ -1,6 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+// Package diff provides functionality to check if files in a module set have changed.
 package diff
 
 import (
@@ -15,14 +16,19 @@ import (
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
 
+// Client is an interface for a git client. It is used to abstract away the
+// implementation details of the git client, allowing for easier testing and
+// mocking.
 type Client interface {
 	HeadCommit(r *git.Repository) (*object.Commit, error)
 	TagCommit(r *git.Repository, tag string) (*object.Commit, error)
 	FilesChanged(headCommit *object.Commit, tagCommit *object.Commit, prefix string, suffix string) ([]string, error)
 }
 
+// GitClient handles interactions with git.
 type GitClient struct{}
 
+// HeadCommit returns the commit object for the HEAD of the repository.
 func (g GitClient) HeadCommit(r *git.Repository) (*object.Commit, error) {
 	headRef, err := r.Head()
 	if err != nil {
@@ -31,6 +37,7 @@ func (g GitClient) HeadCommit(r *git.Repository) (*object.Commit, error) {
 	return r.CommitObject(headRef.Hash())
 }
 
+// TagCommit returns the commit object for a given tag.
 func (g GitClient) TagCommit(r *git.Repository, tag string) (*object.Commit, error) {
 	tagRef, err := r.Tag(tag)
 	if err != nil {
@@ -82,6 +89,7 @@ func normalizeTag(tagName common.ModuleTagName, ver string) string {
 	return fmt.Sprintf("%s/%s", tagName, ver)
 }
 
+// HasChanged checks if the files in the module set have changed since the last release.
 func HasChanged(repoRoot string, versioningFile string, ver string, modset string) ([]string, error) {
 	changedFiles := []string{}
 	ver = normalizeVersion(ver)
@@ -103,7 +111,7 @@ func HasChanged(repoRoot string, versioningFile string, ver string, modset strin
 	// get tag names of mods to update
 	tagNames, err := common.ModulePathsToTagNames(
 		mset.ModSet.Modules,
-		mset.ModuleVersioning.ModPathMap,
+		mset.ModPathMap,
 		repoRoot,
 	)
 	if err != nil {

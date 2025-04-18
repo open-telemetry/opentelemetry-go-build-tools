@@ -20,9 +20,8 @@ import (
 	"strings"
 )
 
-const (
-	RepoRootTag = ModuleTagName("REPOROOTTAG")
-)
+// RepoRootTag is a special tag name that indicates the root of the repository.
+const RepoRootTag = ModuleTagName("REPOROOTTAG")
 
 // combineModuleTagNamesAndVersion combines a slice of ModuleTagNames with the version number and returns
 // the new full module tags.

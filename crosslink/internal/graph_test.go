@@ -15,14 +15,12 @@ package crosslink
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestBuildDependencyGraph(t *testing.T) {
-
 	tests := []struct {
 		testName string
 		mockDir  string
@@ -36,7 +34,8 @@ func TestBuildDependencyGraph(t *testing.T) {
 			expected: map[string][]string{
 				"go.opentelemetry.io/build-tools/crosslink/testroot": {
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testA",
-					"go.opentelemetry.io/build-tools/crosslink/testroot/testB"},
+					"go.opentelemetry.io/build-tools/crosslink/testroot/testB",
+				},
 				"go.opentelemetry.io/build-tools/crosslink/testroot/testA": {"go.opentelemetry.io/build-tools/crosslink/testroot/testB"},
 				"go.opentelemetry.io/build-tools/crosslink/testroot/testB": {},
 			},
@@ -48,30 +47,28 @@ func TestBuildDependencyGraph(t *testing.T) {
 			expected: map[string][]string{
 				"go.opentelemetry.io/build-tools/crosslink/testroot": {
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testA",
-					"go.opentelemetry.io/build-tools/crosslink/testroot/testB"},
+					"go.opentelemetry.io/build-tools/crosslink/testroot/testB",
+				},
 				"go.opentelemetry.io/build-tools/crosslink/testroot/testA": {
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testB",
-					"go.opentelemetry.io/build-tools/crosslink/testroot"},
+					"go.opentelemetry.io/build-tools/crosslink/testroot",
+				},
 				// b has req on root but not necessary to write out with current comparison logic
 				"go.opentelemetry.io/build-tools/crosslink/testroot/testB": {
 					"go.opentelemetry.io/build-tools/crosslink/testroot/testA",
-					"go.opentelemetry.io/build-tools/crosslink/testroot"},
+					"go.opentelemetry.io/build-tools/crosslink/testroot",
+				},
 			},
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.testName, func(t *testing.T) {
-			tmpRootDir, err := createTempTestDir(test.mockDir)
-			if err != nil {
-				t.Fatal("creating temp dir:", err)
-			}
-
-			err = renameGoMod(tmpRootDir)
+			tmpRootDir := createTempTestDir(t, test.mockDir)
+			err := renameGoMod(tmpRootDir)
 			if err != nil {
 				t.Errorf("error renaming gomod files: %v", err)
 			}
-			t.Cleanup(func() { os.RemoveAll(tmpRootDir) })
 
 			test.config.RootPath = tmpRootDir
 
@@ -92,7 +89,6 @@ func TestBuildDependencyGraph(t *testing.T) {
 						modName, expectedReplaceStatements, requiredReplaceStatementsActual))
 					// ensure that they contain the same values
 					for _, expectedReplaceStatement := range expectedReplaceStatements {
-
 						if _, contains := requiredReplaceStatementsActual[expectedReplaceStatement]; !contains {
 							t.Errorf("Expected replace statement : %s not in map %v", expectedReplaceStatement, requiredReplaceStatementsActual)
 						}
@@ -100,7 +96,6 @@ func TestBuildDependencyGraph(t *testing.T) {
 
 				}
 			}
-
 		})
 	}
 }
