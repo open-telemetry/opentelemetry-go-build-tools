@@ -99,7 +99,7 @@ func Compare(left API, right API) Diff {
 	}
 
 	l.Functions, e.Functions, r.Functions = separate(left.Functions, right.Functions, fnComp)
-	l.Structs, e.Structs, r.Structs = separate(left.Structs, right.Structs, func(a Apistruct, b Apistruct) int {
+	l.Structs, e.Structs, r.Structs = separate(left.Structs, right.Structs, func(a APIstruct, b APIstruct) int {
 		if name := strings.Compare(a.Name, b.Name); name != 0 {
 			return name
 		}
