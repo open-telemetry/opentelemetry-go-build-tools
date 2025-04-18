@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package chlog provides internal functionality for the generation of
+// changelogs for OpenTelemetry Go projects.
 package chlog
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -26,13 +29,19 @@ import (
 )
 
 const (
-	Breaking     = "breaking"
-	Deprecation  = "deprecation"
+	// Breaking is a breaking change.
+	Breaking = "breaking"
+	// Deprecation is a deprecation change.
+	Deprecation = "deprecation"
+	// NewComponent is a new component change.
 	NewComponent = "new_component"
-	Enhancement  = "enhancement"
-	BugFix       = "bug_fix"
+	// Enhancement is an enhancement change.
+	Enhancement = "enhancement"
+	// BugFix is a bug fix change.
+	BugFix = "bug_fix"
 )
 
+// Entry represents a changelog entry.
 type Entry struct {
 	ChangeLogs []string `yaml:"change_logs"`
 	ChangeType string   `yaml:"change_type"`
@@ -50,6 +59,7 @@ var changeTypes = []string{
 	BugFix,
 }
 
+// Validate validates the changelog entry.
 func (e Entry) Validate(requireChangelog bool, components []string, validChangeLogs ...string) error {
 	if requireChangelog && len(e.ChangeLogs) == 0 {
 		return fmt.Errorf("specify one or more 'change_logs'")
@@ -66,14 +76,7 @@ func (e Entry) Validate(requireChangelog bool, components []string, validChangeL
 		}
 	}
 
-	var validType bool
-	for _, ct := range changeTypes {
-		if e.ChangeType == ct {
-			validType = true
-			break
-		}
-	}
-	if !validType {
+	if !slices.Contains(changeTypes, e.ChangeType) {
 		return fmt.Errorf("'%s' is not a valid 'change_type'. Specify one of %v", e.ChangeType, changeTypes)
 	}
 
@@ -81,13 +84,7 @@ func (e Entry) Validate(requireChangelog bool, components []string, validChangeL
 		return fmt.Errorf("specify a 'component'")
 	}
 
-	found := false
-	for _, validComp := range components {
-		if e.Component == validComp {
-			found = true
-			break
-		}
-	}
+	found := slices.Contains(components, e.Component)
 	// only apply component validation if one or more values are present.
 	if len(components) > 0 && !found {
 		return fmt.Errorf("%s is not a valid 'component'. It must be one of %v", e.Component, components)
@@ -104,6 +101,7 @@ func (e Entry) Validate(requireChangelog bool, components []string, validChangeL
 	return nil
 }
 
+// ReadEntries reads changelog entries from YAML files based on the provided configuration.
 func ReadEntries(cfg *config.Config) (map[string][]*Entry, error) {
 	yamlFiles, err := filepath.Glob(filepath.Join(cfg.EntriesDir, "*.yaml"))
 	if err != nil {
@@ -144,6 +142,7 @@ func ReadEntries(cfg *config.Config) (map[string][]*Entry, error) {
 	return entries, nil
 }
 
+// DeleteEntries deletes changelog entries from YAML files based on the provided configuration.
 func DeleteEntries(cfg *config.Config) error {
 	yamlFiles, err := filepath.Glob(filepath.Join(cfg.EntriesDir, "*.yaml"))
 	if err != nil {

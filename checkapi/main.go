@@ -1,6 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+// Checkapi is a tool to check the API of OpenTelemetry Go modules.
 package main
 
 import (
@@ -107,14 +108,7 @@ func walkFolder(cfg internal.Config, folder string, componentType string) error 
 		functionsPresent := map[string]struct{}{}
 	OUTER:
 		for _, fnDesc := range cfg.AllowedFunctions {
-			matchComponentType := false
-			for _, c := range fnDesc.Classes {
-				if c == componentType {
-					matchComponentType = true
-					break
-				}
-			}
-			if !matchComponentType {
+			if !slices.Contains(fnDesc.Classes, componentType) {
 				continue
 			}
 			for _, fn := range result.Functions {
@@ -143,7 +137,7 @@ func walkFolder(cfg internal.Config, folder string, componentType string) error 
 	return errors.Join(errs...)
 }
 
-func checkStructDisallowUnkeyedLiteral(cfg internal.Config, s internal.Apistruct, folder string) error {
+func checkStructDisallowUnkeyedLiteral(cfg internal.Config, s internal.APIstruct, folder string) error {
 	if !unicode.IsUpper(rune(s.Name[0])) {
 		return nil
 	}

@@ -21,14 +21,12 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"testing"
 
 	cp "github.com/otiai10/copy"
 )
 
-var (
-	testDataDir, _ = filepath.Abs("./test_data")
-	mockDataDir, _ = filepath.Abs("./mock_test_data")
-)
+var mockDataDir, _ = filepath.Abs("./mock_test_data")
 
 // the odd naming convention and renaming function is required to avoid dependabot
 // failures. If the mock gomod files were named go.mod by default our precommit
@@ -59,17 +57,16 @@ func renameGoMod(fp string) error {
 
 // Copies the mocked gomod files into a temporary directory in the test_data folder.
 // testName must match the name of a directory within the mock_test_data folder.
-func createTempTestDir(testName string) (string, error) {
-	tmpRootDir, err := os.MkdirTemp(testDataDir, testName)
-	if err != nil {
-		return "", fmt.Errorf("failed to make temp director: %w", err)
-	}
+func createTempTestDir(t *testing.T, testName string) string {
+	t.Helper()
+
+	tmpRootDir := t.TempDir()
 
 	mockDir := filepath.Join(mockDataDir, testName)
-	err = cp.Copy(mockDir, tmpRootDir)
+	err := cp.Copy(mockDir, tmpRootDir)
 	if err != nil {
-		return "", fmt.Errorf("failed to copy mock data into temp: %w", err)
+		t.Fatalf("failed to copy mock data into temp: %v", err)
 	}
 
-	return tmpRootDir, nil
+	return tmpRootDir
 }

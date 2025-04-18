@@ -84,10 +84,8 @@ func TestTidy(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			testDir, err := createTempTestDir(test.mock)
-			require.NoError(t, err, "error creating temporary directory")
-			t.Cleanup(func() { os.RemoveAll(testDir) })
-			err = renameGoMod(testDir)
+			testDir := createTempTestDir(t, test.mock)
+			err := renameGoMod(testDir)
 			require.NoError(t, err, "error renaming gomod files")
 			outputPath := path.Join(testDir, "schedule.txt")
 

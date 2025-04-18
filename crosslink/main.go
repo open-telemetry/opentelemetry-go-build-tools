@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Crosslink updates mono-repo go.mod. It ensures local versions of modules
+// are used when building the code.
 package main
 
 import "go.opentelemetry.io/build-tools/crosslink/cmd"

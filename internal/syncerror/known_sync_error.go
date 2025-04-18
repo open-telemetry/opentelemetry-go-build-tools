@@ -15,6 +15,8 @@
 //go:build !windows
 // +build !windows
 
+// Package syncerror provides functionality to encapsulate synchronization
+// errors.
 package syncerror
 
 import (
@@ -33,7 +35,7 @@ var knownSyncErrors = []error{
 	syscall.EBADF,
 }
 
-// knownSyncError returns true if the given error is one of the known
+// KnownSyncError returns true if the given error is one of the known
 // non-actionable errors returned by Sync on Linux and macOS.
 func KnownSyncError(err error) bool {
 	for _, syncError := range knownSyncErrors {

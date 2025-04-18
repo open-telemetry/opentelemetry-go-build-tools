@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package internal provides internal functionality for the dbotconf package.
 package internal
 
 import (
@@ -45,6 +46,7 @@ var (
 
 const ignoreFlag = "ignore"
 
+// BuildAndExecute runs the dbotconf command.
 func BuildAndExecute() error {
 	rootCmd.AddCommand(generateCmd)
 	rootCmd.AddCommand(verifyCmd)

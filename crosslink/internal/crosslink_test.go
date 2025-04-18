@@ -118,16 +118,11 @@ func TestCrosslink(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.testName, func(t *testing.T) {
-			tmpRootDir, err := createTempTestDir(test.mockDir)
-			if err != nil {
-				t.Fatal("creating temp dir:", err)
-			}
-
-			err = renameGoMod(tmpRootDir)
+			tmpRootDir := createTempTestDir(t, test.mockDir)
+			err := renameGoMod(tmpRootDir)
 			if err != nil {
 				t.Errorf("error renaming gomod files: %v", err)
 			}
-			t.Cleanup(func() { os.RemoveAll(tmpRootDir) })
 
 			test.config.RootPath = tmpRootDir
 
@@ -232,14 +227,8 @@ func TestOverwrite(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.testName, func(t *testing.T) {
-			tmpRootDir, err := createTempTestDir(test.testName)
-			if err != nil {
-				t.Fatal("creating temp dir:", err)
-			}
-
-			t.Cleanup(func() { os.RemoveAll(tmpRootDir) })
-
-			err = renameGoMod(tmpRootDir)
+			tmpRootDir := createTempTestDir(t, test.testName)
+			err := renameGoMod(tmpRootDir)
 			if err != nil {
 				t.Errorf("error renaming gomod files: %v", err)
 			}
@@ -329,13 +318,8 @@ func TestExclude(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.testCase, func(t *testing.T) {
-			tmpRootDir, err := createTempTestDir(testName)
-			if err != nil {
-				t.Fatal("creating temp dir:", err)
-			}
-			t.Cleanup(func() { os.RemoveAll(tmpRootDir) })
-
-			err = renameGoMod(tmpRootDir)
+			tmpRootDir := createTempTestDir(t, testName)
+			err := renameGoMod(tmpRootDir)
 			if err != nil {
 				t.Errorf("error renaming gomod files: %v", err)
 			}
@@ -472,13 +456,8 @@ func TestSkip(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.testCase, func(t *testing.T) {
-			tmpRootDir, err := createTempTestDir(testName)
-			if err != nil {
-				t.Fatal("creating temp dir:", err)
-			}
-			t.Cleanup(func() { os.RemoveAll(tmpRootDir) })
-
-			err = renameGoMod(tmpRootDir)
+			tmpRootDir := createTempTestDir(t, testName)
+			err := renameGoMod(tmpRootDir)
 			if err != nil {
 				t.Errorf("error renaming gomod files: %v", err)
 			}

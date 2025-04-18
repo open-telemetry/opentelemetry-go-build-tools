@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package cmd contains the command line interface for multimod.
 package cmd
 
 import (
@@ -24,9 +25,7 @@ import (
 	"go.opentelemetry.io/build-tools/internal/repo"
 )
 
-var (
-	versioningFile string
-)
+var versioningFile string
 
 const (
 	defaultVersionsConfigName = "versions"

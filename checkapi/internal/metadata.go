@@ -19,6 +19,7 @@ type metadata struct {
 	Status status `yaml:"status"`
 }
 
+// ReadComponentType reads the component type from the metadata.yaml file in the given folder.
 func ReadComponentType(folder string) (string, error) {
 	var componentType string
 	if _, err := os.Stat(filepath.Join(folder, "metadata.yaml")); errors.Is(err, os.ErrNotExist) {

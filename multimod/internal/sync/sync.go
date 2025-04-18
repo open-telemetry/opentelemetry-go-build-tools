@@ -27,6 +27,7 @@ import (
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
 
+// Run runs the synchronization process.
 func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot string, otherModuleSetNames []string, otherVersionCommit string, allModuleSets bool, skipModTidy bool) {
 	myRepoRoot, err := repo.FindRoot()
 	if err != nil {

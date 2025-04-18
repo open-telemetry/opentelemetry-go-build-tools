@@ -29,8 +29,8 @@ import (
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
 
+// Run runs the tag command.
 func Run(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags bool, shouldPrintTags bool) {
-
 	repoRoot, err := repo.FindRoot()
 	if err != nil {
 		log.Fatalf("unable to change to repo root: %v", err)
@@ -153,7 +153,7 @@ func getFullCommitHash(hash string, repo *git.Repository) (plumbing.Hash, error)
 }
 
 func (t tagger) deleteModuleSetTags() error {
-	modFullTagsToDelete := t.ModuleSetRelease.ModuleFullTagNames()
+	modFullTagsToDelete := t.ModuleFullTagNames()
 
 	if err := deleteTags(modFullTagsToDelete, t.Repo); err != nil {
 		return fmt.Errorf("unable to delete module tags: %w", err)
@@ -176,10 +176,10 @@ func deleteTags(modFullTags []string, repo *git.Repository) error {
 }
 
 func (t tagger) tagAllModules(customTagger *object.Signature) error {
-	modFullTags := t.ModuleSetRelease.ModuleFullTagNames()
+	modFullTags := t.ModuleFullTagNames()
 
 	tagMessage := fmt.Sprintf("Module set %v, Version %v",
-		t.ModuleSetRelease.ModSetName, t.ModuleSetRelease.ModSetVersion())
+		t.ModSetName, t.ModSetVersion())
 
 	var addedFullTags []string
 

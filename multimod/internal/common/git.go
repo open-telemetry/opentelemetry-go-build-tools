@@ -54,6 +54,7 @@ func CommitChangesToNewBranch(branchName string, commitMessage string, repo *git
 	return hash, err
 }
 
+// CommitChanges commits changes to the current branch.
 func CommitChanges(commitMessage string, repo *git.Repository, customAuthor *object.Signature) (plumbing.Hash, error) {
 	// commit changes to git
 	log.Printf("Committing changes to git with message '%v'\n", commitMessage)

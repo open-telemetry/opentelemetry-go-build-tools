@@ -23,6 +23,7 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
+// Crosslink crosslinks the go.mod file.
 func Crosslink(rc RunConfig) error {
 	var err error
 
@@ -92,7 +93,6 @@ func insertReplace(module *moduleInfo, rc RunConfig) error {
 					zap.String("new_replace", reqModule+" => "+localPath))
 
 				err = modContents.AddReplace(reqModule, "", localPath, "")
-
 				if err != nil {
 					rc.Logger.Error("failed to add replace statement", zap.Error(err),
 						zap.String("module", modContents.Module.Mod.Path),

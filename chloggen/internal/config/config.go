@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package config provides changelog configuration.
 package config
 
 import (
@@ -25,12 +26,17 @@ import (
 )
 
 const (
-	DefaultEntriesDir        = ".chloggen"
-	DefaultTemplateYAML      = "TEMPLATE.yaml"
-	DefaultChangeLogKey      = "default"
+	// DefaultEntriesDir is the default directory for changelog entries.
+	DefaultEntriesDir = ".chloggen"
+	// DefaultTemplateYAML is the default template file for changelog entries.
+	DefaultTemplateYAML = "TEMPLATE.yaml"
+	// DefaultChangeLogKey is the default key for the changelog.
+	DefaultChangeLogKey = "default"
+	// DefaultChangeLogFilename is the default filename for the changelog.
 	DefaultChangeLogFilename = "CHANGELOG.md"
 )
 
+// Config represents the configuration for changelogs.
 type Config struct {
 	ChangeLogs        map[string]string `yaml:"change_logs"`
 	DefaultChangeLogs []string          `yaml:"default_change_logs"`
@@ -41,6 +47,7 @@ type Config struct {
 	ConfigYAML        string
 }
 
+// New returns a new Config with default values.
 func New(rootDir string) *Config {
 	return &Config{
 		ChangeLogs:        map[string]string{DefaultChangeLogKey: filepath.Join(rootDir, DefaultChangeLogFilename)},
@@ -50,6 +57,7 @@ func New(rootDir string) *Config {
 	}
 }
 
+// NewFromFile returns a new Config from the specified YAML file.
 func NewFromFile(rootDir string, cfgFilename string) (*Config, error) {
 	cfgYAML := filepath.Clean(filepath.Join(rootDir, cfgFilename))
 	cfgBytes, err := os.ReadFile(cfgYAML)

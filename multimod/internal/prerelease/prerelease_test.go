@@ -161,19 +161,19 @@ func TestNewPrerelease(t *testing.T) {
 
 				assert.IsType(t, prerelease{}, actual)
 				assert.IsType(t, common.ModuleSetRelease{}, actual.ModuleSetRelease)
-				assert.Equal(t, tc.expectedTagNames[expectedModSetName], actual.ModuleSetRelease.TagNames)
-				assert.Equal(t, expectedModSet, actual.ModuleSetRelease.ModSet)
-				assert.Equal(t, expectedModSetName, actual.ModuleSetRelease.ModSetName)
+				assert.Equal(t, tc.expectedTagNames[expectedModSetName], actual.TagNames)
+				assert.Equal(t, expectedModSet, actual.ModSet)
+				assert.Equal(t, expectedModSetName, actual.ModSetName)
 
-				assert.IsType(t, common.ModuleVersioning{}, actual.ModuleSetRelease.ModuleVersioning)
-				assert.Equal(t, tc.expectedModuleSetMap, actual.ModuleSetRelease.ModuleVersioning.ModSetMap)
-				assert.Equal(t, tc.expectedModulePathMap, actual.ModuleSetRelease.ModuleVersioning.ModPathMap)
-				assert.Equal(t, tc.expectedModuleInfoMap, actual.ModuleSetRelease.ModuleVersioning.ModInfoMap)
+				assert.IsType(t, common.ModuleVersioning{}, actual.ModuleVersioning)
+				assert.Equal(t, tc.expectedModuleSetMap, actual.ModSetMap)
+				assert.Equal(t, tc.expectedModulePathMap, actual.ModPathMap)
+				assert.Equal(t, tc.expectedModuleInfoMap, actual.ModInfoMap)
 
 				// property functions
-				assert.Equal(t, tc.expectedFullTagNames[expectedModSetName], actual.ModuleSetRelease.ModuleFullTagNames())
-				assert.Equal(t, tc.expectedModSetVersions[expectedModSetName], actual.ModuleSetRelease.ModSetVersion())
-				assert.Equal(t, tc.expectedModSetPaths[expectedModSetName], actual.ModuleSetRelease.ModSetPaths())
+				assert.Equal(t, tc.expectedFullTagNames[expectedModSetName], actual.ModuleFullTagNames())
+				assert.Equal(t, tc.expectedModSetVersions[expectedModSetName], actual.ModSetVersion())
+				assert.Equal(t, tc.expectedModSetPaths[expectedModSetName], actual.ModSetPaths())
 			}
 		})
 	}

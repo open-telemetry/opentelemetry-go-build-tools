@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package tools provides helper functions used in multiple build tools.
+// Package repo provides helper functions used in multiple build tools.
 package repo
 
 import (
@@ -119,6 +119,8 @@ func FindModules(root string, ignore []string) ([]*modfile.File, error) {
 	return results, err
 }
 
+// FindFilePatternDirs returns files in the root directory that match the
+// pattern. Any directories that match the ignore patterns are ignored.
 func FindFilePatternDirs(root, pattern string, ignore []string) ([]string, error) {
 	var results []string
 	err := filepath.Walk(root, func(path string, info os.FileInfo, walkErr error) error {

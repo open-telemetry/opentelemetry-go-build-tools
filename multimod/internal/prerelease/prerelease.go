@@ -30,6 +30,7 @@ import (
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
 
+// Run runs the prerelease process.
 func Run(versioningFile string, moduleSetNames []string, allModuleSets bool, skipModTidy bool, commitToDifferentBranch bool) {
 	repoRoot, err := repo.FindRoot()
 	if err != nil {
@@ -82,7 +83,7 @@ func Run(versioningFile string, moduleSetNames []string, allModuleSets bool, ski
 		if skipModTidy {
 			log.Println("Skipping 'go mod tidy'...")
 		} else {
-			if err = common.RunGoModTidy(p.ModuleSetRelease.ModuleVersioning.ModPathMap); err != nil {
+			if err = common.RunGoModTidy(p.ModPathMap); err != nil {
 				log.Fatal("could not run Go Mod Tidy: ", err)
 			}
 		}
@@ -115,13 +116,13 @@ func newPrerelease(versioningFilename, modSetToUpdate, repoRoot string) (prerele
 }
 
 func (p prerelease) checkModuleSetUpToDate(repo *git.Repository) (bool, error) {
-	err := p.ModuleSetRelease.CheckGitTagsAlreadyExist(repo)
+	err := p.CheckGitTagsAlreadyExist(repo)
 	if err != nil {
 		if errors.As(err, &common.ErrGitTagsAlreadyExist{}) {
 			return true, nil
 		}
 		if errors.As(err, &common.ErrInconsistentGitTagsExist{}) {
-			return false, fmt.Errorf("cannot proceed with inconsistently tagged module set %v: %w", p.ModuleSetRelease.ModSetName, err)
+			return false, fmt.Errorf("cannot proceed with inconsistently tagged module set %v: %w", p.ModSetName, err)
 		}
 		return false, fmt.Errorf("unhandled error: %w", err)
 	}
@@ -132,8 +133,8 @@ func (p prerelease) checkModuleSetUpToDate(repo *git.Repository) (bool, error) {
 // updateAllVersionGo updates the version.go file containing a hardcoded semver version string
 // for modules within a set, if the file exists.
 func (p prerelease) updateAllVersionGo() error {
-	for _, modPath := range p.ModuleSetRelease.ModSetPaths() {
-		modFilePath := p.ModuleSetRelease.ModuleVersioning.ModPathMap[modPath]
+	for _, modPath := range p.ModSetPaths() {
+		modFilePath := p.ModPathMap[modPath]
 
 		versionGoDir := filepath.Dir(string(modFilePath))
 		versionGoFilePath := filepath.Join(versionGoDir, "version.go")
@@ -146,7 +147,7 @@ func (p prerelease) updateAllVersionGo() error {
 			}
 			return fmt.Errorf("could not check existence of %v: %w", versionGoFilePath, err)
 		}
-		if err = updateVersionGoFile(versionGoFilePath, p.ModuleSetRelease.ModSetVersion()); err != nil {
+		if err = updateVersionGoFile(versionGoFilePath, p.ModSetVersion()); err != nil {
 			return fmt.Errorf("could not update %v: %w", versionGoFilePath, err)
 		}
 
@@ -188,15 +189,15 @@ func updateVersionGoFile(filePath string, newVersion string) error {
 // updateAllGoModFiles updates ALL modules' requires sections to use the newVersion number
 // for the modules given in newModPaths.
 func (p prerelease) updateAllGoModFiles() error {
-	modFilePaths := make([]common.ModuleFilePath, 0, len(p.ModuleSetRelease.ModuleVersioning.ModPathMap))
+	modFilePaths := make([]common.ModuleFilePath, 0, len(p.ModPathMap))
 
-	for _, filePath := range p.ModuleSetRelease.AllModPathMap {
+	for _, filePath := range p.AllModPathMap {
 		modFilePaths = append(modFilePaths, filePath)
 	}
 
 	var newModRefs []common.ModuleRef
-	ver := p.ModuleSetRelease.ModSetVersion()
-	for _, mod := range p.ModuleSetRelease.ModSetPaths() {
+	ver := p.ModSetVersion()
+	for _, mod := range p.ModSetPaths() {
 		newModRefs = append(newModRefs, common.ModuleRef{Path: mod, Version: ver})
 	}
 	if err := common.UpdateGoModFiles(modFilePaths, newModRefs); err != nil {

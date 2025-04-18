@@ -36,6 +36,7 @@ type graphNode struct {
 	onStack bool
 }
 
+// TidyList computes a list of modules to tidy.
 func TidyList(rc RunConfig, outputPath string) error {
 	rc.Logger.Debug("crosslink run config", zap.Any("run_config", rc))
 
