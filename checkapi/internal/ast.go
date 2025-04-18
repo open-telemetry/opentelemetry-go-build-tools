@@ -123,7 +123,7 @@ func Read(folder string, ignoredFunctions []string, excludedFiles []string) (API
 		slices.Sort(f.TypeParams)
 		slices.Sort(f.ReturnTypes)
 	}
-	slices.SortFunc(result.Structs, func(a, b Apistruct) int {
+	slices.SortFunc(result.Structs, func(a, b APIstruct) int {
 		return strings.Compare(a.Name, b.Name)
 	})
 	for _, s := range result.Structs {

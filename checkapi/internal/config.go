@@ -22,7 +22,7 @@ func (f Function) String() string {
 	if f.Receiver != "" {
 		receiverPrefix = f.Receiver + "."
 	}
-	return fmt.Sprintf("%s%s(%s) %s", receiverPrefix, f.Name, strings.Join(f.TypeParams, ","), strings.Join(f.ReturnTypes, ","))
+	return fmt.Sprintf("%s%s[%s](%s) %s", receiverPrefix, f.Name, strings.Join(f.TypeParams, ","), strings.Join(f.Params, ","), strings.Join(f.ReturnTypes, ","))
 }
 
 // APIstruct represents a struct in the codebase.

@@ -36,7 +36,7 @@ func TestDiff(t *testing.T) {
 		Params:      []string{"string", "bool"},
 	}}, bBeforeFn.Functions...)
 	bAddStruct := b
-	bAddStruct.Structs = append(bAddStruct.Structs, Apistruct{Name: "MyStruct", Fields: []string{"foo", "bar"}})
+	bAddStruct.Structs = append(bAddStruct.Structs, APIstruct{Name: "MyStruct", Fields: []string{"foo", "bar"}})
 
 	tests := []struct {
 		name         string
@@ -112,7 +112,7 @@ func TestDiff(t *testing.T) {
 				Left:  API{},
 				Equal: a,
 				Right: API{
-					Structs: []Apistruct{
+					Structs: []APIstruct{
 						{
 							Name:   "MyStruct",
 							Fields: []string{"foo", "bar"},
@@ -139,7 +139,7 @@ func TestDiff(t *testing.T) {
 				},
 				Equal: a,
 				Right: API{
-					Structs: []Apistruct{
+					Structs: []APIstruct{
 						{
 							Name:   "MyStruct",
 							Fields: []string{"foo", "bar"},
@@ -170,18 +170,18 @@ func TestDiff(t *testing.T) {
 		{
 			name: "struct field added",
 			a: API{
-				Structs: []Apistruct{{Name: "MyStruct", Fields: []string{"foo", "bar"}}},
+				Structs: []APIstruct{{Name: "MyStruct", Fields: []string{"foo", "bar"}}},
 			},
 			b: API{
-				Structs: []Apistruct{{Name: "MyStruct", Fields: []string{"foo", "bar", "foobar"}}},
+				Structs: []APIstruct{{Name: "MyStruct", Fields: []string{"foo", "bar", "foobar"}}},
 			},
 			expectedDiff: Diff{
 				Left: API{
-					Structs: []Apistruct{{Name: "MyStruct", Fields: []string{"foo", "bar"}}},
+					Structs: []APIstruct{{Name: "MyStruct", Fields: []string{"foo", "bar"}}},
 				},
 				Equal: API{},
 				Right: API{
-					Structs: []Apistruct{{Name: "MyStruct", Fields: []string{"foo", "bar", "foobar"}}},
+					Structs: []APIstruct{{Name: "MyStruct", Fields: []string{"foo", "bar", "foobar"}}},
 				},
 			},
 		},
