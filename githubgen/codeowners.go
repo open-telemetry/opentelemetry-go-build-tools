@@ -13,7 +13,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/google/go-github/v66/github"
+	"github.com/google/go-github/v71/github"
 
 	"go.opentelemetry.io/build-tools/githubgen/datatype"
 )
