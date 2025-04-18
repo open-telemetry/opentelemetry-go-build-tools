@@ -42,7 +42,7 @@
 - `githubgen`: githubgen now injects component lists and others into CODEOWNERS and ALLOWLIST files using magic strings instead of writing the complete files. (#674)
   
   This feature allows maintainers to have custom content in addition to the component lists and others in their CODEOWNERS and ALLOWLIST files.
-  Magic delimiter strings need to be added to CODEOWNERS and ALLOWLIST files fot githubgen to fill in the content.
+  Magic delimiter strings need to be added to CODEOWNERS and ALLOWLIST files for githubgen to fill in the content.
   Use `# Start/End components list`, `# Start/End distribution list` and `# Start/End unmaintained components list` in your CODEOWNERS file.
   Use `# Start/End deprecated components list` and `# Start/End unmaintained components list` in your ALLOWLIST file.
   Also, issue template files need to be updated and use `# Start/End components list` to fill in the component list.

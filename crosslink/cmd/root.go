@@ -100,7 +100,7 @@ func newCommandConfig() *commandConfig {
 	c.pruneCommand = cobra.Command{
 		Use:   "prune",
 		Short: "Remove unnecessary replace statements from intra-repository go.mod files",
-		Long: `Prune will analyze and remove any uncessary replace statements for intra-repository
+		Long: `Prune will analyze and remove any unnecessary replace statements for intra-repository
 		go.mod files that are not direct or transitive dependencies for intra-repository modules. 
 		This is a destructive action and will overwrite existing go.mod files. 
 		Prune will not remove modules that fall outside of the root module namespace.`,

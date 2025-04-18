@@ -52,7 +52,7 @@ func TidyList(rc RunConfig, outputPath string) error {
 		var file *os.File
 		file, err = os.Open(rc.AllowCircular)
 		if err != nil {
-			return fmt.Errorf("failed to open cicular dependency allowlist: %w", err)
+			return fmt.Errorf("failed to open circular dependency allowlist: %w", err)
 		}
 		defer file.Close()
 		scanner := bufio.NewScanner(file)
@@ -63,7 +63,7 @@ func TidyList(rc RunConfig, outputPath string) error {
 			}
 		}
 		if err = scanner.Err(); err != nil {
-			return fmt.Errorf("failed to read cicular dependency allowlist: %w", err)
+			return fmt.Errorf("failed to read circular dependency allowlist: %w", err)
 		}
 	}
 
