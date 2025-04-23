@@ -225,7 +225,7 @@ func (rg *reportGenerator) templateHelper(param string) string {
 	case "jobName":
 		return "`" + rg.envVariables[githubWorkflow] + "`"
 	case "linkToBuild":
-		return fmt.Sprintf("%s/%s/actions/runs/%s", rg.envVariables[githubServerURL], rg.envVariables[githubOwnerAndRepository], rg.envVariables[githubRunID])
+		return fmt.Sprintf("%s/%s/%s/actions/runs/%s", rg.envVariables[githubServerURL], rg.envVariables["githubOwner"], rg.envVariables["githubRepository"], rg.envVariables[githubRunID])
 	case "failedTests":
 		return rg.reports[rg.reportIterator].getFailedTests()
 	default:
