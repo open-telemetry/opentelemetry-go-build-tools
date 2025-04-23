@@ -252,6 +252,7 @@ func (rg *reportGenerator) getExistingIssue(module string) *github.Issue {
 		rg.handleBadResponses(response)
 	}
 
+	module = strings.TrimPrefix(module, fmt.Sprintf("github.com/%s/%s/", rg.envVariables["githubOwner"], rg.envVariables["githubRepository"]))
 	requiredTitle := strings.Replace(issueTitleTemplate, "${module}", module, 1)
 	for _, issue := range issues {
 		if *issue.Title == requiredTitle {
