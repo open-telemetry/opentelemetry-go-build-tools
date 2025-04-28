@@ -4,6 +4,13 @@
 
 <!-- next version -->
 
+## v0.23.0
+
+### 🧰 Bug fixes 🧰
+
+- `issuegenerator`: Print correct workflow link in the issue body. (#840)
+- `issuegenerator`: Trim repository name from the module name in the issue title. (#841)
+
 ## v0.22.0
 
 ### 🚀 New components 🚀
