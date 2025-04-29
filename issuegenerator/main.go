@@ -60,7 +60,6 @@ ${failedTests}
 )
 
 type reportGenerator struct {
-	ctx          context.Context
 	logger       *zap.Logger
 	client       *github.Client
 	envVariables map[string]string
@@ -83,7 +82,6 @@ func newReportGenerator() *reportGenerator {
 	}
 
 	return &reportGenerator{
-		ctx:        context.Background(),
 		logger:     logger,
 		testSuites: make(map[string]junit.Suite),
 		reports:    make([]report, 0),
@@ -98,10 +96,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	ctx := context.Background()
+
 	rg := newReportGenerator()
 	rg.ingestArtifacts(*pathToArtifacts)
 	rg.processTestResults()
-	rg.initializeGHClient()
+	rg.initializeGHClient(ctx)
 
 	// Look for existing open GitHub Issue that resulted from previous
 	// failures of this job.
@@ -113,11 +113,11 @@ func main() {
 			zap.Int("failed_tests", len(report.failedTests)),
 		)
 
-		existingIssue := rg.getExistingIssue(report.module)
+		existingIssue := rg.getExistingIssue(ctx, report.module)
 		if existingIssue == nil {
 			// If none exists, create a new GitHub Issue for the failure.
 			rg.logger.Info("No existing Issues found, creating a new one.")
-			createdIssue := rg.createIssue(report)
+			createdIssue := rg.createIssue(ctx, report)
 			rg.logger.Info("New GitHub Issue created", zap.String("html_url", *createdIssue.HTMLURL))
 		} else {
 			// Otherwise, add a comment to the existing Issue.
@@ -125,7 +125,7 @@ func main() {
 				"Updating GitHub Issue with latest failure",
 				zap.String("html_url", *existingIssue.HTMLURL),
 			)
-			createdIssueComment := rg.commentOnIssue(existingIssue)
+			createdIssueComment := rg.commentOnIssue(ctx, existingIssue)
 			rg.logger.Info("GitHub Issue updated", zap.String("html_url", *createdIssueComment.HTMLURL))
 		}
 		rg.reportIterator++
@@ -183,10 +183,10 @@ func (rg *reportGenerator) processTestResults() {
 	}
 }
 
-func (rg *reportGenerator) initializeGHClient() {
+func (rg *reportGenerator) initializeGHClient(ctx context.Context) {
 	rg.getRequiredEnv()
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: rg.envVariables[githubAPITokenKey]})
-	tc := oauth2.NewClient(rg.ctx, ts)
+	tc := oauth2.NewClient(ctx, ts)
 	rg.client = github.NewClient(tc)
 }
 
@@ -235,9 +235,9 @@ func (rg *reportGenerator) templateHelper(param string) string {
 
 // getExistingIssues gathers an existing GitHub Issue related to previous failures
 // of the same module.
-func (rg *reportGenerator) getExistingIssue(module string) *github.Issue {
+func (rg *reportGenerator) getExistingIssue(ctx context.Context, module string) *github.Issue {
 	issues, response, err := rg.client.Issues.ListByRepo(
-		rg.ctx,
+		ctx,
 		rg.envVariables["githubOwner"],
 		rg.envVariables["githubRepository"],
 		&github.IssueListByRepoOptions{
@@ -266,11 +266,11 @@ func (rg *reportGenerator) getExistingIssue(module string) *github.Issue {
 // commentOnIssue adds a new comment on an existing GitHub issue with
 // information about the latest failure. This method is expected to be
 // called only if there's an existing open Issue for the current job.
-func (rg *reportGenerator) commentOnIssue(issue *github.Issue) *github.IssueComment {
+func (rg *reportGenerator) commentOnIssue(ctx context.Context, issue *github.Issue) *github.IssueComment {
 	body := os.Expand(issueCommentTemplate, rg.templateHelper)
 
 	issueComment, response, err := rg.client.Issues.CreateComment(
-		rg.ctx,
+		ctx,
 		rg.envVariables["githubOwner"],
 		rg.envVariables["githubRepository"],
 		*issue.Number,
@@ -290,12 +290,12 @@ func (rg *reportGenerator) commentOnIssue(issue *github.Issue) *github.IssueComm
 }
 
 // createIssue creates a new GitHub Issue corresponding to a build failure.
-func (rg *reportGenerator) createIssue(r report) *github.Issue {
+func (rg *reportGenerator) createIssue(ctx context.Context, r report) *github.Issue {
 	title := strings.Replace(issueTitleTemplate, "${module}", r.module, 1)
 	body := os.Expand(issueBodyTemplate, rg.templateHelper)
 
 	issue, response, err := rg.client.Issues.Create(
-		rg.ctx,
+		ctx,
 		rg.envVariables["githubOwner"],
 		rg.envVariables["githubRepository"],
 		&github.IssueRequest{
