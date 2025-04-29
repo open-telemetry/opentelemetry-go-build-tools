@@ -108,3 +108,42 @@ func TestIngestArtifacts(t *testing.T) {
 	require.Equal(t, expectedTestResults, rg.testSuites)
 
 }
+
+func TestTrimPath(t *testing.T) {
+
+	tests := []struct {
+		name           string
+		owner          string
+		repo           string
+		module         string
+		expectedModule string
+	}{
+		{
+			name:           "Test contrib host metrics integration path with https prefix",
+			owner:          "open-telemetry",
+			repo:           "opentelemetry-collector-contrib",
+			module:         "https://github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver/integration_test.go",
+			expectedModule: "receiver/hostmetricsreceiver/integration_test.go",
+		},
+		{
+			name:           "Test contrib host metrics integration path",
+			owner:          "open-telemetry",
+			repo:           "opentelemetry-collector-contrib",
+			module:         "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver/integration_test.go",
+			expectedModule: "receiver/hostmetricsreceiver/integration_test.go",
+		},
+		{
+			name:           "Test core otlphttp exporter test path",
+			owner:          "open-telemetry",
+			repo:           "opentelemetry-collector",
+			module:         "github.com/open-telemetry/opentelemetry-collector/exporter/otlphttpexporter/otlp_test.go",
+			expectedModule: "exporter/otlphttpexporter/otlp_test.go",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.expectedModule, trimModule(tt.owner, tt.repo, tt.module))
+		})
+	}
+}
