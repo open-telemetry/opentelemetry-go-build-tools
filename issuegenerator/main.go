@@ -37,6 +37,9 @@ const (
 	githubWorkflow           = "GITHUB_ACTION"
 	githubAPITokenKey        = "GITHUB_TOKEN" // #nosec G101
 
+	githubOwner      = "githubOwner"
+	githubRepository = "githubRepository"
+
 	// Variables used to build workflow URL.
 	githubServerURL = "GITHUB_SERVER_URL"
 	githubRunID     = "GITHUB_RUN_ID"
@@ -201,8 +204,8 @@ func (rg *reportGenerator) getRequiredEnv() {
 	// owner/repository.
 	// See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables#default-environment-variables:~:text=or%20tag.-,GITHUB_REPOSITORY,-The%20owner%20and
 	ownerAndRepository := strings.Split(os.Getenv(githubOwnerAndRepository), "/")
-	env["githubOwner"] = ownerAndRepository[0]
-	env["githubRepository"] = ownerAndRepository[1]
+	env[githubOwner] = ownerAndRepository[0]
+	env[githubRepository] = ownerAndRepository[1]
 	env[githubWorkflow] = os.Getenv(githubWorkflow)
 	env[githubServerURL] = os.Getenv(githubServerURL)
 	env[githubRunID] = os.Getenv(githubRunID)
@@ -225,7 +228,7 @@ func (rg *reportGenerator) templateHelper(param string) string {
 	case "jobName":
 		return "`" + rg.envVariables[githubWorkflow] + "`"
 	case "linkToBuild":
-		return fmt.Sprintf("%s/%s/%s/actions/runs/%s", rg.envVariables[githubServerURL], rg.envVariables["githubOwner"], rg.envVariables["githubRepository"], rg.envVariables[githubRunID])
+		return fmt.Sprintf("%s/%s/%s/actions/runs/%s", rg.envVariables[githubServerURL], rg.envVariables[githubOwner], rg.envVariables[githubRepository], rg.envVariables[githubRunID])
 	case "failedTests":
 		return rg.reports[rg.reportIterator].getFailedTests()
 	default:
@@ -238,8 +241,8 @@ func (rg *reportGenerator) templateHelper(param string) string {
 func (rg *reportGenerator) getExistingIssue(module string) *github.Issue {
 	issues, response, err := rg.client.Issues.ListByRepo(
 		rg.ctx,
-		rg.envVariables["githubOwner"],
-		rg.envVariables["githubRepository"],
+		rg.envVariables[githubOwner],
+		rg.envVariables[githubRepository],
 		&github.IssueListByRepoOptions{
 			State: "open",
 		},
@@ -252,7 +255,7 @@ func (rg *reportGenerator) getExistingIssue(module string) *github.Issue {
 		rg.handleBadResponses(response)
 	}
 
-	module = strings.TrimPrefix(module, fmt.Sprintf("github.com/%s/%s/", rg.envVariables["githubOwner"], rg.envVariables["githubRepository"]))
+	module = strings.TrimPrefix(module, fmt.Sprintf("github.com/%s/%s/", rg.envVariables[githubOwner], rg.envVariables[githubRepository]))
 	requiredTitle := strings.Replace(issueTitleTemplate, "${module}", module, 1)
 	for _, issue := range issues {
 		if *issue.Title == requiredTitle {
@@ -271,8 +274,8 @@ func (rg *reportGenerator) commentOnIssue(issue *github.Issue) *github.IssueComm
 
 	issueComment, response, err := rg.client.Issues.CreateComment(
 		rg.ctx,
-		rg.envVariables["githubOwner"],
-		rg.envVariables["githubRepository"],
+		rg.envVariables[githubOwner],
+		rg.envVariables[githubRepository],
 		*issue.Number,
 		&github.IssueComment{
 			Body: &body,
@@ -296,8 +299,8 @@ func (rg *reportGenerator) createIssue(r report) *github.Issue {
 
 	issue, response, err := rg.client.Issues.Create(
 		rg.ctx,
-		rg.envVariables["githubOwner"],
-		rg.envVariables["githubRepository"],
+		rg.envVariables[githubOwner],
+		rg.envVariables[githubRepository],
 		&github.IssueRequest{
 			Title: &title,
 			Body:  &body,
