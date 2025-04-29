@@ -94,9 +94,9 @@ func newReportGenerator() *reportGenerator {
 }
 
 func trimModule(owner, repo, module string) string {
-	https_prefix := "https://"
-	if strings.HasPrefix(module, https_prefix) {
-		module = strings.TrimPrefix(module, https_prefix)
+	httpsPrefix := "https://"
+	if strings.HasPrefix(module, httpsPrefix) {
+		module = strings.TrimPrefix(module, httpsPrefix)
 	}
 
 	return strings.TrimPrefix(module, fmt.Sprintf("github.com/%s/%s/", owner, repo))
