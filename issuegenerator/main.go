@@ -294,7 +294,8 @@ func (rg *reportGenerator) commentOnIssue(issue *github.Issue) *github.IssueComm
 
 // createIssue creates a new GitHub Issue corresponding to a build failure.
 func (rg *reportGenerator) createIssue(r report) *github.Issue {
-	title := strings.Replace(issueTitleTemplate, "${module}", r.module, 1)
+	trimmedModule := strings.TrimPrefix(r.module, fmt.Sprintf("github.com/%s/%s/", rg.envVariables["githubOwner"], rg.envVariables["githubRepository"]))
+	title := strings.Replace(issueTitleTemplate, "${module}", trimmedModule, 1)
 	body := os.Expand(issueBodyTemplate, rg.templateHelper)
 
 	issue, response, err := rg.client.Issues.Create(
