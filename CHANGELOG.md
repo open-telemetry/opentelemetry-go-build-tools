@@ -4,6 +4,12 @@
 
 <!-- next version -->
 
+## v0.23.1
+
+### 🧰 Bug fixes 🧰
+
+- `issuegenerator`: Trim repository prefix from new issue titles (#864)
+
 ## v0.23.0
 
 ### 🧰 Bug fixes 🧰
