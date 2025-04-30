@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	"github.com/joshdk/go-junit"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -110,40 +111,32 @@ func TestIngestArtifacts(t *testing.T) {
 }
 
 func TestTrimPath(t *testing.T) {
-
 	tests := []struct {
-		name           string
-		owner          string
-		repo           string
-		module         string
-		expectedModule string
+		name       string
+		owner      string
+		repo       string
+		module     string
+		wantModule string
 	}{
 		{
-			name:           "Test contrib host metrics integration path with https prefix",
-			owner:          "open-telemetry",
-			repo:           "opentelemetry-collector-contrib",
-			module:         "https://github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver/integration_test.go",
-			expectedModule: "receiver/hostmetricsreceiver/integration_test.go",
+			name:       "Test contrib host metrics integration path",
+			owner:      "open-telemetry",
+			repo:       "opentelemetry-collector-contrib",
+			module:     "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver/integration_test.go",
+			wantModule: "receiver/hostmetricsreceiver/integration_test.go",
 		},
 		{
-			name:           "Test contrib host metrics integration path",
-			owner:          "open-telemetry",
-			repo:           "opentelemetry-collector-contrib",
-			module:         "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver/integration_test.go",
-			expectedModule: "receiver/hostmetricsreceiver/integration_test.go",
-		},
-		{
-			name:           "Test core otlphttp exporter test path",
-			owner:          "open-telemetry",
-			repo:           "opentelemetry-collector",
-			module:         "github.com/open-telemetry/opentelemetry-collector/exporter/otlphttpexporter/otlp_test.go",
-			expectedModule: "exporter/otlphttpexporter/otlp_test.go",
+			name:       "Test core otlphttp exporter test path",
+			owner:      "open-telemetry",
+			repo:       "opentelemetry-collector",
+			module:     "github.com/open-telemetry/opentelemetry-collector/exporter/otlphttpexporter/otlp_test.go",
+			wantModule: "exporter/otlphttpexporter/otlp_test.go",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.expectedModule, trimModule(tt.owner, tt.repo, tt.module))
+			assert.Equal(t, tt.wantModule, trimModule(tt.owner, tt.repo, tt.module), "owner: %s, repo: %s, module: %s, wantModule: %s", tt.owner, tt.repo, tt.module, tt.wantModule)
 		})
 	}
 }

@@ -94,7 +94,6 @@ func newReportGenerator() *reportGenerator {
 }
 
 func trimModule(owner, repo, module string) string {
-	module = strings.TrimPrefix(module, "https://")
 	return strings.TrimPrefix(module, fmt.Sprintf("github.com/%s/%s/", owner, repo))
 }
 
