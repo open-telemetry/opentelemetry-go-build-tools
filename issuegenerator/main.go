@@ -93,6 +93,10 @@ func newReportGenerator() *reportGenerator {
 	}
 }
 
+func trimModule(owner, repo, module string) string {
+	return strings.TrimPrefix(module, fmt.Sprintf("github.com/%s/%s/", owner, repo))
+}
+
 func main() {
 	pathToArtifacts := flag.String("path", "", "Path to the directory with test results")
 	flag.Parse()
@@ -255,7 +259,7 @@ func (rg *reportGenerator) getExistingIssue(module string) *github.Issue {
 		rg.handleBadResponses(response)
 	}
 
-	module = strings.TrimPrefix(module, fmt.Sprintf("github.com/%s/%s/", rg.envVariables[githubOwner], rg.envVariables[githubRepository]))
+	module = trimModule(rg.envVariables[githubOwner], rg.envVariables[githubRepository], module)
 	requiredTitle := strings.Replace(issueTitleTemplate, "${module}", module, 1)
 	for _, issue := range issues {
 		if *issue.Title == requiredTitle {
@@ -294,7 +298,8 @@ func (rg *reportGenerator) commentOnIssue(issue *github.Issue) *github.IssueComm
 
 // createIssue creates a new GitHub Issue corresponding to a build failure.
 func (rg *reportGenerator) createIssue(r report) *github.Issue {
-	title := strings.Replace(issueTitleTemplate, "${module}", r.module, 1)
+	trimmedModule := trimModule(rg.envVariables[githubOwner], rg.envVariables[githubRepository], r.module)
+	title := strings.Replace(issueTitleTemplate, "${module}", trimmedModule, 1)
 	body := os.Expand(issueBodyTemplate, rg.templateHelper)
 
 	issue, response, err := rg.client.Issues.Create(
