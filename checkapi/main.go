@@ -135,7 +135,7 @@ func walkFolder(cfg internal.Config, folder string, componentType string) error 
 	}
 
 	if cfg.Diff.ErrorOnAddition || cfg.Diff.ErrorOnRemoval || cfg.Diff.WriteDiff {
-		originalAPI, err := internal.ReadDiff(cfg.Diff.Path)
+		originalAPI, err := internal.ReadAPI(cfg.Diff.Path)
 		if err != nil {
 			return err
 		}
@@ -143,7 +143,7 @@ func walkFolder(cfg internal.Config, folder string, componentType string) error 
 		errs = append(errs, d.Error(cfg.Diff.ErrorOnAddition, cfg.Diff.ErrorOnRemoval))
 
 		if cfg.Diff.WriteDiff {
-			if err = internal.WriteDiff(result, cfg.Diff.Path); err != nil {
+			if err = internal.WriteAPI(result, cfg.Diff.Path); err != nil {
 				return err
 			}
 		}

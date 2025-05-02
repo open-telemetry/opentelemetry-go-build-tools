@@ -35,6 +35,7 @@ func (f APIstruct) String() string {
 	return fmt.Sprintf("%s(%s)", f.Name, strings.Join(f.Fields, ","))
 }
 
+// Interface represents an interface in the codebase.
 type Interface struct {
 	Name    string     `json:"name"`
 	Methods []Function `json:"methods"`
@@ -80,6 +81,7 @@ type UnkeyedLiteral struct {
 	Limit   int  `yaml:"limit"`
 }
 
+// DiffConfig represents the configuration of how to treat differences in config.
 type DiffConfig struct {
 	ErrorOnAddition bool   `yaml:"error_on_addition"`
 	ErrorOnRemoval  bool   `yaml:"error_on_removal"`

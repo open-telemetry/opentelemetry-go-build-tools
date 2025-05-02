@@ -12,6 +12,7 @@ import (
 	"strings"
 )
 
+// Diff is the set of changes only in the first API, the common API, and the set of changes in the second API.
 type Diff struct {
 	Left  API `json:"left"`
 	Equal API `json:"equal"`
@@ -54,7 +55,8 @@ func separate[E any](left []E, right []E, comp func(E, E) int) ([]E, []E, []E) {
 	return l, e, r
 }
 
-func ReadDiff(path string) (API, error) {
+// ReadAPI reads an API from a file.
+func ReadAPI(path string) (API, error) {
 	var api API
 	b, err := os.ReadFile(path) // #nosec G304
 	if os.IsNotExist(err) {
@@ -64,7 +66,8 @@ func ReadDiff(path string) (API, error) {
 	return api, err
 }
 
-func WriteDiff(a API, path string) error {
+// WriteAPI writes an API to a file.
+func WriteAPI(a API, path string) error {
 	b, err := json.MarshalIndent(a, "", "  ")
 	if err != nil {
 		return err
@@ -73,6 +76,7 @@ func WriteDiff(a API, path string) error {
 	return err
 }
 
+// Compare compares two APIs and computes a Diff object.
 func Compare(left API, right API) Diff {
 	l := API{}
 	e := API{}
