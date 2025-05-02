@@ -1,0 +1,4 @@
+diff:
+  path: validpkg_old.json
+  error_on_removal: true
+  error_on_addition: true

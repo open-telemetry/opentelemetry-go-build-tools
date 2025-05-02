@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"go.opentelemetry.io/build-tools/checkapi/internal"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -40,4 +42,15 @@ func TestUnkeyedPkg(t *testing.T) {
 func TestMissingConfigFile(t *testing.T) {
 	err := run(filepath.Join("internal", "unkeyedpkg"), "badconfig.yaml")
 	require.EqualError(t, err, `open badconfig.yaml: no such file or directory`)
+}
+
+func TestReadAndCompare(t *testing.T) {
+	require.NoError(t, run(filepath.Join("internal", "testpkg"), "config_diff.yaml"))
+	_, err := internal.ReadAPI("validpkg.json")
+	require.NoError(t, err)
+}
+
+func TestCompareRemovedMethod(t *testing.T) {
+	err := run(filepath.Join("internal", "testpkg"), "config_diff_old.yaml")
+	require.EqualError(t, err, "- Missing function MyMethod[]() bool\n")
 }

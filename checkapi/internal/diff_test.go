@@ -233,3 +233,16 @@ func TestDiff(t *testing.T) {
 		})
 	}
 }
+
+func TestRoundtrip(t *testing.T) {
+	api := API{
+		Functions: []Function{{Name: "MyFn", Params: []string{"foo", "bar"}, TypeParams: []string{"string"}}},
+	}
+
+	fooFile := filepath.Join(t.TempDir(), "foo.json")
+	require.NoError(t, WriteAPI(api, fooFile))
+	read, err := ReadAPI(fooFile)
+	require.NoError(t, err)
+	d := Compare(api, read)
+	require.True(t, d.identical())
+}

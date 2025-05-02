@@ -1,0 +1,18 @@
+{
+  "functions": [
+    {
+      "name": "NewFactory",
+      "receiver": "",
+      "return_types": [
+        "receiver.Factory"
+      ]
+    },
+      {
+          "name": "MyMethod",
+          "receiver": "",
+          "return_types": [
+              "bool"
+          ]
+      }
+  ]
+}

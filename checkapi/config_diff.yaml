@@ -1,0 +1,3 @@
+diff:
+  path: validpkg.json
+  write_diff: true
