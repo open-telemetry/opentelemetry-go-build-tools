@@ -84,6 +84,10 @@ func ExprToString(expr ast.Expr) string {
 		return strings.Join(exprs, ",")
 	case *ast.UnaryExpr:
 		return fmt.Sprintf("%s%s", e.Op.String(), ExprToString(e.X))
+	case *ast.BinaryExpr:
+		return fmt.Sprintf("%s%s", e.Op.String(), ExprToString(e.X))
+	case *ast.ParenExpr:
+		return fmt.Sprintf("(%s)", ExprToString(e.X))
 	default:
 		panic(fmt.Sprintf("Unsupported expr type: %#v", expr))
 	}
@@ -130,12 +134,40 @@ func readFile(ignoredFunctions []string, f *ast.File, result *API) {
 				}
 				if t, ok := s.(*ast.TypeSpec); ok {
 					if structType, ok := t.Type.(*ast.StructType); ok {
-						var fieldNames []string
+						var fieldNames []APIstructField
 						if structType.Fields != nil {
-							fieldNames = make([]string, 0, len(structType.Fields.List))
+							fieldNames = make([]APIstructField, 0, len(structType.Fields.List))
 							for _, f := range structType.Fields.List {
 								if len(f.Names) > 0 {
-									fieldNames = append(fieldNames, f.Names[0].Name)
+									fieldType := f.Names[0].Obj.Decl.(*ast.Field).Type
+									switch t := fieldType.(type) {
+									case *ast.StarExpr:
+										fieldType = t.X
+									case *ast.ArrayType:
+										fieldType = t.Elt
+										if tt, ok := fieldType.(*ast.StarExpr); ok {
+											fieldType = tt.X
+										}
+									case *ast.MapType:
+										fieldType = t.Value
+										if tt, ok := fieldType.(*ast.StarExpr); ok {
+											fieldType = tt.X
+										}
+									}
+									fieldNames = append(fieldNames, APIstructField{Name: f.Names[0].Name, Type: ExprToString(fieldType)})
+								} else {
+									// Embedded struct
+									fieldType := f.Type
+									switch t := f.Type.(type) {
+									case *ast.StarExpr:
+										fieldType = t.X
+									case *ast.ArrayType:
+										fieldType = t.Elt
+										if tt, ok := fieldType.(*ast.StarExpr); ok {
+											fieldType = tt.X
+										}
+									}
+									fieldNames = append(fieldNames, APIstructField{Name: "", Type: ExprToString(fieldType)})
 								}
 							}
 						}
@@ -148,9 +180,6 @@ func readFile(ignoredFunctions []string, f *ast.File, result *API) {
 			}
 		}
 		if fn, isFn := d.(*ast.FuncDecl); isFn {
-			if !fn.Name.IsExported() {
-				continue
-			}
 			exported := false
 			receiver := ""
 			if fn.Recv.NumFields() == 0 && !isFunctionIgnored(ignoredFunctions, fn.Name.String()) {
@@ -185,14 +214,41 @@ func readFile(ignoredFunctions []string, f *ast.File, result *API) {
 						typeParams = append(typeParams, ExprToString(r.Type))
 					}
 				}
-				f := Function{
+
+				apiFn := Function{
 					Name:        fn.Name.Name,
 					Receiver:    receiver,
 					Params:      params,
 					ReturnTypes: returnTypes,
 					TypeParams:  typeParams,
 				}
-				result.Functions = append(result.Functions, f)
+				if !fn.Name.IsExported() && len(apiFn.ReturnTypes) == 1 && apiFn.ReturnTypes[0] == "component.Config" {
+					if ret, ok := fn.Body.List[len(fn.Body.List)-1].(*ast.ReturnStmt); ok {
+						if len(ret.Results) == 1 {
+							switch r := ret.Results[0].(type) {
+							case *ast.UnaryExpr:
+								switch x := r.X.(type) {
+								case *ast.Ident:
+									result.ConfigStructName = x.Name
+								case *ast.CompositeLit:
+									switch subt := x.Type.(type) {
+									case *ast.Ident:
+										result.ConfigStructName = subt.Name
+									case *ast.SelectorExpr:
+										result.ConfigStructName = subt.X.(*ast.Ident).Name
+									}
+								}
+							case *ast.Ident:
+								result.ConfigStructName = r.Name
+							default:
+								panic(fmt.Sprintf("[%s] Unsupported type %T", f.Name.Name, r))
+							}
+						}
+					}
+				} else if fn.Name.IsExported() {
+					result.Functions = append(result.Functions, apiFn)
+				}
+
 			}
 		}
 	}

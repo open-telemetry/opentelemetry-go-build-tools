@@ -8,6 +8,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"go/ast"
 	"io/fs"
 	"log"
 	"os"
@@ -134,7 +135,48 @@ func walkFolder(cfg internal.Config, folder string, componentType string) error 
 		}
 	}
 
+	if cfg.ComponentAPI && (componentType == "connector" || componentType == "exporter" || componentType == "extension" || componentType == "processor" || componentType == "receiver") {
+		if result.ConfigStructName == "" {
+			errs = append(errs, fmt.Errorf("[%s] cannot find the createDefaultConfig function", folder))
+		} else {
+			var cfgStruct *internal.APIstruct
+			allStructs := make(map[string]struct{}, len(result.Structs))
+			structsByName := make(map[string]internal.APIstruct, len(result.Structs))
+			for _, s := range result.Structs {
+				if ast.IsExported(s.Name) {
+					allStructs[s.Name] = struct{}{}
+					structsByName[s.Name] = s
+				}
+				if s.Name == result.ConfigStructName {
+					cfgStruct = &s
+				}
+			}
+			if cfgStruct == nil {
+				errs = append(errs, fmt.Errorf("[%s] cannot find the config struct", folder))
+			} else {
+				delete(allStructs, cfgStruct.Name)
+				filterStructs(structsByName, *cfgStruct, allStructs)
+				if len(allStructs) > 0 {
+					structNames := make([]string, 0, len(allStructs))
+					for k := range allStructs {
+						structNames = append(structNames, k)
+					}
+					errs = append(errs, fmt.Errorf("[%s] these structs are not part of config and cannot be exported: %s", folder, strings.Join(structNames, ",")))
+				}
+			}
+		}
+	}
+
 	return errors.Join(errs...)
+}
+
+func filterStructs(structMap map[string]internal.APIstruct, current internal.APIstruct, allStructs map[string]struct{}) {
+	for _, f := range current.Fields {
+		if s, ok := structMap[f.Type]; ok {
+			delete(allStructs, s.Name)
+			filterStructs(structMap, s, allStructs)
+		}
+	}
 }
 
 func checkStructDisallowUnkeyedLiteral(cfg internal.Config, s internal.APIstruct, folder string) error {
@@ -149,8 +191,14 @@ func checkStructDisallowUnkeyedLiteral(cfg internal.Config, s internal.APIstruct
 	}
 
 	for _, f := range s.Fields {
-		if !unicode.IsUpper(rune(f[0])) {
-			return nil
+		if len(f.Name) == 0 {
+			if !unicode.IsUpper(rune(f.Type[0])) {
+				return nil
+			}
+		} else {
+			if !unicode.IsUpper(rune(f.Name[0])) {
+				return nil
+			}
 		}
 	}
 	return fmt.Errorf("%s struct %q does not prevent unkeyed literal initialization", folder, s.Name)
