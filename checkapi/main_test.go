@@ -41,3 +41,13 @@ func TestMissingConfigFile(t *testing.T) {
 	err := run(filepath.Join("internal", "unkeyedpkg"), "badconfig.yaml")
 	require.EqualError(t, err, `open badconfig.yaml: no such file or directory`)
 }
+
+func TestComponentConfig(t *testing.T) {
+	err := run(filepath.Join("internal", "config", "receiver", "configreceiver"), filepath.Join("internal", "config", "config.yaml"))
+	require.NoError(t, err, "all config structs are valid")
+}
+
+func TestComponentConfigBadStruct(t *testing.T) {
+	err := run(filepath.Join("internal", "config", "receiver", "badconfigreceiver"), filepath.Join("internal", "config", "config.yaml"))
+	require.EqualError(t, err, "[internal/config/receiver/badconfigreceiver] these structs are not part of config and cannot be exported: ExtraStruct")
+}
