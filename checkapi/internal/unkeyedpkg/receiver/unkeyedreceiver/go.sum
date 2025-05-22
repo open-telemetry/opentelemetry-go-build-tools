@@ -60,10 +60,10 @@ go.opentelemetry.io/contrib/bridges/otelzap v0.10.0 h1:ojdSRDvjrnm30beHOmwsSvLpo
 go.opentelemetry.io/contrib/bridges/otelzap v0.10.0/go.mod h1:oTTm4g7NEtHSV2i/0FeVdPaPgUIZPfQkFbq0vbzqnv0=
 go.opentelemetry.io/otel v1.36.0 h1:UumtzIklRBY6cI/lllNZlALOF5nNIzJVb16APdvgTXg=
 go.opentelemetry.io/otel v1.36.0/go.mod h1:/TcFMXYjyRNh8khOAO9ybYkqaDBb/70aVwkNML4pP8E=
-go.opentelemetry.io/otel/log v0.12.1 h1:VIfeVj/w81CSR0ibbr2zYB3Q3p4f54QUPiJ2jqltaOk=
-go.opentelemetry.io/otel/log v0.12.1/go.mod h1:ShIItIxSYxufUMt+1H5a2wbckGli3/iCfuEbVZi/98E=
-go.opentelemetry.io/otel/log/logtest v0.0.0-20250521201008-b64535e2dfc0 h1:AA2k0GO1L5xXnW9utVuC5NdayMB1ToVqsk5GQDmFsTs=
-go.opentelemetry.io/otel/log/logtest v0.0.0-20250521201008-b64535e2dfc0/go.mod h1:2lJf2Aeu3FeOruGpon4A3PSamXLCZPWQrJ/THiW2938=
+go.opentelemetry.io/otel/log v0.12.2 h1:yob9JVHn2ZY24byZeaXpTVoPS6l+UrrxmxmPKohXTwc=
+go.opentelemetry.io/otel/log v0.12.2/go.mod h1:ShIItIxSYxufUMt+1H5a2wbckGli3/iCfuEbVZi/98E=
+go.opentelemetry.io/otel/log/logtest v0.0.0-20250522120704-482086a5f789 h1:SUCGRx/qmApI4rS5lB0UP0qP32HUiAIOFAHaThUX2WI=
+go.opentelemetry.io/otel/log/logtest v0.0.0-20250522120704-482086a5f789/go.mod h1:NToOxLDCS1tXDSB2dIj44H9xGPOpKr0csIN+gnuihv4=
 go.opentelemetry.io/otel/metric v1.36.0 h1:MoWPKVhQvJ+eeXWHFBOPoBOi20jh6Iq2CcCREuTYufE=
 go.opentelemetry.io/otel/metric v1.36.0/go.mod h1:zC7Ks+yeyJt4xig9DEw9kuUFe5C3zLbVjV2PzT6qzbs=
 go.opentelemetry.io/otel/sdk v1.36.0 h1:b6SYIuLRs88ztox4EyrvRti80uXIFy+Sqzoh9kFULbs=

@@ -22,8 +22,8 @@ require (
 	go.opentelemetry.io/collector/pipeline v0.126.0 // indirect
 	go.opentelemetry.io/contrib/bridges/otelzap v0.10.0 // indirect
 	go.opentelemetry.io/otel v1.36.0 // indirect
-	go.opentelemetry.io/otel/log v0.12.1 // indirect
-	go.opentelemetry.io/otel/log/logtest v0.0.0-20250521201008-b64535e2dfc0 // indirect
+	go.opentelemetry.io/otel/log v0.12.2 // indirect
+	go.opentelemetry.io/otel/log/logtest v0.0.0-20250522120704-482086a5f789 // indirect
 	go.opentelemetry.io/otel/metric v1.36.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.36.0 // indirect
 	go.opentelemetry.io/otel/trace v1.36.0 // indirect
