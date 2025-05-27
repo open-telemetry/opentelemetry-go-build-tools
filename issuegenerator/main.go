@@ -24,6 +24,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/google/go-github/github"
 	"github.com/joshdk/go-junit"
@@ -249,6 +250,7 @@ func (rg *reportGenerator) getExistingIssue(ctx context.Context, module string) 
 		rg.envVariables[githubRepository],
 		&github.IssueListByRepoOptions{
 			State: "open",
+			Since: time.Now().Add(-time.Hour * 24 * 30 * 6), // Search for at least 6 months of issues
 		},
 	)
 	if err != nil {
