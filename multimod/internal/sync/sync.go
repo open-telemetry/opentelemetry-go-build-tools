@@ -23,6 +23,8 @@ import (
 
 	"github.com/go-git/go-git/v5"
 
+	"github.com/hashicorp/go-retryablehttp"
+
 	"go.opentelemetry.io/build-tools/internal/repo"
 	"go.opentelemetry.io/build-tools/multimod/internal/common"
 )
@@ -116,7 +118,7 @@ func newSync(myVersioningFilename, otherVersioningFilename, modSetToUpdate, myRe
 		OtherModuleSet:           otherModuleSet,
 		MyModuleVersioning:       myModVersioning,
 		OtherModuleVersionCommit: otherVersionCommit,
-		client:                   http.DefaultClient,
+		client:                   retryablehttp.NewClient().StandardClient(),
 	}, nil
 }
 
