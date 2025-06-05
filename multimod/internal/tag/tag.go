@@ -26,7 +26,7 @@ import (
 	"go.uber.org/multierr"
 
 	"go.opentelemetry.io/build-tools/internal/repo"
-	"go.opentelemetry.io/build-tools/multimod/internal/common"
+	"go.opentelemetry.io/build-tools/multimod/internal/shared"
 )
 
 // Run runs the tag command.
@@ -64,13 +64,13 @@ func Run(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags b
 }
 
 type tagger struct {
-	common.ModuleSetRelease
+	shared.ModuleSetRelease
 	CommitHash plumbing.Hash
 	Repo       *git.Repository
 }
 
 func newTagger(versioningFilename, modSetToUpdate, repoRoot, hash string, deleteModuleSetTags bool) (tagger, error) {
-	modRelease, err := common.NewModuleSetRelease(versioningFilename, modSetToUpdate, repoRoot)
+	modRelease, err := shared.NewModuleSetRelease(versioningFilename, modSetToUpdate, repoRoot)
 	if err != nil {
 		return tagger{}, fmt.Errorf("error creating tagger struct: %w", err)
 	}

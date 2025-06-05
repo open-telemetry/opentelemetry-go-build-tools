@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package common
+package shared
 
 import (
 	"io"
@@ -24,12 +24,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"go.opentelemetry.io/build-tools/multimod/internal/common/commontest"
+	"go.opentelemetry.io/build-tools/multimod/internal/shared/sharedtest"
 )
 
-var (
-	testDataDir, _ = filepath.Abs("./test_data")
-)
+var testDataDir, _ = filepath.Abs("./test_data")
 
 // TestMain performs setup for the tests and suppress printing logs.
 func TestMain(m *testing.M) {
@@ -341,7 +339,7 @@ func TestBuildModulePathMap(t *testing.T) {
 		filepath.Join(tmpRootDir, "test", "test2", "go.mod"): []byte("module \"go.opentelemetry.io/test/testexcluded\"\n\ngo 1.16\n"),
 	}
 
-	require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
+	require.NoError(t, sharedtest.WriteTempFiles(modFiles), "could not create go mod file tree")
 
 	expected := ModulePathMap{
 		"go.opentelemetry.io/test/test1":  ModuleFilePath(filepath.Join(tmpRootDir, "test", "test1", "go.mod")),
