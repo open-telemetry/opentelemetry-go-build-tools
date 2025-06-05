@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"go.opentelemetry.io/build-tools/internal/repo"
-	"go.opentelemetry.io/build-tools/multimod/internal/common"
+	"go.opentelemetry.io/build-tools/multimod/internal/shared"
 )
 
 func TestNormalizeVersion(t *testing.T) {
@@ -42,12 +42,12 @@ func TestNormalizeVersion(t *testing.T) {
 func TestNormalizeTag(t *testing.T) {
 	tests := []struct {
 		name   string
-		input  common.ModuleTagName
+		input  shared.ModuleTagName
 		output string
 	}{
 		{
 			name:   "repo root tag",
-			input:  common.RepoRootTag,
+			input:  shared.RepoRootTag,
 			output: "v1.2.3",
 		},
 		{
@@ -154,7 +154,7 @@ func TestFilesChanged(t *testing.T) {
 		name     string
 		version  string
 		modset   string
-		tagNames []common.ModuleTagName
+		tagNames []shared.ModuleTagName
 		cli      MockClient
 		expected bool
 		err      error
@@ -173,7 +173,7 @@ func TestFilesChanged(t *testing.T) {
 			cli: MockClient{
 				tagCommitErr: git.ErrTagNotFound,
 			},
-			tagNames: []common.ModuleTagName{"tools"},
+			tagNames: []shared.ModuleTagName{"tools"},
 			version:  "v0.8.0",
 			modset:   "tools",
 			err:      git.ErrTagNotFound,
@@ -185,7 +185,7 @@ func TestFilesChanged(t *testing.T) {
 			cli: MockClient{
 				files: []string{"file1.go"},
 			},
-			tagNames: []common.ModuleTagName{"tools"},
+			tagNames: []shared.ModuleTagName{"tools"},
 			expected: true,
 		},
 	}

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package common
+package shared
 
 import (
 	"os"
@@ -22,7 +22,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"go.opentelemetry.io/build-tools/multimod/internal/common/commontest"
+	"go.opentelemetry.io/build-tools/multimod/internal/shared/sharedtest"
 )
 
 func TestIsStableVersion(t *testing.T) {
@@ -84,7 +84,7 @@ func TestUpdateGoModVersions(t *testing.T) {
 			")"),
 	}
 
-	require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
+	require.NoError(t, sharedtest.WriteTempFiles(modFiles), "could not create go mod file tree")
 
 	var modFilePaths []ModuleFilePath
 	for modFilePath := range modFiles {

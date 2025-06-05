@@ -18,12 +18,12 @@ import (
 	"fmt"
 	"strings"
 
-	"go.opentelemetry.io/build-tools/multimod/internal/common"
+	"go.opentelemetry.io/build-tools/multimod/internal/shared"
 )
 
 type errModuleNotInSet struct {
-	modPath     common.ModulePath
-	modFilePath common.ModuleFilePath
+	modPath     shared.ModulePath
+	modFilePath shared.ModuleFilePath
 }
 
 func (e *errModuleNotInSet) Error() string {
@@ -31,7 +31,7 @@ func (e *errModuleNotInSet) Error() string {
 }
 
 type errModuleNotInRepo struct {
-	modPath    common.ModulePath
+	modPath    shared.ModulePath
 	modSetName string
 }
 
@@ -73,9 +73,9 @@ func (e *errMultipleSetSameVersion) Error() string {
 
 // errDependency is logged upon discovery that a stable module depends on an unstable module.
 type errDependency struct {
-	modPath    common.ModulePath
+	modPath    shared.ModulePath
 	modVersion string
-	depPath    common.ModulePath
+	depPath    shared.ModulePath
 	depVersion string
 }
 

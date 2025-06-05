@@ -25,13 +25,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"go.opentelemetry.io/build-tools/multimod/internal/common"
-	"go.opentelemetry.io/build-tools/multimod/internal/common/commontest"
+	"go.opentelemetry.io/build-tools/multimod/internal/shared"
+	"go.opentelemetry.io/build-tools/multimod/internal/shared/sharedtest"
 )
 
-var (
-	testDataDir, _ = filepath.Abs("./test_data")
-)
+var testDataDir, _ = filepath.Abs("./test_data")
 
 // TestMain performs setup for the tests and suppress printing logs.
 func TestMain(m *testing.M) {
@@ -52,7 +50,7 @@ func TestNewPrerelease(t *testing.T) {
 		filepath.Join(tmpRootDir, "test", "test2", "go.mod"): []byte("module \"go.opentelemetry.io/test/testexcluded\"\n\ngo 1.16\n"),
 	}
 
-	require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
+	require.NoError(t, sharedtest.WriteTempFiles(modFiles), "could not create go mod file tree")
 
 	// initialize temporary local git repository
 	_, err := git.PlainInit(tmpRootDir, true)
@@ -63,62 +61,62 @@ func TestNewPrerelease(t *testing.T) {
 		versioningFilename     string
 		repoRoot               string
 		shouldError            bool
-		expectedModuleSetMap   common.ModuleSetMap
-		expectedModulePathMap  common.ModulePathMap
-		expectedModuleInfoMap  common.ModuleInfoMap
-		expectedTagNames       map[string][]common.ModuleTagName
+		expectedModuleSetMap   shared.ModuleSetMap
+		expectedModulePathMap  shared.ModulePathMap
+		expectedModuleInfoMap  shared.ModuleInfoMap
+		expectedTagNames       map[string][]shared.ModuleTagName
 		expectedFullTagNames   map[string][]string
 		expectedModSetVersions map[string]string
-		expectedModSetPaths    map[string][]common.ModulePath
+		expectedModSetPaths    map[string][]shared.ModulePath
 	}{
 		{
 			name:               "valid versioning",
 			versioningFilename: filepath.Join(versionsYamlDir, "/versions_valid.yaml"),
 			repoRoot:           tmpRootDir,
 			shouldError:        false,
-			expectedModuleSetMap: common.ModuleSetMap{
-				"mod-set-1": common.ModuleSet{
+			expectedModuleSetMap: shared.ModuleSetMap{
+				"mod-set-1": shared.ModuleSet{
 					Version: "v1.2.3-RC1+meta",
-					Modules: []common.ModulePath{
+					Modules: []shared.ModulePath{
 						"go.opentelemetry.io/test/test1",
 					},
 				},
-				"mod-set-2": common.ModuleSet{
+				"mod-set-2": shared.ModuleSet{
 					Version: "v0.1.0",
-					Modules: []common.ModulePath{
+					Modules: []shared.ModulePath{
 						"go.opentelemetry.io/test2",
 					},
 				},
-				"mod-set-3": common.ModuleSet{
+				"mod-set-3": shared.ModuleSet{
 					Version: "v2.2.2",
-					Modules: []common.ModulePath{
+					Modules: []shared.ModulePath{
 						"go.opentelemetry.io/testroot/v2",
 					},
 				},
 			},
-			expectedModulePathMap: common.ModulePathMap{
-				"go.opentelemetry.io/test/test1":  common.ModuleFilePath(filepath.Join(tmpRootDir, "test", "test1", "go.mod")),
-				"go.opentelemetry.io/test2":       common.ModuleFilePath(filepath.Join(tmpRootDir, "test", "go.mod")),
-				"go.opentelemetry.io/testroot/v2": common.ModuleFilePath(filepath.Join(tmpRootDir, "go.mod")),
+			expectedModulePathMap: shared.ModulePathMap{
+				"go.opentelemetry.io/test/test1":  shared.ModuleFilePath(filepath.Join(tmpRootDir, "test", "test1", "go.mod")),
+				"go.opentelemetry.io/test2":       shared.ModuleFilePath(filepath.Join(tmpRootDir, "test", "go.mod")),
+				"go.opentelemetry.io/testroot/v2": shared.ModuleFilePath(filepath.Join(tmpRootDir, "go.mod")),
 			},
-			expectedModuleInfoMap: common.ModuleInfoMap{
-				"go.opentelemetry.io/test/test1": common.ModuleInfo{
+			expectedModuleInfoMap: shared.ModuleInfoMap{
+				"go.opentelemetry.io/test/test1": shared.ModuleInfo{
 					ModuleSetName: "mod-set-1",
 					Version:       "v1.2.3-RC1+meta",
 				},
-				"go.opentelemetry.io/testroot/v2": common.ModuleInfo{
+				"go.opentelemetry.io/testroot/v2": shared.ModuleInfo{
 					ModuleSetName: "mod-set-3",
 					Version:       "v2.2.2",
 				},
-				"go.opentelemetry.io/test2": common.ModuleInfo{
+				"go.opentelemetry.io/test2": shared.ModuleInfo{
 					ModuleSetName: "mod-set-2",
 					Version:       "v0.1.0",
 				},
 			},
-			expectedTagNames: map[string][]common.ModuleTagName{
+			expectedTagNames: map[string][]shared.ModuleTagName{
 				"mod-set-1": {"test/test1"},
 				"mod-set-2": {"test"},
-				"mod-set-3": {common.RepoRootTag},
+				"mod-set-3": {shared.RepoRootTag},
 			},
 			expectedFullTagNames: map[string][]string{
 				"mod-set-1": {"test/test1/v1.2.3-RC1+meta"},
@@ -130,7 +128,7 @@ func TestNewPrerelease(t *testing.T) {
 				"mod-set-2": "v0.1.0",
 				"mod-set-3": "v2.2.2",
 			},
-			expectedModSetPaths: map[string][]common.ModulePath{
+			expectedModSetPaths: map[string][]shared.ModulePath{
 				"mod-set-1": {"go.opentelemetry.io/test/test1"},
 				"mod-set-2": {"go.opentelemetry.io/test2"},
 				"mod-set-3": {"go.opentelemetry.io/testroot/v2"},
@@ -160,12 +158,12 @@ func TestNewPrerelease(t *testing.T) {
 				}
 
 				assert.IsType(t, prerelease{}, actual)
-				assert.IsType(t, common.ModuleSetRelease{}, actual.ModuleSetRelease)
+				assert.IsType(t, shared.ModuleSetRelease{}, actual.ModuleSetRelease)
 				assert.Equal(t, tc.expectedTagNames[expectedModSetName], actual.TagNames)
 				assert.Equal(t, expectedModSet, actual.ModSet)
 				assert.Equal(t, expectedModSetName, actual.ModSetName)
 
-				assert.IsType(t, common.ModuleVersioning{}, actual.ModuleVersioning)
+				assert.IsType(t, shared.ModuleVersioning{}, actual.ModuleVersioning)
 				assert.Equal(t, tc.expectedModuleSetMap, actual.ModSetMap)
 				assert.Equal(t, tc.expectedModulePathMap, actual.ModPathMap)
 				assert.Equal(t, tc.expectedModuleInfoMap, actual.ModInfoMap)
@@ -264,8 +262,8 @@ func TestUpdateAllVersionGo(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
-			require.NoError(t, commontest.WriteTempFiles(versionGoFiles), "could not create version.go file tree")
+			require.NoError(t, sharedtest.WriteTempFiles(modFiles), "could not create go mod file tree")
+			require.NoError(t, sharedtest.WriteTempFiles(versionGoFiles), "could not create version.go file tree")
 
 			p, err := newPrerelease(versioningFilename, tc.modSetName, tmpRootDir)
 			require.NoError(t, err)
@@ -464,7 +462,7 @@ func TestUpdateAllGoModFiles(t *testing.T) {
 					")"),
 			}
 
-			require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
+			require.NoError(t, sharedtest.WriteTempFiles(modFiles), "could not create go mod file tree")
 
 			p, err := newPrerelease(versioningFilename, tc.modSetName, tmpRootDir)
 			require.NoError(t, err)

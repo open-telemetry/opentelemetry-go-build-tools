@@ -24,7 +24,7 @@ import (
 	"golang.org/x/mod/semver"
 
 	"go.opentelemetry.io/build-tools/internal/repo"
-	"go.opentelemetry.io/build-tools/multimod/internal/common"
+	"go.opentelemetry.io/build-tools/multimod/internal/shared"
 )
 
 // Run runs the verification.
@@ -55,14 +55,14 @@ func Run(versioningFile string) {
 }
 
 type verification struct {
-	common.ModuleVersioning
+	shared.ModuleVersioning
 }
 
 // dependencyMap keeps track of all modules' dependencies.
-type dependencyMap map[common.ModulePath][]common.ModulePath
+type dependencyMap map[shared.ModulePath][]shared.ModulePath
 
 func newVerification(versioningFilename, repoRoot string) (verification, error) {
-	modVersioning, err := common.NewModuleVersioning(versioningFilename, repoRoot)
+	modVersioning, err := shared.NewModuleVersioning(versioningFilename, repoRoot)
 	if err != nil {
 		return verification{}, fmt.Errorf("call to NewModuleVersioning failed: %w", err)
 	}
@@ -93,8 +93,8 @@ func (v verification) getDependencies() (dependencyMap, error) {
 		// get dependencies as defined by the "require" section
 		for _, dep := range modFile.Require {
 			// check if dependency is in the same repo (i.e. if it exists in the module versioning file)
-			if _, exists := modVersioning.ModInfoMap[common.ModulePath(dep.Mod.Path)]; exists {
-				dependencies[modPath] = append(dependencies[modPath], common.ModulePath(dep.Mod.Path))
+			if _, exists := modVersioning.ModInfoMap[shared.ModulePath(dep.Mod.Path)]; exists {
+				dependencies[modPath] = append(dependencies[modPath], shared.ModulePath(dep.Mod.Path))
 			}
 		}
 	}
@@ -143,7 +143,7 @@ func (v verification) verifyVersions() error {
 			}
 		}
 
-		if common.IsStableVersion(modSet.Version) {
+		if shared.IsStableVersion(modSet.Version) {
 			// Add all sets to major version map
 			modSetMajorVersion := semver.Major(modSet.Version)
 			setMajorVersions[modSetMajorVersion] = append(setMajorVersions[modSetMajorVersion], modSetName)
@@ -182,11 +182,11 @@ func (v verification) verifyDependencies() error {
 	for modPath, modDeps := range dependencies {
 		// check if module is stable
 		modVersion := v.ModuleVersioning.ModInfoMap[modPath].Version
-		if common.IsStableVersion(modVersion) {
+		if shared.IsStableVersion(modVersion) {
 			for _, depPath := range modDeps {
 				// check if dependency is on an unstable module
 				depVersion := v.ModuleVersioning.ModInfoMap[depPath].Version
-				if !common.IsStableVersion(depVersion) {
+				if !shared.IsStableVersion(depVersion) {
 					log.Println(
 						&errDependency{
 							modPath:    modPath,

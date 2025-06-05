@@ -13,7 +13,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 
-	"go.opentelemetry.io/build-tools/multimod/internal/common"
+	"go.opentelemetry.io/build-tools/multimod/internal/shared"
 )
 
 // Client is an interface for a git client. It is used to abstract away the
@@ -82,8 +82,8 @@ func normalizeVersion(ver string) string {
 	return fmt.Sprintf("v%s", ver)
 }
 
-func normalizeTag(tagName common.ModuleTagName, ver string) string {
-	if tagName == common.RepoRootTag {
+func normalizeTag(tagName shared.ModuleTagName, ver string) string {
+	if tagName == shared.RepoRootTag {
 		return ver
 	}
 	return fmt.Sprintf("%s/%s", tagName, ver)
@@ -99,17 +99,17 @@ func HasChanged(repoRoot string, versioningFile string, ver string, modset strin
 		return changedFiles, fmt.Errorf("could not open repo at %v: %w", repoRoot, err)
 	}
 
-	if e := common.VerifyWorkingTreeClean(r); e != nil {
+	if e := shared.VerifyWorkingTreeClean(r); e != nil {
 		return changedFiles, fmt.Errorf("VerifyWorkingTreeClean failed: %w", e)
 	}
 
-	mset, err := common.NewModuleSetRelease(versioningFile, modset, repoRoot)
+	mset, err := shared.NewModuleSetRelease(versioningFile, modset, repoRoot)
 	if err != nil {
 		return changedFiles, err
 	}
 
 	// get tag names of mods to update
-	tagNames, err := common.ModulePathsToTagNames(
+	tagNames, err := shared.ModulePathsToTagNames(
 		mset.ModSet.Modules,
 		mset.ModPathMap,
 		repoRoot,
@@ -121,7 +121,7 @@ func HasChanged(repoRoot string, versioningFile string, ver string, modset strin
 	return filesChanged(r, modset, ver, tagNames, GitClient{})
 }
 
-func filesChanged(r *git.Repository, modset string, ver string, tagNames []common.ModuleTagName, client Client) ([]string, error) {
+func filesChanged(r *git.Repository, modset string, ver string, tagNames []shared.ModuleTagName, client Client) ([]string, error) {
 	changedFiles := []string{}
 	headCommit, err := client.HeadCommit(r)
 	if err != nil {

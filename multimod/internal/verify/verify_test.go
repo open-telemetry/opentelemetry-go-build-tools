@@ -26,13 +26,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"go.opentelemetry.io/build-tools/multimod/internal/common"
-	"go.opentelemetry.io/build-tools/multimod/internal/common/commontest"
+	"go.opentelemetry.io/build-tools/multimod/internal/shared"
+	"go.opentelemetry.io/build-tools/multimod/internal/shared/sharedtest"
 )
 
-var (
-	testDataDir, _ = filepath.Abs("./test_data")
-)
+var testDataDir, _ = filepath.Abs("./test_data")
 
 // TestMain performs setup for the tests and suppress printing logs.
 func TestMain(m *testing.M) {
@@ -64,57 +62,57 @@ func TestNewVerification(t *testing.T) {
 		filepath.Join(tmpRootDir, "test", "excluded", "go.mod"): []byte("module \"go.opentelemetry.io/test/testexcluded\"\n\ngo 1.16\n"),
 	}
 
-	require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
+	require.NoError(t, sharedtest.WriteTempFiles(modFiles), "could not create go mod file tree")
 
 	testCases := []struct {
 		name                  string
 		versioningFilename    string
 		repoRoot              string
 		shouldError           bool
-		expectedModuleSetMap  common.ModuleSetMap
-		expectedModulePathMap common.ModulePathMap
-		expectedModuleInfoMap common.ModuleInfoMap
+		expectedModuleSetMap  shared.ModuleSetMap
+		expectedModulePathMap shared.ModulePathMap
+		expectedModuleInfoMap shared.ModuleInfoMap
 	}{
 		{
 			name:               "valid versioning",
 			versioningFilename: filepath.Join(versionYamlDir, "versions_valid.yaml"),
 			repoRoot:           tmpRootDir,
 			shouldError:        false,
-			expectedModuleSetMap: common.ModuleSetMap{
-				"mod-set-1": common.ModuleSet{
+			expectedModuleSetMap: shared.ModuleSetMap{
+				"mod-set-1": shared.ModuleSet{
 					Version: "v1.2.3-RC1+meta",
-					Modules: []common.ModulePath{
+					Modules: []shared.ModulePath{
 						"go.opentelemetry.io/test/test1",
 					},
 				},
-				"mod-set-2": common.ModuleSet{
+				"mod-set-2": shared.ModuleSet{
 					Version: "v0.1.0",
-					Modules: []common.ModulePath{
+					Modules: []shared.ModulePath{
 						"go.opentelemetry.io/test2",
 					},
 				},
-				"mod-set-3": common.ModuleSet{
+				"mod-set-3": shared.ModuleSet{
 					Version: "v2.2.2",
-					Modules: []common.ModulePath{
+					Modules: []shared.ModulePath{
 						"go.opentelemetry.io/testroot/v2",
 					},
 				},
 			},
-			expectedModulePathMap: common.ModulePathMap{
-				"go.opentelemetry.io/test/test1":  common.ModuleFilePath(filepath.Join(tmpRootDir, "test", "test1", "go.mod")),
-				"go.opentelemetry.io/test2":       common.ModuleFilePath(filepath.Join(tmpRootDir, "test", "go.mod")),
-				"go.opentelemetry.io/testroot/v2": common.ModuleFilePath(filepath.Join(tmpRootDir, "go.mod")),
+			expectedModulePathMap: shared.ModulePathMap{
+				"go.opentelemetry.io/test/test1":  shared.ModuleFilePath(filepath.Join(tmpRootDir, "test", "test1", "go.mod")),
+				"go.opentelemetry.io/test2":       shared.ModuleFilePath(filepath.Join(tmpRootDir, "test", "go.mod")),
+				"go.opentelemetry.io/testroot/v2": shared.ModuleFilePath(filepath.Join(tmpRootDir, "go.mod")),
 			},
-			expectedModuleInfoMap: common.ModuleInfoMap{
-				"go.opentelemetry.io/test/test1": common.ModuleInfo{
+			expectedModuleInfoMap: shared.ModuleInfoMap{
+				"go.opentelemetry.io/test/test1": shared.ModuleInfo{
 					ModuleSetName: "mod-set-1",
 					Version:       "v1.2.3-RC1+meta",
 				},
-				"go.opentelemetry.io/test2": common.ModuleInfo{
+				"go.opentelemetry.io/test2": shared.ModuleInfo{
 					ModuleSetName: "mod-set-2",
 					Version:       "v0.1.0",
 				},
-				"go.opentelemetry.io/testroot/v2": common.ModuleInfo{
+				"go.opentelemetry.io/testroot/v2": shared.ModuleInfo{
 					ModuleSetName: "mod-set-3",
 					Version:       "v2.2.2",
 				},
@@ -184,27 +182,27 @@ func TestGetDependencies(t *testing.T) {
 			")"),
 	}
 
-	require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
+	require.NoError(t, sharedtest.WriteTempFiles(modFiles), "could not create go mod file tree")
 	v, _ := newVerification(
 		filepath.Join(versionYamlDir, "versions_valid.yaml"),
 		tmpRootDir,
 	)
 
 	expected := dependencyMap{
-		"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test1": []common.ModulePath{
+		"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test1": []shared.ModulePath{
 			"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test2",
 			"go.opentelemetry.io/build-tools/multimod/internal/verify/test3",
 		},
-		"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test2": []common.ModulePath{
+		"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test2": []shared.ModulePath{
 			"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test1",
 			"go.opentelemetry.io/build-tools/multimod/internal/verify/test3",
 			"go.opentelemetry.io/build-tools/multimod/internal/verify/testroot",
 		},
-		"go.opentelemetry.io/build-tools/multimod/internal/verify/test3": []common.ModulePath{
+		"go.opentelemetry.io/build-tools/multimod/internal/verify/test3": []shared.ModulePath{
 			"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test1",
 			"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test2",
 		},
-		"go.opentelemetry.io/build-tools/multimod/internal/verify/testroot": []common.ModulePath{
+		"go.opentelemetry.io/build-tools/multimod/internal/verify/testroot": []shared.ModulePath{
 			"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test1",
 			"go.opentelemetry.io/build-tools/multimod/internal/verify/test/test2",
 			"go.opentelemetry.io/build-tools/multimod/internal/verify/test3",
@@ -259,7 +257,7 @@ func TestVerifyAllModulesInSet(t *testing.T) {
 			},
 			expectedError: &errModuleNotInSet{
 				modPath:     "go.opentelemetry.io/testroot/v2",
-				modFilePath: common.ModuleFilePath(filepath.Join(tmpRootDir, "not_listed", "go.mod")),
+				modFilePath: shared.ModuleFilePath(filepath.Join(tmpRootDir, "not_listed", "go.mod")),
 			},
 		},
 		{
@@ -280,7 +278,7 @@ func TestVerifyAllModulesInSet(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			require.NoError(t, commontest.WriteTempFiles(tc.modFiles), "could not create go mod file tree")
+			require.NoError(t, sharedtest.WriteTempFiles(tc.modFiles), "could not create go mod file tree")
 
 			v, err := newVerification(tc.versioningFilename, tc.repoRoot)
 			require.NoError(t, err)
@@ -358,7 +356,7 @@ func TestVerifyVersions(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			require.NoError(t, commontest.WriteTempFiles(tc.modFiles), "could not create go mod file tree")
+			require.NoError(t, sharedtest.WriteTempFiles(tc.modFiles), "could not create go mod file tree")
 
 			v, err := newVerification(tc.versioningFilename, tc.repoRoot)
 			require.NoError(t, err)
@@ -486,7 +484,7 @@ func TestVerifyDependencies(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			require.NoError(t, commontest.WriteTempFiles(tc.modFiles), "could not create go mod file tree")
+			require.NoError(t, sharedtest.WriteTempFiles(tc.modFiles), "could not create go mod file tree")
 
 			v, err := newVerification(tc.versioningFilename, tc.repoRoot)
 			require.NoError(t, err)

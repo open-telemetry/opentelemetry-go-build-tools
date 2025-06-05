@@ -27,7 +27,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 
 	"go.opentelemetry.io/build-tools/internal/repo"
-	"go.opentelemetry.io/build-tools/multimod/internal/common"
+	"go.opentelemetry.io/build-tools/multimod/internal/shared"
 )
 
 // Run runs the prerelease process.
@@ -39,7 +39,7 @@ func Run(versioningFile string, moduleSetNames []string, allModuleSets bool, ski
 	log.Printf("Using repo with root at %s\n\n", repoRoot)
 
 	if allModuleSets {
-		moduleSetNames, err = common.GetAllModuleSetNames(versioningFile, repoRoot)
+		moduleSetNames, err = shared.GetAllModuleSetNames(versioningFile, repoRoot)
 		if err != nil {
 			log.Fatalf("could not automatically get all module set names: %v", err)
 		}
@@ -50,7 +50,7 @@ func Run(versioningFile string, moduleSetNames []string, allModuleSets bool, ski
 		log.Fatalf("could not open repo at %v: %v", repoRoot, err)
 	}
 
-	if err = common.VerifyWorkingTreeClean(repo); err != nil {
+	if err = shared.VerifyWorkingTreeClean(repo); err != nil {
 		log.Fatalf("VerifyWorkingTreeClean failed: %v", err)
 	}
 
@@ -83,7 +83,7 @@ func Run(versioningFile string, moduleSetNames []string, allModuleSets bool, ski
 		if skipModTidy {
 			log.Println("Skipping 'go mod tidy'...")
 		} else {
-			if err = common.RunGoModTidy(p.ModPathMap); err != nil {
+			if err = shared.RunGoModTidy(p.ModPathMap); err != nil {
 				log.Fatal("could not run Go Mod Tidy: ", err)
 			}
 		}
@@ -101,11 +101,11 @@ Then, if necessary, commit changes and push to upstream/make a pull request.`)
 
 // prerelease holds fields needed to update one module set at a time.
 type prerelease struct {
-	common.ModuleSetRelease
+	shared.ModuleSetRelease
 }
 
 func newPrerelease(versioningFilename, modSetToUpdate, repoRoot string) (prerelease, error) {
-	modRelease, err := common.NewModuleSetRelease(versioningFilename, modSetToUpdate, repoRoot)
+	modRelease, err := shared.NewModuleSetRelease(versioningFilename, modSetToUpdate, repoRoot)
 	if err != nil {
 		return prerelease{}, fmt.Errorf("error creating new prerelease struct: %w", err)
 	}
@@ -118,10 +118,10 @@ func newPrerelease(versioningFilename, modSetToUpdate, repoRoot string) (prerele
 func (p prerelease) checkModuleSetUpToDate(repo *git.Repository) (bool, error) {
 	err := p.CheckGitTagsAlreadyExist(repo)
 	if err != nil {
-		if errors.As(err, &common.ErrGitTagsAlreadyExist{}) {
+		if errors.As(err, &shared.ErrGitTagsAlreadyExist{}) {
 			return true, nil
 		}
-		if errors.As(err, &common.ErrInconsistentGitTagsExist{}) {
+		if errors.As(err, &shared.ErrInconsistentGitTagsExist{}) {
 			return false, fmt.Errorf("cannot proceed with inconsistently tagged module set %v: %w", p.ModSetName, err)
 		}
 		return false, fmt.Errorf("unhandled error: %w", err)
@@ -168,7 +168,7 @@ func updateVersionGoFile(filePath string, newVersion string) error {
 		panic(err)
 	}
 
-	oldVersionRegex := common.SemverRegexNumberOnly
+	oldVersionRegex := shared.SemverRegexNumberOnly
 	r, err := regexp.Compile(oldVersionRegex)
 	if err != nil {
 		return fmt.Errorf("error compiling regex: %w", err)
@@ -189,25 +189,25 @@ func updateVersionGoFile(filePath string, newVersion string) error {
 // updateAllGoModFiles updates ALL modules' requires sections to use the newVersion number
 // for the modules given in newModPaths.
 func (p prerelease) updateAllGoModFiles() error {
-	modFilePaths := make([]common.ModuleFilePath, 0, len(p.ModPathMap))
+	modFilePaths := make([]shared.ModuleFilePath, 0, len(p.ModPathMap))
 
 	for _, filePath := range p.AllModPathMap {
 		modFilePaths = append(modFilePaths, filePath)
 	}
 
-	var newModRefs []common.ModuleRef
+	var newModRefs []shared.ModuleRef
 	ver := p.ModSetVersion()
 	for _, mod := range p.ModSetPaths() {
-		newModRefs = append(newModRefs, common.ModuleRef{Path: mod, Version: ver})
+		newModRefs = append(newModRefs, shared.ModuleRef{Path: mod, Version: ver})
 	}
-	if err := common.UpdateGoModFiles(modFilePaths, newModRefs); err != nil {
+	if err := shared.UpdateGoModFiles(modFilePaths, newModRefs); err != nil {
 		return fmt.Errorf("could not update all go mod files: %w", err)
 	}
 
 	return nil
 }
 
-func commitChanges(msr common.ModuleSetRelease, commitToDifferentBranch bool, repo *git.Repository) error {
+func commitChanges(msr shared.ModuleSetRelease, commitToDifferentBranch bool, repo *git.Repository) error {
 	commitMessage := fmt.Sprintf("Prepare %v for version %v", msr.ModSetName, msr.ModSetVersion())
 
 	var hash plumbing.Hash
@@ -215,9 +215,9 @@ func commitChanges(msr common.ModuleSetRelease, commitToDifferentBranch bool, re
 	if commitToDifferentBranch {
 		branchNameElements := []string{"prerelease", msr.ModSetName, msr.ModSetVersion()}
 		branchName := strings.Join(branchNameElements, "_")
-		hash, err = common.CommitChangesToNewBranch(branchName, commitMessage, repo, nil)
+		hash, err = shared.CommitChangesToNewBranch(branchName, commitMessage, repo, nil)
 	} else {
-		hash, err = common.CommitChanges(commitMessage, repo, nil)
+		hash, err = shared.CommitChanges(commitMessage, repo, nil)
 	}
 	if err != nil {
 		return err
