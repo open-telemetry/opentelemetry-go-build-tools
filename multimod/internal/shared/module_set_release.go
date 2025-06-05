@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package common
+package shared
 
 import (
 	"fmt"
@@ -72,7 +72,6 @@ func NewModuleSetRelease(versioningFilename, modSetToUpdate, repoRoot string) (M
 		TagNames:         tagNames,
 		AllModPathMap:    allModPathMap,
 	}, nil
-
 }
 
 // ModSetVersion gets the version of the module set to update.

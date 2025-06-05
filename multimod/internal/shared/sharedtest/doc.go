@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package commontest provides exported shared helper functions for testing.
-package commontest
+// Package sharedtest provides exported shared helper functions for testing.
+package sharedtest

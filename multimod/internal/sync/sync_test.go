@@ -26,8 +26,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"go.opentelemetry.io/build-tools/multimod/internal/common"
-	"go.opentelemetry.io/build-tools/multimod/internal/common/commontest"
+	"go.opentelemetry.io/build-tools/multimod/internal/shared"
+	"go.opentelemetry.io/build-tools/multimod/internal/shared/sharedtest"
 )
 
 var testDataDir, _ = filepath.Abs("./test_data")
@@ -78,50 +78,50 @@ func TestNewSync(t *testing.T) {
 			")"),
 	}
 
-	require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
+	require.NoError(t, sharedtest.WriteTempFiles(modFiles), "could not create go mod file tree")
 
-	expectedMyModuleVersioning := common.ModuleVersioning{
-		ModSetMap: common.ModuleSetMap{
-			"my-mod-set-1": common.ModuleSet{
+	expectedMyModuleVersioning := shared.ModuleVersioning{
+		ModSetMap: shared.ModuleSetMap{
+			"my-mod-set-1": shared.ModuleSet{
 				Version: "v1.2.3-RC1+meta",
-				Modules: []common.ModulePath{
+				Modules: []shared.ModulePath{
 					"go.opentelemetry.io/build-tools/multimod/internal/sync/test/test1",
 					"go.opentelemetry.io/build-tools/multimod/internal/sync/test/test2",
 				},
 			},
-			"my-mod-set-2": common.ModuleSet{
+			"my-mod-set-2": shared.ModuleSet{
 				Version: "v0.1.0",
-				Modules: []common.ModulePath{
+				Modules: []shared.ModulePath{
 					"go.opentelemetry.io/build-tools/multimod/internal/sync/test3",
 				},
 			},
-			"my-mod-set-3": common.ModuleSet{
+			"my-mod-set-3": shared.ModuleSet{
 				Version: "v2.2.2",
-				Modules: []common.ModulePath{
+				Modules: []shared.ModulePath{
 					"go.opentelemetry.io/build-tools/multimod/internal/sync/testroot/v2",
 				},
 			},
 		},
-		ModPathMap: common.ModulePathMap{
-			"go.opentelemetry.io/build-tools/multimod/internal/sync/test/test1":  common.ModuleFilePath(filepath.Join(tmpRootDir, "my", "test", "test1", "go.mod")),
-			"go.opentelemetry.io/build-tools/multimod/internal/sync/test/test2":  common.ModuleFilePath(filepath.Join(tmpRootDir, "my", "test", "test2", "go.mod")),
-			"go.opentelemetry.io/build-tools/multimod/internal/sync/test3":       common.ModuleFilePath(filepath.Join(tmpRootDir, "my", "test", "go.mod")),
-			"go.opentelemetry.io/build-tools/multimod/internal/sync/testroot/v2": common.ModuleFilePath(filepath.Join(tmpRootDir, "my", "go.mod")),
+		ModPathMap: shared.ModulePathMap{
+			"go.opentelemetry.io/build-tools/multimod/internal/sync/test/test1":  shared.ModuleFilePath(filepath.Join(tmpRootDir, "my", "test", "test1", "go.mod")),
+			"go.opentelemetry.io/build-tools/multimod/internal/sync/test/test2":  shared.ModuleFilePath(filepath.Join(tmpRootDir, "my", "test", "test2", "go.mod")),
+			"go.opentelemetry.io/build-tools/multimod/internal/sync/test3":       shared.ModuleFilePath(filepath.Join(tmpRootDir, "my", "test", "go.mod")),
+			"go.opentelemetry.io/build-tools/multimod/internal/sync/testroot/v2": shared.ModuleFilePath(filepath.Join(tmpRootDir, "my", "go.mod")),
 		},
-		ModInfoMap: common.ModuleInfoMap{
-			"go.opentelemetry.io/build-tools/multimod/internal/sync/test/test1": common.ModuleInfo{
+		ModInfoMap: shared.ModuleInfoMap{
+			"go.opentelemetry.io/build-tools/multimod/internal/sync/test/test1": shared.ModuleInfo{
 				ModuleSetName: "my-mod-set-1",
 				Version:       "v1.2.3-RC1+meta",
 			},
-			"go.opentelemetry.io/build-tools/multimod/internal/sync/test/test2": common.ModuleInfo{
+			"go.opentelemetry.io/build-tools/multimod/internal/sync/test/test2": shared.ModuleInfo{
 				ModuleSetName: "my-mod-set-1",
 				Version:       "v1.2.3-RC1+meta",
 			},
-			"go.opentelemetry.io/build-tools/multimod/internal/sync/test3": common.ModuleInfo{
+			"go.opentelemetry.io/build-tools/multimod/internal/sync/test3": shared.ModuleInfo{
 				ModuleSetName: "my-mod-set-2",
 				Version:       "v0.1.0",
 			},
-			"go.opentelemetry.io/build-tools/multimod/internal/sync/testroot/v2": common.ModuleInfo{
+			"go.opentelemetry.io/build-tools/multimod/internal/sync/testroot/v2": shared.ModuleInfo{
 				ModuleSetName: "my-mod-set-3",
 				Version:       "v2.2.2",
 			},
@@ -130,27 +130,27 @@ func TestNewSync(t *testing.T) {
 
 	testCases := []struct {
 		modSetName          string
-		expectedOtherModSet common.ModuleSet
+		expectedOtherModSet shared.ModuleSet
 	}{
 		{
 			modSetName: "other-mod-set-1",
-			expectedOtherModSet: common.ModuleSet{
+			expectedOtherModSet: shared.ModuleSet{
 				Version: "v1.2.3-RC1+meta",
-				Modules: []common.ModulePath{"go.opentelemetry.io/other/test/test1"},
+				Modules: []shared.ModulePath{"go.opentelemetry.io/other/test/test1"},
 			},
 		},
 		{
 			modSetName: "other-mod-set-2",
-			expectedOtherModSet: common.ModuleSet{
+			expectedOtherModSet: shared.ModuleSet{
 				Version: "v0.1.0",
-				Modules: []common.ModulePath{"go.opentelemetry.io/other/test2"},
+				Modules: []shared.ModulePath{"go.opentelemetry.io/other/test2"},
 			},
 		},
 		{
 			modSetName: "other-mod-set-3",
-			expectedOtherModSet: common.ModuleSet{
+			expectedOtherModSet: shared.ModuleSet{
 				Version: "v2.2.2",
-				Modules: []common.ModulePath{"go.opentelemetry.io/other/testroot/v2"},
+				Modules: []shared.ModulePath{"go.opentelemetry.io/other/testroot/v2"},
 			},
 		},
 	}
@@ -302,7 +302,7 @@ func TestUpdateAllGoModFilesWithCommitHash(t *testing.T) {
 		}
 
 		t.Run(tc.modSetName, func(t *testing.T) {
-			require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
+			require.NoError(t, sharedtest.WriteTempFiles(modFiles), "could not create go mod file tree")
 
 			s, err := newSync(
 				myVersioningFilename,
@@ -506,7 +506,7 @@ func TestUpdateAllGoModFiles(t *testing.T) {
 		}
 
 		t.Run(tc.modSetName, func(t *testing.T) {
-			require.NoError(t, commontest.WriteTempFiles(modFiles), "could not create go mod file tree")
+			require.NoError(t, sharedtest.WriteTempFiles(modFiles), "could not create go mod file tree")
 
 			s, err := newSync(
 				myVersioningFilename,

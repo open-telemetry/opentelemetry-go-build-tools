@@ -12,26 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package commontest
+package shared
 
 import (
-	"io"
-	"log"
-	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"go.opentelemetry.io/build-tools/multimod/internal/shared/sharedtest"
 )
 
-// TestMain performs setup for the tests and suppress printing logs.
-func TestMain(m *testing.M) {
-	log.SetOutput(io.Discard)
-	os.Exit(m.Run())
-}
-
-func TestWriteTempFiles(t *testing.T) {
+func TestNewAllModulePathMap(t *testing.T) {
 	tmpRootDir := t.TempDir()
 	modFiles := map[string][]byte{
 		filepath.Join(tmpRootDir, "test", "test1", "go.mod"): []byte("module \"go.opentelemetry.io/test/test1\"\n\ngo 1.16\n\n" +
@@ -41,13 +34,17 @@ func TestWriteTempFiles(t *testing.T) {
 		filepath.Join(tmpRootDir, "test", "test2", "go.mod"): []byte("module \"go.opentelemetry.io/test/testexcluded\"\n\ngo 1.16\n"),
 	}
 
-	require.NoError(t, WriteTempFiles(modFiles), "could not create go mod file tree")
+	require.NoError(t, sharedtest.WriteTempFiles(modFiles), "could not create go mod file tree")
 
-	// check all mod files have been written correctly
-	for modPath, expectedModFile := range modFiles {
-		actual, err := os.ReadFile(filepath.Clean(modPath))
-
-		require.NoError(t, err)
-		assert.Equal(t, expectedModFile, actual)
+	expected := ModulePathMap{
+		"go.opentelemetry.io/test/test1":        ModuleFilePath(filepath.Join(tmpRootDir, "test", "test1", "go.mod")),
+		"go.opentelemetry.io/test3":             ModuleFilePath(filepath.Join(tmpRootDir, "test", "go.mod")),
+		"go.opentelemetry.io/testroot/v2":       ModuleFilePath(filepath.Join(tmpRootDir, "go.mod")),
+		"go.opentelemetry.io/test/testexcluded": ModuleFilePath(filepath.Join(tmpRootDir, "test", "test2", "go.mod")),
 	}
+
+	result, err := newAllModulePathMap(tmpRootDir)
+
+	require.NoError(t, err)
+	assert.Equal(t, expected, result)
 }

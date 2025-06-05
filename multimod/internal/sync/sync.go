@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 
 	"go.opentelemetry.io/build-tools/internal/repo"
-	"go.opentelemetry.io/build-tools/multimod/internal/common"
+	"go.opentelemetry.io/build-tools/multimod/internal/shared"
 )
 
 // Run runs the synchronization process.
@@ -38,7 +38,7 @@ func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot stri
 	log.Printf("Using repo with root at %s\n\n", myRepoRoot)
 
 	if allModuleSets {
-		otherModuleSetNames, err = common.GetAllModuleSetNames(otherVersioningFile, otherRepoRoot)
+		otherModuleSetNames, err = shared.GetAllModuleSetNames(otherVersioningFile, otherRepoRoot)
 		if err != nil {
 			log.Fatalf("could not automatically get all module set names: %v", err)
 		}
@@ -49,7 +49,7 @@ func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot stri
 		log.Fatalf("could not open repo at %v: %v", myRepoRoot, err)
 	}
 
-	if err = common.VerifyWorkingTreeClean(repo); err != nil {
+	if err = shared.VerifyWorkingTreeClean(repo); err != nil {
 		log.Fatalf("VerifyWorkingTreeClean failed: %v", err)
 	}
 
@@ -78,7 +78,7 @@ func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot stri
 		if skipModTidy {
 			log.Println("Skipping go mod tidy...")
 		} else {
-			if err := common.RunGoModTidy(s.MyModuleVersioning.ModPathMap); err != nil {
+			if err := shared.RunGoModTidy(s.MyModuleVersioning.ModPathMap); err != nil {
 				log.Printf("WARNING: failed to run 'go mod tidy': %v\n", err)
 			}
 		}
@@ -96,19 +96,19 @@ Then, if necessary, commit changes and push to upstream/make a pull request.`)
 type sync struct {
 	OtherModuleSetName       string
 	OtherModuleVersionCommit string
-	OtherModuleSet           common.ModuleSet
-	MyModuleVersioning       common.ModuleVersioning
+	OtherModuleSet           shared.ModuleSet
+	MyModuleVersioning       shared.ModuleVersioning
 	client                   *http.Client
 }
 
 func newSync(myVersioningFilename, otherVersioningFilename, modSetToUpdate, myRepoRoot string, otherVersionCommit string) (sync, error) {
-	otherModuleSet, err := common.GetModuleSet(modSetToUpdate, otherVersioningFilename)
+	otherModuleSet, err := shared.GetModuleSet(modSetToUpdate, otherVersioningFilename)
 	if err != nil {
 		return sync{}, fmt.Errorf("error creating new sync struct: %w", err)
 	}
 
 	// when syncing, always sync deps for modules, including the excluded-modules
-	myModVersioning, err := common.NewModuleVersioningWithIgnoreExcluded(myVersioningFilename, myRepoRoot, true)
+	myModVersioning, err := shared.NewModuleVersioningWithIgnoreExcluded(myVersioningFilename, myRepoRoot, true)
 	if err != nil {
 		return sync{}, fmt.Errorf("could not get my ModuleVersioning: %w", err)
 	}
@@ -149,13 +149,13 @@ func (s sync) parseVersionInfo(pkg, tag string) (string, error) {
 // updateAllGoModFiles updates ALL modules' requires sections to use the newVersion number
 // for the modules given in newModPaths.
 func (s sync) updateAllGoModFiles() error {
-	modFilePaths := make([]common.ModuleFilePath, 0, len(s.MyModuleVersioning.ModPathMap))
+	modFilePaths := make([]shared.ModuleFilePath, 0, len(s.MyModuleVersioning.ModPathMap))
 
 	for _, filePath := range s.MyModuleVersioning.ModPathMap {
 		modFilePaths = append(modFilePaths, filePath)
 	}
 
-	var newModRefs []common.ModuleRef
+	var newModRefs []shared.ModuleRef
 	for _, mod := range s.OtherModuleSet.Modules {
 		ver := s.OtherModuleSet.Version
 		if s.OtherModuleVersionCommit != "" {
@@ -166,10 +166,10 @@ func (s sync) updateAllGoModFiles() error {
 			ver = version
 		}
 		log.Printf("Version for module %q: %s\n", mod, ver)
-		newModRefs = append(newModRefs, common.ModuleRef{Path: mod, Version: ver})
+		newModRefs = append(newModRefs, shared.ModuleRef{Path: mod, Version: ver})
 	}
 
-	if err := common.UpdateGoModFiles(
+	if err := shared.UpdateGoModFiles(
 		modFilePaths,
 		newModRefs,
 	); err != nil {
@@ -180,7 +180,7 @@ func (s sync) updateAllGoModFiles() error {
 }
 
 func checkModuleSetUpToDate(repo *git.Repository) (bool, error) {
-	worktree, err := common.GetWorktree(repo)
+	worktree, err := shared.GetWorktree(repo)
 	if err != nil {
 		return false, err
 	}
