@@ -12,17 +12,24 @@ type Function struct {
 	TypeParams  []string `json:"type_params,omitempty"`
 }
 
+// APIstructField represents a struct field in the codebase.
+type APIstructField struct {
+	Name string
+	Type string
+}
+
 // APIstruct represents a struct in the codebase.
 type APIstruct struct {
-	Name   string   `json:"name"`
-	Fields []string `json:"fields"`
+	Name   string           `json:"name"`
+	Fields []APIstructField `json:"fields"`
 }
 
 // API represents the API of the codebase, including functions and structs.
 type API struct {
-	Values    []string    `json:"values,omitempty"`
-	Structs   []APIstruct `json:"structs,omitempty"`
-	Functions []Function  `json:"functions,omitempty"`
+	Values           []string    `json:"values,omitempty"`
+	Structs          []APIstruct `json:"structs,omitempty"`
+	Functions        []Function  `json:"functions,omitempty"`
+	ConfigStructName string
 }
 
 // FunctionDescription represents a function description.
@@ -35,11 +42,13 @@ type FunctionDescription struct {
 
 // Config represents the configuration for the codebase analysis.
 type Config struct {
-	IgnoredPaths     []string              `yaml:"ignored_paths"`
-	ExcludedFiles    []string              `yaml:"excluded_files"`
-	AllowedFunctions []FunctionDescription `yaml:"allowed_functions"`
-	IgnoredFunctions []string              `yaml:"ignored_functions"`
-	UnkeyedLiteral   UnkeyedLiteral        `yaml:"unkeyed_literal_initialization"`
+	IgnoredPaths       []string              `yaml:"ignored_paths"`
+	ExcludedFiles      []string              `yaml:"excluded_files"`
+	AllowedFunctions   []FunctionDescription `yaml:"allowed_functions"`
+	IgnoredFunctions   []string              `yaml:"ignored_functions"`
+	UnkeyedLiteral     UnkeyedLiteral        `yaml:"unkeyed_literal_initialization"`
+	ComponentAPI       bool                  `yaml:"component_api"`
+	ComponentAPIStrict bool                  `yaml:"component_api_strict"`
 }
 
 // UnkeyedLiteral represents the configuration for unkeyed literal initialization.
