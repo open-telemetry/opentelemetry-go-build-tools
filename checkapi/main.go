@@ -135,9 +135,11 @@ func walkFolder(cfg internal.Config, folder string, componentType string) error 
 		}
 	}
 
-	if cfg.ComponentAPI && (componentType == "connector" || componentType == "exporter" || componentType == "extension" || componentType == "processor" || componentType == "receiver") {
+	if cfg.ComponentAPI || cfg.ComponentAPIStrict && (componentType == "connector" || componentType == "exporter" || componentType == "extension" || componentType == "processor" || componentType == "receiver") {
 		if result.ConfigStructName == "" {
-			errs = append(errs, fmt.Errorf("[%s] cannot find the createDefaultConfig function", folder))
+			if cfg.ComponentAPIStrict {
+				errs = append(errs, fmt.Errorf("[%s] cannot find the createDefaultConfig function", folder))
+			}
 		} else {
 			var cfgStruct *internal.APIstruct
 			allStructs := make(map[string]struct{}, len(result.Structs))
@@ -152,7 +154,9 @@ func walkFolder(cfg internal.Config, folder string, componentType string) error 
 				}
 			}
 			if cfgStruct == nil {
-				errs = append(errs, fmt.Errorf("[%s] cannot find the config struct", folder))
+				if cfg.ComponentAPIStrict {
+					errs = append(errs, fmt.Errorf("[%s] cannot find the config struct", folder))
+				}
 			} else {
 				delete(allStructs, cfgStruct.Name)
 				filterStructs(structsByName, *cfgStruct, allStructs)

@@ -42,12 +42,13 @@ type FunctionDescription struct {
 
 // Config represents the configuration for the codebase analysis.
 type Config struct {
-	IgnoredPaths     []string              `yaml:"ignored_paths"`
-	ExcludedFiles    []string              `yaml:"excluded_files"`
-	AllowedFunctions []FunctionDescription `yaml:"allowed_functions"`
-	IgnoredFunctions []string              `yaml:"ignored_functions"`
-	UnkeyedLiteral   UnkeyedLiteral        `yaml:"unkeyed_literal_initialization"`
-	ComponentAPI     bool                  `yaml:"component_api"`
+	IgnoredPaths       []string              `yaml:"ignored_paths"`
+	ExcludedFiles      []string              `yaml:"excluded_files"`
+	AllowedFunctions   []FunctionDescription `yaml:"allowed_functions"`
+	IgnoredFunctions   []string              `yaml:"ignored_functions"`
+	UnkeyedLiteral     UnkeyedLiteral        `yaml:"unkeyed_literal_initialization"`
+	ComponentAPI       bool                  `yaml:"component_api"`
+	ComponentAPIStrict bool                  `yaml:"component_api_strict"`
 }
 
 // UnkeyedLiteral represents the configuration for unkeyed literal initialization.
