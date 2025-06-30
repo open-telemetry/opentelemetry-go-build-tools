@@ -479,3 +479,136 @@ func TestUpdateAllGoModFiles(t *testing.T) {
 		})
 	}
 }
+
+func TestUpdateAll(t *testing.T) {
+	origCC := commitChanges
+	commit = func(shared.ModuleSetRelease, bool, *git.Repository) error { return nil }
+	t.Cleanup(func() { commit = origCC })
+
+	origWTC := workingTreeClean
+	workingTreeClean = func(*git.Repository) error { return nil }
+	t.Cleanup(func() { workingTreeClean = origWTC })
+
+	dir := filepath.Join(testDataDir, "update_all")
+	vFile := filepath.Join(dir, "versions.yaml")
+
+	root := t.TempDir()
+	_, err := git.PlainInit(root, false)
+	require.NoError(t, err, "could not initialize temp git repo")
+
+	origFR := findRoot
+	findRoot = func() (string, error) { return root, nil }
+	t.Cleanup(func() { findRoot = origFR })
+
+	modFiles := map[string][]byte{
+		filepath.Join(root, "test", "test1", "go.mod"): []byte("module go.opentelemetry.io/all/test/test1\n\n" +
+			"go 1.16\n\n" +
+			"require (\n\t" +
+			"go.opentelemetry.io/all/test/test2 v0.0.1\n\t" +
+			"go.opentelemetry.io/all/v2 v2.2.2\n" +
+			"go.opentelemetry.io/other/test/test1 v1.0.0\n\t" +
+			"go.opentelemetry.io/other/v2 v2.2.2\n" +
+			")"),
+		filepath.Join(root, "test", "test2", "go.mod"): []byte("module go.opentelemetry.io/all/test/test2\n\n" +
+			"go 1.16\n\n" +
+			"require (\n\t" +
+			"go.opentelemetry.io/all/test/test1 v1.2.3-OLD\n\t" +
+			"go.opentelemetry.io/other/test/test1 v1.0.0\n\t" +
+			"go.opentelemetry.io/other/v2 v2.2.2\n" +
+			")"),
+		filepath.Join(root, "test", "go.mod"): []byte("module go.opentelemetry.io/all/test3\n\n" +
+			"go 1.16\n\n" +
+			"require (\n\t" +
+			"go.opentelemetry.io/all/test/test1 v1.2.3-OLD\n\t" +
+			"go.opentelemetry.io/all/test/test2 v0.0.1\n\t" +
+			"go.opentelemetry.io/all v0.1.0-shouldBe2\n\t" +
+			"go.opentelemetry.io/other/test2 v0.1.0\n" +
+			")"),
+		filepath.Join(root, "go.mod"): []byte("module go.opentelemetry.io/all\n\n" +
+			"go 1.16\n\n" +
+			"require (\n\t" +
+			"go.opentelemetry.io/all/test/test1 v1.2.3-OLD\n\t" +
+			"go.opentelemetry.io/all/test/test2 v0.0.1\n\t" +
+			"go.opentelemetry.io/all/test3 v0.1.0-OLD\n\t" +
+			"go.opentelemetry.io/other/test/test1 v1.0.0\n\t" +
+			")"),
+		filepath.Join(root, "v2", "go.mod"): []byte("module go.opentelemetry.io/all/v2\n\n" +
+			"go 1.16\n\n" +
+			"require (\n\t" +
+			"go.opentelemetry.io/all/test/test1 v1.2.3-OLD\n\t" +
+			"go.opentelemetry.io/all/test/test2 v0.0.1\n\t" +
+			"go.opentelemetry.io/all/test3 v0.1.0-OLD\n\t" +
+			"go.opentelemetry.io/other/test/test1 v1.0.0\n\t" +
+			")"),
+		filepath.Join(root, "excluded", "go.mod"): []byte("module go.opentelemetry.io/all/test/testexcluded\n\n" +
+			"go 1.16\n\n" +
+			"require (\n\t" +
+			"go.opentelemetry.io/all/test/test2 v0.0.1\n\t" +
+			"go.opentelemetry.io/other/test/test1 v1.0.0\n\t" +
+			"go.opentelemetry.io/other/v2 v2.2.2\n" +
+			")"),
+	}
+
+	require.NoError(t, sharedtest.WriteTempFiles(modFiles))
+	require.NoError(t, run(vFile, nil, true, false))
+
+	expected := map[string][]byte{
+		filepath.Join("test", "test1", "go.mod"): []byte("module go.opentelemetry.io/all/test/test1\n\n" +
+			"go 1.16\n\n" +
+			"require (\n\t" +
+			"go.opentelemetry.io/all/test/test2 v0.1.0\n\t" +
+			"go.opentelemetry.io/all/v2 v2.2.2\n" +
+			"go.opentelemetry.io/other/test/test1 v1.0.0\n\t" +
+			"go.opentelemetry.io/other/v2 v2.2.2\n" +
+			")"),
+		filepath.Join("test", "test2", "go.mod"): []byte("module go.opentelemetry.io/all/test/test2\n\n" +
+			"go 1.16\n\n" +
+			"require (\n\t" +
+			"go.opentelemetry.io/all/test/test1 v1.2.3-RC1+meta\n\t" +
+			"go.opentelemetry.io/other/test/test1 v1.0.0\n\t" +
+			"go.opentelemetry.io/other/v2 v2.2.2\n" +
+			")"),
+		filepath.Join("test", "go.mod"): []byte("module go.opentelemetry.io/all/test3\n\n" +
+			"go 1.16\n\n" +
+			"require (\n\t" +
+			"go.opentelemetry.io/all/test/test1 v1.2.3-RC1+meta\n\t" +
+			"go.opentelemetry.io/all/test/test2 v0.1.0\n\t" +
+			"go.opentelemetry.io/all v0.1.0\n\t" +
+			"go.opentelemetry.io/other/test2 v0.1.0\n" +
+			")"),
+		"go.mod": []byte("module go.opentelemetry.io/all\n\n" +
+			"go 1.16\n\n" +
+			"require (\n\t" +
+			"go.opentelemetry.io/all/test/test1 v1.2.3-RC1+meta\n\t" +
+			"go.opentelemetry.io/all/test/test2 v0.1.0\n\t" +
+			"go.opentelemetry.io/all/test3 v1.2.3-RC1+meta\n\t" +
+			"go.opentelemetry.io/other/test/test1 v1.0.0\n\t" +
+			")"),
+		filepath.Join("v2", "go.mod"): []byte("module go.opentelemetry.io/all/v2\n\n" +
+			"go 1.16\n\n" +
+			"require (\n\t" +
+			"go.opentelemetry.io/all/test/test1 v1.2.3-RC1+meta\n\t" +
+			"go.opentelemetry.io/all/test/test2 v0.1.0\n\t" +
+			"go.opentelemetry.io/all/test3 v1.2.3-RC1+meta\n\t" +
+			"go.opentelemetry.io/other/test/test1 v1.0.0\n\t" +
+			")"),
+		filepath.Join("excluded", "go.mod"): []byte("module go.opentelemetry.io/all/test/testexcluded\n\n" +
+			"go 1.16\n\n" +
+			"require (\n\t" +
+			"go.opentelemetry.io/all/test/test2 v0.1.0\n\t" +
+			"go.opentelemetry.io/other/test/test1 v1.0.0\n\t" +
+			"go.opentelemetry.io/other/v2 v2.2.2\n" +
+			")"),
+	}
+	for file, want := range expected {
+		path := filepath.Clean(filepath.Join(root, file))
+		got, err := os.ReadFile(path)
+		require.NoError(t, err)
+
+		assert.Equalf(
+			t,
+			string(want), string(got),
+			"file %s does not match expected output", file,
+		)
+	}
+}
