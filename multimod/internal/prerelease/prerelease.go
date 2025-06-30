@@ -31,14 +31,15 @@ import (
 )
 
 // Run runs the prerelease process.
-func Run(versioningFile string, moduleSetNames []string, allModuleSets bool, skipModTidy bool, commitToDifferentBranch bool) {
+func Run(versioningFile string, moduleSetNames []string, skipModTidy bool, commitToDifferentBranch bool) {
 	repoRoot, err := repo.FindRoot()
 	if err != nil {
 		log.Fatalf("unable to find repo root: %v", err)
 	}
 	log.Printf("Using repo with root at %s\n\n", repoRoot)
 
-	if allModuleSets {
+	// Default to all module sets.
+	if len(moduleSetNames) == 0 {
 		moduleSetNames, err = shared.GetAllModuleSetNames(versioningFile, repoRoot)
 		if err != nil {
 			log.Fatalf("could not automatically get all module set names: %v", err)
