@@ -14,8 +14,13 @@ on:
     #        *  * * * *
     - cron: '30 1 * * *'
 
+permissions:
+  contents: read
+
 jobs:
   CodeQL-Build:
+    permissions:
+      security-events: write # required for uploading SARIF results
     runs-on: ubuntu-latest
 
     steps:
