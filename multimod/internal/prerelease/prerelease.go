@@ -31,40 +31,55 @@ import (
 )
 
 // Run runs the prerelease process.
-func Run(versioningFile string, moduleSetNames []string, allModuleSets bool, skipModTidy bool, commitToDifferentBranch bool) {
-	repoRoot, err := repo.FindRoot()
+func Run(versioningFile string, moduleSetNames []string, skipModTidy bool, commitToDifferentBranch bool) {
+	err := run(versioningFile, moduleSetNames, skipModTidy, commitToDifferentBranch)
 	if err != nil {
-		log.Fatalf("unable to find repo root: %v", err)
+		log.Fatalf("prerelease failed: %v", err)
+	}
+}
+
+// Used for testing overrides.
+var (
+	workingTreeClean = shared.VerifyWorkingTreeClean
+	findRoot         = repo.FindRoot
+	commit           = commitChanges
+)
+
+func run(versioningFile string, moduleSetNames []string, skipModTidy bool, commitToDifferentBranch bool) error {
+	repoRoot, err := findRoot()
+	if err != nil {
+		return fmt.Errorf("unable to find repo root: %w", err)
 	}
 	log.Printf("Using repo with root at %s\n\n", repoRoot)
 
-	if allModuleSets {
+	// Default to all module sets.
+	if len(moduleSetNames) == 0 {
 		moduleSetNames, err = shared.GetAllModuleSetNames(versioningFile, repoRoot)
 		if err != nil {
-			log.Fatalf("could not automatically get all module set names: %v", err)
+			return fmt.Errorf("could not automatically get all module set names: %w", err)
 		}
 	}
 
 	repo, err := git.PlainOpen(repoRoot)
 	if err != nil {
-		log.Fatalf("could not open repo at %v: %v", repoRoot, err)
+		return fmt.Errorf("could not open repo at %v: %w", repoRoot, err)
 	}
 
-	if err = shared.VerifyWorkingTreeClean(repo); err != nil {
-		log.Fatalf("VerifyWorkingTreeClean failed: %v", err)
+	if err = workingTreeClean(repo); err != nil {
+		return fmt.Errorf("VerifyWorkingTreeClean failed: %w", err)
 	}
 
 	for _, moduleSetName := range moduleSetNames {
 		p, err := newPrerelease(versioningFile, moduleSetName, repoRoot)
 		if err != nil {
-			log.Fatalf("Error creating new prerelease struct: %v", err)
+			return fmt.Errorf("prerelease struct: %w", err)
 		}
 
 		log.Printf("===== Module Set: %v =====\n", moduleSetName)
 
 		modSetUpToDate, err := p.checkModuleSetUpToDate(repo)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		if modSetUpToDate {
 			log.Println("Module set already up to date (git tags already exist). Skipping...")
@@ -73,23 +88,23 @@ func Run(versioningFile string, moduleSetNames []string, allModuleSets bool, ski
 		log.Println("Updating versions for module set...")
 
 		if err = p.updateAllVersionGo(); err != nil {
-			log.Fatalf("updateAllVersionGo failed: %v", err)
+			return fmt.Errorf("updateAllVersionGo failed: %w", err)
 		}
 
 		if err = p.updateAllGoModFiles(); err != nil {
-			log.Fatalf("updateAllGoModFiles failed: %v", err)
+			return fmt.Errorf("updateAllGoModFiles failed: %w", err)
 		}
 
 		if skipModTidy {
 			log.Println("Skipping 'go mod tidy'...")
 		} else {
 			if err = shared.RunGoModTidy(p.ModPathMap); err != nil {
-				log.Fatal("could not run Go Mod Tidy: ", err)
+				return fmt.Errorf("could not run Go Mod Tidy: %w", err)
 			}
 		}
 
-		if err = commitChanges(p.ModuleSetRelease, commitToDifferentBranch, repo); err != nil {
-			log.Fatalf("commitChangesToNewBranch failed: %v", err)
+		if err = commit(p.ModuleSetRelease, commitToDifferentBranch, repo); err != nil {
+			return fmt.Errorf("commitChangesToNewBranch failed: %w", err)
 		}
 	}
 
@@ -97,6 +112,7 @@ func Run(versioningFile string, moduleSetNames []string, allModuleSets bool, ski
 Prerelease finished successfully. Now checkout the new branch(es) and verify the changes.
 
 Then, if necessary, commit changes and push to upstream/make a pull request.`)
+	return nil
 }
 
 // prerelease holds fields needed to update one module set at a time.
