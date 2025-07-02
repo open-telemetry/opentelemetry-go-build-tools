@@ -27,3 +27,8 @@ module-sets:
       - go.opentelemetry.io/testroot/v2
 excluded-modules:
   - go.opentelemetry.io/test/testexcluded
+modules:
+  go.opentelemetry.io/test/test1:
+    version-refs:
+      - ./version.go
+      - ./internal/version/distro.go
