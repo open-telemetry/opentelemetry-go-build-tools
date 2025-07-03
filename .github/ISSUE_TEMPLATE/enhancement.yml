@@ -1,0 +1,42 @@
+name: Enhancement
+description: Suggest an enhancement
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting an enhancement!
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component(s)
+      description: Which tool(s) or component(s) are related? (Select all that apply)
+      multiple: true
+      options:
+        - checkapi
+        - checkfile
+        - chloggen
+        - crosslink
+        - dbotconf
+        - githubgen
+        - gotmpl
+        - internal
+        - issuegenerator
+        - multimod
+        - semconvgen
+    validations:
+      required: false
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Enhancement Proposal
+      description: Describe your suggestion.
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Why do you want this enhancement?
+    validations:
+      required: true
