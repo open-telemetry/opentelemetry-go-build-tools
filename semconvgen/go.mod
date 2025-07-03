@@ -1,3 +1,4 @@
+// Deprecated: use https://github.com/open-telemetry/weaver instead.
 module go.opentelemetry.io/build-tools/semconvgen
 
 go 1.23.0
