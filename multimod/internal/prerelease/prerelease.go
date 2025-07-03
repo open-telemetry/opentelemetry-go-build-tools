@@ -185,7 +185,7 @@ var verRegex = regexp.MustCompile(shared.SemverRegexNumberOnly)
 // updateVersionGoFile updates all versions within the file at path to use the
 // new version number ver.
 func updateVersionGoFile(path string, ver string) error {
-	// TODO: a potential improvement is to use an AST package rather than regex
+	// TODO: There is a potential improvement is to use an AST package rather than regex
 	// to perform replacement.
 	log.Printf("... Updating version references in %s to %s\n", path, ver)
 

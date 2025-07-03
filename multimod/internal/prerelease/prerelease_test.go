@@ -635,14 +635,12 @@ func TestUpdateAll(t *testing.T) {
 
 func TestUpdateVersionGoFileErrs(t *testing.T) {
 	t.Run("NotExist", func(t *testing.T) {
-		dir := t.TempDir()
-		path := filepath.Join(dir, "version.go")
+		path := filepath.Join(t.TempDir(), "version.go")
 		err := updateVersionGoFile(path, "")
 		assert.ErrorIs(t, err, os.ErrNotExist, "version.go does not exist")
 	})
 	t.Run("ReadOnly", func(t *testing.T) {
-		dir := t.TempDir()
-		path := filepath.Join(dir, "version.go")
+		path := filepath.Join(t.TempDir(), "version.go")
 
 		const readOnlyPerm = 0444
 		file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, readOnlyPerm) // nolint:gosec  // Var filepath okay in test.
