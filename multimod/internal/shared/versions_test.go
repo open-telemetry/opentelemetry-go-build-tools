@@ -352,3 +352,50 @@ func TestBuildModulePathMap(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, expected, actual)
 }
+
+func TestAltVersionFiles(t *testing.T) {
+	vFile := filepath.Join(testDataDir, "alt_version_files/versions.yaml")
+	actual, err := readVersioningFile(vFile)
+	require.NoError(t, err)
+	assert.Equal(t, versionConfig{
+		ModuleSets: ModuleSetMap{
+			"mod-set-1": ModuleSet{
+				Version: "v0.0.1",
+				Modules: []ModulePath{
+					"go.opentelemetry.io/test/test1",
+					"go.opentelemetry.io/test/test2",
+				},
+			},
+			"mod-set-2": ModuleSet{
+				Version: "v0.1.0",
+				Modules: []ModulePath{
+					"go.opentelemetry.io/test3",
+				},
+			},
+		},
+		ExcludedModules: []ModulePath{"go.opentelemetry.io/excluded1"},
+		Modules: map[ModulePath]ModuleDef{
+			"go.opentelemetry.io/excluded1": {
+				VersionRefs: []string{
+					"./sub/pkg/version/versions.go",
+				},
+			},
+			"go.opentelemetry.io/test/test1": {
+				VersionRefs: []string{
+					"./versions.go",
+					"./internal/version/versions.go",
+				},
+			},
+			"go.opentelemetry.io/test/test2": {
+				VersionRefs: []string{
+					"./internal/deeper/version/versions.go",
+				},
+			},
+			"go.opentelemetry.io/unknown": {
+				VersionRefs: []string{
+					"../unknown/versions.go",
+				},
+			},
+		},
+	}, actual)
+}

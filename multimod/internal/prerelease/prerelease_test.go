@@ -198,6 +198,11 @@ func TestUpdateAllVersionGo(t *testing.T) {
 			"func Version() string {\n\t" +
 			"return \"1.0.0-OLD\"\n" +
 			"}\n"),
+		filepath.Join(tmpRootDir, "test", "test1", "internal", "version", "distro.go"): []byte("package version\"\n\n" +
+			"// Version is the current release version of OpenTelemetry in use.\n" +
+			"func Version() string {\n\t" +
+			"return \"1.0.0-OLD\"\n" +
+			"}\n"),
 		filepath.Join(tmpRootDir, "test", "version.go"): []byte("package test2 // import \"go.opentelemetry.io/test/test2\"\n\n" +
 			"// version is the current release version of OpenTelemetry in use.\n" +
 			"func version() string {\n\t" +
@@ -219,6 +224,11 @@ func TestUpdateAllVersionGo(t *testing.T) {
 					"func Version() string {\n\t" +
 					"return \"1.2.3-RC1+meta\"\n" +
 					"}\n"),
+				filepath.Join(tmpRootDir, "test", "test1", "internal", "version", "distro.go"): []byte("package version\"\n\n" +
+					"// Version is the current release version of OpenTelemetry in use.\n" +
+					"func Version() string {\n\t" +
+					"return \"1.2.3-RC1+meta\"\n" +
+					"}\n"),
 				filepath.Join(tmpRootDir, "test", "version.go"): []byte("package test2 // import \"go.opentelemetry.io/test/test2\"\n\n" +
 					"// version is the current release version of OpenTelemetry in use.\n" +
 					"func version() string {\n\t" +
@@ -235,6 +245,11 @@ func TestUpdateAllVersionGo(t *testing.T) {
 					"func Version() string {\n\t" +
 					"return \"1.0.0-OLD\"\n" +
 					"}\n"),
+				filepath.Join(tmpRootDir, "test", "test1", "internal", "version", "distro.go"): []byte("package version\"\n\n" +
+					"// Version is the current release version of OpenTelemetry in use.\n" +
+					"func Version() string {\n\t" +
+					"return \"1.0.0-OLD\"\n" +
+					"}\n"),
 				filepath.Join(tmpRootDir, "test", "version.go"): []byte("package test2 // import \"go.opentelemetry.io/test/test2\"\n\n" +
 					"// version is the current release version of OpenTelemetry in use.\n" +
 					"func version() string {\n\t" +
@@ -247,6 +262,11 @@ func TestUpdateAllVersionGo(t *testing.T) {
 			modSetName: "mod-set-3",
 			expectedVersionGoOutputs: map[string][]byte{
 				filepath.Join(tmpRootDir, "test", "test1", "version.go"): []byte("package test1 // import \"go.opentelemetry.io/test/test1\"\n\n" +
+					"// Version is the current release version of OpenTelemetry in use.\n" +
+					"func Version() string {\n\t" +
+					"return \"1.0.0-OLD\"\n" +
+					"}\n"),
+				filepath.Join(tmpRootDir, "test", "test1", "internal", "version", "distro.go"): []byte("package version\"\n\n" +
 					"// Version is the current release version of OpenTelemetry in use.\n" +
 					"func Version() string {\n\t" +
 					"return \"1.0.0-OLD\"\n" +
@@ -611,4 +631,23 @@ func TestUpdateAll(t *testing.T) {
 			"file %s does not match expected output", file,
 		)
 	}
+}
+
+func TestUpdateVersionGoFileErrs(t *testing.T) {
+	t.Run("NotExist", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), "version.go")
+		err := updateVersionGoFile(path, "")
+		assert.ErrorIs(t, err, os.ErrNotExist, "version.go does not exist")
+	})
+	t.Run("ReadOnly", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), "version.go")
+
+		const readOnlyPerm = 0444
+		file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, readOnlyPerm) // nolint:gosec  // Var filepath okay in test.
+		require.NoError(t, err)
+		require.NoError(t, file.Close())
+
+		err = updateVersionGoFile(path, "")
+		assert.ErrorIs(t, err, os.ErrPermission, "write error not embedded")
+	})
 }
