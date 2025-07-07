@@ -4,6 +4,36 @@
 
 <!-- next version -->
 
+## v0.24.0
+
+### 🛑 Breaking changes 🛑
+
+- `multimod`: Default to attempting pre-releasing all module sets. (#992)
+
+### 🚩 Deprecations 🚩
+
+- `semconvgen`: The semconvgen tooling is deprecated. (#1004)
+  Use Weaver instead.
+
+### 💡 Enhancements 💡
+
+- `checkapi`: Allow to check the API of components matches strictly to guidelines, with the only structs exported the Config structs. (#894)
+- `issuegenerator`: Increased search for existing issues to 6 months. (#925)
+- `multimod`: Add retries to multimod sync (#941)
+  This tries to address occasional flakes in the Go proxy.
+  
+- `multimod`: Support custom version reference files (#994)
+  A new "modules" section is parsed in the version configuration. This section
+  defines relative file paths for files that references the version of the
+  module set. If this section is not used for a module the default "version.go"
+  file at the root of the module directory is still assumed.
+  
+
+### 🧰 Bug fixes 🧰
+
+- `multimod`: Use Go errors to return error instead of logging and halting. (#1006)
+- `multimod`: Fix the multimod root command name in help text. (#991)
+
 ## v0.23.1
 
 ### 🧰 Bug fixes 🧰
