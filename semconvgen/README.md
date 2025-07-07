@@ -1,4 +1,8 @@
-# Go Semantic Convention Generator
+# ⛔️ DEPRECATED - Go Semantic Convention Generator
+
+> [!WARNING]
+> This tool is deprecated and will be removed in a future release.
+> Use [weaver] instead.
 
 This tool is designed to generate constants in a semantic convention package
 for the Go API and the collector.
@@ -33,3 +37,5 @@ A full list of available options:
   -s, --specver string                Version of semantic convention to generate. Must be an existing version tag in the specification git repository.
   -t, --template string               Template filename (default "template.j2")```
 ````
+
+[weaver]: https://github.com/open-telemetry/weaver
