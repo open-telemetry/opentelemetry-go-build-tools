@@ -48,7 +48,7 @@ func CommitChangesToNewBranch(branchName string, commitMessage string, repo *git
 	// return to original branch
 	err = checkoutExistingBranch(origRef.Name(), repo)
 	if err != nil {
-		log.Fatal("unable to checkout original branch")
+		return hash, fmt.Errorf("could not checkout original branch: %w", err)
 	}
 
 	return hash, err
