@@ -59,3 +59,8 @@ module-sets:
       - go.opentelemetry.io/otel/oteltest
 excluded-modules:
   - go.opentelemetry.io/otel/internal/tools
+modules:
+  go.opentelemetry.io/otel:
+    version-refs:
+      - ./versions.go
+      - ./internal/distro/distro.go
