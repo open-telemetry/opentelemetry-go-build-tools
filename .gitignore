@@ -21,5 +21,4 @@ dbotconf/dbotconf
 issuegenerator/issuegenerator
 gotmpl/gotmpl
 multimod/multimod
-semconvgen/semconvgen
 *.exe
