@@ -23,7 +23,6 @@ body:
         - internal
         - issuegenerator
         - multimod
-        - semconvgen
     validations:
       required: false
   - type: textarea
