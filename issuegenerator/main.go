@@ -164,8 +164,9 @@ func (rg *reportGenerator) ingestArtifacts(pathToArtifacts string) {
 				)
 			}
 
-			// We only expect one suite per file.
-			rg.testSuites[suites[0].Name] = suites[0]
+			for _, s := range suites {
+				rg.testSuites[s.Name] = s
+			}
 		}
 	}
 }

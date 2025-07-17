@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="2" failures="1" errors="0" time="1.835537">
+	<testsuite tests="1" failures="0" time="0.660000" name="package3.0" timestamp="2024-12-20T11:01:25-03:00">
+		<properties>
+			<property name="go.version" value="go1.23.1 darwin/arm64"></property>
+		</properties>
+		<testcase classname="package3.0" name="TestSuccess" time="0.000000"></testcase>
+	</testsuite>
+	<testsuite tests="1" failures="1" time="0.660000" name="package3.1" timestamp="2024-12-20T11:01:25-03:00">
+		<properties>
+			<property name="go.version" value="go1.23.1 darwin/arm64"></property>
+		</properties>
+		<testcase classname="package3.1" name="TestFailure" time="0.000000">
+			<failure message="Failed" type="">=== RUN   TestFailure&#xA;--- FAIL: TestFailure (0.00s)&#xA;</failure>
+		</testcase>
+	</testsuite>
+</testsuites>
