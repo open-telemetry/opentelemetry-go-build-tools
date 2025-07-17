@@ -55,7 +55,8 @@ func TestIngestArtifacts(t *testing.T) {
 					Message:    "",
 					Properties: map[string]string{"classname": "package1", "name": "TestSucess", "time": "0.000000"},
 					SystemOut:  "",
-					SystemErr:  ""},
+					SystemErr:  "",
+				},
 			},
 			SystemOut: "",
 			SystemErr: "",
@@ -67,7 +68,8 @@ func TestIngestArtifacts(t *testing.T) {
 				Error:    0,
 				Duration: 0,
 			},
-		}, "package2": {
+		},
+		"package2": {
 			Name:       "package2",
 			Package:    "",
 			Properties: map[string]string{"go.version": "go1.23.1 darwin/arm64"},
@@ -84,7 +86,8 @@ func TestIngestArtifacts(t *testing.T) {
 						Body:    "=== RUN   TestFailure\n--- FAIL: TestFailure (0.00s)\n",
 					}, Properties: map[string]string{"classname": "package2", "name": "TestFailure", "time": "0.000000"},
 					SystemOut: "",
-					SystemErr: ""},
+					SystemErr: "",
+				},
 				{
 					Name:       "TestSucess",
 					Classname:  "package2",
@@ -93,7 +96,8 @@ func TestIngestArtifacts(t *testing.T) {
 					Message:    "",
 					Properties: map[string]string{"classname": "package2", "name": "TestSucess", "time": "0.000000"},
 					SystemOut:  "",
-					SystemErr:  ""},
+					SystemErr:  "",
+				},
 			},
 			SystemOut: "",
 			SystemErr: "",
@@ -103,11 +107,69 @@ func TestIngestArtifacts(t *testing.T) {
 				Skipped:  0,
 				Failed:   1,
 				Error:    0,
-				Duration: 0},
+				Duration: 0,
+			},
+		},
+		"package3.0": {
+			Name:       "package3.0",
+			Package:    "",
+			Properties: map[string]string{"go.version": "go1.23.1 darwin/arm64"},
+			Tests: []junit.Test{
+				{
+					Name:       "TestSuccess",
+					Classname:  "package3.0",
+					Duration:   0,
+					Status:     "passed",
+					Message:    "",
+					Properties: map[string]string{"classname": "package3.0", "name": "TestSuccess", "time": "0.000000"},
+					SystemOut:  "",
+					SystemErr:  "",
+				},
+			},
+			SystemOut: "",
+			SystemErr: "",
+			Totals: junit.Totals{
+				Tests:    1,
+				Passed:   1,
+				Skipped:  0,
+				Failed:   0,
+				Error:    0,
+				Duration: 0,
+			},
+		},
+		"package3.1": {
+			Name:       "package3.1",
+			Package:    "",
+			Properties: map[string]string{"go.version": "go1.23.1 darwin/arm64"},
+			Tests: []junit.Test{
+				{
+					Name:      "TestFailure",
+					Classname: "package3.1",
+					Duration:  0,
+					Status:    "failed",
+					Message:   "Failed",
+					Error: junit.Error{
+						Message: "Failed",
+						Type:    "",
+						Body:    "=== RUN   TestFailure\n--- FAIL: TestFailure (0.00s)\n",
+					}, Properties: map[string]string{"classname": "package3.1", "name": "TestFailure", "time": "0.000000"},
+					SystemOut: "",
+					SystemErr: "",
+				},
+			},
+			SystemOut: "",
+			SystemErr: "",
+			Totals: junit.Totals{
+				Tests:    1,
+				Passed:   0,
+				Skipped:  0,
+				Failed:   1,
+				Error:    0,
+				Duration: 0,
+			},
 		},
 	}
 	require.Equal(t, expectedTestResults, rg.testSuites)
-
 }
 
 func TestTrimPath(t *testing.T) {
