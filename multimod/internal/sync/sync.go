@@ -15,6 +15,7 @@
 package sync
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -114,12 +115,20 @@ func newSync(myVersioningFilename, otherVersioningFilename, modSetToUpdate, myRe
 		return sync{}, fmt.Errorf("could not get my ModuleVersioning: %w", err)
 	}
 
+	retryableClient := retryablehttp.NewClient()
+	retryableClient.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+		if resp.StatusCode == http.StatusNotFound {
+			return true, nil // Retry on 404 errors
+		}
+		return retryablehttp.DefaultRetryPolicy(ctx, resp, err)
+	}
+
 	return sync{
 		OtherModuleSetName:       modSetToUpdate,
 		OtherModuleSet:           otherModuleSet,
 		MyModuleVersioning:       myModVersioning,
 		OtherModuleVersionCommit: otherVersionCommit,
-		client:                   retryablehttp.NewClient().StandardClient(),
+		client:                   retryableClient.StandardClient(),
 	}, nil
 }
 
