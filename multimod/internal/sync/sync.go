@@ -21,6 +21,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/go-git/go-git/v5"
 	"golang.org/x/sync/errgroup"
@@ -116,6 +117,12 @@ func newSync(myVersioningFilename, otherVersioningFilename, modSetToUpdate, myRe
 	}
 
 	retryableClient := retryablehttp.NewClient()
+	// https://proxy.golang.org/ states that negative caching lasts at most 30 minutes.
+	// 5 retries with exponential backoff starting at 1 minute and maxing out at 16 minutes
+	// amounts to a maximum of 31 minutes, we give up after that.
+	retryableClient.RetryWaitMin = 1 * time.Minute
+	retryableClient.RetryWaitMax = 16 * time.Minute
+	retryableClient.RetryMax = 5
 	retryableClient.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
 		if resp.StatusCode == http.StatusNotFound {
 			return true, nil // Retry on 404 errors
