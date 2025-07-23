@@ -4,6 +4,18 @@
 
 <!-- next version -->
 
+## v0.25.0
+
+### 🛑 Breaking changes 🛑
+
+- `semconvgen`: The deprecated `semconvgen` tool is removed (#1017)
+
+### 💡 Enhancements 💡
+
+- `issuegenerator`: Handle multiple test suites in ingested junit files. (#1031)
+- `multimod`: Parallelize requests to Go Proxy when doing `multimod sync`. (#1052)
+- `multimod`: Retry on 404 errors from the Go proxy (#1051)
+
 ## v0.24.0
 
 ### 🛑 Breaking changes 🛑
