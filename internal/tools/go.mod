@@ -7,10 +7,10 @@ require (
 	github.com/gogo/protobuf v1.3.2
 	github.com/golangci/golangci-lint/v2 v2.3.0
 	github.com/matryer/moq v0.4.0
-	go.opentelemetry.io/build-tools/chloggen v0.24.0
-	go.opentelemetry.io/build-tools/crosslink v0.24.0
-	go.opentelemetry.io/build-tools/dbotconf v0.24.0
-	go.opentelemetry.io/build-tools/multimod v0.24.0
+	go.opentelemetry.io/build-tools/chloggen v0.25.0
+	go.opentelemetry.io/build-tools/crosslink v0.25.0
+	go.opentelemetry.io/build-tools/dbotconf v0.25.0
+	go.opentelemetry.io/build-tools/multimod v0.25.0
 	golang.org/x/vuln v1.1.4
 )
 
@@ -213,7 +213,7 @@ require (
 	go-simpler.org/sloglint v0.11.1 // indirect
 	go.augendre.info/arangolint v0.2.0 // indirect
 	go.augendre.info/fatcontext v0.8.0 // indirect
-	go.opentelemetry.io/build-tools v0.24.0 // indirect
+	go.opentelemetry.io/build-tools v0.25.0 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
