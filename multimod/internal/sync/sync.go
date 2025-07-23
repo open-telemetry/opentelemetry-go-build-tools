@@ -21,8 +21,10 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/go-git/go-git/v5"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/hashicorp/go-retryablehttp"
 
@@ -115,6 +117,12 @@ func newSync(myVersioningFilename, otherVersioningFilename, modSetToUpdate, myRe
 	}
 
 	retryableClient := retryablehttp.NewClient()
+	// https://proxy.golang.org/ states that negative caching lasts at most 30 minutes.
+	// 5 retries with exponential backoff starting at 1 minute and maxing out at 16 minutes
+	// amounts to a maximum of 31 minutes, we give up after that.
+	retryableClient.RetryWaitMin = 1 * time.Minute
+	retryableClient.RetryWaitMax = 16 * time.Minute
+	retryableClient.RetryMax = 5
 	retryableClient.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
 		if resp.StatusCode == http.StatusNotFound {
 			return true, nil // Retry on 404 errors
@@ -164,18 +172,36 @@ func (s sync) updateAllGoModFiles() error {
 		modFilePaths = append(modFilePaths, filePath)
 	}
 
-	var newModRefs []shared.ModuleRef
+	g := new(errgroup.Group)
+	g.SetLimit(8)
+	modRefsChan := make(chan shared.ModuleRef, len(s.OtherModuleSet.Modules))
+	defer close(modRefsChan)
+
 	for _, mod := range s.OtherModuleSet.Modules {
-		ver := s.OtherModuleSet.Version
-		if s.OtherModuleVersionCommit != "" {
-			version, err := s.parseVersionInfo(string(mod), s.OtherModuleVersionCommit)
-			if err != nil {
-				return err
+		g.Go(func() error {
+			ver := s.OtherModuleSet.Version
+			if s.OtherModuleVersionCommit != "" {
+				version, err := s.parseVersionInfo(string(mod), s.OtherModuleVersionCommit)
+				if err != nil {
+					return err
+				}
+				ver = version
 			}
-			ver = version
-		}
-		log.Printf("Version for module %q: %s\n", mod, ver)
-		newModRefs = append(newModRefs, shared.ModuleRef{Path: mod, Version: ver})
+			log.Printf("Version for module %q: %s\n", mod, ver)
+			modRefsChan <- shared.ModuleRef{Path: mod, Version: ver}
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		return fmt.Errorf("error while fetching module versions: %w", err)
+	}
+
+	var newModRefs []shared.ModuleRef
+	// Collect all module references from the channel.
+	for i := 0; i < len(s.OtherModuleSet.Modules); i++ {
+		modRef := <-modRefsChan
+		newModRefs = append(newModRefs, modRef)
 	}
 
 	if err := shared.UpdateGoModFiles(

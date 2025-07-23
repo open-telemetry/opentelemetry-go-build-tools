@@ -11,6 +11,7 @@ require (
 	go.opentelemetry.io/build-tools v0.24.0
 	go.uber.org/multierr v1.11.0
 	golang.org/x/mod v0.26.0
+	golang.org/x/sync v0.16.0
 )
 
 require (
