@@ -57,6 +57,7 @@ type DistributionData struct {
 	Name        string   `yaml:"name"`
 	URL         string   `yaml:"url"`
 	Maintainers []string `yaml:"maintainers,omitempty"`
+	None        bool     `yaml:"none"` // denotes a special distribution of all the components that are not in any distribution.
 }
 
 // ChloggenConfig represents the configuration for the changelog generator.
