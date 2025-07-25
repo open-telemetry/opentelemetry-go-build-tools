@@ -75,7 +75,7 @@ type reportGenerator struct {
 
 type report struct {
 	module      string
-	failedTests []string
+	failedTests map[string]string
 }
 
 func newReportGenerator() *reportGenerator {
@@ -181,11 +181,11 @@ func (rg *reportGenerator) processTestResults() {
 
 		r := report{
 			module:      module,
-			failedTests: make([]string, 0, suite.Totals.Failed),
+			failedTests: make(map[string]string, suite.Totals.Failed),
 		}
 		for _, t := range suite.Tests {
 			if t.Status == junit.StatusFailed {
-				r.failedTests = append(r.failedTests, t.Name)
+				r.failedTests[t.Name] = t.Error.Error()
 			}
 		}
 		rg.reports = append(rg.reports, r)
@@ -335,8 +335,8 @@ func (r *report) getFailedTests() string {
 	var sb strings.Builder
 	sb.WriteString("#### Test Failures\n")
 
-	for _, s := range r.failedTests {
-		sb.WriteString("-  `" + s + "`\n")
+	for testName, testError := range r.failedTests {
+		sb.WriteString("-  `" + testName + "`\n```\n" + testError + "\n```\n")
 	}
 
 	return sb.String()

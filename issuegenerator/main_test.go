@@ -15,6 +15,7 @@
 package main
 
 import (
+	"os"
 	"testing"
 
 	"github.com/joshdk/go-junit"
@@ -199,6 +200,76 @@ func TestTrimPath(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equal(t, tt.wantModule, trimModule(tt.owner, tt.repo, tt.module), "owner: %s, repo: %s, module: %s, wantModule: %s", tt.owner, tt.repo, tt.module, tt.wantModule)
+		})
+	}
+}
+
+func TestTemplateExpansion(t *testing.T) {
+	// Create a reportGenerator and ingest test data instead of hardcoding
+	rg := newReportGenerator()
+	rg.ingestArtifacts("./testdata/junit")
+	rg.processTestResults()
+
+	// Set up the environment variables
+	rg.envVariables = map[string]string{
+		githubWorkflow:   "test-ci",
+		githubServerURL:  "https://github.com",
+		githubOwner:      "test-org",
+		githubRepository: "test-repo",
+		githubRunID:      "555555",
+	}
+
+	// Hardcoding iterator to 0 to get the first report
+	rg.reportIterator = 0
+
+	tests := []struct {
+		name     string
+		template string
+		expected string
+	}{
+		{
+			name:     "issue body template",
+			template: issueBodyTemplate,
+			expected: `
+Auto-generated report for ` + "`test-ci`" + ` job build.
+
+Link to failed build: https://github.com/test-org/test-repo/actions/runs/555555
+
+#### Test Failures
+-  ` + "`TestFailure`" + `
+` + "```" + `
+=== RUN   TestFailure
+--- FAIL: TestFailure (0.00s)
+
+` + "```" + `
+
+
+**Note**: Information about any subsequent build failures that happen while
+this issue is open, will be added as comments with more information to this issue.
+`,
+		},
+		{
+			name:     "issue comment template",
+			template: issueCommentTemplate,
+			expected: `
+Link to latest failed build: https://github.com/test-org/test-repo/actions/runs/555555
+
+#### Test Failures
+-  ` + "`TestFailure`" + `
+` + "```" + `
+=== RUN   TestFailure
+--- FAIL: TestFailure (0.00s)
+
+` + "```" + `
+
+`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := os.Expand(tt.template, rg.templateHelper)
+			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
