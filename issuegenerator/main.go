@@ -160,9 +160,10 @@ func (rg *reportGenerator) ingestArtifacts(pathToArtifacts string) {
 			if err != nil {
 				rg.logger.Error(
 					"Failed to ingest JUnit xml, omitting test results from report",
-					zap.Field(zap.String("path", file.Name())),
+					zap.String("path", file.Name()),
 					zap.Error(err),
 				)
+				continue
 			}
 
 			for _, s := range suites {
