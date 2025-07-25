@@ -46,8 +46,6 @@ type Status struct {
 type Metadata struct {
 	// Type of the component.
 	Type string `mapstructure:"type"`
-	// Type of the parent component (applicable to subcomponents).
-	Parent string `mapstructure:"parent"`
 	// Status information for the component.
 	Status *Status `mapstructure:"status"`
 }
