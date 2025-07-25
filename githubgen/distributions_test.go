@@ -21,8 +21,7 @@ func Test_distributionsGenerator_Generate(t *testing.T) {
 				RootFolder: "some-folder",
 				Components: map[string]datatype.Metadata{
 					"some-component": {
-						Type:   "otlp",
-						Parent: "",
+						Type: "otlp",
 						Status: &datatype.Status{
 							Distributions: []string{"some-distro"},
 							Class:         "exporter",
