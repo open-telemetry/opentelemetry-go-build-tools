@@ -28,20 +28,32 @@ type distOutput struct {
 func (cg *distributionsGenerator) Generate(data datatype.GithubData) error {
 	for _, dist := range data.Distributions {
 		components := map[string][]string{}
-		for _, c := range data.Components {
-			inDistro := false
-			for _, componentDistro := range c.Status.Distributions {
-				if dist.Name == componentDistro {
-					inDistro = true
-					break
+		if dist.None {
+			for _, c := range data.Components {
+				if len(c.Status.Distributions) == 0 && c.Status.Class != "" && c.Status.Class != "pkg" && c.Type != "" {
+					array, ok := components[c.Status.Class]
+					if !ok {
+						array = []string{}
+					}
+					components[c.Status.Class] = append(array, c.Type)
 				}
 			}
-			if inDistro {
-				array, ok := components[c.Status.Class]
-				if !ok {
-					array = []string{}
+		} else {
+			for _, c := range data.Components {
+				inDistro := false
+				for _, componentDistro := range c.Status.Distributions {
+					if dist.Name == componentDistro {
+						inDistro = true
+						break
+					}
 				}
-				components[c.Status.Class] = append(array, c.Type)
+				if inDistro {
+					array, ok := components[c.Status.Class]
+					if !ok {
+						array = []string{}
+					}
+					components[c.Status.Class] = append(array, c.Type)
+				}
 			}
 		}
 		for _, comps := range components {
