@@ -16,6 +16,7 @@ package shared
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/spf13/viper"
 )
@@ -29,8 +30,9 @@ const (
 
 // versionConfig is needed to parse the versions.yaml file with viper.
 type versionConfig struct {
-	ModuleSets      ModuleSetMap `mapstructure:"module-sets"`
-	ExcludedModules []ModulePath `mapstructure:"excluded-modules"`
+	ModuleSets      ModuleSetMap             `mapstructure:"module-sets"`
+	ExcludedModules []ModulePath             `mapstructure:"excluded-modules"`
+	Modules         map[ModulePath]ModuleDef `mapstructure:"modules"`
 	ignoreExcluded  bool
 }
 
@@ -56,6 +58,13 @@ type ModuleRef struct {
 	Version string
 }
 
+// ModuleDef are the definitions related to a module.
+type ModuleDef struct {
+	// VersionRefs are the files that contain the module version and need to be
+	// updated when the module version is updated.
+	VersionRefs []string `mapstructure:"version-refs"`
+}
+
 // ModuleInfoMap is a mapping from a module's import path to its ModuleInfo struct.
 type ModuleInfoMap map[ModulePath]ModuleInfo
 
@@ -64,6 +73,21 @@ type ModuleInfoMap map[ModulePath]ModuleInfo
 type ModuleInfo struct {
 	ModuleSetName string
 	Version       string
+
+	versionRefs []string
+}
+
+// VersionRefs returns the path to all version references for the module. which
+// are the files that contain the module version and need to be updated when
+// the module version is updated.
+//
+// All paths are relative to the root path provided.
+func (mi ModuleInfo) VersionRefs(root string) []string {
+	out := make([]string, len(mi.versionRefs))
+	for i, ref := range mi.versionRefs {
+		out[i] = filepath.Join(root, ref)
+	}
+	return out
 }
 
 // ModuleFilePath holds the file path to the go.mod file within the repo,
@@ -80,22 +104,25 @@ type ModuleTagName string
 // readVersioningFile reads in a versioning file (typically given as versions.yaml) and returns
 // a versionConfig struct.
 func readVersioningFile(versioningFilename string) (versionConfig, error) {
-	viper.SetConfigFile(versioningFilename)
+	// Allow '.' in configuration keys.
+	// (i.e go.opentelemetry.io/otel is a valid key).
+	v := viper.NewWithOptions(viper.KeyDelimiter("\\"))
+	v.SetConfigFile(versioningFilename)
 
 	var versionCfg versionConfig
 
-	if err := viper.ReadInConfig(); err != nil {
+	if err := v.ReadInConfig(); err != nil {
 		return versionConfig{}, fmt.Errorf("error reading versionsConfig file: %w", err)
 	}
 
-	if err := viper.Unmarshal(&versionCfg); err != nil {
+	if err := v.Unmarshal(&versionCfg); err != nil {
 		return versionConfig{}, fmt.Errorf("unable to unmarshal versionsConfig: %w", err)
 	}
 
-	if viper.ConfigFileUsed() != versioningFilename {
+	if v.ConfigFileUsed() != versioningFilename {
 		return versionConfig{}, fmt.Errorf(
 			"config file used (%v) does not match input file (%v)",
-			viper.ConfigFileUsed(),
+			v.ConfigFileUsed(),
 			versioningFilename,
 		)
 	}
@@ -125,7 +152,11 @@ func (versionCfg versionConfig) buildModuleMap() (ModuleInfoMap, error) {
 			if versionCfg.shouldExcludeModule(modPath) {
 				return nil, fmt.Errorf("module %v is an excluded module and should not be versioned", modPath)
 			}
-			modMap[modPath] = ModuleInfo{setName, moduleSet.Version}
+			modMap[modPath] = ModuleInfo{
+				setName,
+				moduleSet.Version,
+				versionCfg.Modules[modPath].VersionRefs,
+			}
 		}
 	}
 
