@@ -31,40 +31,55 @@ import (
 )
 
 // Run runs the prerelease process.
-func Run(versioningFile string, moduleSetNames []string, allModuleSets bool, skipModTidy bool, commitToDifferentBranch bool) {
-	repoRoot, err := repo.FindRoot()
+func Run(versioningFile string, moduleSetNames []string, skipModTidy bool, commitToDifferentBranch bool) {
+	err := run(versioningFile, moduleSetNames, skipModTidy, commitToDifferentBranch)
 	if err != nil {
-		log.Fatalf("unable to find repo root: %v", err)
+		log.Fatalf("prerelease failed: %v", err)
+	}
+}
+
+// Used for testing overrides.
+var (
+	workingTreeClean = shared.VerifyWorkingTreeClean
+	findRoot         = repo.FindRoot
+	commit           = commitChanges
+)
+
+func run(versioningFile string, moduleSetNames []string, skipModTidy bool, commitToDifferentBranch bool) error {
+	repoRoot, err := findRoot()
+	if err != nil {
+		return fmt.Errorf("unable to find repo root: %w", err)
 	}
 	log.Printf("Using repo with root at %s\n\n", repoRoot)
 
-	if allModuleSets {
+	// Default to all module sets.
+	if len(moduleSetNames) == 0 {
 		moduleSetNames, err = shared.GetAllModuleSetNames(versioningFile, repoRoot)
 		if err != nil {
-			log.Fatalf("could not automatically get all module set names: %v", err)
+			return fmt.Errorf("could not automatically get all module set names: %w", err)
 		}
 	}
 
 	repo, err := git.PlainOpen(repoRoot)
 	if err != nil {
-		log.Fatalf("could not open repo at %v: %v", repoRoot, err)
+		return fmt.Errorf("could not open repo at %v: %w", repoRoot, err)
 	}
 
-	if err = shared.VerifyWorkingTreeClean(repo); err != nil {
-		log.Fatalf("VerifyWorkingTreeClean failed: %v", err)
+	if err = workingTreeClean(repo); err != nil {
+		return fmt.Errorf("VerifyWorkingTreeClean failed: %w", err)
 	}
 
 	for _, moduleSetName := range moduleSetNames {
 		p, err := newPrerelease(versioningFile, moduleSetName, repoRoot)
 		if err != nil {
-			log.Fatalf("Error creating new prerelease struct: %v", err)
+			return fmt.Errorf("prerelease struct: %w", err)
 		}
 
 		log.Printf("===== Module Set: %v =====\n", moduleSetName)
 
 		modSetUpToDate, err := p.checkModuleSetUpToDate(repo)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		if modSetUpToDate {
 			log.Println("Module set already up to date (git tags already exist). Skipping...")
@@ -73,23 +88,23 @@ func Run(versioningFile string, moduleSetNames []string, allModuleSets bool, ski
 		log.Println("Updating versions for module set...")
 
 		if err = p.updateAllVersionGo(); err != nil {
-			log.Fatalf("updateAllVersionGo failed: %v", err)
+			return fmt.Errorf("updateAllVersionGo failed: %w", err)
 		}
 
 		if err = p.updateAllGoModFiles(); err != nil {
-			log.Fatalf("updateAllGoModFiles failed: %v", err)
+			return fmt.Errorf("updateAllGoModFiles failed: %w", err)
 		}
 
 		if skipModTidy {
 			log.Println("Skipping 'go mod tidy'...")
 		} else {
 			if err = shared.RunGoModTidy(p.ModPathMap); err != nil {
-				log.Fatal("could not run Go Mod Tidy: ", err)
+				return fmt.Errorf("could not run Go Mod Tidy: %w", err)
 			}
 		}
 
-		if err = commitChanges(p.ModuleSetRelease, commitToDifferentBranch, repo); err != nil {
-			log.Fatalf("commitChangesToNewBranch failed: %v", err)
+		if err = commit(p.ModuleSetRelease, commitToDifferentBranch, repo); err != nil {
+			return fmt.Errorf("commitChangesToNewBranch failed: %w", err)
 		}
 	}
 
@@ -97,6 +112,7 @@ func Run(versioningFile string, moduleSetNames []string, allModuleSets bool, ski
 Prerelease finished successfully. Now checkout the new branch(es) and verify the changes.
 
 Then, if necessary, commit changes and push to upstream/make a pull request.`)
+	return nil
 }
 
 // prerelease holds fields needed to update one module set at a time.
@@ -133,54 +149,57 @@ func (p prerelease) checkModuleSetUpToDate(repo *git.Repository) (bool, error) {
 // updateAllVersionGo updates the version.go file containing a hardcoded semver version string
 // for modules within a set, if the file exists.
 func (p prerelease) updateAllVersionGo() error {
+	var err error
 	for _, modPath := range p.ModSetPaths() {
 		modFilePath := p.ModPathMap[modPath]
+		root := filepath.Dir(string(modFilePath))
 
-		versionGoDir := filepath.Dir(string(modFilePath))
-		versionGoFilePath := filepath.Join(versionGoDir, "version.go")
-
-		// check if version.go file exists
-		_, err := os.Stat(versionGoFilePath)
-		if err != nil {
-			if os.IsNotExist(err) {
-				continue
-			}
-			return fmt.Errorf("could not check existence of %v: %w", versionGoFilePath, err)
-		}
-		if err = updateVersionGoFile(versionGoFilePath, p.ModSetVersion()); err != nil {
-			return fmt.Errorf("could not update %v: %w", versionGoFilePath, err)
+		vRefs := p.ModInfoMap[modPath].VersionRefs(root)
+		if len(vRefs) == 0 {
+			vRefs = defaultFileRefs(root)
 		}
 
+		for _, vRef := range vRefs {
+			e := updateVersionGoFile(vRef, p.ModSetVersion())
+			err = errors.Join(err, e)
+		}
 	}
-	return nil
+	return err
 }
 
-// updateVersionGoFile updates one version.go file.
-// TODO: a potential improvement is to use an AST package rather than regex to perform replacement.
-func updateVersionGoFile(filePath string, newVersion string) error {
-	if !strings.HasSuffix(filePath, "version.go") {
-		return errors.New("cannot update file passed that does not end with version.go")
-	}
-	log.Printf("... Updating file %v\n", filePath)
-
-	newVersionGoFile, err := os.ReadFile(filepath.Clean(filePath))
+func defaultFileRefs(root string) []string {
+	path := filepath.Join(root, "version.go")
+	_, err := os.Stat(path)
 	if err != nil {
-		panic(err)
+		if !os.IsNotExist(err) {
+			log.Printf("Warning: could not check existence of %v: %v\n", path, err)
+		}
+		// The file does not exist, or we cannot check its existence.
+		return nil
 	}
+	return []string{path}
+}
 
-	oldVersionRegex := shared.SemverRegexNumberOnly
-	r, err := regexp.Compile(oldVersionRegex)
+var verRegex = regexp.MustCompile(shared.SemverRegexNumberOnly)
+
+// updateVersionGoFile updates all versions within the file at path to use the
+// new version number ver.
+func updateVersionGoFile(path string, ver string) error {
+	// TODO: There is a potential improvement is to use an AST package rather than regex
+	// to perform replacement.
+	log.Printf("... Updating version references in %s to %s\n", path, ver)
+
+	data, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
-		return fmt.Errorf("error compiling regex: %w", err)
+		return fmt.Errorf("error reading version.go file %v: %w", path, err)
 	}
 
-	newVersionNumberOnly := strings.TrimPrefix(newVersion, "v")
+	v := strings.TrimPrefix(ver, "v")
+	data = verRegex.ReplaceAll(data, []byte(v))
 
-	newVersionGoFile = r.ReplaceAll(newVersionGoFile, []byte(newVersionNumberOnly))
-
-	// overwrite the version.go file
-	if err := os.WriteFile(filePath, newVersionGoFile, 0600); err != nil {
-		return fmt.Errorf("error overwriting go.mod file: %w", err)
+	// Overwrite filePath.
+	if err := os.WriteFile(path, data, 0600); err != nil {
+		return fmt.Errorf("error overwriting %s file: %w", path, err)
 	}
 
 	return nil

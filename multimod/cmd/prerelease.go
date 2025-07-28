@@ -56,7 +56,7 @@ var prereleaseCmd = &cobra.Command{
 	Run: func(*cobra.Command, []string) {
 		log.Println("Using versioning file", versioningFile)
 
-		prerelease.Run(versioningFile, moduleSetNames, allModuleSets, skipGoModTidy, commitToDifferentBranch)
+		prerelease.Run(versioningFile, moduleSetNames, skipGoModTidy, commitToDifferentBranch)
 	},
 }
 
@@ -67,23 +67,27 @@ func init() {
 	rootCmd.AddCommand(prereleaseCmd)
 
 	prereleaseCmd.Flags().BoolVarP(&allModuleSets, "all-module-sets", "a", false,
-		"Specify this flag to update versions of modules in all sets listed in the versioning file.",
+		"update versions of all modules sets",
 	)
+	prereleaseCmd.Flags().Lookup("all-module-sets").Deprecated = "default behavior"
 
-	prereleaseCmd.Flags().StringSliceVarP(&moduleSetNames, "module-set-names", "m", nil,
-		"Names of module set whose version is being changed. "+
-			"Each name be listed in the module set versioning YAML. "+
-			"To specify multiple module sets, specify set names as comma-separated values."+
-			"For example: --module-set-names=\"mod-set-1,mod-set-2\"",
+	prereleaseCmd.Flags().StringSliceVarP(
+		&moduleSetNames,
+		"module-set-names",
+		"m",
+		nil,
+		"allow-list of module sets to update",
 	)
-	if err := prereleaseCmd.MarkFlagRequired("module-set-names"); err != nil {
-		log.Fatalf("could not mark module-set-names flag as required: %v", err)
-	}
-	prereleaseCmd.Flags().BoolVarP(&skipGoModTidy, "skip-go-mod-tidy", "s", false,
-		"Specify this flag to skip calling 'go mod tidy'. "+
-			"To be used for debugging purposes. Should not be skipped during actual release.",
+	prereleaseCmd.Flags().Lookup("module-set-names").DefValue = "all modules sets"
+
+	prereleaseCmd.Flags().BoolVarP(
+		&skipGoModTidy,
+		"skip-go-mod-tidy",
+		"s",
+		false,
+		"skip calling 'go mod tidy' after update",
 	)
 	prereleaseCmd.Flags().BoolVarP(&commitToDifferentBranch, "commit-to-different-branch", "b", true,
-		"Specify this flag to commit to a different branch.",
+		"commit to a branch other than the current one",
 	)
 }

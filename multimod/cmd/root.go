@@ -34,7 +34,7 @@ const (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "versions",
+	Use:   "multimod",
 	Short: "Enables the release of Go modules with flexible versioning",
 	Long: `A Golang release versioning and tagging tool that simplifies and
 automates versioning for repos with multiple Go modules.`,
