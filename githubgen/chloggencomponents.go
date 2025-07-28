@@ -15,13 +15,14 @@ type chloggenComponentsGenerator struct {
 }
 
 func (cg *chloggenComponentsGenerator) Generate(data datatype.GithubData) error {
-	components := make([]string, 0, len(data.Components)+1)
-	components = append(components, "all")
-	for _, comp := range data.Components {
-		if comp.Status != nil {
+	components := make([]string, 1, len(data.Components)+1)
+	components[0] = "all"
+	for _, folder := range data.Folders {
+		comp := data.Components[folder]
+		if comp.Status != nil && comp.Status.Class != "" && comp.Type != "" {
 			components = append(components, fmt.Sprintf("%s/%s", comp.Status.Class, comp.Type))
 		} else {
-			components = append(components, comp.Type)
+			components = append(components, folder)
 		}
 	}
 	sort.Strings(components)
