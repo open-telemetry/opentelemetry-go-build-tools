@@ -3,7 +3,7 @@ module go.opentelemetry.io/build-tools/gotmpl
 go 1.23.0
 
 require (
-	github.com/spf13/pflag v1.0.6
+	github.com/spf13/pflag v1.0.7
 	github.com/stretchr/testify v1.10.0
 )
 

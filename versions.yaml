@@ -14,7 +14,7 @@
 
 module-sets:
   tools:
-    version: v0.23.1
+    version: v0.25.0
     modules:
       - go.opentelemetry.io/build-tools
       - go.opentelemetry.io/build-tools/checkapi
@@ -26,7 +26,6 @@ module-sets:
       - go.opentelemetry.io/build-tools/gotmpl
       - go.opentelemetry.io/build-tools/issuegenerator
       - go.opentelemetry.io/build-tools/multimod
-      - go.opentelemetry.io/build-tools/semconvgen
 
 excluded-modules:
   - go.opentelemetry.io/build-tools/internal/tools
