@@ -234,40 +234,40 @@ func readFile(ignoredFunctions []string, f *ast.File, result *API) {
 }
 
 func extractFunctionReturnType(fn *ast.FuncDecl) string {
-	if ret, ok := fn.Body.List[len(fn.Body.List)-1].(*ast.ReturnStmt); ok {
-		if len(ret.Results) == 1 {
-			switch r := ret.Results[0].(type) {
-			case *ast.UnaryExpr:
-				switch x := r.X.(type) {
-				case *ast.Ident:
-					return x.Name
-				case *ast.CompositeLit:
-					switch subt := x.Type.(type) {
-					case *ast.Ident:
-						return subt.Name
-					case *ast.SelectorExpr:
-						return subt.X.(*ast.Ident).Name
-					}
-				}
+	ret, ok := fn.Body.List[len(fn.Body.List)-1].(*ast.ReturnStmt)
+	if !ok || len(ret.Results) != 1 {
+		return ""
+	}
+	switch r := ret.Results[0].(type) {
+	case *ast.UnaryExpr:
+		switch x := r.X.(type) {
+		case *ast.Ident:
+			return x.Name
+		case *ast.CompositeLit:
+			switch subt := x.Type.(type) {
 			case *ast.Ident:
-				return r.Name
-			case *ast.CallExpr:
-				switch x := r.Fun.(type) {
-				case *ast.SelectorExpr:
-					if x.Sel.Obj != nil {
-						return extractFunctionReturnType(x.Sel.Obj.Decl.(*ast.FuncDecl))
-					}
-				case *ast.Ident:
-					if x.Obj != nil {
-						return extractFunctionReturnType(x.Obj.Decl.(*ast.FuncDecl))
-					}
-				default:
-					panic(fmt.Sprintf("[%s] Unsupported function reference %T", fn.Name.Name, x))
-				}
-			default:
-				panic(fmt.Sprintf("[%s] Unsupported type %T", fn.Name.Name, r))
+				return subt.Name
+			case *ast.SelectorExpr:
+				return subt.X.(*ast.Ident).Name
 			}
 		}
+	case *ast.Ident:
+		return r.Name
+	case *ast.CallExpr:
+		switch x := r.Fun.(type) {
+		case *ast.SelectorExpr:
+			if x.Sel.Obj != nil {
+				return extractFunctionReturnType(x.Sel.Obj.Decl.(*ast.FuncDecl))
+			}
+		case *ast.Ident:
+			if x.Obj != nil {
+				return extractFunctionReturnType(x.Obj.Decl.(*ast.FuncDecl))
+			}
+		default:
+			panic(fmt.Sprintf("[%s] Unsupported function reference %T", fn.Name.Name, x))
+		}
+	default:
+		panic(fmt.Sprintf("[%s] Unsupported type %T", fn.Name.Name, r))
 	}
 	return ""
 }
