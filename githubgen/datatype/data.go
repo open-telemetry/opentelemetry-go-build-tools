@@ -46,8 +46,6 @@ type Status struct {
 type Metadata struct {
 	// Type of the component.
 	Type string `mapstructure:"type"`
-	// Type of the parent component (applicable to subcomponents).
-	Parent string `mapstructure:"parent"`
 	// Status information for the component.
 	Status *Status `mapstructure:"status"`
 }
@@ -57,6 +55,7 @@ type DistributionData struct {
 	Name        string   `yaml:"name"`
 	URL         string   `yaml:"url"`
 	Maintainers []string `yaml:"maintainers,omitempty"`
+	None        bool     `yaml:"none"` // denotes a special distribution of all the components that are not in any distribution.
 }
 
 // ChloggenConfig represents the configuration for the changelog generator.

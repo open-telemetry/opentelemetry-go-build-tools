@@ -49,6 +49,17 @@ func Test_chloggencomponents_verifyComponentsList(t *testing.T) {
 					"no status": {
 						Type: "no_status",
 					},
+					"internal/foo": {},
+					"internal/foo2": {
+						Status: &datatype.Status{Class: "internal"},
+					},
+					"internal/foo3": {
+						Status: &datatype.Status{Class: ""},
+					},
+					"internal/foo4": {
+						Status: &datatype.Status{Class: "foo"},
+						Type:   "",
+					},
 				},
 				Chloggen: datatype.ChloggenConfig{
 					ChangeLogs:        nil,
@@ -59,7 +70,7 @@ func Test_chloggencomponents_verifyComponentsList(t *testing.T) {
 					Components:        []string{},
 				},
 			},
-			expected: datatype.ChloggenConfig{Components: []string{"all", "connector/count", "exporter/foo", "extension/bar", "no_status", "pkg/mypkg", "processor/foo", "receiver/otlp"}},
+			expected: datatype.ChloggenConfig{Components: []string{"all", "connector/count", "exporter/foo", "extension/bar", "internal/foo", "internal/foo2", "internal/foo3", "internal/foo4", "no status", "pkg/mypkg", "processor/foo", "receiver/otlp"}},
 		},
 		{
 			name: "respect existing config",
@@ -92,6 +103,11 @@ func Test_chloggencomponents_verifyComponentsList(t *testing.T) {
 					return nil
 				},
 			}
+			folders := make([]string, 0, len(tt.data.Components))
+			for comp := range tt.data.Components {
+				folders = append(folders, comp)
+			}
+			tt.data.Folders = folders
 			err := cg.Generate(tt.data)
 			require.NoError(t, err)
 		})

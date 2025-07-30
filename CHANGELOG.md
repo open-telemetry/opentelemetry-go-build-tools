@@ -4,6 +4,18 @@
 
 <!-- next version -->
 
+## v0.26.0
+
+### 💡 Enhancements 💡
+
+- `githubgen`: Support a custom distribution which contains all elements that are not in a distribution (#1068)
+- `issuegenerator`: Include test failure message in the issue comment. (#1065)
+
+### 🧰 Bug fixes 🧰
+
+- `issuegenerator`: Don't fatal when not able to ingest a JUnit report. (#1063)
+- `githubgen`: derive chloggen component name from repository path if no metadata is present (#1067)
+
 ## v0.25.0
 
 ### 🛑 Breaking changes 🛑

@@ -7,10 +7,10 @@ require (
 	github.com/gogo/protobuf v1.3.2
 	github.com/golangci/golangci-lint/v2 v2.3.0
 	github.com/matryer/moq v0.4.0
-	go.opentelemetry.io/build-tools/chloggen v0.25.0
-	go.opentelemetry.io/build-tools/crosslink v0.25.0
-	go.opentelemetry.io/build-tools/dbotconf v0.25.0
-	go.opentelemetry.io/build-tools/multimod v0.25.0
+	go.opentelemetry.io/build-tools/chloggen v0.26.0
+	go.opentelemetry.io/build-tools/crosslink v0.26.0
+	go.opentelemetry.io/build-tools/dbotconf v0.26.0
+	go.opentelemetry.io/build-tools/multimod v0.26.0
 	golang.org/x/vuln v1.1.4
 )
 
@@ -19,7 +19,7 @@ require (
 	4d63.com/gochecknoglobals v0.2.2 // indirect
 	codeberg.org/chavacava/garif v0.2.0 // indirect
 	dario.cat/mergo v1.0.2 // indirect
-	github.com/4meepo/tagalign v1.4.2 // indirect
+	github.com/4meepo/tagalign v1.4.3 // indirect
 	github.com/Abirdcfly/dupword v0.1.6 // indirect
 	github.com/AlwxSin/noinlineerr v1.0.5 // indirect
 	github.com/Antonboom/errname v1.1.0 // indirect
@@ -36,6 +36,7 @@ require (
 	github.com/alecthomas/go-check-sumtype v0.3.1 // indirect
 	github.com/alexkohler/nakedret/v2 v2.0.6 // indirect
 	github.com/alexkohler/prealloc v1.0.0 // indirect
+	github.com/alfatraining/structtag v1.0.0 // indirect
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/alingse/nilnesserr v0.2.0 // indirect
 	github.com/ashanbrown/forbidigo/v2 v2.1.0 // indirect
@@ -169,7 +170,7 @@ require (
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/ryancurrah/gomodguard v1.4.1 // indirect
 	github.com/ryanrolds/sqlclosecheck v0.5.1 // indirect
-	github.com/sagikazarmark/locafero v0.9.0 // indirect
+	github.com/sagikazarmark/locafero v0.10.0 // indirect
 	github.com/sanposhiho/wastedassign/v2 v2.1.0 // indirect
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2 // indirect
 	github.com/sashamelentyev/interfacebloat v1.1.0 // indirect
@@ -180,7 +181,7 @@ require (
 	github.com/sivchari/containedctx v1.0.3 // indirect
 	github.com/skeema/knownhosts v1.3.1 // indirect
 	github.com/sonatard/noctx v0.4.0 // indirect
-	github.com/sourcegraph/conc v0.3.0 // indirect
+	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
 	github.com/sourcegraph/go-diff v0.7.0 // indirect
 	github.com/spf13/afero v1.14.0 // indirect
 	github.com/spf13/cast v1.9.2 // indirect
@@ -213,7 +214,7 @@ require (
 	go-simpler.org/sloglint v0.11.1 // indirect
 	go.augendre.info/arangolint v0.2.0 // indirect
 	go.augendre.info/fatcontext v0.8.0 // indirect
-	go.opentelemetry.io/build-tools v0.25.0 // indirect
+	go.opentelemetry.io/build-tools v0.26.0 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
@@ -223,7 +224,7 @@ require (
 	golang.org/x/net v0.42.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect
 	golang.org/x/sys v0.34.0 // indirect
-	golang.org/x/telemetry v0.0.0-20250721140356-96f361d9aaf7 // indirect
+	golang.org/x/telemetry v0.0.0-20250729135900-28f32e417a03 // indirect
 	golang.org/x/text v0.27.0 // indirect
 	golang.org/x/tools v0.35.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
