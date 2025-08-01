@@ -1,0 +1,4 @@
+type: config
+
+status:
+  class: receiver
