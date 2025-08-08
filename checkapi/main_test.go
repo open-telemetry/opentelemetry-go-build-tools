@@ -47,6 +47,11 @@ func TestComponentConfig(t *testing.T) {
 	require.NoError(t, err, "all config structs are valid")
 }
 
+func TestComponentCallConfig(t *testing.T) {
+	err := run(filepath.Join("internal", "config", "receiver", "configcallreceiver"), filepath.Join("internal", "config", "config.yaml"))
+	require.NoError(t, err, "all config structs are valid")
+}
+
 func TestComponentConfigBadStruct(t *testing.T) {
 	err := run(filepath.Join("internal", "config", "receiver", "badconfigreceiver"), filepath.Join("internal", "config", "config.yaml"))
 	require.EqualError(t, err, "[internal/config/receiver/badconfigreceiver] these structs are not part of config and cannot be exported: ExtraStruct")
