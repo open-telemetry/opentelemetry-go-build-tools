@@ -4,6 +4,12 @@
 
 <!-- next version -->
 
+## 0.26.1
+
+### 🧰 Bug fixes 🧰
+
+- `checkapi`: Do not crash when the `createDefaultConfig` function calls out to another function (#1029)
+
 ## v0.26.0
 
 ### 💡 Enhancements 💡
