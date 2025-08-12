@@ -55,6 +55,8 @@ go.opentelemetry.io/collector/pdata/pprofile v0.131.0 h1:eQ2Yq1g6wOWHjRXum9Fm0dZ
 go.opentelemetry.io/collector/pdata/pprofile v0.131.0/go.mod h1:g4IuRFVGC89n/2bTdw0CuMJkkCY4zDb0Hu37wCKlx0c=
 go.opentelemetry.io/collector/pipeline v0.131.0 h1:D2PhrZdXxYTVm3fOL6hZMKOhne8wI+2MsgyJNp7TTlk=
 go.opentelemetry.io/collector/pipeline v0.131.0/go.mod h1:TO02zju/K6E+oFIOdi372Wk0MXd+Szy72zcTsFQwXl4=
+go.opentelemetry.io/collector/pipeline v1.38.0 h1:6kWfaWUW9RptGv2NSyT/EZoIkwUOBsZ220UYvOVNZ3U=
+go.opentelemetry.io/collector/pipeline v1.38.0/go.mod h1:TO02zju/K6E+oFIOdi372Wk0MXd+Szy72zcTsFQwXl4=
 go.opentelemetry.io/collector/receiver v1.37.0 h1:rXe+tbhoC5lRv0zW39KKrmqTYPCl1XRglu40GOiXI24=
 go.opentelemetry.io/collector/receiver v1.37.0/go.mod h1:+C8whk742qLVKsbZd/uvEBFv2T72s2FX0Xp4lPOICb4=
 go.opentelemetry.io/contrib/bridges/otelzap v0.12.0 h1:FGre0nZh5BSw7G73VpT3xs38HchsfPsa2aZtMp0NPOs=
