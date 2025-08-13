@@ -121,6 +121,37 @@ func Read(folder string, ignoredFunctions []string, excludedFiles []string) (API
 	return *result, nil
 }
 
+func interpretFieldType(f *ast.Field, expr ast.Expr) []APIstructField {
+	var fieldNames []APIstructField
+	fieldType := expr
+	switch t := fieldType.(type) {
+	case *ast.StarExpr:
+		fieldType = t.X
+	case *ast.ArrayType:
+		fieldType = t.Elt
+		if tt, ok := fieldType.(*ast.StarExpr); ok {
+			fieldType = tt.X
+		}
+	case *ast.MapType:
+		fieldType = t.Value
+		if tt, ok := fieldType.(*ast.StarExpr); ok {
+			fieldType = tt.X
+		}
+		fieldNames = interpretFieldType(f, t.Key)
+	case *ast.Ident:
+		// nothing to do
+	case *ast.ChanType:
+		fieldType = t.Value
+	case *ast.StructType:
+		// nothing to do
+	case *ast.IndexExpr:
+		fieldType = t.X
+		fieldNames = interpretFieldType(f, t.Index)
+	}
+	fieldNames = append(fieldNames, APIstructField{Name: f.Names[0].Name, Type: ExprToString(fieldType)})
+	return fieldNames
+}
+
 func readFile(ignoredFunctions []string, f *ast.File, result *API) {
 	for _, d := range f.Decls {
 		if str, isStr := d.(*ast.GenDecl); isStr {
@@ -139,22 +170,7 @@ func readFile(ignoredFunctions []string, f *ast.File, result *API) {
 							fieldNames = make([]APIstructField, 0, len(structType.Fields.List))
 							for _, f := range structType.Fields.List {
 								if len(f.Names) > 0 {
-									fieldType := f.Names[0].Obj.Decl.(*ast.Field).Type
-									switch t := fieldType.(type) {
-									case *ast.StarExpr:
-										fieldType = t.X
-									case *ast.ArrayType:
-										fieldType = t.Elt
-										if tt, ok := fieldType.(*ast.StarExpr); ok {
-											fieldType = tt.X
-										}
-									case *ast.MapType:
-										fieldType = t.Value
-										if tt, ok := fieldType.(*ast.StarExpr); ok {
-											fieldType = tt.X
-										}
-									}
-									fieldNames = append(fieldNames, APIstructField{Name: f.Names[0].Name, Type: ExprToString(fieldType)})
+									fieldNames = append(fieldNames, interpretFieldType(f, f.Names[0].Obj.Decl.(*ast.Field).Type)...)
 								} else {
 									// Embedded struct
 									fieldType := f.Type

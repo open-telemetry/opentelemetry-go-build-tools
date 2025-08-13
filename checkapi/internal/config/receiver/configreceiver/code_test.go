@@ -30,7 +30,15 @@ type Config struct {
 	Embedded
 	// Embedded struct pointer
 	*EmbeddedPtr
+	// Generic type
+	Holder GenericHolder[GenericType]
+	// Map holding types
+	MapOfStructs map[Key]Value
 }
+
+type Key struct{}
+
+type Value struct{}
 
 type PtrStruct struct {
 	Field string
@@ -51,5 +59,13 @@ type Embedded struct {
 }
 
 type EmbeddedPtr struct {
+	Foo string
+}
+
+type GenericHolder[T any] struct {
+	Value T
+}
+
+type GenericType struct {
 	Foo string
 }
