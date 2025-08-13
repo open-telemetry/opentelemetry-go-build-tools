@@ -4,6 +4,12 @@
 
 <!-- next version -->
 
+## 0.26.2
+
+### 🧰 Bug fixes 🧰
+
+- `checkapi`: Support detecting usage of a Struct as part of config when used as a generic type of a map key (#1116)
+
 ## 0.26.1
 
 ### 🧰 Bug fixes 🧰
