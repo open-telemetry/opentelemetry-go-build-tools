@@ -265,7 +265,7 @@ func TestReadDeleteEntries(t *testing.T) {
 		Note:       "broke foo",
 		Issues:     []int{123},
 	}
-	writeEntry(t, entriesDir, &entryA)
+	writeEntry(t, entriesDir, &entryA, "yaml")
 
 	entryB := Entry{
 		ChangeLogs: []string{"bar"},
@@ -275,7 +275,7 @@ func TestReadDeleteEntries(t *testing.T) {
 		Issues:     []int{345, 678},
 		SubText:    "more details",
 	}
-	writeEntry(t, entriesDir, &entryB)
+	writeEntry(t, entriesDir, &entryB, "yml")
 
 	entryC := Entry{
 		ChangeLogs: []string{},
@@ -284,7 +284,7 @@ func TestReadDeleteEntries(t *testing.T) {
 		Note:       "enhance!",
 		Issues:     []int{555},
 	}
-	writeEntry(t, entriesDir, &entryC)
+	writeEntry(t, entriesDir, &entryC, "yaml")
 
 	entryD := Entry{
 		ChangeLogs: []string{"foo", "bar"},
@@ -293,7 +293,7 @@ func TestReadDeleteEntries(t *testing.T) {
 		Note:       "deprecate something",
 		Issues:     []int{999},
 	}
-	writeEntry(t, entriesDir, &entryD)
+	writeEntry(t, entriesDir, &entryD, "yml")
 
 	// Put config and template files in entries_dir to ensure they are ignored when reading/deleting entries
 	configYAML, err := os.Create(filepath.Join(entriesDir, "config.yaml")) //nolint:gosec
@@ -338,11 +338,64 @@ func TestReadDeleteEntries(t *testing.T) {
 	assert.FileExists(t, cfg.TemplateYAML)
 }
 
-func writeEntry(t *testing.T, dir string, entry *Entry) {
+func TestFindYamlFiles_EmptyDir(t *testing.T) {
+	dir := t.TempDir()
+
+	files, err := findYamlFiles(dir)
+	require.NoError(t, err)
+	assert.Empty(t, files)
+}
+
+func TestFindYamlFiles_BothExtensions(t *testing.T) {
+	dir := t.TempDir()
+
+	yamlFile, err := os.Create(filepath.Join(dir, "one.yaml")) //nolint:gosec
+	require.NoError(t, err)
+	defer yamlFile.Close()
+
+	ymlFile, err := os.Create(filepath.Join(dir, "two.yml")) //nolint:gosec
+	require.NoError(t, err)
+	defer ymlFile.Close()
+
+	// Non-YAML file should be ignored
+	txtFile, err := os.Create(filepath.Join(dir, "ignore.txt")) //nolint:gosec
+	require.NoError(t, err)
+	defer txtFile.Close()
+
+	files, err := findYamlFiles(dir)
+	require.NoError(t, err)
+	assert.ElementsMatch(t, []string{yamlFile.Name(), ymlFile.Name()}, files)
+}
+
+func TestFindYamlFiles_NonRecursive(t *testing.T) {
+	dir := t.TempDir()
+
+	// Create a YAML file in the root dir
+	rootYAML, err := os.Create(filepath.Join(dir, "root.yaml")) //nolint:gosec
+	require.NoError(t, err)
+	defer rootYAML.Close()
+
+	// Create a subdirectory with a YAML file inside it
+	subdir := filepath.Join(dir, "nested")
+	require.NoError(t, os.Mkdir(subdir, 0750))
+
+	nestedYML, err := os.Create(filepath.Join(subdir, "nested.yml")) //nolint:gosec
+	require.NoError(t, err)
+	defer nestedYML.Close()
+
+	files, err := findYamlFiles(dir)
+	require.NoError(t, err)
+	// Should only include files directly under dir, not nested ones
+	assert.ElementsMatch(t, []string{rootYAML.Name()}, files)
+}
+
+func writeEntry(t *testing.T, dir string, entry *Entry, ext string) {
+	require.Contains(t, []string{"yaml", "yml"}, ext, "ext must be 'yaml' or 'yml'")
+
 	entryBytes, err := yaml.Marshal(entry)
 	require.NoError(t, err)
 
-	entryFile, err := os.CreateTemp(dir, "*.yaml")
+	entryFile, err := os.CreateTemp(dir, "*."+ext)
 	require.NoError(t, err)
 	defer entryFile.Close()
 

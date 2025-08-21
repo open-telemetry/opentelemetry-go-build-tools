@@ -103,7 +103,7 @@ func (e Entry) Validate(requireChangelog bool, components []string, validChangeL
 
 // ReadEntries reads changelog entries from YAML files based on the provided configuration.
 func ReadEntries(cfg *config.Config) (map[string][]*Entry, error) {
-	yamlFiles, err := filepath.Glob(filepath.Join(cfg.EntriesDir, "*.yaml"))
+	yamlFiles, err := findYamlFiles(cfg.EntriesDir)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +144,7 @@ func ReadEntries(cfg *config.Config) (map[string][]*Entry, error) {
 
 // DeleteEntries deletes changelog entries from YAML files based on the provided configuration.
 func DeleteEntries(cfg *config.Config) error {
-	yamlFiles, err := filepath.Glob(filepath.Join(cfg.EntriesDir, "*.yaml"))
+	yamlFiles, err := findYamlFiles(cfg.EntriesDir)
 	if err != nil {
 		return err
 	}
@@ -159,4 +159,20 @@ func DeleteEntries(cfg *config.Config) error {
 		}
 	}
 	return nil
+}
+
+// findYamlFiles finds all YAML files in the specified directory.
+// It includes files with both .yaml and .yml extensions.
+func findYamlFiles(dir string) ([]string, error) {
+	yamlFiles, err := filepath.Glob(filepath.Join(dir, "*.yaml"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to find YAML files in %s: %w", dir, err)
+	}
+
+	ymlFiles, err := filepath.Glob(filepath.Join(dir, "*.yml"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to find YML files in %s: %w", dir, err)
+	}
+
+	return slices.Concat(yamlFiles, ymlFiles), nil
 }
