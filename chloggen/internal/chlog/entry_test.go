@@ -338,7 +338,7 @@ func TestReadDeleteEntries(t *testing.T) {
 	assert.FileExists(t, cfg.TemplateYAML)
 }
 
-func TestFindYamlFiles_EmptyDir(t *testing.T) {
+func TestFindYamlFilesEmptyDir(t *testing.T) {
 	dir := t.TempDir()
 
 	files, err := findYamlFiles(dir)
@@ -346,7 +346,7 @@ func TestFindYamlFiles_EmptyDir(t *testing.T) {
 	assert.Empty(t, files)
 }
 
-func TestFindYamlFiles_BothExtensions(t *testing.T) {
+func TestFindYamlFilesBothExtensions(t *testing.T) {
 	dir := t.TempDir()
 
 	yamlFile, err := os.Create(filepath.Join(dir, "one.yaml")) //nolint:gosec
@@ -367,7 +367,7 @@ func TestFindYamlFiles_BothExtensions(t *testing.T) {
 	assert.ElementsMatch(t, []string{yamlFile.Name(), ymlFile.Name()}, files)
 }
 
-func TestFindYamlFiles_NonRecursive(t *testing.T) {
+func TestFindYamlFilesNonRecursive(t *testing.T) {
 	dir := t.TempDir()
 
 	// Create a YAML file in the root dir
