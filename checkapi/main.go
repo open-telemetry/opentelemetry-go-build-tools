@@ -18,6 +18,8 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/kaptinlin/jsonschema"
+
 	"go.opentelemetry.io/build-tools/checkapi/internal"
 
 	"gopkg.in/yaml.v3"
@@ -135,39 +137,69 @@ func walkFolder(cfg internal.Config, folder string, componentType string) error 
 		}
 	}
 
-	if cfg.ComponentAPI || cfg.ComponentAPIStrict && (componentType == "connector" || componentType == "exporter" || componentType == "extension" || componentType == "processor" || componentType == "receiver") {
-		if result.ConfigStructName == "" {
-			if cfg.ComponentAPIStrict {
-				errs = append(errs, fmt.Errorf("[%s] cannot find the createDefaultConfig function", folder))
-			}
+	if (!cfg.JSONSchema.CheckPresent && !cfg.JSONSchema.CheckValid && !cfg.ComponentAPI && !cfg.ComponentAPIStrict) || (componentType != "connector" && componentType != "exporter" && componentType != "extension" && componentType != "processor" && componentType != "receiver") {
+		return errors.Join(errs...)
+	}
+
+	if result.ConfigStructName == "" && cfg.ComponentAPIStrict {
+		errs = append(errs, fmt.Errorf("[%s] cannot find the createDefaultConfig function", folder))
+		return errors.Join(errs...)
+	}
+
+	var cfgStruct *internal.APIstruct
+	allStructs := make(map[string]struct{}, len(result.Structs))
+	structsByName := make(map[string]internal.APIstruct, len(result.Structs))
+	for _, s := range result.Structs {
+		if ast.IsExported(s.Name) {
+			allStructs[s.Name] = struct{}{}
+			structsByName[s.Name] = s
+		}
+		if s.Name == result.ConfigStructName {
+			cfgStruct = &s
+		}
+	}
+	if cfgStruct == nil {
+		if cfg.ComponentAPIStrict {
+			errs = append(errs, fmt.Errorf("[%s] cannot find the config struct", folder))
+		}
+		return errors.Join(errs...)
+	}
+
+	if _, err := os.Stat(filepath.Join(folder, "config.schema.json")); errors.Is(err, os.ErrNotExist) {
+		if cfg.JSONSchema.CheckPresent {
+			errs = append(errs, err)
+		}
+	} else {
+		jsonSchema, err := internal.ReadJSONSchema(folder)
+		if err != nil {
+			errs = append(errs, err)
 		} else {
-			var cfgStruct *internal.APIstruct
-			allStructs := make(map[string]struct{}, len(result.Structs))
-			structsByName := make(map[string]internal.APIstruct, len(result.Structs))
-			for _, s := range result.Structs {
-				if ast.IsExported(s.Name) {
-					allStructs[s.Name] = struct{}{}
-					structsByName[s.Name] = s
-				}
-				if s.Name == result.ConfigStructName {
-					cfgStruct = &s
-				}
+			var after *jsonschema.Schema
+			if after, err = internal.DeriveSchema(*cfgStruct, result.Structs, cfg.JSONSchema.TypeMappings); err != nil {
+				errs = append(errs, err)
+			} else if err := internal.CompareJSONSchema(jsonSchema, after); err != nil {
+				errs = append(errs, err)
+				b, _ := after.MarshalJSON()
+				errs = append(errs, fmt.Errorf("new JSON schema: %s", string(b)))
 			}
-			if cfgStruct == nil {
-				if cfg.ComponentAPIStrict {
-					errs = append(errs, fmt.Errorf("[%s] cannot find the config struct", folder))
-				}
-			} else {
-				delete(allStructs, cfgStruct.Name)
-				filterStructs(structsByName, *cfgStruct, allStructs)
-				if len(allStructs) > 0 {
-					structNames := make([]string, 0, len(allStructs))
-					for k := range allStructs {
-						structNames = append(structNames, k)
-					}
-					errs = append(errs, fmt.Errorf("[%s] these structs are not part of config and cannot be exported: %s", folder, strings.Join(structNames, ",")))
-				}
+
+		}
+	}
+
+	if cfg.ComponentAPIStrict || cfg.ComponentAPI {
+		delete(allStructs, cfgStruct.Name)
+		filterStructs(structsByName, *cfgStruct, allStructs)
+		for k, v := range structsByName {
+			if v.Internal {
+				delete(allStructs, k)
 			}
+		}
+		if len(allStructs) > 0 {
+			structNames := make([]string, 0, len(allStructs))
+			for k := range allStructs {
+				structNames = append(structNames, k)
+			}
+			errs = append(errs, fmt.Errorf("[%s] these structs are not part of config and cannot be exported: %s", folder, strings.Join(structNames, ",")))
 		}
 	}
 

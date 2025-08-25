@@ -3,7 +3,10 @@
 
 package configreceiver
 
-import "go.opentelemetry.io/collector/component"
+import (
+	"github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/config/receiver/configreceiver/internal"
+	"go.opentelemetry.io/collector/component"
+)
 
 func createDefaultConfig() component.Config {
 	fooStr := "foo"
@@ -19,15 +22,18 @@ func createDefaultConfig() component.Config {
 	}
 }
 
+type DataDefinedElsewhere string
+
 type Config struct {
-	Foo     []string
-	Bar     map[string]string
-	Bool    bool
-	StrChan chan string
-	Sub     SubConfig
-	Ptr     *PtrStruct
+	Foo              []string             `mapstructure:"foo"`
+	Bar              map[string]string    `mapstructure:"bar"`
+	Bool             bool                 `mapstructure:"bool"`
+	DefinedElsewhere DataDefinedElsewhere `mapstructure:"data_defined_elsewhere"`
+	StrChan          chan string
+	Sub              SubConfig  `mapstructure:"subconfig"`
+	Ptr              *PtrStruct `mapstructure:"ptrStruct"`
 	// Embedded struct
-	Embedded
+	internal.Embedded `mapstructure:",squash"`
 	// Embedded struct pointer
 	*EmbeddedPtr
 	// Generic type
@@ -45,17 +51,14 @@ type PtrStruct struct {
 }
 
 type SubConfig struct {
-	Foo  string
-	Bar  bool
-	Sub2 SubConfig2
+	Foo              string               `mapstructure:"foo"`
+	Bar              bool                 `mapstructure:"bar"`
+	Sub2             SubConfig2           `mapstructure:"sub_config2"`
+	DefinedElsewhere DataDefinedElsewhere `mapstructure:",squash"`
 }
 
 type SubConfig2 struct {
-	FooBar string
-}
-
-type Embedded struct {
-	Foo string
+	FooBar string `mapstructure:"foobar"`
 }
 
 type EmbeddedPtr struct {

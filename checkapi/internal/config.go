@@ -51,6 +51,14 @@ type Config struct {
 	UnkeyedLiteral     UnkeyedLiteral        `yaml:"unkeyed_literal_initialization"`
 	ComponentAPI       bool                  `yaml:"component_api"`
 	ComponentAPIStrict bool                  `yaml:"component_api_strict"`
+	JSONSchema         JSONSchemaConfig      `yaml:"json_schema"`
+}
+
+// JSONSchemaConfig represents the configuration of JSON schema validation and mapping
+type JSONSchemaConfig struct {
+	CheckPresent bool              `yaml:"check_present"`
+	CheckValid   bool              `yaml:"check_valid"`
+	TypeMappings map[string]string `yaml:"type_mappings"`
 }
 
 // UnkeyedLiteral represents the configuration for unkeyed literal initialization.
