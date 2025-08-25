@@ -9,6 +9,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"io/fs"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -97,28 +98,48 @@ func ExprToString(expr ast.Expr) string {
 func Read(folder string, ignoredFunctions []string, excludedFiles []string) (API, error) {
 	result := &API{}
 	set := token.NewFileSet()
-	packs, err := parser.ParseDir(set, folder, nil, 0)
-	if err != nil {
-		return API{}, err
-	}
 
-	for _, pack := range packs {
-	FILE:
-		for path, f := range pack.Files {
-			for _, exclusionPattern := range excludedFiles {
-				ok, err2 := filepath.Match(exclusionPattern, filepath.Base(path))
-				if err2 != nil {
-					return API{}, err2
-				}
-				if ok {
-					continue FILE
+	readErr := filepath.Walk(folder, func(path string, info fs.FileInfo, _ error) error {
+		if info.IsDir() {
+
+			isInternal := false
+			for _, s := range strings.Split(path, "/") {
+				if s == "internal" {
+					isInternal = true
 				}
 			}
-			readFile(ignoredFunctions, f, result)
-		}
-	}
+			packs, err := parser.ParseDir(set, path, nil, 0)
+			if err != nil {
+				return err
+			}
 
-	return *result, nil
+			for _, pack := range packs {
+				if err := readPackage(pack, ignoredFunctions, excludedFiles, result, isInternal); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	})
+
+	return *result, readErr
+}
+
+func readPackage(pack *ast.Package, ignoredFunctions []string, excludedFiles []string, result *API, internal bool) error { // nolint:staticcheck // SA1019
+FILE:
+	for path, f := range pack.Files {
+		for _, exclusionPattern := range excludedFiles {
+			ok, err2 := filepath.Match(exclusionPattern, filepath.Base(path))
+			if err2 != nil {
+				return err2
+			}
+			if ok {
+				continue FILE
+			}
+		}
+		readFile(ignoredFunctions, f, result, internal)
+	}
+	return nil
 }
 
 func interpretFieldType(f *ast.Field, expr ast.Expr) []APIstructField {
@@ -148,11 +169,15 @@ func interpretFieldType(f *ast.Field, expr ast.Expr) []APIstructField {
 		fieldType = t.X
 		fieldNames = interpretFieldType(f, t.Index)
 	}
-	fieldNames = append(fieldNames, APIstructField{Name: f.Names[0].Name, Type: ExprToString(fieldType)})
+	tag := ""
+	if f.Tag != nil {
+		tag = f.Tag.Value
+	}
+	fieldNames = append(fieldNames, APIstructField{Name: f.Names[0].Name, Type: ExprToString(fieldType), Tag: tag})
 	return fieldNames
 }
 
-func readFile(ignoredFunctions []string, f *ast.File, result *API) {
+func readFile(ignoredFunctions []string, f *ast.File, result *API, internal bool) {
 	for _, d := range f.Decls {
 		if str, isStr := d.(*ast.GenDecl); isStr {
 			for _, s := range str.Specs {
@@ -183,13 +208,18 @@ func readFile(ignoredFunctions []string, f *ast.File, result *API) {
 											fieldType = tt.X
 										}
 									}
-									fieldNames = append(fieldNames, APIstructField{Name: "", Type: ExprToString(fieldType)})
+									tag := ""
+									if f.Tag != nil {
+										tag = f.Tag.Value
+									}
+									fieldNames = append(fieldNames, APIstructField{Name: "", Type: ExprToString(fieldType), Tag: tag})
 								}
 							}
 						}
 						result.Structs = append(result.Structs, APIstruct{
-							Name:   t.Name.String(),
-							Fields: fieldNames,
+							Name:     t.Name.String(),
+							Fields:   fieldNames,
+							Internal: internal,
 						})
 					}
 				}

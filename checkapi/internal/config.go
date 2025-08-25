@@ -16,12 +16,14 @@ type Function struct {
 type APIstructField struct {
 	Name string
 	Type string
+	Tag  string
 }
 
 // APIstruct represents a struct in the codebase.
 type APIstruct struct {
-	Name   string           `json:"name"`
-	Fields []APIstructField `json:"fields"`
+	Name     string           `json:"name"`
+	Fields   []APIstructField `json:"fields"`
+	Internal bool             `json:"internal"`
 }
 
 // API represents the API of the codebase, including functions and structs.
