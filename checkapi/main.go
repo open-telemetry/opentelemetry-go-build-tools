@@ -177,10 +177,10 @@ func walkFolder(cfg internal.Config, folder string, componentType string) error 
 			var after *jsonschema.Schema
 			if after, err = internal.DeriveSchema(*cfgStruct, result.Structs, cfg.JSONSchema.TypeMappings); err != nil {
 				errs = append(errs, err)
-			} else if err := internal.CompareJSONSchema(jsonSchema, after); err != nil {
+			} else if err := internal.CompareJSONSchema(folder, jsonSchema, after); err != nil {
 				errs = append(errs, err)
 				b, _ := after.MarshalJSON()
-				errs = append(errs, fmt.Errorf("new JSON schema: %s", string(b)))
+				errs = append(errs, fmt.Errorf("[%s] new JSON schema: %s", folder, string(b)))
 			}
 
 		}

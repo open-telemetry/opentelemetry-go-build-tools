@@ -36,7 +36,7 @@ func TestCompareSchemas(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			err := CompareJSONSchema(test.before, test.after)
+			err := CompareJSONSchema("", test.before, test.after)
 			if test.error != "" {
 				assert.ErrorContains(t, err, test.error)
 			} else {
