@@ -4,6 +4,16 @@
 
 <!-- next version -->
 
+## v0.27.0
+
+### 💡 Enhancements 💡
+
+- `chloggen`: Add support for YAML files that use the alternate `.yml` extension (#1079)
+- `checkapi`: Add an option to check the config JSON schema matches the Config struct. (#1135)
+  Add `check_json_schema: true` to the configuration file of checkapi to enable this option.
+  
+- `checkapi`: read the structs in the component's internal packages (#1137)
+
 ## 0.26.2
 
 ### 🧰 Bug fixes 🧰
