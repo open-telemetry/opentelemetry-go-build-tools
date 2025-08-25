@@ -33,8 +33,9 @@ func TestAltConfigWithOriginalConfig(t *testing.T) {
 }
 
 func TestUnkeyedPkg(t *testing.T) {
-	err := run(filepath.Join("internal", "unkeyedpkg"), "config.yaml")
-	require.EqualError(t, err, `internal/unkeyedpkg/receiver/unkeyedreceiver struct "UnkeyedConfig" does not prevent unkeyed literal initialization`)
+	t.Chdir(filepath.Join("internal", "unkeyedpkg"))
+	err := run(".", filepath.Join("..", "..", "config.yaml"))
+	require.EqualError(t, err, `receiver/unkeyedreceiver struct "UnkeyedConfig" does not prevent unkeyed literal initialization`)
 }
 
 func TestMissingConfigFile(t *testing.T) {
