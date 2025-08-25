@@ -1,1 +1,6 @@
 component_api: true
+json_schema:
+  check_present: true
+  check_valid: true
+  type_mappings:
+    "DataDefinedElsewhere": "http://example.com/schemas/external_schema.json#/properties/data"
