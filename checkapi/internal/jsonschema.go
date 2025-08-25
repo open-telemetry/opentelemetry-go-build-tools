@@ -133,7 +133,7 @@ func compareProperties(folder string, before *jsonschema.Schema, after *jsonsche
 					for subName, subBs := range *bs.Properties {
 						subAs, ok := (*as.Properties)[subName]
 						if !ok {
-							errs = append(errs, fmt.Errorf("[%s] roperty %q is missing", folder, subName))
+							errs = append(errs, fmt.Errorf("[%s] property %q is missing", folder, subName))
 						} else {
 							errs = append(errs, compareProperties(folder, subBs, subAs))
 						}
