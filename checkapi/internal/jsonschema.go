@@ -105,37 +105,37 @@ func readTag(tag string) string {
 }
 
 // CompareJSONSchema compares the presence of fields and their types.
-func CompareJSONSchema(before *jsonschema.Schema, after *jsonschema.Schema) error {
+func CompareJSONSchema(folder string, before *jsonschema.Schema, after *jsonschema.Schema) error {
 	if before.Properties == nil && after.Properties == nil {
 		return nil
 	}
 	if before.Properties == nil || after.Properties == nil || len(*before.Properties) != len(*after.Properties) {
-		return errors.New("number of fields differ")
+		return fmt.Errorf("[%s] number of fields differ", folder)
 	}
-	return compareProperties(before, after)
+	return compareProperties(folder, before, after)
 }
 
-func compareProperties(before *jsonschema.Schema, after *jsonschema.Schema) error {
+func compareProperties(folder string, before *jsonschema.Schema, after *jsonschema.Schema) error {
 	var errs []error
 	if before.Properties != nil {
 		for name, bs := range *before.Properties {
 			as, ok := (*after.Properties)[name]
 			if !ok {
-				errs = append(errs, fmt.Errorf("field %q is missing", name))
+				errs = append(errs, fmt.Errorf("[%s] field %q is missing", folder, name))
 			} else {
 				if !slices.Equal(bs.Type, as.Type) {
-					errs = append(errs, fmt.Errorf("field %q type changed", name))
+					errs = append(errs, fmt.Errorf("[%s] field %q type changed", folder, name))
 				}
 				if bs.Ref != as.Ref {
-					errs = append(errs, fmt.Errorf("field %q ref changed", name))
+					errs = append(errs, fmt.Errorf("[%s] field %q ref changed", folder, name))
 				}
 				if bs.Properties != nil {
 					for subName, subBs := range *bs.Properties {
 						subAs, ok := (*as.Properties)[subName]
 						if !ok {
-							errs = append(errs, fmt.Errorf("property %q is missing", subName))
+							errs = append(errs, fmt.Errorf("[%s] property %q is missing", folder, subName))
 						} else {
-							errs = append(errs, compareProperties(subBs, subAs))
+							errs = append(errs, compareProperties(folder, subBs, subAs))
 						}
 					}
 				}
@@ -143,12 +143,12 @@ func compareProperties(before *jsonschema.Schema, after *jsonschema.Schema) erro
 		}
 	}
 	if len(before.AllOf) != len(after.AllOf) {
-		errs = append(errs, fmt.Errorf("references length do not match %d %d", len(before.AllOf), len(after.AllOf)))
+		errs = append(errs, fmt.Errorf("[%s] references length do not match %d %d", folder, len(before.AllOf), len(after.AllOf)))
 	}
 	for i, b := range before.AllOf {
 		a := after.AllOf[i]
 		if a.Ref != b.Ref {
-			errs = append(errs, fmt.Errorf("references do not match %q %q", a.Ref, b.Ref))
+			errs = append(errs, fmt.Errorf("[%s] references do not match %q %q", folder, a.Ref, b.Ref))
 		}
 	}
 	return errors.Join(errs...)
