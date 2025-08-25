@@ -10,6 +10,7 @@ import (
 	"go/parser"
 	"go/token"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -103,7 +104,7 @@ func Read(folder string, ignoredFunctions []string, excludedFiles []string) (API
 		if info.IsDir() {
 
 			isInternal := false
-			for _, s := range strings.Split(path, "/") {
+			for _, s := range strings.Split(path, string(os.PathSeparator)) {
 				if s == "internal" {
 					isInternal = true
 				}

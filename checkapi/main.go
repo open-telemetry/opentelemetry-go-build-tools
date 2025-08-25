@@ -216,6 +216,9 @@ func filterStructs(structMap map[string]internal.APIstruct, current internal.API
 }
 
 func checkStructDisallowUnkeyedLiteral(cfg internal.Config, s internal.APIstruct, folder string) error {
+	if s.Internal {
+		return nil
+	}
 	if !unicode.IsUpper(rune(s.Name[0])) {
 		return nil
 	}
