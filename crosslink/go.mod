@@ -7,7 +7,7 @@ require (
 	github.com/otiai10/copy v1.14.1
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.7
-	github.com/stretchr/testify v1.11.0
+	github.com/stretchr/testify v1.11.1
 	go.opentelemetry.io/build-tools v0.27.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/mod v0.27.0
