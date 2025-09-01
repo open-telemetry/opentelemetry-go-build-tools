@@ -1,6 +1,6 @@
 module github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/config/receiver/configreceiver
 
-go 1.23.7
+go 1.24.0
 
 require go.opentelemetry.io/collector/component v1.38.0
 
