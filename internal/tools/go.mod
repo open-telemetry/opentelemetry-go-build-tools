@@ -6,7 +6,7 @@ require (
 	github.com/client9/misspell v0.3.4
 	github.com/gogo/protobuf v1.3.2
 	github.com/golangci/golangci-lint/v2 v2.3.1
-	github.com/matryer/moq v0.4.0
+	github.com/matryer/moq v0.6.0
 	go.opentelemetry.io/build-tools/chloggen v0.27.0
 	go.opentelemetry.io/build-tools/crosslink v0.27.0
 	go.opentelemetry.io/build-tools/dbotconf v0.27.0
