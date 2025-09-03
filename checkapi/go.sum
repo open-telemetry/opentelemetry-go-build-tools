@@ -11,8 +11,8 @@ github.com/gotnospirit/makeplural v0.0.0-20180622080156-a5f48d94d976 h1:b70jEaX2
 github.com/gotnospirit/makeplural v0.0.0-20180622080156-a5f48d94d976/go.mod h1:ZGQeOwybjD8lkCjIyJfqR5LD2wMVHJ31d6GdPxoTsWY=
 github.com/gotnospirit/messageformat v0.0.0-20221001023931-dfe49f1eb092 h1:c7gcNWTSr1gtLp6PyYi3wzvFCEcHJ4YRobDgqmIgf7Q=
 github.com/gotnospirit/messageformat v0.0.0-20221001023931-dfe49f1eb092/go.mod h1:ZZAN4fkkful3l1lpJwF8JbW41ZiG9TwJ2ZlqzQovBNU=
-github.com/kaptinlin/go-i18n v0.1.4 h1:wCiwAn1LOcvymvWIVAM4m5dUAMiHunTdEubLDk4hTGs=
-github.com/kaptinlin/go-i18n v0.1.4/go.mod h1:g1fn1GvTgT4CiLE8/fFE1hboHWJ6erivrDpiDtCcFKg=
+github.com/kaptinlin/go-i18n v0.1.5 h1:7hNfKUi+JzlOToOPv5iUtL/r6mWNOdRtDLhWJ33kWio=
+github.com/kaptinlin/go-i18n v0.1.5/go.mod h1:oOfNMf/GDapNftSGH/1anXPEPjCqp4ZS6sC/H92KYNs=
 github.com/kaptinlin/jsonschema v0.4.9 h1:sfdbYV7Ua9Ad2IsJoeqF4J2CJOcZDFKnV+90DWTOewE=
 github.com/kaptinlin/jsonschema v0.4.9/go.mod h1:zG+WOWvAxUaPUnh83QrV/a/fsfloI6L6d/YM4mtZCHw=
 github.com/kr/pretty v0.2.1/go.mod h1:ipq/a2n7PKx3OHsz4KJII5eveXtPO4qwEXGdVfWzfnI=
