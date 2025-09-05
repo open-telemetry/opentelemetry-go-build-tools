@@ -13,8 +13,8 @@ github.com/gotnospirit/messageformat v0.0.0-20221001023931-dfe49f1eb092 h1:c7gcN
 github.com/gotnospirit/messageformat v0.0.0-20221001023931-dfe49f1eb092/go.mod h1:ZZAN4fkkful3l1lpJwF8JbW41ZiG9TwJ2ZlqzQovBNU=
 github.com/kaptinlin/go-i18n v0.1.5 h1:7hNfKUi+JzlOToOPv5iUtL/r6mWNOdRtDLhWJ33kWio=
 github.com/kaptinlin/go-i18n v0.1.5/go.mod h1:oOfNMf/GDapNftSGH/1anXPEPjCqp4ZS6sC/H92KYNs=
-github.com/kaptinlin/jsonschema v0.4.11 h1:6x9ns6PhE6ULF8dLisC9a86rsw3KYQ2Uoi782Ez0Ups=
-github.com/kaptinlin/jsonschema v0.4.11/go.mod h1:zG+WOWvAxUaPUnh83QrV/a/fsfloI6L6d/YM4mtZCHw=
+github.com/kaptinlin/jsonschema v0.4.12 h1:10cy+j2b69jyOX+F+u9suLK2dw0k63UqzUNctpxiV3A=
+github.com/kaptinlin/jsonschema v0.4.12/go.mod h1:zG+WOWvAxUaPUnh83QrV/a/fsfloI6L6d/YM4mtZCHw=
 github.com/kr/pretty v0.2.1/go.mod h1:ipq/a2n7PKx3OHsz4KJII5eveXtPO4qwEXGdVfWzfnI=
 github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=
 github.com/kr/pretty v0.3.1/go.mod h1:hoEshYVHaxMs3cyo3Yncou5ZscifuDolrwPKZanG3xk=
