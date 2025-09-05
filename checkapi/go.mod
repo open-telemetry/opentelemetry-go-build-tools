@@ -3,7 +3,7 @@ module go.opentelemetry.io/build-tools/checkapi
 go 1.24.0
 
 require (
-	github.com/kaptinlin/jsonschema v0.4.10
+	github.com/kaptinlin/jsonschema v0.4.11
 	github.com/stretchr/testify v1.11.1
 	gopkg.in/yaml.v3 v3.0.1
 )
