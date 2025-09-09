@@ -51,6 +51,9 @@ Auto-generated report for ${jobName} job build.
 
 Link to failed build: ${linkToBuild}
 
+### Component(s)
+${component}
+
 ${failedTests}
 
 **Note**: Information about any subsequent build failures that happen while
@@ -94,6 +97,14 @@ func newReportGenerator() *reportGenerator {
 
 func trimModule(owner, repo, module string) string {
 	return strings.TrimPrefix(module, fmt.Sprintf("github.com/%s/%s/", owner, repo))
+}
+
+func getComponent(module string) string {
+	parts := strings.Split(module, "/")
+	if len(parts) >= 2 {
+		return strings.Join(parts[:2], "/")
+	}
+	return module
 }
 
 func main() {
@@ -232,13 +243,17 @@ func (rg *reportGenerator) getRequiredEnv() {
 }
 
 func (rg *reportGenerator) templateHelper(param string) string {
+	currentReport := rg.reports[rg.reportIterator]
 	switch param {
 	case "jobName":
 		return "`" + rg.envVariables[githubWorkflow] + "`"
 	case "linkToBuild":
 		return fmt.Sprintf("%s/%s/%s/actions/runs/%s", rg.envVariables[githubServerURL], rg.envVariables[githubOwner], rg.envVariables[githubRepository], rg.envVariables[githubRunID])
 	case "failedTests":
-		return rg.reports[rg.reportIterator].getFailedTests()
+		return currentReport.getFailedTests()
+	case "component":
+		trimmedModule := trimModule(rg.envVariables[githubOwner], rg.envVariables[githubRepository], currentReport.module)
+		return getComponent(trimmedModule)
 	default:
 		return ""
 	}
