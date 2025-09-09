@@ -32,11 +32,28 @@ func combineModuleTagNamesAndVersion(modTagNames []ModuleTagName, version string
 		if modTagName == RepoRootTag {
 			newFullTag = version
 		} else {
-			newFullTag = string(modTagName) + "/" + version
+			// Handle vN subdirectory modules - tag as <module_path>/vN.x.x not <module_path>/vN/vN.x.x
+			modTagStr := string(modTagName)
+
+			// Case 1: Root-level vN module (e.g., "v5" -> "v5.0.0", "v10" -> "v10.0.0")
+			if isRootLevelVNModule(modTagStr, version) {
+				newFullTag = version
+			} else if vIdx := strings.LastIndex(modTagStr, "/v"); vIdx != -1 {
+				// Case 2: Subdirectory vN module (e.g., "detectors/aws/ec2/v2" -> "detectors/aws/ec2/v2.0.0")
+				vPart := modTagStr[vIdx+2:] // Extract the part after "/v"
+				if isValidVNPart(vPart) && versionMatchesVN(vPart, version) {
+					// e.g., detectors/aws/ec2/v2 + v2.0.0 => detectors/aws/ec2/v2.0.0
+					newFullTag = modTagStr[:vIdx] + "/" + version
+				} else {
+					newFullTag = modTagStr + "/" + version
+				}
+			} else {
+				// Case 3: Regular module (e.g., "foo/bar" -> "foo/bar/v1.2.3")
+				newFullTag = modTagStr + "/" + version
+			}
 		}
 		modFullTags = append(modFullTags, newFullTag)
 	}
-
 	return modFullTags
 }
 
@@ -109,4 +126,63 @@ func moduleFilePathsToTagNames(modFilePaths []ModuleFilePath, repoRoot string) (
 	}
 
 	return modNames, nil
+}
+
+// isRootLevelVNModule checks if a module tag is a root-level vN module (e.g., "v2", "v10", "v123")
+// and if the version matches the module's major version.
+func isRootLevelVNModule(modTagStr, version string) bool {
+	if len(modTagStr) < 2 || modTagStr[0] != 'v' {
+		return false
+	}
+
+	// Extract version number from module tag (e.g., "v10" -> "10")
+	versionPart := modTagStr[1:]
+	if !isValidVNPart(versionPart) {
+		return false
+	}
+
+	return versionMatchesVN(versionPart, version)
+}
+
+// isValidVNPart checks if a string is a valid version number (digits only, >= 2)
+func isValidVNPart(vPart string) bool {
+	if len(vPart) == 0 {
+		return false
+	}
+
+	// Must be all digits
+	for _, char := range vPart {
+		if char < '0' || char > '9' {
+			return false
+		}
+	}
+
+	// Must be >= 2 (v0 and v1 don't use subdirectories)
+	if len(vPart) == 1 && vPart[0] < '2' {
+		return false
+	}
+
+	return true
+}
+
+// versionMatchesVN checks if a version string (e.g., "v10.0.0") matches the expected vN part (e.g., "10")
+func versionMatchesVN(vPart, version string) bool {
+	if len(version) < 2 || version[0] != 'v' {
+		return false
+	}
+
+	// Extract major version from version string (e.g., "v10.0.0" -> "10")
+	versionRest := version[1:]
+
+	// Find the first dot or end of string
+	majorVersionEnd := len(versionRest)
+	for i, char := range versionRest {
+		if char == '.' || char == '-' || char == '+' {
+			majorVersionEnd = i
+			break
+		}
+	}
+
+	majorVersion := versionRest[:majorVersionEnd]
+	return majorVersion == vPart
 }
