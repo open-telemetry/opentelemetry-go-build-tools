@@ -9,8 +9,6 @@ permissions:
 env:
   # Path to where test results will be saved.
   TEST_RESULTS: /tmp/test-results
-  # Default minimum version of Go to support.
-  DEFAULT_GO_VERSION: "~1.24.0"
 jobs:
   lint:
     strategy:
@@ -21,7 +19,7 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6
       with:
-        go-version: ${{ env.DEFAULT_GO_VERSION }}
+        go-version: oldstable
         check-latest: true
 
     - name: Checkout Repo
@@ -74,7 +72,7 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6
       with:
-        go-version: ${{ env.DEFAULT_GO_VERSION }}
+        go-version: oldstable
         check-latest: true
 
     - name: Checkout Repo
@@ -102,7 +100,7 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6
       with:
-        go-version: ${{ env.DEFAULT_GO_VERSION }}
+        go-version: oldstable
         check-latest: true
 
     - name: Checkout Repo
