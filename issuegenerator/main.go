@@ -36,6 +36,8 @@ const (
 	githubOwnerAndRepository = "GITHUB_REPOSITORY"
 	githubWorkflow           = "GITHUB_ACTION"
 	githubAPITokenKey        = "GITHUB_TOKEN" // #nosec G101
+	githubSHAKey             = "GITHUB_SHA"
+	githubRefKey             = "GITHUB_REF"
 
 	githubOwner      = "githubOwner"
 	githubRepository = "githubRepository"
@@ -51,6 +53,8 @@ const (
 Auto-generated report for ${jobName} job build.
 
 Link to failed build: ${linkToBuild}
+Commit: ${commit}
+PR: ${pr}
 
 ### Component(s)
 ${component}
@@ -62,6 +66,8 @@ this issue is open, will be added as comments with more information to this issu
 `
 	issueCommentTemplate = `
 Link to latest failed build: ${linkToBuild}
+Commit: ${commit}
+PR: ${pr}
 
 ${failedTests}
 `
@@ -239,6 +245,8 @@ func (rg *reportGenerator) getRequiredEnv() {
 	env[githubServerURL] = os.Getenv(githubServerURL)
 	env[githubRunID] = os.Getenv(githubRunID)
 	env[githubAPITokenKey] = os.Getenv(githubAPITokenKey)
+	env[githubSHAKey] = os.Getenv(githubSHAKey)
+	env[githubRefKey] = os.Getenv(githubRefKey)
 
 	for k, v := range env {
 		if v == "" {
@@ -264,6 +272,16 @@ func (rg *reportGenerator) templateHelper(param string) string {
 	case "component":
 		trimmedModule := trimModule(rg.envVariables[githubOwner], rg.envVariables[githubRepository], currentReport.module)
 		return getComponent(trimmedModule)
+	case "commit":
+		return rg.envVariables[githubSHAKey]
+	case "pr":
+		ref := rg.envVariables[githubRefKey]
+		parts := strings.Split(ref, "/")
+		if len(parts) == 4 && parts[1] == "pull" {
+			return "#" + parts[2]
+		}
+		rg.logger.Warn("Could not parse PR from GITHUB_REF", zap.String("GITHUB_REF", ref))
+		return "N/A"
 	default:
 		return ""
 	}
