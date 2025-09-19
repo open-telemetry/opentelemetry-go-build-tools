@@ -14,7 +14,7 @@ require (
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/goccy/go-yaml v1.18.0 // indirect
 	github.com/kaptinlin/go-i18n v0.1.6 // indirect
-	github.com/kaptinlin/messageformat-go v0.4.0 // indirect
+	github.com/kaptinlin/messageformat-go v0.4.4 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
