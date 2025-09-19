@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// package github handles interaction with Github through the [Client].
+// Package github handles interaction with Github through the [Client].
 package github
 
 import (
