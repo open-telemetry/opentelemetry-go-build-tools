@@ -26,9 +26,10 @@ import (
 	"strings"
 
 	"github.com/google/go-github/github"
-	"go.opentelemetry.io/build-tools/issuegenerator/internal/report"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
+
+	"go.opentelemetry.io/build-tools/issuegenerator/internal/report"
 )
 
 const (

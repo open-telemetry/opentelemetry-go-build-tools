@@ -22,8 +22,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/build-tools/issuegenerator/internal/report"
 	"go.uber.org/zap/zaptest"
+
+	"go.opentelemetry.io/build-tools/issuegenerator/internal/report"
 )
 
 func TestTemplateExpansion(t *testing.T) {

@@ -21,9 +21,10 @@ import (
 	"fmt"
 	"os"
 
+	"go.uber.org/zap"
+
 	"go.opentelemetry.io/build-tools/issuegenerator/internal/github"
 	"go.opentelemetry.io/build-tools/issuegenerator/internal/report"
-	"go.uber.org/zap"
 )
 
 func main() {
