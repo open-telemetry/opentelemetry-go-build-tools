@@ -15,7 +15,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -204,12 +203,10 @@ func TestBadRootPath(t *testing.T) {
 	mockConfig := cl.DefaultRunConfig()
 	args := []string{}
 
-	// under the assumption that this is not a nested git repository
-	err := os.Chdir("/../../..")
-	assert.NoError(t, err, "failed to change working directory")
+	t.Chdir(t.TempDir())
 	comCfg.runConfig = mockConfig
 
-	err = comCfg.rootCommand.ParseFlags(args)
+	err := comCfg.rootCommand.ParseFlags(args)
 	if err != nil {
 		t.Errorf("Failed to parse flags: %v", err)
 	}

@@ -9,8 +9,6 @@ permissions:
 env:
   # Path to where test results will be saved.
   TEST_RESULTS: /tmp/test-results
-  # Default minimum version of Go to support.
-  DEFAULT_GO_VERSION: "~1.24.0"
 jobs:
   lint:
     strategy:
@@ -19,9 +17,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
     - name: Install Go
-      uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
+      uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6
       with:
-        go-version: ${{ env.DEFAULT_GO_VERSION }}
+        go-version: oldstable
         check-latest: true
 
     - name: Checkout Repo
@@ -72,9 +70,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
     - name: Install Go
-      uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
+      uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6
       with:
-        go-version: ${{ env.DEFAULT_GO_VERSION }}
+        go-version: oldstable
         check-latest: true
 
     - name: Checkout Repo
@@ -100,9 +98,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Install Go
-      uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
+      uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6
       with:
-        go-version: ${{ env.DEFAULT_GO_VERSION }}
+        go-version: oldstable
         check-latest: true
 
     - name: Checkout Repo
@@ -130,7 +128,7 @@ jobs:
         cp coverage.html $TEST_RESULTS
 
     - name: Upload coverage report
-      uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5.5.0
+      uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
       with:
         file: ./coverage.txt
         fail_ci_if_error: true
