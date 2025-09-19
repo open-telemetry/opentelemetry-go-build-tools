@@ -224,6 +224,8 @@ func TestTemplateExpansion(t *testing.T) {
 		githubOwner:      "test-org",
 		githubRepository: "test-repo",
 		githubRunID:      "555555",
+		githubSHAKey:     "abcde12345",
+		githubRefKey:     "refs/pull/1234/merge",
 	}
 
 	// Sort the reports by module name to ensure deterministic order
@@ -245,6 +247,8 @@ func TestTemplateExpansion(t *testing.T) {
 Auto-generated report for ` + "`test-ci`" + ` job build.
 
 Link to failed build: https://github.com/test-org/test-repo/actions/runs/555555
+Commit: abcde12345
+PR: #1234
 
 ### Component(s)
 ` + "package1" + `
@@ -267,6 +271,8 @@ this issue is open, will be added as comments with more information to this issu
 			template: issueCommentTemplate,
 			expected: `
 Link to latest failed build: https://github.com/test-org/test-repo/actions/runs/555555
+Commit: abcde12345
+PR: #1234
 
 #### Test Failures
 -  ` + "`TestFailure`" + `
