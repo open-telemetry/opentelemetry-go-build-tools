@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// package github handles interaction with Github through the [Client].
 package github
 
 import (
@@ -70,17 +71,19 @@ ${failedTests}
 `
 )
 
-// CommaSeparatedSet is a custom type for parsing comma-separated values.
+// CommaSeparatedList is a custom type for parsing comma-separated values.
 type CommaSeparatedList []string
 
 var _ encoding.TextMarshaler = (*CommaSeparatedList)(nil)
 
+// MarshalText is needed for flag.TextVar support.
 func (c CommaSeparatedList) MarshalText() ([]byte, error) {
 	return []byte(strings.Join(c, ",")), nil
 }
 
 var _ encoding.TextUnmarshaler = (*CommaSeparatedList)(nil)
 
+// UnmarshalText is needed for flag.TextVar support.
 func (c *CommaSeparatedList) UnmarshalText(text []byte) error {
 	for _, key := range strings.Split(string(text), ",") {
 		key = strings.TrimSpace(key)
@@ -92,6 +95,7 @@ func (c *CommaSeparatedList) UnmarshalText(text []byte) error {
 	return nil
 }
 
+// ClientConfig includes all the configuration to create a [Client].
 type ClientConfig struct {
 	Labels CommaSeparatedList
 }
@@ -102,6 +106,7 @@ func (c *ClientConfig) labelsCopy() []string {
 	return newSlice
 }
 
+// Client for Github interaction
 type Client struct {
 	logger       *zap.Logger
 	client       *github.Client
@@ -109,6 +114,7 @@ type Client struct {
 	cfg          ClientConfig
 }
 
+// NewClient creates a new client.
 func NewClient(ctx context.Context, logger *zap.Logger, cfg ClientConfig) (*Client, error) {
 	env, err := getRequiredEnv()
 	if err != nil {

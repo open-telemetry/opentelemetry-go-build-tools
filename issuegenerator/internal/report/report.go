@@ -12,16 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// package report handles [Report] generation via the [Generator].
 package report
 
 import "strings"
 
+// Report on failing tests.
 type Report struct {
 	Module      string
 	FailedTests map[string]string
 }
 
-// getFailedTests returns information about failed tests if available, otherwise
+// FailedTestsMD returns information about failed tests if available, otherwise
 // an empty string.
 func (r *Report) FailedTestsMD() string {
 	if len(r.FailedTests) == 0 {

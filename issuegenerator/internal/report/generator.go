@@ -22,15 +22,18 @@ import (
 	"go.uber.org/zap"
 )
 
+// GeneratorConfig includes configuration needed to create a [Generator].
 type GeneratorConfig struct {
 	ArtifactsPath string
 }
 
+// Generator of [Report].
 type Generator struct {
 	logger *zap.Logger
 	cfg    GeneratorConfig
 }
 
+// NewGenerator creates a new [Generator] given a [GeneratorConfig].
 func NewGenerator(logger *zap.Logger, cfg GeneratorConfig) *Generator {
 	return &Generator{
 		logger: logger,
