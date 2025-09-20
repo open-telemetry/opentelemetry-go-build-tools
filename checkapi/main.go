@@ -172,24 +172,24 @@ func walkFolder(cfg internal.Config, folder string, metadata internal.Metadata) 
 			errs = append(errs, err)
 		}
 	} else {
-		schemaBytes, err := json.Marshal(metadata.Config)
+		configSchemaBytes, err := json.Marshal(metadata.Config)
 		if err != nil {
 			errs = append(errs, err)
 		} else {
-			jsonSchema, err := jsonschema.NewCompiler().Compile(schemaBytes)
+			configSchema, err := jsonschema.NewCompiler().Compile(configSchemaBytes)
 			if err != nil {
 				errs = append(errs, err)
 			} else {
-				var after *jsonschema.Schema
-				if after, err = internal.DeriveSchema(*cfgStruct, result.Structs, cfg.JSONSchema.TypeMappings); err != nil {
+				var structDerivedSchema *jsonschema.Schema
+				if structDerivedSchema, err = internal.DeriveSchema(*cfgStruct, result.Structs, cfg.JSONSchema.TypeMappings); err != nil {
 					errs = append(errs, err)
-				} else if err := internal.CompareJSONSchema(folder, jsonSchema, after); err != nil {
+				} else if err := internal.CompareJSONSchema(folder, configSchema, structDerivedSchema); err != nil {
 					errs = append(errs, err)
-					b, _ := after.MarshalJSON()
+					configSchemaBytes, _ := structDerivedSchema.MarshalJSON()
 					rawJSON := map[string]any{}
-					_ = json.Unmarshal(b, &rawJSON)
-					b, _ = yaml.Marshal(rawJSON)
-					errs = append(errs, fmt.Errorf("[%s] new JSON schema: %s", folder, string(b)))
+					_ = json.Unmarshal(configSchemaBytes, &rawJSON)
+					configSchemaYAML, _ := yaml.Marshal(rawJSON)
+					errs = append(errs, fmt.Errorf("[%s] new JSON schema: %s", folder, string(configSchemaYAML)))
 				}
 			}
 		}
