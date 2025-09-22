@@ -38,7 +38,6 @@ const (
 	githubWorkflow           = "GITHUB_ACTION"
 	githubAPITokenKey        = "GITHUB_TOKEN" // #nosec G101
 	githubSHAKey             = "GITHUB_SHA"
-	githubRefKey             = "GITHUB_REF"
 
 	githubOwner      = "githubOwner"
 	githubRepository = "githubRepository"
@@ -53,7 +52,6 @@ Auto-generated report for ${jobName} job build.
 
 Link to failed build: ${linkToBuild}
 Commit: ${commit}
-PR: ${pr}
 
 ### Component(s)
 ${component}
@@ -66,7 +64,6 @@ this issue is open, will be added as comments with more information to this issu
 	issueCommentTemplate = `
 Link to latest failed build: ${linkToBuild}
 Commit: ${commit}
-PR: ${pr}
 
 ${failedTests}
 `
@@ -150,7 +147,6 @@ func getRequiredEnv() (map[string]string, error) {
 	env[githubRunID] = os.Getenv(githubRunID)
 	env[githubAPITokenKey] = os.Getenv(githubAPITokenKey)
 	env[githubSHAKey] = os.Getenv(githubSHAKey)
-	env[githubRefKey] = os.Getenv(githubRefKey)
 
 	for k, v := range env {
 		if v == "" {
@@ -252,18 +248,19 @@ func templateHelper(env map[string]string, r report.Report) func(string) string 
 			trimmedModule := trimModule(env[githubOwner], env[githubRepository], r.Module)
 			return getComponent(trimmedModule)
 		case "commit":
-			return env[githubSHAKey]
-		case "pr":
-			ref := env[githubRefKey]
-			parts := strings.Split(ref, "/")
-			if len(parts) == 4 && parts[1] == "pull" {
-				return "#" + parts[2]
-			}
-			return fmt.Sprintf("N/A (github_ref: %q)", ref)
+			return shortSha(env[githubSHAKey])
 		default:
 			return ""
 		}
 	}
+}
+
+// shortSha returns the first 7 characters of a full Git commit SHA
+func shortSha(sha string) string {
+	if len(sha) >= 7 {
+		return sha[:7]
+	}
+	return sha
 }
 
 // CreateIssue creates a new GitHub Issue corresponding to a build failure.
