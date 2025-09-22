@@ -2,7 +2,7 @@ module github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/
 
 go 1.24.0
 
-require go.opentelemetry.io/collector/component v1.41.0
+require go.opentelemetry.io/collector/component v1.42.0
 
 require (
 	github.com/go-logr/logr v1.4.3 // indirect
