@@ -260,7 +260,7 @@ func shortSha(sha string) string {
 	if len(sha) >= 7 {
 		return sha[:7]
 	}
-	return sha 
+	return sha
 }
 
 // CreateIssue creates a new GitHub Issue corresponding to a build failure.
