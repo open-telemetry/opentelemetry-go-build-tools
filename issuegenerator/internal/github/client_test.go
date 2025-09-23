@@ -23,7 +23,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v75/github"
 	"github.com/migueleliasweb/go-github-mock/src/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
