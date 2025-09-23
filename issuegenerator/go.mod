@@ -3,7 +3,7 @@ module go.opentelemetry.io/build-tools/issuegenerator
 go 1.24.0
 
 require (
-	github.com/google/go-github/v74 v74.0.0
+	github.com/google/go-github/v75 v75.0.0
 	github.com/joshdk/go-junit v1.0.0
 	github.com/stretchr/testify v1.11.1
 	go.uber.org/zap v1.27.0
