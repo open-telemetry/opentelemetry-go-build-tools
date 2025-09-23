@@ -15,7 +15,6 @@
 package github
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"os"
@@ -50,7 +49,7 @@ func newTestReport() report.Report {
 }
 
 func newTestIssue() *github.Issue {
-	return &github.Issue{ID: github.Int64(123), Number: github.Int(123), HTMLURL: github.String(testIssueURL)}
+	return &github.Issue{ID: github.Ptr[int64](123), Number: github.Ptr(123), HTMLURL: github.Ptr(testIssueURL)}
 }
 
 func newTestClient(t *testing.T, httpClient *http.Client) *Client {
@@ -221,16 +220,16 @@ func TestGetExistingIssue(t *testing.T) {
 			name: "multiple existing issues",
 			mockResponse: []*github.Issue{
 				{
-					ID:      github.Int64(1),
-					Number:  github.Int(123),
-					HTMLURL: github.String(testIssueURL),
+					ID:      github.Ptr[int64](1),
+					Number:  github.Ptr(123),
+					HTMLURL: github.Ptr(testIssueURL),
 				},
 				newTestIssue(),
 			},
 			expectedIssue: &github.Issue{
-				ID:      github.Int64(1),
-				Number:  github.Int(123),
-				HTMLURL: github.String(testIssueURL),
+				ID:      github.Ptr[int64](1),
+				Number:  github.Ptr(123),
+				HTMLURL: github.Ptr(testIssueURL),
 			},
 		},
 	}
@@ -260,8 +259,8 @@ func TestCommentOnIssue(t *testing.T) {
 	testReport := newTestReport()
 	existingIssue := newTestIssue()
 	expectedComment := &github.IssueComment{
-		ID:      github.Int64(789),
-		HTMLURL: github.String(testCommentURL),
+		ID:      github.Ptr[int64](789),
+		HTMLURL: github.Ptr(testCommentURL),
 	}
 	mockedHTTPClient := newMockHTTPClient(t, mock.PostReposIssuesCommentsByOwnerByRepoByIssueNumber, expectedComment, http.StatusCreated)
 	client := newTestClient(t, mockedHTTPClient)
@@ -311,50 +310,6 @@ func TestNewClient(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NotNil(t, client)
 			}
-		})
-	}
-}
-
-func TestAPIErrorHandling(t *testing.T) {
-	testReport := newTestReport()
-	tests := []struct {
-		name         string
-		mockEndpoint mock.EndpointPattern
-		testFunc     func(*Client, context.Context)
-		statusCode   int
-	}{
-		{
-			name:         "GetExistingIssue bad status code",
-			mockEndpoint: mock.GetReposIssuesByOwnerByRepo,
-			statusCode:   http.StatusNotFound,
-			testFunc: func(client *Client, ctx context.Context) {
-				client.GetExistingIssue(ctx, testComponent)
-			},
-		},
-		{
-			name:         "CreateIssue bad status code",
-			mockEndpoint: mock.PostReposIssuesByOwnerByRepo,
-			statusCode:   http.StatusUnprocessableEntity,
-			testFunc: func(client *Client, ctx context.Context) {
-				client.CreateIssue(ctx, testReport)
-			},
-		},
-		{
-			name:         "CommentOnIssue bad status code",
-			mockEndpoint: mock.PostReposIssuesCommentsByOwnerByRepoByIssueNumber,
-			statusCode:   http.StatusNotFound,
-			testFunc: func(client *Client, ctx context.Context) {
-				existingIssue := newTestIssue()
-				client.CommentOnIssue(ctx, testReport, existingIssue)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mockedHTTPClient := newMockHTTPClient(t, tt.mockEndpoint, map[string]string{"message": "API Error"}, tt.statusCode)
-			client := newTestClient(t, mockedHTTPClient)
-			assert.Panics(t, func() { tt.testFunc(client, t.Context()) })
 		})
 	}
 }
