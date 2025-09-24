@@ -230,7 +230,15 @@ func trimModule(owner, repo, module string) string {
 func getComponent(module string) string {
 	parts := strings.Split(module, "/")
 	if len(parts) >= 2 {
-		return strings.Join(parts[:2], "/")
+		componentName := parts[1]
+		for _, suffix := range []string{"receiver", "exporter", "processor", "extension", "connector"} {
+			// component name will always be more than just the suffix, we are checking just to be safe
+			if strings.HasSuffix(componentName, suffix) && len(componentName) > len(suffix) {
+				componentName = strings.TrimSuffix(componentName, suffix)
+				break
+			}
+		}
+		return parts[0] + "/" + componentName
 	}
 	return module
 }
