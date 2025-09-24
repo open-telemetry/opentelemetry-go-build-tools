@@ -15,17 +15,76 @@
 package github
 
 import (
+	"encoding/json"
+	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
 	"testing"
 
+	"github.com/google/go-github/v75/github"
+	"github.com/migueleliasweb/go-github-mock/src/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 
 	"go.opentelemetry.io/build-tools/issuegenerator/internal/report"
 )
+
+const (
+	testOwner      = "open-telemetry"
+	testRepo       = "opentelemetry-collector-contrib"
+	testRepoFull   = "open-telemetry/opentelemetry-collector-contrib"
+	testIssueURL   = "https://github.com/open-telemetry/opentelemetry-collector-contrib/issues/123"
+	testCommentURL = "https://github.com/open-telemetry/opentelemetry-collector-contrib/issues/123#issuecomment-789"
+	testModule     = "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver"
+	testComponent  = "receiver/hostmetricsreceiver"
+)
+
+func newTestReport() report.Report {
+	return report.Report{
+		Module:      testModule,
+		FailedTests: map[string]string{"TestFailure": "test failed with error"},
+	}
+}
+
+func newTestIssue() *github.Issue {
+	return &github.Issue{ID: github.Ptr[int64](123), Number: github.Ptr(123), HTMLURL: github.Ptr(testIssueURL)}
+}
+
+func newTestClient(t *testing.T, httpClient *http.Client) *Client {
+	return &Client{
+		logger: zaptest.NewLogger(t),
+		client: github.NewClient(httpClient),
+		envVariables: map[string]string{
+			githubOwner:      testOwner,
+			githubRepository: testRepo,
+			githubWorkflow:   "test-workflow",
+			githubServerURL:  "https://github.com",
+			githubRunID:      "12345",
+			githubSHAKey:     "abcdef123456",
+		},
+		cfg: ClientConfig{Labels: []string{"test-label"}},
+	}
+}
+
+func newMockHTTPClient(t *testing.T, endpoint mock.EndpointPattern, response any, statusCode int) *http.Client {
+	if statusCode == 0 {
+		return mock.NewMockedHTTPClient(
+			mock.WithRequestMatch(endpoint, response),
+		)
+	}
+	return mock.NewMockedHTTPClient(
+		mock.WithRequestMatchHandler(
+			endpoint,
+			http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(statusCode)
+				w.Header().Set("Content-Type", "application/json")
+				require.NoError(t, json.NewEncoder(w).Encode(response))
+			}),
+		),
+	)
+}
 
 func TestTemplateExpansion(t *testing.T) {
 	// Create a reportGenerator and ingest test data instead of hardcoding
@@ -169,6 +228,120 @@ func TestTrimPathAndComponentName(t *testing.T) {
 			actualComponent := getComponent(actualModule)
 			assert.Equal(t, tt.wantModule, actualModule, "owner: %s, repo: %s, module: %s, wantModule: %s", tt.owner, tt.repo, tt.module, tt.wantModule)
 			assert.Equal(t, tt.wantComponent, actualComponent, "owner: %s, repo: %s, module: %s, wantComponent: %s", tt.owner, tt.repo, tt.module, tt.wantComponent)
+		})
+	}
+}
+
+func TestGetExistingIssue(t *testing.T) {
+	tests := []struct {
+		name          string
+		mockResponse  []*github.Issue
+		expectedIssue *github.Issue
+	}{
+		{
+			name:          "no existing issues",
+			mockResponse:  []*github.Issue{},
+			expectedIssue: nil,
+		},
+		{
+			name:          "single existing issue",
+			mockResponse:  []*github.Issue{newTestIssue()},
+			expectedIssue: newTestIssue(),
+		},
+		{
+			name: "multiple existing issues",
+			mockResponse: []*github.Issue{
+				{
+					ID:      github.Ptr[int64](1),
+					Number:  github.Ptr(123),
+					HTMLURL: github.Ptr(testIssueURL),
+				},
+				newTestIssue(),
+			},
+			expectedIssue: &github.Issue{
+				ID:      github.Ptr[int64](1),
+				Number:  github.Ptr(123),
+				HTMLURL: github.Ptr(testIssueURL),
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockedHTTPClient := newMockHTTPClient(t, mock.GetReposIssuesByOwnerByRepo, tt.mockResponse, 0)
+			client := newTestClient(t, mockedHTTPClient)
+			result := client.GetExistingIssue(t.Context(), testComponent)
+			assert.Equal(t, tt.expectedIssue, result)
+		})
+	}
+}
+
+func TestCreateIssue(t *testing.T) {
+	testReport := newTestReport()
+	expectedIssue := newTestIssue()
+	mockedHTTPClient := newMockHTTPClient(t, mock.PostReposIssuesByOwnerByRepo, expectedIssue, http.StatusCreated)
+	client := newTestClient(t, mockedHTTPClient)
+	result := client.CreateIssue(t.Context(), testReport)
+	require.NotNil(t, result)
+	assert.Equal(t, *expectedIssue.Number, *result.Number)
+	assert.Equal(t, *expectedIssue.HTMLURL, *result.HTMLURL)
+}
+
+func TestCommentOnIssue(t *testing.T) {
+	testReport := newTestReport()
+	existingIssue := newTestIssue()
+	expectedComment := &github.IssueComment{
+		ID:      github.Ptr[int64](789),
+		HTMLURL: github.Ptr(testCommentURL),
+	}
+	mockedHTTPClient := newMockHTTPClient(t, mock.PostReposIssuesCommentsByOwnerByRepoByIssueNumber, expectedComment, http.StatusCreated)
+	client := newTestClient(t, mockedHTTPClient)
+	result := client.CommentOnIssue(t.Context(), testReport, existingIssue)
+	assert.Equal(t, expectedComment, result)
+}
+
+func TestNewClient(t *testing.T) {
+	tests := []struct {
+		name        string
+		envVars     map[string]string
+		expectError bool
+	}{
+		{
+			name: "valid environment variables",
+			envVars: map[string]string{
+				"GITHUB_REPOSITORY": testRepoFull,
+				"GITHUB_ACTION":     "test-workflow",
+				"GITHUB_SERVER_URL": "https://github.com",
+				"GITHUB_RUN_ID":     "12345",
+				"GITHUB_TOKEN":      "test-token",
+				"GITHUB_SHA":        "abcdef123456",
+			},
+		},
+		{
+			name: "missing required environment variable",
+			envVars: map[string]string{
+				"GITHUB_REPOSITORY": testRepoFull,
+				"GITHUB_ACTION":     "test-workflow",
+				// Missing other required vars
+			},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for key, value := range tt.envVars {
+				t.Setenv(key, value)
+			}
+
+			client, err := NewClient(t.Context(), zaptest.NewLogger(t), ClientConfig{})
+			if tt.expectError {
+				assert.Error(t, err)
+				assert.Nil(t, client)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, client)
+			}
 		})
 	}
 }
