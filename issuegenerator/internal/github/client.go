@@ -70,6 +70,10 @@ Commit: ${commit}
 
 ${failedTests}
 `
+	prCommentTemplate = `@${prAuthor} some tests are failing on main after these changes.  
+Details: ${issueLink}  
+Please take a look when you get a chance. Thanks!
+`
 )
 
 // CommaSeparatedList is a custom type for parsing comma-separated values.
@@ -227,6 +231,13 @@ func (c *Client) CommentOnIssue(ctx context.Context, r report.Report, issue *git
 		c.handleBadResponses(response)
 	}
 
+	// Also comment on the PR with a link to this comment
+	if prNumber > 0 && issueComment != nil && issueComment.HTMLURL != nil {
+		if prAuthor := c.GetPRAuthor(ctx, prNumber); prAuthor != "" {
+			_ = c.CommentOnPR(ctx, prNumber, prAuthor, *issueComment.HTMLURL)
+		}
+	}
+
 	return issueComment
 }
 
@@ -315,6 +326,83 @@ func (c *Client) getCommitMessage(ctx context.Context) string {
 	return ""
 }
 
+// GetPRAuthor fetches the author of a pull request
+func (c *Client) GetPRAuthor(ctx context.Context, prNumber int) string {
+	if prNumber <= 0 {
+		return ""
+	}
+
+	pr, response, err := c.client.PullRequests.Get(
+		ctx,
+		c.envVariables[githubOwner],
+		c.envVariables[githubRepository],
+		prNumber,
+	)
+	if err != nil {
+		c.logger.Warn("Failed to get PR details from GitHub API",
+			zap.Int("pr_number", prNumber),
+			zap.Error(err),
+		)
+		return ""
+	}
+
+	if response.StatusCode != http.StatusOK {
+		c.logger.Warn("Unexpected response when fetching PR",
+			zap.Int("status_code", response.StatusCode),
+			zap.Int("pr_number", prNumber),
+		)
+		return ""
+	}
+
+	if pr.User != nil && pr.User.Login != nil {
+		return *pr.User.Login
+	}
+
+	return ""
+}
+
+// CommentOnPR adds a comment to a pull request to notify the author about failing tests
+func (c *Client) CommentOnPR(ctx context.Context, prNumber int, prAuthor string, issueURL string) *github.IssueComment {
+	if prNumber <= 0 || prAuthor == "" {
+		c.logger.Warn("Cannot comment on PR: missing PR number or author",
+			zap.Int("pr_number", prNumber),
+			zap.String("pr_author", prAuthor),
+		)
+		return nil
+	}
+
+	body := os.Expand(prCommentTemplate, func(param string) string {
+		return prTemplateHelper(param, prAuthor, issueURL)
+	})
+
+	prComment, response, err := c.client.Issues.CreateComment(
+		ctx,
+		c.envVariables[githubOwner],
+		c.envVariables[githubRepository],
+		prNumber,
+		&github.IssueComment{
+			Body: &body,
+		},
+	)
+	if err != nil {
+		c.logger.Warn("Failed to comment on PR",
+			zap.Int("pr_number", prNumber),
+			zap.Error(err),
+		)
+		return nil
+	}
+
+	if response.StatusCode != http.StatusCreated {
+		c.logger.Warn("Unexpected response when commenting on PR",
+			zap.Int("status_code", response.StatusCode),
+			zap.Int("pr_number", prNumber),
+		)
+		return nil
+	}
+
+	return prComment
+}
+
 func (c *Client) extractPRNumberFromCommitMessage(commitMsg string) int {
 	// Only consider the first line of the commit message.
 	firstLine := strings.SplitN(commitMsg, "\n", 2)[0]
@@ -377,7 +465,25 @@ func (c *Client) CreateIssue(ctx context.Context, r report.Report) *github.Issue
 		c.handleBadResponses(response)
 	}
 
+	// After creating the issue, also comment on the PR  with a link to the created issue
+	if prNumber > 0 && issue != nil && issue.HTMLURL != nil {
+		if prAuthor := c.GetPRAuthor(ctx, prNumber); prAuthor != "" {
+			_ = c.CommentOnPR(ctx, prNumber, prAuthor, *issue.HTMLURL)
+		}
+	}
+
 	return issue
+}
+
+func prTemplateHelper(param string, prAuthor string, issueURL string) string {
+	switch param {
+	case "prAuthor":
+		return prAuthor
+	case "issueLink":
+		return issueURL
+	default:
+		return ""
+	}
 }
 
 func (c *Client) handleBadResponses(response *github.Response) {
