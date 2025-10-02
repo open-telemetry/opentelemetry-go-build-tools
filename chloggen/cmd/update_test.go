@@ -32,6 +32,7 @@ const updateUsage = `Usage:
   chloggen update [flags]
 
 Flags:
+  -a, --alphabetical       sort changelog entries alphabetically (lexicographically) based on component field
   -c, --component string   only select entries with this exact component
   -d, --dry                will generate the update text and print to stdout
   -h, --help               help for update
