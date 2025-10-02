@@ -32,7 +32,6 @@ const updateUsage = `Usage:
   chloggen update [flags]
 
 Flags:
-  -a, --alphabetical       sort changelog entries alphabetically (lexicographically) based on component field
   -c, --component string   only select entries with this exact component
   -d, --dry                will generate the update text and print to stdout
   -h, --help               help for update
@@ -76,7 +75,6 @@ func TestUpdate(t *testing.T) {
 		version           string
 		dry               bool
 		componentFilter   string
-		alphabetical      bool
 	}{
 		{
 			name:    "all_change_types",
@@ -282,8 +280,7 @@ func TestUpdate(t *testing.T) {
 					Issues:     []int{2},
 				},
 			},
-			version:      "v0.45.0",
-			alphabetical: true,
+			version: "v0.45.0",
 		},
 	}
 
@@ -306,9 +303,6 @@ func TestUpdate(t *testing.T) {
 			args := []string{"update", "--version", tc.version}
 			if tc.dry {
 				args = append(args, "--dry")
-			}
-			if tc.alphabetical {
-				args = append(args, "--alphabetical")
 			}
 			if tc.componentFilter != "" {
 				args = append(args, "--component", tc.componentFilter)
