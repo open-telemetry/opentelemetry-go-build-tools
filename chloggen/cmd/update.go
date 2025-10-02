@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -34,6 +35,7 @@ var (
 	version         string
 	dry             bool
 	componentFilter string
+	alphabetical    bool
 )
 
 func updateCmd() *cobra.Command {
@@ -47,6 +49,12 @@ func updateCmd() *cobra.Command {
 			}
 
 			for changeLogKey, entries := range entriesByChangelog {
+
+				if alphabetical {
+					slices.SortFunc(entries, func(a, b *chlog.Entry) int {
+						return strings.Compare(a.Component, b.Component)
+					})
+				}
 
 				if componentFilter != "" {
 					filteredEntries := make([]*chlog.Entry, 0, len(entries))
@@ -107,5 +115,6 @@ func updateCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&version, "version", "v", "vTODO", "will be rendered directly into the update text")
 	cmd.Flags().BoolVarP(&dry, "dry", "d", false, "will generate the update text and print to stdout")
 	cmd.Flags().StringVarP(&componentFilter, "component", "c", "", "only select entries with this exact component")
+	cmd.Flags().BoolVarP(&alphabetical, "alphabetical", "a", false, "sort changelog entries alphabetically (lexicographically) based on component field")
 	return cmd
 }
