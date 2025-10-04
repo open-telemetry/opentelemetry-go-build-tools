@@ -23,6 +23,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/google/go-github/v75/github"
@@ -52,6 +54,7 @@ Auto-generated report for ${jobName} job build.
 
 Link to failed build: ${linkToBuild}
 Commit: ${commit}
+PR: ${prNumber}
 
 ### Component(s)
 ${component}
@@ -66,6 +69,10 @@ Link to latest failed build: ${linkToBuild}
 Commit: ${commit}
 
 ${failedTests}
+`
+	prCommentTemplate = `@${prAuthor} some tests are failing on main after these changes.  
+Details: ${issueLink}  
+Please take a look when you get a chance. Thanks!
 `
 )
 
@@ -201,7 +208,11 @@ func (c *Client) GetExistingIssue(ctx context.Context, module string) *github.Is
 // information about the latest failure. This method is expected to be
 // called only if there's an existing open Issue for the current job.
 func (c *Client) CommentOnIssue(ctx context.Context, r report.Report, issue *github.Issue) *github.IssueComment {
-	body := os.Expand(issueCommentTemplate, templateHelper(c.envVariables, r))
+	// Get commit message and extract PR number
+	commitMessage := c.getCommitMessage(ctx)
+	prNumber := c.extractPRNumberFromCommitMessage(commitMessage)
+
+	body := os.Expand(issueCommentTemplate, templateHelper(c.envVariables, r, prNumber))
 
 	issueComment, response, err := c.client.Issues.CreateComment(
 		ctx,
@@ -218,6 +229,13 @@ func (c *Client) CommentOnIssue(ctx context.Context, r report.Report, issue *git
 
 	if response.StatusCode != http.StatusCreated {
 		c.handleBadResponses(response)
+	}
+
+	// Also comment on the PR with a link to this comment
+	if prNumber > 0 && issueComment != nil && issueComment.HTMLURL != nil {
+		if prAuthor := c.GetPRAuthor(ctx, prNumber); prAuthor != "" {
+			_ = c.CommentOnPR(ctx, prNumber, prAuthor, *issueComment.HTMLURL)
+		}
 	}
 
 	return issueComment
@@ -243,7 +261,7 @@ func getComponent(module string) string {
 	return module
 }
 
-func templateHelper(env map[string]string, r report.Report) func(string) string {
+func templateHelper(env map[string]string, r report.Report, prNumber int) func(string) string {
 	return func(param string) string {
 		switch param {
 		case "jobName":
@@ -257,6 +275,11 @@ func templateHelper(env map[string]string, r report.Report) func(string) string 
 			return getComponent(trimmedModule)
 		case "commit":
 			return shortSha(env[githubSHAKey])
+		case "prNumber":
+			if prNumber > 0 {
+				return fmt.Sprintf("#%d", prNumber)
+			}
+			return "N/A"
 		default:
 			return ""
 		}
@@ -271,11 +294,155 @@ func shortSha(sha string) string {
 	return sha
 }
 
+// getCommitMessage fetches the commit message
+func (c *Client) getCommitMessage(ctx context.Context) string {
+	commit, response, err := c.client.Repositories.GetCommit(
+		ctx,
+		c.envVariables[githubOwner],
+		c.envVariables[githubRepository],
+		c.envVariables[githubSHAKey],
+		&github.ListOptions{},
+	)
+	if err != nil {
+		c.logger.Warn("Failed to get commit message from GitHub API",
+			zap.String("sha", c.envVariables[githubSHAKey]),
+			zap.Error(err),
+		)
+		return ""
+	}
+
+	if response.StatusCode != http.StatusOK {
+		c.logger.Warn("Unexpected response when fetching commit",
+			zap.Int("status_code", response.StatusCode),
+			zap.String("sha", c.envVariables[githubSHAKey]),
+		)
+		return ""
+	}
+
+	if commit.Commit != nil {
+		return *commit.Commit.Message
+	}
+
+	return ""
+}
+
+// GetPRAuthor fetches the author of a pull request
+func (c *Client) GetPRAuthor(ctx context.Context, prNumber int) string {
+	if prNumber <= 0 {
+		return ""
+	}
+
+	pr, response, err := c.client.PullRequests.Get(
+		ctx,
+		c.envVariables[githubOwner],
+		c.envVariables[githubRepository],
+		prNumber,
+	)
+	if err != nil {
+		c.logger.Warn("Failed to get PR details from GitHub API",
+			zap.Int("pr_number", prNumber),
+			zap.Error(err),
+		)
+		return ""
+	}
+
+	if response.StatusCode != http.StatusOK {
+		c.logger.Warn("Unexpected response when fetching PR",
+			zap.Int("status_code", response.StatusCode),
+			zap.Int("pr_number", prNumber),
+		)
+		return ""
+	}
+
+	if pr.User != nil && pr.User.Login != nil {
+		return *pr.User.Login
+	}
+
+	return ""
+}
+
+// CommentOnPR adds a comment to a pull request to notify the author about failing tests
+func (c *Client) CommentOnPR(ctx context.Context, prNumber int, prAuthor string, issueURL string) *github.IssueComment {
+	if prNumber <= 0 || prAuthor == "" {
+		c.logger.Warn("Cannot comment on PR: missing PR number or author",
+			zap.Int("pr_number", prNumber),
+			zap.String("pr_author", prAuthor),
+		)
+		return nil
+	}
+
+	body := os.Expand(prCommentTemplate, func(param string) string {
+		return prTemplateHelper(param, prAuthor, issueURL)
+	})
+
+	prComment, response, err := c.client.Issues.CreateComment(
+		ctx,
+		c.envVariables[githubOwner],
+		c.envVariables[githubRepository],
+		prNumber,
+		&github.IssueComment{
+			Body: &body,
+		},
+	)
+	if err != nil {
+		c.logger.Warn("Failed to comment on PR",
+			zap.Int("pr_number", prNumber),
+			zap.Error(err),
+		)
+		return nil
+	}
+
+	if response.StatusCode != http.StatusCreated {
+		c.logger.Warn("Unexpected response when commenting on PR",
+			zap.Int("status_code", response.StatusCode),
+			zap.Int("pr_number", prNumber),
+		)
+		return nil
+	}
+
+	return prComment
+}
+
+func (c *Client) extractPRNumberFromCommitMessage(commitMsg string) int {
+	// Only consider the first line of the commit message.
+	firstLine := strings.SplitN(commitMsg, "\n", 2)[0]
+
+	// cases matched :
+	// - (#123)
+	// - Merge pull request #123
+	// - (#123): some description
+	// - pull request #123
+	prRegex := regexp.MustCompile(`(?i)(?:merge pull request #|pull request #|\(#)(\d+)\)?`)
+	matches := prRegex.FindStringSubmatch(firstLine)
+
+	if len(matches) >= 2 {
+		prNumber, err := strconv.Atoi(matches[1])
+		if err != nil {
+			c.logger.Warn("Failed to convert PR number to integer",
+				zap.String("pr_string", matches[1]),
+				zap.Error(err),
+			)
+			return 0
+		}
+		return prNumber
+	}
+
+	c.logger.Warn("No PR number found in commit message",
+		zap.String("first_line", firstLine),
+	)
+	return 0
+}
+
 // CreateIssue creates a new GitHub Issue corresponding to a build failure.
 func (c *Client) CreateIssue(ctx context.Context, r report.Report) *github.Issue {
 	trimmedModule := trimModule(c.envVariables[githubOwner], c.envVariables[githubRepository], r.Module)
 	title := strings.Replace(issueTitleTemplate, "${module}", trimmedModule, 1)
-	body := os.Expand(issueBodyTemplate, templateHelper(c.envVariables, r))
+
+	// Get commit message and extract PR number
+	commitMessage := c.getCommitMessage(ctx)
+	prNumber := c.extractPRNumberFromCommitMessage(commitMessage)
+
+	body := os.Expand(issueBodyTemplate, templateHelper(c.envVariables, r, prNumber))
 	componentName := getComponent(trimmedModule)
 
 	issueLabels := c.cfg.labelsCopy()
@@ -298,7 +465,25 @@ func (c *Client) CreateIssue(ctx context.Context, r report.Report) *github.Issue
 		c.handleBadResponses(response)
 	}
 
+	// After creating the issue, also comment on the PR  with a link to the created issue
+	if prNumber > 0 && issue != nil && issue.HTMLURL != nil {
+		if prAuthor := c.GetPRAuthor(ctx, prNumber); prAuthor != "" {
+			_ = c.CommentOnPR(ctx, prNumber, prAuthor, *issue.HTMLURL)
+		}
+	}
+
 	return issue
+}
+
+func prTemplateHelper(param string, prAuthor string, issueURL string) string {
+	switch param {
+	case "prAuthor":
+		return prAuthor
+	case "issueLink":
+		return issueURL
+	default:
+		return ""
+	}
 }
 
 func (c *Client) handleBadResponses(response *github.Response) {

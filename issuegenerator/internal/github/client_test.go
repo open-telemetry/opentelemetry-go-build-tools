@@ -118,6 +118,7 @@ Auto-generated report for ` + "`test-ci`" + ` job build.
 
 Link to failed build: https://github.com/test-org/test-repo/actions/runs/555555
 Commit: abcde12
+PR: N/A
 
 ### Component(s)
 ` + "package1" + `
@@ -157,7 +158,7 @@ Commit: abcde12
 	require.GreaterOrEqual(t, len(reports), len(tests))
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := os.Expand(tt.template, templateHelper(envVariables, reports[i]))
+			result := os.Expand(tt.template, templateHelper(envVariables, reports[i], 0))
 			assert.Equal(t, tt.expected, result)
 		})
 	}
@@ -342,6 +343,51 @@ func TestNewClient(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NotNil(t, client)
 			}
+		})
+	}
+}
+
+func TestExtractPRNumberFromMessage(t *testing.T) {
+	type testCase struct {
+		name       string
+		commitMsg  string
+		expectedPR int
+	}
+	tests := []testCase{
+		{
+			name:       "Standard PR format (#123)",
+			commitMsg:  "Fix bug in receiver (#123)",
+			expectedPR: 123,
+		},
+		{
+			name:       "Merge pull request #456",
+			commitMsg:  "Merge pull request #456 from branch/feature",
+			expectedPR: 456,
+		},
+		{
+			name:       "pull request #321",
+			commitMsg:  "Some change pull request #321",
+			expectedPR: 321,
+		},
+		{
+			name:       "No PR number",
+			commitMsg:  "Regular commit message",
+			expectedPR: 0,
+		},
+		{
+			name:       "example otel commit message",
+			commitMsg:  "[chore] Skip test on Windows ARM (#42921)",
+			expectedPR: 42921,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client := &Client{
+				logger: zaptest.NewLogger(t),
+			}
+			prNum := client.extractPRNumberFromCommitMessage(tt.commitMsg)
+			assert.Equal(t, tt.expectedPR, prNum)
 		})
 	}
 }

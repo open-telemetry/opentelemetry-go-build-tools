@@ -66,6 +66,7 @@ func main() {
 		)
 
 		existingIssue := ghClient.GetExistingIssue(ctx, report.Module)
+		// CreateIssue/CommentOnIssue will also comment on the related PR.
 		if existingIssue == nil {
 			// If none exists, create a new GitHub Issue for the failure.
 			logger.Info("No existing Issues found, creating a new one.")
@@ -80,5 +81,6 @@ func main() {
 			createdIssueComment := ghClient.CommentOnIssue(ctx, report, existingIssue)
 			logger.Info("GitHub Issue updated", zap.String("html_url", *createdIssueComment.HTMLURL))
 		}
+
 	}
 }
