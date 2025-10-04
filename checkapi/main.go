@@ -18,6 +18,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/goccy/go-json"
 	"github.com/kaptinlin/jsonschema"
 
 	"go.opentelemetry.io/build-tools/checkapi/internal"
@@ -63,11 +64,11 @@ func run(folder string, configPath string) error {
 					return nil
 				}
 			}
-			componentType, err3 := internal.ReadComponentType(base)
+			metadata, err3 := internal.ReadMetadata(base)
 			if err3 != nil {
 				return err3
 			}
-			if err = walkFolder(cfg, base, componentType); err != nil {
+			if err = walkFolder(cfg, base, metadata); err != nil {
 				errs = append(errs, err)
 			}
 		}
@@ -82,7 +83,7 @@ func run(folder string, configPath string) error {
 	return nil
 }
 
-func walkFolder(cfg internal.Config, folder string, componentType string) error {
+func walkFolder(cfg internal.Config, folder string, metadata internal.Metadata) error {
 	result, err := internal.Read(folder, cfg.IgnoredFunctions, cfg.ExcludedFiles)
 	if err != nil {
 		return err
@@ -111,7 +112,7 @@ func walkFolder(cfg internal.Config, folder string, componentType string) error 
 		functionsPresent := map[string]struct{}{}
 	OUTER:
 		for _, fnDesc := range cfg.AllowedFunctions {
-			if !slices.Contains(fnDesc.Classes, componentType) {
+			if !slices.Contains(fnDesc.Classes, metadata.Status.Class) {
 				continue
 			}
 			for _, fn := range result.Functions {
@@ -131,12 +132,13 @@ func walkFolder(cfg internal.Config, folder string, componentType string) error 
 
 	if cfg.UnkeyedLiteral.Enabled {
 		for _, s := range result.Structs {
-			if err := checkStructDisallowUnkeyedLiteral(cfg, s, folder); err != nil {
+			if err = checkStructDisallowUnkeyedLiteral(cfg, s, folder); err != nil {
 				errs = append(errs, err)
 			}
 		}
 	}
 
+	componentType := metadata.Status.Class
 	if (!cfg.JSONSchema.CheckPresent && !cfg.JSONSchema.CheckValid && !cfg.ComponentAPI && !cfg.ComponentAPIStrict) || (componentType != "connector" && componentType != "exporter" && componentType != "extension" && componentType != "processor" && componentType != "receiver") {
 		return errors.Join(errs...)
 	}
@@ -165,24 +167,31 @@ func walkFolder(cfg internal.Config, folder string, componentType string) error 
 		return errors.Join(errs...)
 	}
 
-	if _, err := os.Stat(filepath.Join(folder, "config.schema.json")); errors.Is(err, os.ErrNotExist) {
+	if metadata.Config == nil {
 		if cfg.JSONSchema.CheckPresent {
 			errs = append(errs, err)
 		}
 	} else {
-		jsonSchema, err := internal.ReadJSONSchema(folder)
+		configSchemaBytes, err := json.Marshal(metadata.Config)
 		if err != nil {
 			errs = append(errs, err)
 		} else {
-			var after *jsonschema.Schema
-			if after, err = internal.DeriveSchema(*cfgStruct, result.Structs, cfg.JSONSchema.TypeMappings); err != nil {
+			configSchema, err := jsonschema.NewCompiler().Compile(configSchemaBytes)
+			if err != nil {
 				errs = append(errs, err)
-			} else if err := internal.CompareJSONSchema(folder, jsonSchema, after); err != nil {
-				errs = append(errs, err)
-				b, _ := after.MarshalJSON()
-				errs = append(errs, fmt.Errorf("[%s] new JSON schema: %s", folder, string(b)))
+			} else {
+				var structDerivedSchema *jsonschema.Schema
+				if structDerivedSchema, err = internal.DeriveSchema(*cfgStruct, result.Structs, cfg.JSONSchema.TypeMappings); err != nil {
+					errs = append(errs, err)
+				} else if err := internal.CompareJSONSchema(folder, configSchema, structDerivedSchema); err != nil {
+					errs = append(errs, err)
+					configSchemaBytes, _ := structDerivedSchema.MarshalJSON()
+					rawJSON := map[string]any{}
+					_ = json.Unmarshal(configSchemaBytes, &rawJSON)
+					configSchemaYAML, _ := yaml.Marshal(rawJSON)
+					errs = append(errs, fmt.Errorf("[%s] new JSON schema: %s", folder, string(configSchemaYAML)))
+				}
 			}
-
 		}
 	}
 

@@ -6,24 +6,11 @@ package internal
 import (
 	"errors"
 	"fmt"
-	"os"
-	"path"
 	"slices"
 	"strings"
 
 	"github.com/kaptinlin/jsonschema"
 )
-
-// ReadJSONSchema returns a JSON schema from the config.schema.json file under the folder
-func ReadJSONSchema(folder string) (*jsonschema.Schema, error) {
-	schemaFile := path.Join(folder, "config.schema.json")
-	b, err := os.ReadFile(schemaFile) //nolint: gosec
-	if err != nil {
-		return nil, err
-	}
-	compiler := jsonschema.NewCompiler()
-	return compiler.Compile(b)
-}
 
 // DeriveSchema interprets the config struct to return a valid JSON schema
 func DeriveSchema(cfgStruct APIstruct, structs []APIstruct, typeMappings map[string]string) (*jsonschema.Schema, error) {

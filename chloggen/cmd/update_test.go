@@ -252,6 +252,36 @@ func TestUpdate(t *testing.T) {
 			},
 			componentFilter: "receiver/foob",
 		},
+		{
+			name: "all_change_types_alphabetical",
+			entries: []*chlog.Entry{
+				{
+					ChangeType: "enhancement",
+					Component:  "receiver/a",
+					Note:       "Some change",
+					Issues:     []int{1},
+				},
+				{
+					ChangeType: "enhancement",
+					Component:  "receiver/bb",
+					Note:       "One more bb change",
+					Issues:     []int{4},
+				},
+				{
+					ChangeType: "enhancement",
+					Component:  "receiver/b",
+					Note:       "Some other change",
+					Issues:     []int{3},
+				},
+				{
+					ChangeType: "enhancement",
+					Component:  "receiver/aa",
+					Note:       "Some other change for aa",
+					Issues:     []int{2},
+				},
+			},
+			version: "v0.45.0",
+		},
 	}
 
 	for _, tc := range tests {

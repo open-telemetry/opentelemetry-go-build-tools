@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -47,6 +48,10 @@ func updateCmd() *cobra.Command {
 			}
 
 			for changeLogKey, entries := range entriesByChangelog {
+
+				slices.SortFunc(entries, func(a, b *chlog.Entry) int {
+					return strings.Compare(a.Component, b.Component)
+				})
 
 				if componentFilter != "" {
 					filteredEntries := make([]*chlog.Entry, 0, len(entries))

@@ -11,29 +11,29 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type status struct {
+// Status of the component
+type Status struct {
 	Class string `yaml:"class"`
 }
 
-type metadata struct {
-	Status status `yaml:"status"`
+// Metadata of the component
+type Metadata struct {
+	Status Status `yaml:"status"`
+	Config any    `yaml:"config"`
 }
 
-// ReadComponentType reads the component type from the metadata.yaml file in the given folder.
-func ReadComponentType(folder string) (string, error) {
-	var componentType string
+// ReadMetadata reads from the metadata.yaml file in the given folder.
+func ReadMetadata(folder string) (Metadata, error) {
 	if _, err := os.Stat(filepath.Join(folder, "metadata.yaml")); errors.Is(err, os.ErrNotExist) {
-		componentType = "pkg"
-	} else {
-		m, err := os.ReadFile(filepath.Join(folder, "metadata.yaml")) // #nosec G304
-		if err != nil {
-			return "", err
-		}
-		var componentInfo metadata
-		if err = yaml.Unmarshal(m, &componentInfo); err != nil {
-			return "", err
-		}
-		componentType = componentInfo.Status.Class
+		return Metadata{Status: Status{Class: "pkg"}}, nil
 	}
-	return componentType, nil
+	m, err := os.ReadFile(filepath.Join(folder, "metadata.yaml")) // #nosec G304
+	if err != nil {
+		return Metadata{}, err
+	}
+	var componentInfo Metadata
+	if err = yaml.Unmarshal(m, &componentInfo); err != nil {
+		return Metadata{}, err
+	}
+	return componentInfo, nil
 }
