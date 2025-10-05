@@ -14,7 +14,7 @@
 
 module-sets:
   tools:
-    version: v0.28.0
+    version: v0.28.1
     modules:
       - go.opentelemetry.io/build-tools
       - go.opentelemetry.io/build-tools/checkapi
