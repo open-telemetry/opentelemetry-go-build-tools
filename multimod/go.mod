@@ -3,7 +3,7 @@ module go.opentelemetry.io/build-tools/multimod
 go 1.24.0
 
 require (
-	github.com/go-git/go-git/v5 v5.16.2
+	github.com/go-git/go-git/v5 v5.16.3
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.21.0
