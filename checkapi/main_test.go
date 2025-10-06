@@ -22,6 +22,11 @@ func TestBadPkg(t *testing.T) {
 	require.ErrorContains(t, err, "no function matching configuration found")
 }
 
+func TestPkgPkg(t *testing.T) {
+	err := run(filepath.Join("internal", "pkg"), "config.yaml")
+	require.NoError(t, err)
+}
+
 func TestAltConfig(t *testing.T) {
 	err := run(filepath.Join("internal", "altpkg"), filepath.Join("internal", "altpkg", "config.yaml"))
 	require.NoError(t, err)
