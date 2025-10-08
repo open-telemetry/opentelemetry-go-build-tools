@@ -142,6 +142,7 @@ this issue is open, will be added as comments with more information to this issu
 			expected: `
 Link to latest failed build: https://github.com/test-org/test-repo/actions/runs/555555
 Commit: abcde12
+PR: N/A
 
 #### Test Failures
 -  ` + "`TestFailure`" + `
