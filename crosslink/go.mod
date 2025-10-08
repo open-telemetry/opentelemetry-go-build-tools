@@ -10,7 +10,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	go.opentelemetry.io/build-tools v0.28.1
 	go.uber.org/zap v1.27.0
-	golang.org/x/mod v0.28.0
+	golang.org/x/mod v0.29.0
 )
 
 require (
