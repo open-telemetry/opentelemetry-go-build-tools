@@ -67,6 +67,7 @@ this issue is open, will be added as comments with more information to this issu
 	issueCommentTemplate = `
 Link to latest failed build: ${linkToBuild}
 Commit: ${commit}
+PR: ${prNumber}
 
 ${failedTests}
 `
