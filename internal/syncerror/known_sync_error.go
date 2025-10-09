@@ -13,7 +13,6 @@
 // limitations under the License.
 
 //go:build !windows
-// +build !windows
 
 // Package syncerror provides functionality to encapsulate synchronization
 // errors.
