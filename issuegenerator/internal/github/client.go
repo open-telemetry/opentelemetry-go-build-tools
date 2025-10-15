@@ -27,7 +27,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/v75/github"
+	"github.com/google/go-github/v76/github"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 
@@ -168,7 +168,6 @@ func getRequiredEnv() (map[string]string, error) {
 // GetExistingIssue gathers an existing GitHub Issue related to previous failures
 // of the same module.
 func (c *Client) GetExistingIssue(ctx context.Context, module string) *github.Issue {
-
 	componentName := getComponent(trimModule(c.envVariables[githubOwner], c.envVariables[githubRepository], module))
 	issues, response, err := c.client.Issues.ListByRepo(
 		ctx,
