@@ -156,7 +156,9 @@ func walkFolder(cfg internal.Config, folder string, metadata internal.Metadata) 
 	allStructs := make(map[string]struct{}, len(result.Structs))
 	structsByName := make(map[string]internal.APIstruct, len(result.Structs))
 	for _, s := range result.Structs {
-		if ast.IsExported(s.Name) {
+		segments := strings.Split(s.Name, ".")
+		name := segments[len(segments)-1]
+		if ast.IsExported(name) {
 			allStructs[s.Name] = struct{}{}
 			structsByName[s.Name] = s
 		}

@@ -123,7 +123,7 @@ func Read(folder string, ignoredFunctions []string, excludedFiles []string) (API
 			}
 
 			for _, pack := range packs {
-				if err := readPackage(pack, ignoredFunctions, excludedFiles, result, isInternal); err != nil {
+				if err := readPackage(pack, ignoredFunctions, excludedFiles, result, isInternal, path == folder); err != nil {
 					return err
 				}
 			}
@@ -134,7 +134,7 @@ func Read(folder string, ignoredFunctions []string, excludedFiles []string) (API
 	return *result, readErr
 }
 
-func readPackage(pack *ast.Package, ignoredFunctions []string, excludedFiles []string, result *API, internal bool) error { // nolint:staticcheck // SA1019
+func readPackage(pack *ast.Package, ignoredFunctions []string, excludedFiles []string, result *API, internal bool, root bool) error { // nolint:staticcheck // SA1019
 FILE:
 	for path, f := range pack.Files {
 		for _, exclusionPattern := range excludedFiles {
@@ -146,7 +146,11 @@ FILE:
 				continue FILE
 			}
 		}
-		readFile(ignoredFunctions, f, result, internal)
+		packageName := pack.Name
+		if root {
+			packageName = ""
+		}
+		readFile(ignoredFunctions, f, result, internal, packageName)
 	}
 	return nil
 }
@@ -186,7 +190,7 @@ func interpretFieldType(f *ast.Field, expr ast.Expr) []APIstructField {
 	return fieldNames
 }
 
-func readFile(ignoredFunctions []string, f *ast.File, result *API, internal bool) {
+func readFile(ignoredFunctions []string, f *ast.File, result *API, internal bool, packageName string) {
 	for _, d := range f.Decls {
 		if str, isStr := d.(*ast.GenDecl); isStr {
 			for _, s := range str.Specs {
@@ -225,8 +229,12 @@ func readFile(ignoredFunctions []string, f *ast.File, result *API, internal bool
 								}
 							}
 						}
+						name := t.Name.String()
+						if packageName != "" {
+							name = fmt.Sprintf("%s.%s", packageName, t.Name)
+						}
 						result.Structs = append(result.Structs, APIstruct{
-							Name:     t.Name.String(),
+							Name:     name,
 							Fields:   fieldNames,
 							Internal: internal,
 						})
