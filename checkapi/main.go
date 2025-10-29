@@ -64,9 +64,12 @@ func run(folder string, configPath string) error {
 					return nil
 				}
 			}
-			metadata, err3 := internal.ReadMetadata(base)
+			metadata, found, err3 := internal.ReadMetadata(base)
 			if err3 != nil {
 				return err3
+			}
+			if !found {
+				return nil
 			}
 			if err = walkFolder(cfg, base, metadata); err != nil {
 				errs = append(errs, err)
@@ -250,5 +253,5 @@ func checkStructDisallowUnkeyedLiteral(cfg internal.Config, s internal.APIstruct
 			}
 		}
 	}
-	return fmt.Errorf("%s struct %q does not prevent unkeyed literal initialization", folder, s.Name)
+	return fmt.Errorf("[%s] struct %q does not prevent unkeyed literal initialization", folder, s.Name)
 }
