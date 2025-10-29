@@ -5,7 +5,7 @@ change_type: bug_fix
 component: checkapi
 
 # A brief description of the change.  Surround your text with quotes ("") if it needs to start with a backtick (`).
-note: do not try to read the API of a submodule folder
+note: do not try to read the API of a nested module folder
 
 # One or more tracking issues related to the change
 issues: [1355]
