@@ -22,7 +22,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/google/go-github/v75/github"
+	"github.com/google/go-github/v76/github"
 	"github.com/migueleliasweb/go-github-mock/src/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -142,6 +142,7 @@ this issue is open, will be added as comments with more information to this issu
 			expected: `
 Link to latest failed build: https://github.com/test-org/test-repo/actions/runs/555555
 Commit: abcde12
+PR: N/A
 
 #### Test Failures
 -  ` + "`TestFailure`" + `
