@@ -22,6 +22,11 @@ func TestBadPkg(t *testing.T) {
 	require.ErrorContains(t, err, "no function matching configuration found")
 }
 
+func TestPkgPkg(t *testing.T) {
+	err := run(filepath.Join("internal", "pkg"), "config.yaml")
+	require.NoError(t, err)
+}
+
 func TestAltConfig(t *testing.T) {
 	err := run(filepath.Join("internal", "altpkg"), filepath.Join("internal", "altpkg", "config.yaml"))
 	require.NoError(t, err)
@@ -35,7 +40,7 @@ func TestAltConfigWithOriginalConfig(t *testing.T) {
 func TestUnkeyedPkg(t *testing.T) {
 	t.Chdir(filepath.Join("internal", "unkeyedpkg"))
 	err := run(".", filepath.Join("..", "..", "config.yaml"))
-	require.EqualError(t, err, `receiver/unkeyedreceiver struct "UnkeyedConfig" does not prevent unkeyed literal initialization`)
+	require.EqualError(t, err, `[receiver/unkeyedreceiver] struct "UnkeyedConfig" does not prevent unkeyed literal initialization`)
 }
 
 func TestMissingConfigFile(t *testing.T) {

@@ -64,9 +64,12 @@ func run(folder string, configPath string) error {
 					return nil
 				}
 			}
-			metadata, err3 := internal.ReadMetadata(base)
+			metadata, found, err3 := internal.ReadMetadata(base)
 			if err3 != nil {
 				return err3
+			}
+			if !found {
+				return nil
 			}
 			if err = walkFolder(cfg, base, metadata); err != nil {
 				errs = append(errs, err)
@@ -106,6 +109,8 @@ func walkFolder(cfg internal.Config, folder string, metadata internal.Metadata) 
 	}
 
 	var errs []error
+	componentType := metadata.Status.Class
+	isFactoryComponent := componentType == "connector" || componentType == "exporter" || componentType == "extension" || componentType == "processor" || componentType == "receiver"
 
 	if len(cfg.AllowedFunctions) > 0 {
 
@@ -125,7 +130,7 @@ func walkFolder(cfg internal.Config, folder string, metadata internal.Metadata) 
 			}
 		}
 
-		if len(functionsPresent) == 0 {
+		if len(functionsPresent) == 0 && isFactoryComponent {
 			errs = append(errs, fmt.Errorf("[%s] no function matching configuration found", folder))
 		}
 	}
@@ -138,8 +143,7 @@ func walkFolder(cfg internal.Config, folder string, metadata internal.Metadata) 
 		}
 	}
 
-	componentType := metadata.Status.Class
-	if (!cfg.JSONSchema.CheckPresent && !cfg.JSONSchema.CheckValid && !cfg.ComponentAPI && !cfg.ComponentAPIStrict) || (componentType != "connector" && componentType != "exporter" && componentType != "extension" && componentType != "processor" && componentType != "receiver") {
+	if (!cfg.JSONSchema.CheckPresent && !cfg.JSONSchema.CheckValid && !cfg.ComponentAPI && !cfg.ComponentAPIStrict) || !isFactoryComponent {
 		return errors.Join(errs...)
 	}
 
@@ -249,5 +253,5 @@ func checkStructDisallowUnkeyedLiteral(cfg internal.Config, s internal.APIstruct
 			}
 		}
 	}
-	return fmt.Errorf("%s struct %q does not prevent unkeyed literal initialization", folder, s.Name)
+	return fmt.Errorf("[%s] struct %q does not prevent unkeyed literal initialization", folder, s.Name)
 }
