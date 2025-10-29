@@ -109,6 +109,14 @@ func Read(folder string, ignoredFunctions []string, excludedFiles []string) (API
 					isInternal = true
 				}
 			}
+			goModPresent := false
+			if _, err := os.Stat(filepath.Join(path, "go.mod")); err == nil {
+				goModPresent = true
+			}
+			// if a subfolder has its own go.mod, do not read the folder.
+			if path != folder && goModPresent {
+				return nil
+			}
 			packs, err := parser.ParseDir(set, path, nil, 0)
 			if err != nil {
 				return err
