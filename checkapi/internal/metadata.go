@@ -23,17 +23,17 @@ type Metadata struct {
 }
 
 // ReadMetadata reads from the metadata.yaml file in the given folder.
-func ReadMetadata(folder string) (Metadata, error) {
+func ReadMetadata(folder string) (Metadata, bool, error) {
 	if _, err := os.Stat(filepath.Join(folder, "metadata.yaml")); errors.Is(err, os.ErrNotExist) {
-		return Metadata{Status: Status{Class: "pkg"}}, nil
+		return Metadata{Status: Status{Class: "pkg"}}, false, nil
 	}
 	m, err := os.ReadFile(filepath.Join(folder, "metadata.yaml")) // #nosec G304
 	if err != nil {
-		return Metadata{}, err
+		return Metadata{}, false, err
 	}
 	var componentInfo Metadata
 	if err = yaml.Unmarshal(m, &componentInfo); err != nil {
-		return Metadata{}, err
+		return Metadata{}, false, err
 	}
-	return componentInfo, nil
+	return componentInfo, true, nil
 }
