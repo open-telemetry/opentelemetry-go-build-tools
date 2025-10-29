@@ -120,6 +120,25 @@ func walkFolder(cfg internal.Config, folder string, metadata internal.Metadata) 
 			if !slices.Contains(fnDesc.Classes, metadata.Status.Class) {
 				continue
 			}
+			// any function
+			if fnDesc.Name == "*" {
+				functionsPresent[""] = struct{}{}
+				break OUTER
+			}
+			// no functions at all.
+			if fnDesc.Name == "" {
+				functionsPresent[""] = struct{}{}
+				fnNames = make([]string, 0, len(result.Functions))
+				for i, fn := range result.Functions {
+					if !fn.Internal {
+						fnNames[i] = fn.Name
+					}
+				}
+				if len(fnNames) > 0 {
+					errs = append(errs, fmt.Errorf("[%s] no functions must be exported under this module, found %q", folder, strings.Join(fnNames, ",")))
+				}
+				break OUTER
+			}
 			for _, fn := range result.Functions {
 				if fn.Name == fnDesc.Name &&
 					slices.Equal(fn.Params, fnDesc.Parameters) &&
