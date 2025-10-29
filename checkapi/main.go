@@ -109,6 +109,8 @@ func walkFolder(cfg internal.Config, folder string, metadata internal.Metadata) 
 	}
 
 	var errs []error
+	componentType := metadata.Status.Class
+	isFactoryComponent := componentType == "connector" || componentType == "exporter" || componentType == "extension" || componentType == "processor" || componentType == "receiver"
 
 	if len(cfg.AllowedFunctions) > 0 {
 
@@ -128,7 +130,7 @@ func walkFolder(cfg internal.Config, folder string, metadata internal.Metadata) 
 			}
 		}
 
-		if len(functionsPresent) == 0 {
+		if len(functionsPresent) == 0 && isFactoryComponent {
 			errs = append(errs, fmt.Errorf("[%s] no function matching configuration found", folder))
 		}
 	}
@@ -141,8 +143,7 @@ func walkFolder(cfg internal.Config, folder string, metadata internal.Metadata) 
 		}
 	}
 
-	componentType := metadata.Status.Class
-	if (!cfg.JSONSchema.CheckPresent && !cfg.JSONSchema.CheckValid && !cfg.ComponentAPI && !cfg.ComponentAPIStrict) || (componentType != "connector" && componentType != "exporter" && componentType != "extension" && componentType != "processor" && componentType != "receiver") {
+	if (!cfg.JSONSchema.CheckPresent && !cfg.JSONSchema.CheckValid && !cfg.ComponentAPI && !cfg.ComponentAPIStrict) || !isFactoryComponent {
 		return errors.Join(errs...)
 	}
 
