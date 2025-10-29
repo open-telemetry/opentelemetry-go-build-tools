@@ -252,5 +252,5 @@ func checkStructDisallowUnkeyedLiteral(cfg internal.Config, s internal.APIstruct
 			}
 		}
 	}
-	return fmt.Errorf("%s struct %q does not prevent unkeyed literal initialization", folder, s.Name)
+	return fmt.Errorf("[%s] struct %q does not prevent unkeyed literal initialization", folder, s.Name)
 }
