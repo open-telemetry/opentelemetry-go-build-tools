@@ -1,0 +1,7 @@
+allowed_functions:
+  - name: SomeFunc
+    classes:
+      - pkg
+    parameters:
+      - string
+    return_types: [string]

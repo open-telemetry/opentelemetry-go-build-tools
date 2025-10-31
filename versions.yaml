@@ -33,7 +33,7 @@ excluded-modules:
   - github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/altpkg/receiver/badreceiver
   - github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/badpkg/receiver/badreceiver
   - github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/badpkg/receiver/bad2receiver
-  - github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/pkg/pkg
+  - foo/bar/pkg/pkg
   - github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/testpkg/receiver/validreceiver
   - github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/testpkg/receiver/unkeyedreceiver
   - github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/config/receiver/badconfigreceiver

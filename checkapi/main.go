@@ -115,6 +115,12 @@ func walkFolder(cfg internal.Config, folder string, metadata internal.Metadata) 
 	if len(cfg.AllowedFunctions) > 0 {
 
 		functionsPresent := map[string]struct{}{}
+		functionsRemaining := make(map[string]struct{}, len(result.Functions))
+		for _, fn := range result.Functions {
+			if !fn.Internal {
+				functionsRemaining[fn.Name] = struct{}{}
+			}
+		}
 	OUTER:
 		for _, fnDesc := range cfg.AllowedFunctions {
 			if !slices.Contains(fnDesc.Classes, metadata.Status.Class) {
@@ -123,15 +129,17 @@ func walkFolder(cfg internal.Config, folder string, metadata internal.Metadata) 
 			// any function
 			if fnDesc.Name == "*" {
 				functionsPresent[""] = struct{}{}
+				functionsRemaining = map[string]struct{}{}
 				break OUTER
 			}
 			// no functions at all.
 			if fnDesc.Name == "" {
 				functionsPresent[""] = struct{}{}
+				functionsRemaining = map[string]struct{}{}
 				fnNames = make([]string, 0, len(result.Functions))
-				for i, fn := range result.Functions {
+				for _, fn := range result.Functions {
 					if !fn.Internal {
-						fnNames[i] = fn.Name
+						fnNames = append(fnNames, fn.Name)
 					}
 				}
 				if len(fnNames) > 0 {
@@ -139,18 +147,28 @@ func walkFolder(cfg internal.Config, folder string, metadata internal.Metadata) 
 				}
 				break OUTER
 			}
+
 			for _, fn := range result.Functions {
 				if fn.Name == fnDesc.Name &&
 					slices.Equal(fn.Params, fnDesc.Parameters) &&
 					slices.Equal(fn.ReturnTypes, fnDesc.ReturnTypes) {
 					functionsPresent[fn.Name] = struct{}{}
-					break OUTER
+					delete(functionsRemaining, fn.Name)
 				}
 			}
 		}
 
-		if len(functionsPresent) == 0 && isFactoryComponent {
+		if len(functionsPresent) == 0 {
 			errs = append(errs, fmt.Errorf("[%s] no function matching configuration found", folder))
+		}
+
+		if len(functionsRemaining) > 0 {
+			names := make([]string, 0, len(functionsRemaining))
+			for fnName := range functionsRemaining {
+				names = append(names, fnName)
+			}
+			sort.Strings(names)
+			errs = append(errs, fmt.Errorf("[%s] these functions should not be exported: %q", folder, strings.Join(names, ",")))
 		}
 	}
 

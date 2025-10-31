@@ -1,0 +1,10 @@
+allowed_functions:
+  - name: SomeFunc
+    classes:
+      - pkg
+    return_types: [bool]
+    parameters:
+      - string
+  - name: CompletelyUnrelated
+    classes:
+      - receiver
