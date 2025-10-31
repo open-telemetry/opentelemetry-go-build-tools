@@ -4,6 +4,24 @@
 
 <!-- next version -->
 
+## v0.29.0
+
+### 💡 Enhancements 💡
+
+- `checkapi`: Validate the functions exported by a component (#1358)
+  Set explicitly what functions a component can export.
+  Set name to "*" to allow any function to be exported under a class of component.
+  Set name to "" or missing to not allow any functions to be exported under a class of component.
+  
+- `issuegenerator`: Add PR number to issue comments (#1180)
+
+### 🧰 Bug fixes 🧰
+
+- `checkapi`: Do not report errors about a missing factory function if the component is not expected to have a factory function (#1283)
+- `checkapi`: Fix collision of struct names inside a module (#1357)
+- `checkapi`: do not read the API of go modules that are not associated with a metadata.yaml file. (#1356)
+- `checkapi`: do not try to read the API of a nested module folder (#1355)
+
 ## v0.28.1
 
 ### 💡 Enhancements 💡
