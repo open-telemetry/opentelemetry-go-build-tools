@@ -121,7 +121,6 @@ func walkFolder(cfg internal.Config, folder string, metadata internal.Metadata) 
 				functionsRemaining[fn.Name] = struct{}{}
 			}
 		}
-	OUTER:
 		for _, fnDesc := range cfg.AllowedFunctions {
 			if !slices.Contains(fnDesc.Classes, metadata.Status.Class) {
 				continue
@@ -130,7 +129,7 @@ func walkFolder(cfg internal.Config, folder string, metadata internal.Metadata) 
 			if fnDesc.Name == "*" {
 				functionsPresent[""] = struct{}{}
 				functionsRemaining = map[string]struct{}{}
-				break OUTER
+				break
 			}
 			// no functions at all.
 			if fnDesc.Name == "" {
@@ -145,7 +144,7 @@ func walkFolder(cfg internal.Config, folder string, metadata internal.Metadata) 
 				if len(fnNames) > 0 {
 					errs = append(errs, fmt.Errorf("[%s] no functions must be exported under this module, found %q", folder, strings.Join(fnNames, ",")))
 				}
-				break OUTER
+				break
 			}
 
 			for _, fn := range result.Functions {
