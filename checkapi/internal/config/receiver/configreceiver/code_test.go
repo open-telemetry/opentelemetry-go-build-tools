@@ -4,7 +4,7 @@
 package configreceiver
 
 import (
-	"github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/config/receiver/configreceiver/internal"
+	"github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/config/receiver/configreceiver/emb"
 	"go.opentelemetry.io/collector/component"
 )
 
@@ -33,7 +33,7 @@ type Config struct {
 	Sub              SubConfig  `mapstructure:"subconfig"`
 	Ptr              *PtrStruct `mapstructure:"ptrStruct"`
 	// Embedded struct
-	internal.Embedded `mapstructure:",squash"`
+	emb.Config `mapstructure:",squash"`
 	// Embedded struct pointer
 	*EmbeddedPtr
 	// Generic type

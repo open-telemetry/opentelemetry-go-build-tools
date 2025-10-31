@@ -19,11 +19,9 @@ func DeriveSchema(cfgStruct APIstruct, structs []APIstruct, typeMappings map[str
 
 func matchingStruct(structRef string, structs []APIstruct) APIstruct {
 	var selected APIstruct
-	parts := strings.Split(structRef, ".")
-	shortStructRef := parts[len(parts)-1]
 
 	for _, s := range structs {
-		if s.Name == shortStructRef {
+		if s.Name == structRef {
 			selected = s
 			break
 		}

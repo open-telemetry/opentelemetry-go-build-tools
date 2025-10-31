@@ -10,6 +10,7 @@ type Function struct {
 	ReturnTypes []string `json:"return_types,omitempty"`
 	Params      []string `json:"params,omitempty"`
 	TypeParams  []string `json:"type_params,omitempty"`
+	Internal    bool     `json:"internal"`
 }
 
 // APIstructField represents a struct field in the codebase.
