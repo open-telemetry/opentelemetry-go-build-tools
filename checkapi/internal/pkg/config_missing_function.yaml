@@ -1,0 +1,8 @@
+allowed_functions:
+  - name: MissingFunc
+    classes:
+      - pkg
+    return_types: [bool]
+  - name: CompletelyUnrelated
+    classes:
+      - receiver

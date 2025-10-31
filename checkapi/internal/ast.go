@@ -284,6 +284,7 @@ func readFile(ignoredFunctions []string, f *ast.File, result *API, internal bool
 					Params:      params,
 					ReturnTypes: returnTypes,
 					TypeParams:  typeParams,
+					Internal:    internal,
 				}
 				if !fn.Name.IsExported() && len(apiFn.ReturnTypes) == 1 && apiFn.ReturnTypes[0] == "component.Config" {
 					result.ConfigStructName = extractFunctionReturnType(fn)

@@ -27,6 +27,44 @@ func TestPkgPkg(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestPkgPkgNoFunctions(t *testing.T) {
+	t.Chdir("internal")
+	err := run("pkg", filepath.Join("pkg", "config_no_functions.yaml"))
+	require.EqualError(t, err, `[pkg/pkg] no functions must be exported under this module, found "OtherFunc,SomeFunc"`)
+}
+
+func TestPkgPkgSpecificFunctionsAllowed(t *testing.T) {
+	t.Chdir("internal")
+	err := run("pkg", filepath.Join("pkg", "config_allowed.yaml"))
+	require.NoError(t, err)
+}
+
+func TestPkgPkgOnlyOneAllowedFunctionAllowed(t *testing.T) {
+	t.Chdir("internal")
+	err := run("pkg", filepath.Join("pkg", "config_only_one_allowed.yaml"))
+	require.EqualError(t, err, `[pkg/pkg] these functions should not be exported: "OtherFunc"`)
+}
+
+func TestPkgPkgAllFunctionsAllowed(t *testing.T) {
+	t.Chdir("internal")
+	err := run("pkg", filepath.Join("pkg", "config_any_functions.yaml"))
+	require.NoError(t, err)
+}
+
+func TestPkgPkgMissingFunction(t *testing.T) {
+	t.Chdir("internal")
+	err := run("pkg", filepath.Join("pkg", "config_missing_function.yaml"))
+	require.EqualError(t, err, `[pkg/pkg] no function matching configuration found
+[pkg/pkg] these functions should not be exported: "OtherFunc,SomeFunc"`)
+}
+
+func TestPkgPkgWrongReturnType(t *testing.T) {
+	t.Chdir("internal")
+	err := run("pkg", filepath.Join("pkg", "config_wrong_return_type.yaml"))
+	require.EqualError(t, err, `[pkg/pkg] no function matching configuration found
+[pkg/pkg] these functions should not be exported: "OtherFunc,SomeFunc"`)
+}
+
 func TestAltConfig(t *testing.T) {
 	err := run(filepath.Join("internal", "altpkg"), filepath.Join("internal", "altpkg", "config.yaml"))
 	require.NoError(t, err)

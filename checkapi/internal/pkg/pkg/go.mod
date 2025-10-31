@@ -1,3 +1,3 @@
-module github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/pkg/pkg
+module foo/bar/pkg/pkg
 
 go 1.24.0

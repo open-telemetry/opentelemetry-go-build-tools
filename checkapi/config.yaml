@@ -37,6 +37,9 @@ allowed_functions:
     name: NewFactory
     parameters:
     return_types: [receiver.Factory]
+  - classes:
+      - pkg
+    name: "*"
 
 ignored_functions:
   - ^Test.*
