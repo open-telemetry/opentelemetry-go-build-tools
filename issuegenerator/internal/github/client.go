@@ -27,7 +27,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/v76/github"
+	"github.com/google/go-github/v77/github"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 
