@@ -2,7 +2,7 @@ module go.opentelemetry.io/build-tools/issuegenerator
 
 go 1.24.4
 
-toolchain go1.24.7
+toolchain go1.25.4
 
 require (
 	github.com/google/go-github/v77 v77.0.0
