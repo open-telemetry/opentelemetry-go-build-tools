@@ -4,6 +4,7 @@ go 1.24.0
 
 require (
 	github.com/google/go-github/v78 v78.0.0
+	github.com/google/go-github/v79 v79.0.0
 	github.com/stretchr/testify v1.11.1
 	gopkg.in/yaml.v3 v3.0.1
 )
