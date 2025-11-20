@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package shared
+package shared // nolint:revive // keeping generic package name until a proper refactoring is done
 
 import (
 	"errors"
