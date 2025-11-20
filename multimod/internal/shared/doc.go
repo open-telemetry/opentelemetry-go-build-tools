@@ -14,4 +14,4 @@
 
 // Package shared provides helper functions for reading and parsing Module versioning
 // files, as well as common functions used by multiple commands in the Cobra application.
-package shared
+package shared // nolint:revive // keeping generic package name until a proper refactoring is done
