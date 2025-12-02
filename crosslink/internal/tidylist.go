@@ -202,7 +202,7 @@ func TidyList(rc RunConfig, outputPath string) error {
 			queue = queue[1:]
 			i := 0
 			for _, modName := range path {
-				i = slices.Index(path[i:], modName)
+				i = slices.Index(modsTopo[i:], graph[modName].path)
 				if i == -1 {
 					return fmt.Errorf("tidy schedule is invalid; changes may not be propagated along path: %v", path)
 				}
