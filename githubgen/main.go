@@ -20,7 +20,6 @@ import (
 
 // Generates files specific to GitHub according to status datatype.Metadata:
 // .github/CODEOWNERS
-// .github/ALLOWLIST
 // .github/ISSUE_TEMPLATES/*.yaml (list of components)
 // reports/distributions/*
 func main() {

@@ -36,7 +36,7 @@ func (cg *codeownersGenerator) Generate(data datatype.GithubData) error {
 		return err
 	}
 
-	var ownerComponents, allowListUnmaintainedComponents, unmaintainedCodeowners, distributions, allowListDeprecatedComponents []string
+	var ownerComponents, unmaintainedCodeowners, distributions []string
 
 LOOP:
 	for _, folder := range data.Folders {
@@ -44,12 +44,8 @@ LOOP:
 		// check if component is unmaintained or deprecated
 		for stability := range m.Status.Stability {
 			if stability == unmaintainedStatus {
-				allowListUnmaintainedComponents = append(allowListUnmaintainedComponents, folder)
 				unmaintainedCodeowners = append(unmaintainedCodeowners, fmt.Sprintf("%s/%s %s", folder, strings.Repeat(" ", data.MaxLength-len(folder)), data.DefaultCodeOwner))
 				continue LOOP
-			}
-			if stability == deprecatedStatus && (m.Status.Codeowners == nil || len(m.Status.Codeowners.Active) == 0) {
-				allowListDeprecatedComponents = append(allowListDeprecatedComponents, folder+"/\n")
 			}
 		}
 
@@ -92,21 +88,6 @@ LOOP:
 	templateContents = injectContent(startUnmaintainedList, endUnmaintainedList, templateContents, unmaintainedCodeowners)
 
 	err = cg.setFile(codeownersFile, templateContents)
-	if err != nil {
-		return err
-	}
-
-	// ALLOWLIST file
-	allowListFile := filepath.Join(data.RootFolder, ".github", "ALLOWLIST")
-	allowListContents, err := cg.getFile(allowListFile)
-	if err != nil {
-		return err
-	}
-
-	allowListContents = injectContent(startUnmaintainedList, endUnmaintainedList, allowListContents, allowListUnmaintainedComponents)
-	allowListContents = injectContent(startDeprecatedList, endDeprecatedList, allowListContents, allowListDeprecatedComponents)
-
-	err = cg.setFile(allowListFile, allowListContents)
 	if err != nil {
 		return err
 	}
