@@ -1,6 +1,6 @@
 module go.opentelemetry.io/build-tools/checkapi
 
-go 1.25
+go 1.24.0
 
 require (
 	github.com/goccy/go-json v0.10.5
