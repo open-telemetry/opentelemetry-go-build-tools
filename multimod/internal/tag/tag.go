@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"strings"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -65,8 +66,9 @@ func Run(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags b
 
 type tagger struct {
 	shared.ModuleSetRelease
-	CommitHash plumbing.Hash
-	Repo       *git.Repository
+	CommitHash      plumbing.Hash
+	Repo            *git.Repository
+	tagsOnCommit    map[string]bool // tags that already exist on the target commit
 }
 
 func newTagger(versioningFilename, modSetToUpdate, repoRoot, hash string, deleteModuleSetTags bool) (tagger, error) {
@@ -87,21 +89,76 @@ func newTagger(versioningFilename, modSetToUpdate, repoRoot, hash string, delete
 
 	modFullTagNames := modRelease.ModuleFullTagNames()
 
+	var tagsOnCommit map[string]bool
+
 	if deleteModuleSetTags {
 		if err = verifyTagsOnCommit(modFullTagNames, repo, fullCommitHash); err != nil {
 			return tagger{}, fmt.Errorf("verifyTagsOnCommit failed: %w", err)
 		}
+		// For delete operation, we don't need tagsOnCommit
+		tagsOnCommit = make(map[string]bool)
 	} else {
-		if err = modRelease.CheckGitTagsAlreadyExist(repo); err != nil {
-			return tagger{}, fmt.Errorf("CheckGitTagsAlreadyExist failed: %w", err)
+		// Check if tags exist on the specified commit or on a different commit
+		var tagsOnOtherCommit []string
+		tagsOnCommit, tagsOnOtherCommit, err = getTagsOnCommitStatus(modFullTagNames, repo, fullCommitHash)
+		if err != nil {
+			return tagger{}, fmt.Errorf("error checking tag status: %w", err)
 		}
+
+		// If tags exist on a different commit, that's an error
+		if len(tagsOnOtherCommit) > 0 {
+			return tagger{}, fmt.Errorf("some git tags exist on a different commit than %s:\n%s", fullCommitHash, strings.Join(tagsOnOtherCommit, "\n"))
+		}
+		// If all tags exist on the specified commit, we'll skip creating them in tagAllModules
+		// This allows re-running the command without failure
 	}
 
 	return tagger{
 		ModuleSetRelease: modRelease,
 		CommitHash:       fullCommitHash,
 		Repo:             repo,
+		tagsOnCommit:     tagsOnCommit,
 	}, nil
+}
+
+// getTagsOnCommitStatus checks which tags exist on the target commit and which exist on other commits.
+// Returns:
+//   - tagsOnCommit: map of tag names that exist on the target commit
+//   - tagsOnOtherCommit: list of tag names that exist on a different commit
+//   - error: if there was an error checking tags
+func getTagsOnCommitStatus(modFullTagNames []string, repo *git.Repository, targetCommitHash plumbing.Hash) (map[string]bool, []string, error) {
+	tagsOnCommit := make(map[string]bool)
+	var tagsOnOtherCommit []string
+
+	for _, tagName := range modFullTagNames {
+		tagRef, tagRefErr := repo.Tag(tagName)
+
+		if tagRefErr != nil {
+			if errors.Is(tagRefErr, git.ErrTagNotFound) {
+				// Tag doesn't exist, skip it
+				continue
+			}
+			return nil, nil, fmt.Errorf("unable to fetch git tag ref for %v: %w", tagName, tagRefErr)
+		}
+
+		tagObj, tagObjErr := repo.TagObject(tagRef.Hash())
+		if tagObjErr != nil {
+			return nil, nil, fmt.Errorf("unable to get tag object: %w", tagObjErr)
+		}
+
+		tagCommit, tagCommitErr := tagObj.Commit()
+		if tagCommitErr != nil {
+			return nil, nil, fmt.Errorf("could not get tag object commit: %w", tagCommitErr)
+		}
+
+		if targetCommitHash == tagCommit.Hash {
+			tagsOnCommit[tagName] = true
+		} else {
+			tagsOnOtherCommit = append(tagsOnOtherCommit, tagName)
+		}
+	}
+
+	return tagsOnCommit, tagsOnOtherCommit, nil
 }
 
 func verifyTagsOnCommit(modFullTagNames []string, repo *git.Repository, targetCommitHash plumbing.Hash) error {
@@ -186,6 +243,12 @@ func (t tagger) tagAllModules(customTagger *object.Signature) error {
 	log.Printf("Tagging commit %s:\n", t.CommitHash)
 
 	for _, newFullTag := range modFullTags {
+		// Skip tags that already exist on this commit
+		if t.tagsOnCommit[newFullTag] {
+			log.Printf("%v (already exists, skipping)\n", newFullTag)
+			continue
+		}
+
 		log.Printf("%v\n", newFullTag)
 
 		var err error
