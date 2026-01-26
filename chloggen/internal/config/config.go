@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -59,8 +58,13 @@ func New(rootDir string) *Config {
 
 // NewFromFile returns a new Config from the specified YAML file.
 func NewFromFile(rootDir string, cfgFilename string) (*Config, error) {
-	cfgYAML := filepath.Clean(filepath.Join(rootDir, cfgFilename))
-	cfgBytes, err := os.ReadFile(cfgYAML)
+	var cfgYAML string
+	if filepath.IsAbs(cfgFilename) {
+		cfgYAML = filepath.Clean(cfgFilename)
+	} else {
+		cfgYAML = filepath.Clean(filepath.Join(rootDir, cfgFilename))
+	}
+	cfgBytes, err := os.ReadFile(cfgYAML) //nolint:gosec // User-provided config file
 	if err != nil {
 		return nil, err
 	}
@@ -72,13 +76,13 @@ func NewFromFile(rootDir string, cfgFilename string) (*Config, error) {
 	cfg.ConfigYAML = cfgYAML
 	if cfg.EntriesDir == "" {
 		cfg.EntriesDir = filepath.Join(rootDir, DefaultEntriesDir)
-	} else if !strings.HasPrefix(cfg.EntriesDir, rootDir) {
+	} else if !filepath.IsAbs(cfg.EntriesDir) {
 		cfg.EntriesDir = filepath.Join(rootDir, cfg.EntriesDir)
 	}
 
 	if cfg.TemplateYAML == "" {
 		cfg.TemplateYAML = filepath.Join(rootDir, DefaultEntriesDir, DefaultTemplateYAML)
-	} else if !strings.HasPrefix(cfg.TemplateYAML, rootDir) {
+	} else if !filepath.IsAbs(cfg.TemplateYAML) {
 		cfg.TemplateYAML = filepath.Join(rootDir, cfg.TemplateYAML)
 	}
 
@@ -87,6 +91,7 @@ func NewFromFile(rootDir string, cfgFilename string) (*Config, error) {
 	}
 
 	if len(cfg.ChangeLogs) == 0 {
+		cfg.ChangeLogs = make(map[string]string)
 		cfg.ChangeLogs[DefaultChangeLogKey] = filepath.Join(rootDir, DefaultChangeLogFilename)
 		cfg.DefaultChangeLogs = []string{DefaultChangeLogKey}
 		return cfg, nil
@@ -95,7 +100,7 @@ func NewFromFile(rootDir string, cfgFilename string) (*Config, error) {
 	// The user specified at least one changelog. Interpret filename as a relative path from rootDir
 	// (unless they specified an absolute path including rootDir)
 	for key, filename := range cfg.ChangeLogs {
-		if !strings.HasPrefix(filename, rootDir) {
+		if !filepath.IsAbs(filename) {
 			cfg.ChangeLogs[key] = filepath.Join(rootDir, filename)
 		}
 	}
