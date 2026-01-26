@@ -176,3 +176,30 @@ func TestValidate(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateAccumulatesErrors(t *testing.T) {
+	entries := []*chlog.Entry{
+		{
+			ChangeType: "fake_type",
+			Component:  "component",
+			Note:       "note",
+			Issues:     []int{123},
+		},
+		{
+			ChangeType: "bug_fix",
+			Component:  "",
+			Note:       "note",
+			Issues:     []int{456},
+		},
+	}
+
+	cfg := config.New(t.TempDir())
+	globalCfg = cfg
+	setupTestDir(t, entries)
+
+	_, err := runCobra(t, "validate")
+
+	assert.Error(t, err)
+	assert.ErrorContains(t, err, "'fake_type' is not a valid 'change_type'")
+	assert.ErrorContains(t, err, "specify a 'component'")
+}
