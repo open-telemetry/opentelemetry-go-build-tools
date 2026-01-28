@@ -6,7 +6,6 @@ toolchain go1.24.7
 
 require (
 	github.com/google/go-github/v82 v82.0.0
-	github.com/google/go-github/v82 v82.0.0
 	github.com/joshdk/go-junit v1.0.0
 	github.com/migueleliasweb/go-github-mock v1.5.0
 	github.com/stretchr/testify v1.11.1
