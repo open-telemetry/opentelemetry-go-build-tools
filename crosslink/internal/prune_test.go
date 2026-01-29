@@ -26,8 +26,6 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
-// TODO: Add cleanup to os.removeall
-
 func TestPrune(t *testing.T) {
 	lg, _ := zap.NewDevelopment()
 	tests := []struct {

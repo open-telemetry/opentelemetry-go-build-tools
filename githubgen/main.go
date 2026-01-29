@@ -34,6 +34,7 @@ func main() {
 	flag.Parse()
 	var generators []datatype.Generator
 
+	validGenerators := []string{"issue-templates", "codeowners", "distributions", "chloggen-components"}
 	for _, arg := range flag.Args() {
 		switch arg {
 		case "issue-templates":
@@ -45,7 +46,8 @@ func main() {
 		case "chloggen-components":
 			generators = append(generators, newChloggenComponentsGenerator())
 		default:
-			panic(fmt.Sprintf("Unknown datatype.Generator: %s", arg))
+			fmt.Fprintf(os.Stderr, "Error: unknown generator %q\nValid generators: %v\n", arg, validGenerators)
+			os.Exit(1)
 		}
 	}
 	if len(generators) == 0 {
