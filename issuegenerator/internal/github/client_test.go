@@ -15,8 +15,10 @@
 package github
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"sort"
@@ -159,7 +161,13 @@ PR: N/A
 	require.GreaterOrEqual(t, len(reports), len(tests))
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := os.Expand(tt.template, templateHelper(envVariables, reports[i], 0))
+			// Return empty list to test the fallback logic (getRunURL)
+			mockedHTTPClient := newMockHTTPClient(t, mock.GetReposActionsRunsJobsByOwnerByRepoByRunId, &github.Jobs{Jobs: []*github.WorkflowJob{}}, 0)
+			client := newTestClient(t, mockedHTTPClient)
+			// Ensure client env vars match test vars
+			client.envVariables = envVariables
+
+			result := os.Expand(tt.template, templateHelper(context.Background(), client, envVariables, reports[i], 0))
 			assert.Equal(t, tt.expected, result)
 		})
 	}
@@ -389,6 +397,85 @@ func TestExtractPRNumberFromMessage(t *testing.T) {
 			}
 			prNum := client.extractPRNumberFromCommitMessage(tt.commitMsg)
 			assert.Equal(t, tt.expectedPR, prNum)
+		})
+	}
+}
+
+func TestGetFailedJobURLs(t *testing.T) {
+	tests := []struct {
+		name         string
+		runID        int64
+		mockResponse string
+		expected     map[string]string
+		expectErr    bool
+	}{
+		{
+			name:  "single failure found",
+			runID: 123,
+			mockResponse: `{"jobs": [
+				{"id": 1, "name": "Success Job", "conclusion": "success", "html_url": "http://job/1"},
+				{"id": 2, "name": "Failed Job", "conclusion": "failure", "html_url": "http://job/2"}
+			]}`,
+			expected: map[string]string{"Failed Job": "http://job/2"},
+		},
+		{
+			name:  "multiple failures",
+			runID: 123,
+			mockResponse: `{"jobs": [
+				{"id": 1, "name": "Lint", "conclusion": "failure", "html_url": "http://job/1"},
+				{"id": 2, "name": "Test-Linux", "conclusion": "failure", "html_url": "http://job/2"},
+				{"id": 3, "name": "Test-Windows", "conclusion": "success", "html_url": "http://job/3"}
+			]}`,
+			expected: map[string]string{"Lint": "http://job/1", "Test-Linux": "http://job/2"},
+		},
+		{
+			name:  "timed_out treated as failure",
+			runID: 123,
+			mockResponse: `{"jobs": [
+				{"id": 1, "name": "Success Job", "conclusion": "success", "html_url": "http://job/1"},
+				{"id": 2, "name": "Timeout Job", "conclusion": "timed_out", "html_url": "http://job/2"}
+			]}`,
+			expected: map[string]string{"Timeout Job": "http://job/2"},
+		},
+		{
+			name:  "no failures found",
+			runID: 123,
+			mockResponse: `{"jobs": [
+				{"id": 1, "name": "Success Job", "conclusion": "success", "html_url": "http://job/1"}
+			]}`,
+			expected: map[string]string{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusOK)
+				_, err := w.Write([]byte(tt.mockResponse))
+				require.NoError(t, err)
+			}))
+			defer server.Close()
+
+			client := &Client{
+				logger: zaptest.NewLogger(t),
+				envVariables: map[string]string{
+					githubOwner:      testOwner,
+					githubRepository: testRepo,
+					githubServerURL:  "https://github.com",
+				},
+			}
+
+			// Override client base URL to point to mock server
+			c, _ := github.NewClient(nil).WithEnterpriseURLs(server.URL, server.URL)
+			client.client = c
+
+			failedJobs, err := client.getFailedJobURLs(context.Background(), tt.runID)
+			if tt.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected, failedJobs)
+			}
 		})
 	}
 }
