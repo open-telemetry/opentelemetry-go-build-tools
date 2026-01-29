@@ -72,28 +72,14 @@ func NewFromFile(rootDir string, cfgFilename string) (*Config, error) {
 	}
 
 	cfg.ConfigYAML = cfgYAML
-	if cfg.EntriesDir == "" {
-		cfg.EntriesDir = DefaultEntriesDir
-	}
-	if !filepath.IsAbs(cfg.EntriesDir) {
-		cfg.EntriesDir = filepath.Join(rootDir, cfg.EntriesDir)
-	}
-	cfg.EntriesDir = filepath.Clean(cfg.EntriesDir)
-
-	if cfg.TemplateYAML == "" {
-		cfg.TemplateYAML = filepath.Join(DefaultEntriesDir, DefaultTemplateYAML)
-	}
-	if !filepath.IsAbs(cfg.TemplateYAML) {
-		cfg.TemplateYAML = filepath.Join(rootDir, cfg.TemplateYAML)
-	}
-	cfg.TemplateYAML = filepath.Clean(cfg.TemplateYAML)
+	cfg.EntriesDir = makeAbs(rootDir, cfg.EntriesDir, DefaultEntriesDir)
+	cfg.TemplateYAML = makeAbs(rootDir, cfg.TemplateYAML, filepath.Join(DefaultEntriesDir, DefaultTemplateYAML))
 
 	if len(cfg.ChangeLogs) == 0 && len(cfg.DefaultChangeLogs) > 0 {
 		return nil, errors.New("cannot specify 'default_changelogs' without 'changelogs'")
 	}
 
 	if len(cfg.ChangeLogs) == 0 {
-		cfg.ChangeLogs = make(map[string]string)
 		cfg.ChangeLogs[DefaultChangeLogKey] = filepath.Join(rootDir, DefaultChangeLogFilename)
 		cfg.DefaultChangeLogs = []string{DefaultChangeLogKey}
 		return cfg, nil
@@ -115,4 +101,14 @@ func NewFromFile(rootDir string, cfgFilename string) (*Config, error) {
 	}
 
 	return cfg, nil
+}
+
+func makeAbs(rootDir, path, defaultPath string) string {
+	if path == "" {
+		return filepath.Clean(filepath.Join(rootDir, defaultPath))
+	}
+	if filepath.IsAbs(path) {
+		return filepath.Clean(path)
+	}
+	return filepath.Clean(filepath.Join(rootDir, path))
 }
