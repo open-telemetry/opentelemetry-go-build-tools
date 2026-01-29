@@ -1,0 +1,4 @@
+change_type: bug_fix
+component: chloggen
+note: "Correctly handle absolute paths for config file, entries_dir, template_yaml, and change_logs."
+issues: [1387]
