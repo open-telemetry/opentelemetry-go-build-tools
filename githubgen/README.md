@@ -1,7 +1,6 @@
 # githubgen
 
-This executable is used to generate `.github/CODEOWNERS` and
-`.github/ALLOWLIST` files.
+This executable is used to generate `.github/CODEOWNERS` files.
 
 It reads status metadata from `metadata.yaml` files located throughout the
 repository.
