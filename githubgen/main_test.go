@@ -119,119 +119,95 @@ func Test_newIssueTemplatesGenerator(t *testing.T) {
 
 func Test_parseGenerators(t *testing.T) {
 	skipCheck := false
-	type args struct {
+	tests := []struct {
+		name            string
 		args            []string
 		trimSuffixes    string
 		skipGithubCheck *bool
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantLen int
-		wantErr bool
-		errMsg  string
+		wantLen         int
+		wantErr         string
 	}{
 		{
-			name: "valid single generator - issue-templates",
-			args: args{
-				args:            []string{"issue-templates"},
-				trimSuffixes:    "receiver, exporter",
-				skipGithubCheck: &skipCheck,
-			},
-			wantLen: 1,
-			wantErr: false,
+			name:            "valid single generator - issue-templates",
+			args:            []string{"issue-templates"},
+			trimSuffixes:    "receiver, exporter",
+			skipGithubCheck: &skipCheck,
+			wantLen:         1,
+			wantErr:         "",
 		},
 		{
-			name: "valid single generator - codeowners",
-			args: args{
-				args:            []string{"codeowners"},
-				trimSuffixes:    "receiver, exporter",
-				skipGithubCheck: &skipCheck,
-			},
-			wantLen: 1,
-			wantErr: false,
+			name:            "valid single generator - codeowners",
+			args:            []string{"codeowners"},
+			trimSuffixes:    "receiver, exporter",
+			skipGithubCheck: &skipCheck,
+			wantLen:         1,
+			wantErr:         "",
 		},
 		{
-			name: "valid single generator - distributions",
-			args: args{
-				args:            []string{"distributions"},
-				trimSuffixes:    "receiver, exporter",
-				skipGithubCheck: &skipCheck,
-			},
-			wantLen: 1,
-			wantErr: false,
+			name:            "valid single generator - distributions",
+			args:            []string{"distributions"},
+			trimSuffixes:    "receiver, exporter",
+			skipGithubCheck: &skipCheck,
+			wantLen:         1,
+			wantErr:         "",
 		},
 		{
-			name: "valid single generator - chloggen-components",
-			args: args{
-				args:            []string{"chloggen-components"},
-				trimSuffixes:    "receiver, exporter",
-				skipGithubCheck: &skipCheck,
-			},
-			wantLen: 1,
-			wantErr: false,
+			name:            "valid single generator - chloggen-components",
+			args:            []string{"chloggen-components"},
+			trimSuffixes:    "receiver, exporter",
+			skipGithubCheck: &skipCheck,
+			wantLen:         1,
+			wantErr:         "",
 		},
 		{
-			name: "valid multiple generators",
-			args: args{
-				args:            []string{"issue-templates", "codeowners", "distributions"},
-				trimSuffixes:    "receiver, exporter",
-				skipGithubCheck: &skipCheck,
-			},
-			wantLen: 3,
-			wantErr: false,
+			name:            "valid multiple generators",
+			args:            []string{"issue-templates", "codeowners", "distributions"},
+			trimSuffixes:    "receiver, exporter",
+			skipGithubCheck: &skipCheck,
+			wantLen:         3,
+			wantErr:         "",
 		},
 		{
-			name: "all valid generators",
-			args: args{
-				args:            []string{"issue-templates", "codeowners", "distributions", "chloggen-components"},
-				trimSuffixes:    "receiver, exporter",
-				skipGithubCheck: &skipCheck,
-			},
-			wantLen: 4,
-			wantErr: false,
+			name:            "all valid generators",
+			args:            []string{"issue-templates", "codeowners", "distributions", "chloggen-components"},
+			trimSuffixes:    "receiver, exporter",
+			skipGithubCheck: &skipCheck,
+			wantLen:         4,
+			wantErr:         "",
 		},
 		{
-			name: "no generators specified - should use defaults",
-			args: args{
-				args:            []string{},
-				trimSuffixes:    "receiver, exporter",
-				skipGithubCheck: &skipCheck,
-			},
-			wantLen: 2, // issue-templates and codeowners are defaults
-			wantErr: false,
+			name:            "no generators specified - should use defaults",
+			args:            []string{},
+			trimSuffixes:    "receiver, exporter",
+			skipGithubCheck: &skipCheck,
+			wantLen:         2, // issue-templates and codeowners are defaults
+			wantErr:         "",
 		},
 		{
-			name: "invalid generator",
-			args: args{
-				args:            []string{"invalid-generator"},
-				trimSuffixes:    "receiver, exporter",
-				skipGithubCheck: &skipCheck,
-			},
-			wantLen: 0,
-			wantErr: true,
-			errMsg:  "unknown generator",
+			name:            "invalid generator",
+			args:            []string{"invalid-generator"},
+			trimSuffixes:    "receiver, exporter",
+			skipGithubCheck: &skipCheck,
+			wantLen:         0,
+			wantErr:         "unknown generator",
 		},
 		{
-			name: "mix of valid and invalid generators",
-			args: args{
-				args:            []string{"issue-templates", "invalid-generator"},
-				trimSuffixes:    "receiver, exporter",
-				skipGithubCheck: &skipCheck,
-			},
-			wantLen: 0,
-			wantErr: true,
-			errMsg:  "unknown generator",
+			name:            "mix of valid and invalid generators",
+			args:            []string{"issue-templates", "invalid-generator"},
+			trimSuffixes:    "receiver, exporter",
+			skipGithubCheck: &skipCheck,
+			wantLen:         0,
+			wantErr:         "unknown generator",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := parseGenerators(tt.args.args, tt.args.trimSuffixes, tt.args.skipGithubCheck)
+			got, err := parseGenerators(tt.args, tt.trimSuffixes, tt.skipGithubCheck)
 
-			if tt.wantErr {
+			if tt.wantErr != "" {
 				require.Error(t, err, "parseGenerators() should return an error")
-				require.Contains(t, err.Error(), tt.errMsg, "error message should contain expected text")
+				require.Contains(t, err.Error(), tt.wantErr, "error message should contain expected text")
 				require.Nil(t, got, "generators should be nil on error")
 			} else {
 				require.NoError(t, err, "parseGenerators() should not return an error")
