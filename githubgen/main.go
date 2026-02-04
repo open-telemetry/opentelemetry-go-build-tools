@@ -32,25 +32,10 @@ func main() {
 	githubOrgSlug := flag.String("github-org", "open-telemetry", "GitHub organization name to check if codeowners are org members")
 
 	flag.Parse()
-	var generators []datatype.Generator
 
-	validGenerators := []string{"issue-templates", "codeowners", "distributions", "chloggen-components"}
-	for _, arg := range flag.Args() {
-		switch arg {
-		case "issue-templates":
-			generators = append(generators, newIssueTemplatesGenerator(*trimSuffixes))
-		case "codeowners":
-			generators = append(generators, newCodeownersGenerator(skipGithubCheck))
-		case "distributions":
-			generators = append(generators, newDistributionsGenerator())
-		case "chloggen-components":
-			generators = append(generators, newChloggenComponentsGenerator())
-		default:
-			log.Fatalf("Error: unknown generator %q\nValid generators: %v\n", arg, validGenerators)
-		}
-	}
-	if len(generators) == 0 {
-		generators = []datatype.Generator{newIssueTemplatesGenerator(*trimSuffixes), newCodeownersGenerator(skipGithubCheck)}
+	generators, err := parseGenerators(flag.Args(), *trimSuffixes, skipGithubCheck)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	distributions, err := getDistributions(*folder)
@@ -61,6 +46,38 @@ func main() {
 	if err = run(*folder, *allowlistFilePath, generators, distributions, *defaultCodeOwner, *githubOrgSlug); err != nil {
 		log.Fatal(err)
 	}
+}
+
+// parseGenerators validates and creates the list of generators based on command-line arguments.
+// Returns an error if an unknown generator is specified.
+func parseGenerators(args []string, trimSuffixes string, skipGithubCheck *bool) ([]datatype.Generator, error) {
+	var generators []datatype.Generator
+	validGenerators := []string{"issue-templates", "codeowners", "distributions", "chloggen-components"}
+
+	for _, arg := range args {
+		switch arg {
+		case "issue-templates":
+			generators = append(generators, newIssueTemplatesGenerator(trimSuffixes))
+		case "codeowners":
+			generators = append(generators, newCodeownersGenerator(skipGithubCheck))
+		case "distributions":
+			generators = append(generators, newDistributionsGenerator())
+		case "chloggen-components":
+			generators = append(generators, newChloggenComponentsGenerator())
+		default:
+			return nil, fmt.Errorf("unknown generator %q\nValid generators: %v", arg, validGenerators)
+		}
+	}
+
+	// If no generators specified, use default generators
+	if len(generators) == 0 {
+		generators = []datatype.Generator{
+			newIssueTemplatesGenerator(trimSuffixes),
+			newCodeownersGenerator(skipGithubCheck),
+		}
+	}
+
+	return generators, nil
 }
 
 func loadMetadata(filePath string) (datatype.Metadata, error) {
