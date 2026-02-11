@@ -34,7 +34,7 @@ func Crosslink(rc RunConfig) error {
 		return fmt.Errorf("failed to identify root module: %w", err)
 	}
 
-	graph, err := buildDepedencyGraph(rc, rootModulePath)
+	graph, err := buildDependencyGraph(rc, rootModulePath)
 	if err != nil {
 		return fmt.Errorf("failed to build dependency graph: %w", err)
 	}

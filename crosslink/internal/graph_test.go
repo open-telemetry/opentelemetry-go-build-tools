@@ -77,7 +77,7 @@ func TestBuildDependencyGraph(t *testing.T) {
 				t.Fatalf("error identifying root module: %v", err)
 			}
 
-			receivedMap, err := buildDepedencyGraph(test.config, rootModulePath)
+			receivedMap, err := buildDependencyGraph(test.config, rootModulePath)
 
 			if assert.NoError(t, err, "error message on graph build %s") {
 				assert.Equal(t, len(test.expected), len(receivedMap), "Module count does not match")

@@ -24,7 +24,7 @@ import (
 // Creates a dependency graph for all intra-repository go.mod files. Only adds
 // modules that fall under the root module namespace.
 // returns map of module path -> moduleInfo
-func buildDepedencyGraph(rc RunConfig, rootModulePath string) (map[string]*moduleInfo, error) {
+func buildDependencyGraph(rc RunConfig, rootModulePath string) (map[string]*moduleInfo, error) {
 	moduleMap := make(map[string]*moduleInfo)
 
 	err := forGoModFiles(rc, func(_ string, modPath string, modContents *modfile.File) error {
