@@ -14,4 +14,4 @@
 
 // Package sync provides helper functions for synchronizing a current repo
 // with the versioning file of another repo.
-package sync
+package sync // nolint:revive // TODO: rename this internal package
