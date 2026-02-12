@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/client9/misspell v0.3.4
 	github.com/gogo/protobuf v1.3.2
-	github.com/golangci/golangci-lint/v2 v2.8.0
+	github.com/golangci/golangci-lint/v2 v2.9.0
 	github.com/matryer/moq v0.4.0
 	go.opentelemetry.io/build-tools/chloggen v0.29.0
 	go.opentelemetry.io/build-tools/crosslink v0.29.0
@@ -103,8 +103,8 @@ require (
 	github.com/golangci/dupl v0.0.0-20250308024227-f665c8d69b32 // indirect
 	github.com/golangci/go-printf-func-name v0.1.1 // indirect
 	github.com/golangci/gofmt v0.0.0-20250704145412-3e58ba0443c6 // indirect
-	github.com/golangci/golines v0.14.0 // indirect
-	github.com/golangci/misspell v0.7.0 // indirect
+	github.com/golangci/golines v0.15.0 // indirect
+	github.com/golangci/misspell v0.8.0 // indirect
 	github.com/golangci/plugin-module-register v0.1.2 // indirect
 	github.com/golangci/revgrep v0.8.0 // indirect
 	github.com/golangci/swaggoswag v0.0.0-20250504205917-77f2aca3143e // indirect
@@ -221,7 +221,6 @@ require (
 	go.augendre.info/arangolint v0.4.0 // indirect
 	go.augendre.info/fatcontext v0.9.0 // indirect
 	go.opentelemetry.io/build-tools v0.29.0 // indirect
-	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.1 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
