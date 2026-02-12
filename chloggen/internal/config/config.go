@@ -60,7 +60,7 @@ func New(rootDir string) *Config {
 // NewFromFile returns a new Config from the specified YAML file.
 func NewFromFile(rootDir string, cfgFilename string) (*Config, error) {
 	cfgYAML := filepath.Clean(filepath.Join(rootDir, cfgFilename))
-	cfgBytes, err := os.ReadFile(cfgYAML)
+	cfgBytes, err := os.ReadFile(cfgYAML) // nolint:gosec // false positive
 	if err != nil {
 		return nil, err
 	}
