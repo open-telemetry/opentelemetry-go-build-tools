@@ -197,6 +197,10 @@ golangci-lint: generate | $(GOLANGCI_LINT)
 .PHONY: govulncheck
 govulncheck: | $(GOVULNCHECK)
 	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
+	  if [ "$${dir}" = "./checkapi" ]; then \
+	    echo "Skipping govulncheck in $${dir} (known issue with go-json-experiment, will be fixed in Go 1.26)"; \
+	    continue; \
+	  fi; \
 	  echo "golvulncheck in $${dir}"; \
 	  (cd "$${dir}" && \
 	    $(GOVULNCHECK) ./...); \
