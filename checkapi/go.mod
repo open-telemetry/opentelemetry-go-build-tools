@@ -1,6 +1,6 @@
 module go.opentelemetry.io/build-tools/checkapi
 
-go 1.25.0
+go 1.26
 
 require (
 	github.com/goccy/go-json v0.10.5
@@ -11,7 +11,7 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/go-json-experiment/json v0.0.0-20250813233538-9b1f9ea2e11b // indirect
+	github.com/go-json-experiment/json v0.0.0-20260214004413-d219187c3433 // indirect
 	github.com/goccy/go-yaml v1.19.2 // indirect
 	github.com/kaptinlin/go-i18n v0.1.6 // indirect
 	github.com/kaptinlin/messageformat-go v0.4.0 // indirect
