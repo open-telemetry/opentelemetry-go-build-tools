@@ -150,15 +150,15 @@ func TestNewFromFile(t *testing.T) {
 			}
 			assert.Equal(t, expectedEntriesDir, actualCfg.EntriesDir)
 
-			expectedTeamplateYAML := defaultCfg.TemplateYAML
+			expectedTemplateYAML := defaultCfg.TemplateYAML
 			if tc.cfg.TemplateYAML != "" {
 				if filepath.IsAbs(tc.cfg.TemplateYAML) {
-					expectedTeamplateYAML = filepath.Clean(tc.cfg.TemplateYAML)
+					expectedTemplateYAML = filepath.Clean(tc.cfg.TemplateYAML)
 				} else {
-					expectedTeamplateYAML = filepath.Join(tempDir, tc.cfg.TemplateYAML)
+					expectedTemplateYAML = filepath.Join(tempDir, tc.cfg.TemplateYAML)
 				}
 			}
-			assert.Equal(t, expectedTeamplateYAML, actualCfg.TemplateYAML)
+			assert.Equal(t, expectedTemplateYAML, actualCfg.TemplateYAML)
 
 			if len(tc.cfg.ChangeLogs) == 0 {
 				assert.Equal(t, 1, len(actualCfg.ChangeLogs))
