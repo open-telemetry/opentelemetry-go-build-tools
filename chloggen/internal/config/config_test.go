@@ -93,6 +93,26 @@ func TestNewFromFile(t *testing.T) {
 			},
 			expectErr: `contains key "fake" which is not defined in 'changelogs'`,
 		},
+		{
+			name: "absolute-entries-dir",
+			cfg: &Config{
+				EntriesDir: "/tmp/abs_entries",
+			},
+		},
+		{
+			name: "absolute-template-yaml",
+			cfg: &Config{
+				TemplateYAML: "/tmp/abs_template.yaml",
+			},
+		},
+		{
+			name: "absolute-changelog",
+			cfg: &Config{
+				ChangeLogs: map[string]string{
+					"default": "/tmp/abs_changelog.md",
+				},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -122,13 +142,21 @@ func TestNewFromFile(t *testing.T) {
 
 			expectedEntriesDir := defaultCfg.EntriesDir
 			if tc.cfg.EntriesDir != "" {
-				expectedEntriesDir = filepath.Join(tempDir, tc.cfg.EntriesDir)
+				if filepath.IsAbs(tc.cfg.EntriesDir) {
+					expectedEntriesDir = filepath.Clean(tc.cfg.EntriesDir)
+				} else {
+					expectedEntriesDir = filepath.Join(tempDir, tc.cfg.EntriesDir)
+				}
 			}
 			assert.Equal(t, expectedEntriesDir, actualCfg.EntriesDir)
 
 			expectedTeamplateYAML := defaultCfg.TemplateYAML
 			if tc.cfg.TemplateYAML != "" {
-				expectedTeamplateYAML = filepath.Join(tempDir, tc.cfg.TemplateYAML)
+				if filepath.IsAbs(tc.cfg.TemplateYAML) {
+					expectedTeamplateYAML = filepath.Clean(tc.cfg.TemplateYAML)
+				} else {
+					expectedTeamplateYAML = filepath.Join(tempDir, tc.cfg.TemplateYAML)
+				}
 			}
 			assert.Equal(t, expectedTeamplateYAML, actualCfg.TemplateYAML)
 
@@ -144,7 +172,11 @@ func TestNewFromFile(t *testing.T) {
 				assert.Equal(t, len(tc.cfg.ChangeLogs), len(actualCfg.ChangeLogs))
 				for key, filename := range tc.cfg.ChangeLogs {
 					assert.NotNil(t, actualCfg.ChangeLogs[key])
-					assert.Equal(t, filepath.Join(tempDir, filename), actualCfg.ChangeLogs[key])
+					expectedFilename := filename
+					if !filepath.IsAbs(filename) {
+						expectedFilename = filepath.Join(tempDir, filename)
+					}
+					assert.Equal(t, filepath.Clean(expectedFilename), actualCfg.ChangeLogs[key])
 				}
 
 				// When changelogs are specified, the default changelogs must be a subset of the changelogs.
