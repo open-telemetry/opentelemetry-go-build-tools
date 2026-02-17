@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -52,23 +53,25 @@ const (
 	issueBodyTemplate  = `
 Auto-generated report for ${jobName} job build.
 
-Link to failed build: ${linkToBuild}
+Failing job(s): ${linkToBuild}
 Commit: ${commit}
 PR: ${prNumber}
 
 ### Component(s)
 ${component}
 
+The following tests failed:
 ${failedTests}
 
 **Note**: Information about any subsequent build failures that happen while
 this issue is open, will be added as comments with more information to this issue.
 `
 	issueCommentTemplate = `
-Link to latest failed build: ${linkToBuild}
+Failing job(s): ${linkToBuild}
 Commit: ${commit}
 PR: ${prNumber}
 
+The following tests failed:
 ${failedTests}
 `
 	prCommentTemplate = `@${prAuthor} some tests are failing on main after these changes.  
@@ -208,11 +211,10 @@ func (c *Client) GetExistingIssue(ctx context.Context, module string) *github.Is
 // information about the latest failure. This method is expected to be
 // called only if there's an existing open Issue for the current job.
 func (c *Client) CommentOnIssue(ctx context.Context, r report.Report, issue *github.Issue) *github.IssueComment {
-	// Get commit message and extract PR number
 	commitMessage := c.getCommitMessage(ctx)
 	prNumber := c.extractPRNumberFromCommitMessage(commitMessage)
 
-	body := os.Expand(issueCommentTemplate, templateHelper(c.envVariables, r, prNumber))
+	body := os.Expand(issueCommentTemplate, templateHelper(ctx, c, c.envVariables, r, prNumber))
 
 	issueComment, response, err := c.client.Issues.CreateComment(
 		ctx,
@@ -231,7 +233,6 @@ func (c *Client) CommentOnIssue(ctx context.Context, r report.Report, issue *git
 		c.handleBadResponses(response)
 	}
 
-	// Also comment on the PR with a link to this comment
 	if prNumber > 0 && issueComment != nil && issueComment.HTMLURL != nil {
 		if prAuthor := c.GetPRAuthor(ctx, prNumber); prAuthor != "" {
 			_ = c.CommentOnPR(ctx, prNumber, prAuthor, *issueComment.HTMLURL)
@@ -261,13 +262,46 @@ func getComponent(module string) string {
 	return module
 }
 
-func templateHelper(env map[string]string, r report.Report, prNumber int) func(string) string {
+func templateHelper(ctx context.Context, c *Client, env map[string]string, r report.Report, prNumber int) func(string) string {
 	return func(param string) string {
 		switch param {
 		case "jobName":
 			return "`" + env[githubWorkflow] + "`"
 		case "linkToBuild":
-			return fmt.Sprintf("%s/%s/%s/actions/runs/%s", env[githubServerURL], env[githubOwner], env[githubRepository], env[githubRunID])
+			runID, err := strconv.ParseInt(env[githubRunID], 10, 64)
+			if err != nil {
+				c.logger.Warn("Failed to parse run ID", zap.Error(err))
+				return c.getRunURL(env[githubRunID])
+			}
+
+			failedJobs, err := c.getFailedJobURLs(ctx, runID)
+			if err != nil {
+				c.logger.Warn("Failed to get failed job URLs", zap.Error(err))
+				return c.getRunURL(strconv.FormatInt(runID, 10))
+			}
+
+			if len(failedJobs) == 0 {
+				return c.getRunURL(strconv.FormatInt(runID, 10))
+			}
+
+			if len(failedJobs) == 1 {
+				for _, url := range failedJobs {
+					return url
+				}
+			}
+
+			// Sort by name for deterministic output
+			names := make([]string, 0, len(failedJobs))
+			for name := range failedJobs {
+				names = append(names, name)
+			}
+			sort.Strings(names)
+
+			var sb strings.Builder
+			for _, name := range names {
+				fmt.Fprintf(&sb, "\n- [`%s`](%s)", name, failedJobs[name])
+			}
+			return sb.String()
 		case "failedTests":
 			return r.FailedTestsMD()
 		case "component":
@@ -284,6 +318,38 @@ func templateHelper(env map[string]string, r report.Report, prNumber int) func(s
 			return ""
 		}
 	}
+}
+
+// getFailedJobURLs fetches the names and URLs of the failed jobs in the current run.
+func (c *Client) getFailedJobURLs(ctx context.Context, runID int64) (map[string]string, error) {
+	failedJobs := make(map[string]string)
+	opts := &github.ListWorkflowJobsOptions{ListOptions: github.ListOptions{PerPage: 100}}
+	for {
+		jobs, resp, err := c.client.Actions.ListWorkflowJobs(ctx, c.envVariables[githubOwner], c.envVariables[githubRepository], runID, opts)
+		if err != nil {
+			return nil, err
+		}
+		for _, job := range jobs.Jobs {
+			if job.GetConclusion() == "failure" {
+				failedJobs[job.GetName()] = job.GetHTMLURL()
+			}
+		}
+		if resp.NextPage == 0 {
+			break
+		}
+		opts.Page = resp.NextPage
+	}
+	return failedJobs, nil
+}
+
+// getRunURL returns the generic workflow run URL.
+func (c *Client) getRunURL(runID string) string {
+	return fmt.Sprintf("%s/%s/%s/actions/runs/%s",
+		c.envVariables[githubServerURL],
+		c.envVariables[githubOwner],
+		c.envVariables[githubRepository],
+		runID,
+	)
 }
 
 // shortSha returns the first 7 characters of a full Git commit SHA
@@ -404,10 +470,9 @@ func (c *Client) CommentOnPR(ctx context.Context, prNumber int, prAuthor string,
 }
 
 func (c *Client) extractPRNumberFromCommitMessage(commitMsg string) int {
-	// Only consider the first line of the commit message.
 	firstLine := strings.SplitN(commitMsg, "\n", 2)[0]
 
-	// cases matched :
+	// Cases matched:
 	// - (#123)
 	// - Merge pull request #123
 	// - (#123): some description
@@ -438,11 +503,10 @@ func (c *Client) CreateIssue(ctx context.Context, r report.Report) *github.Issue
 	trimmedModule := trimModule(c.envVariables[githubOwner], c.envVariables[githubRepository], r.Module)
 	title := strings.Replace(issueTitleTemplate, "${module}", trimmedModule, 1)
 
-	// Get commit message and extract PR number
 	commitMessage := c.getCommitMessage(ctx)
 	prNumber := c.extractPRNumberFromCommitMessage(commitMessage)
 
-	body := os.Expand(issueBodyTemplate, templateHelper(c.envVariables, r, prNumber))
+	body := os.Expand(issueBodyTemplate, templateHelper(ctx, c, c.envVariables, r, prNumber))
 	componentName := getComponent(trimmedModule)
 
 	issueLabels := c.cfg.labelsCopy()
@@ -465,7 +529,6 @@ func (c *Client) CreateIssue(ctx context.Context, r report.Report) *github.Issue
 		c.handleBadResponses(response)
 	}
 
-	// After creating the issue, also comment on the PR  with a link to the created issue
 	if prNumber > 0 && issue != nil && issue.HTMLURL != nil {
 		if prAuthor := c.GetPRAuthor(ctx, prNumber); prAuthor != "" {
 			_ = c.CommentOnPR(ctx, prNumber, prAuthor, *issue.HTMLURL)
