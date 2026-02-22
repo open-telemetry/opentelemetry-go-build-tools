@@ -1,0 +1,5 @@
+change_type: bug_fix
+component: chloggen
+note: "Improve error handling in DeleteEntries by returning accumulated errors instead of printing to stdout."
+issues: []
+subtext: ""
