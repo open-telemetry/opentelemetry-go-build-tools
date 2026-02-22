@@ -536,9 +536,37 @@ func TestTagAllModules(t *testing.T) {
 				"test/v0.1.0",
 				"v1.0.0-doesNotExist",
 			},
-			shouldError: true,
+			shouldError: false, // Should succeed, skipping tags that already exist on the commit
 		},
 	}
+
+	t.Run("mod_set_3_tags_on_different_commit", func(t *testing.T) {
+		tmpRootDir := t.TempDir()
+		repo, initialHash, err := sharedtest.InitNewRepoWithCommit(tmpRootDir)
+		require.NoError(t, err)
+
+		createTagOptions := &git.CreateTagOptions{
+			Message: "test tag message",
+			Tagger:  sharedtest.TestAuthor,
+		}
+		_, err = repo.CreateTag("v2.2.2", initialHash, createTagOptions)
+		require.NoError(t, err)
+
+		fullHash, err := shared.CommitChangesToNewBranch("test_commit", "commit used in a test", repo, sharedtest.TestAuthor)
+		require.NoError(t, err)
+		hashPrefix := fullHash.String()[:8]
+
+		modFiles := map[string][]byte{
+			filepath.Join(tmpRootDir, "go.mod"): []byte("module go.opentelemetry.io/testroot/v2\n\ngo 1.16\n"),
+		}
+
+		require.NoError(t, sharedtest.WriteTempFiles(modFiles), "could not create go mod file tree")
+
+		versioningFilename := filepath.Join(testDataDir, "tag_all_modules", "versions_valid.yaml")
+		_, err = newTagger(versioningFilename, "mod-set-3", tmpRootDir, hashPrefix, false)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "some git tags exist on a different commit")
+	})
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
