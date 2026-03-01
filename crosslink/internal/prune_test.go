@@ -190,3 +190,36 @@ func TestPruneReplace(t *testing.T) {
 		t.Errorf("Replace{} mismatch (-want +got):\n%s", diff)
 	}
 }
+
+func TestPruneReplace_SafeIteration(t *testing.T) {
+	modContents := []byte(`module go.opentelemetry.io/build-tools/crosslink/testroot
+
+go 1.20
+
+replace go.opentelemetry.io/build-tools/crosslink/testroot/testA => ./testA
+replace go.opentelemetry.io/build-tools/crosslink/testroot/testB => ./testB
+replace go.opentelemetry.io/build-tools/crosslink/testroot/testC => ./testC
+replace go.opentelemetry.io/build-tools/crosslink/testroot/testD => ./testD
+`)
+
+	modFile, err := modfile.Parse("go.mod", modContents, nil)
+	if err != nil {
+		t.Fatalf("failed to parse mock gomod file: %v", err)
+	}
+
+	mockModInfo := newModuleInfo(*modFile)
+	lg, _ := zap.NewDevelopment()
+
+	rc := RunConfig{
+		Prune:   true,
+		Verbose: false,
+		Logger:  lg,
+	}
+
+	pruneReplace("go.opentelemetry.io/build-tools/crosslink/testroot", mockModInfo, rc)
+
+	mockModInfo.moduleContents.Cleanup()
+	actualReps := mockModInfo.moduleContents.Replace
+
+	assert.Empty(t, actualReps, "Expected all replace statements to be pruned, but %d remained", len(actualReps))
+}
