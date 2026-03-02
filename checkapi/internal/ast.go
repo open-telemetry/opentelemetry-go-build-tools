@@ -117,7 +117,8 @@ func Read(folder string, ignoredFunctions []string, excludedFiles []string) (API
 			if path != folder && goModPresent {
 				return nil
 			}
-			packs, err := parser.ParseDir(set, path, nil, 0)
+
+			packs, err := parseDir(set, path)
 			if err != nil {
 				return err
 			}
@@ -132,6 +133,26 @@ func Read(folder string, ignoredFunctions []string, excludedFiles []string) (API
 	})
 
 	return *result, readErr
+}
+
+// simplified version of deprecated https://cs.opensource.google/go/go/+/refs/tags/go1.26.0:src/go/parser/interface.go;l=153
+func parseDir(fset *token.FileSet, dir string) (map[string]*ast.Package, error) { // nolint:staticcheck // SA1019
+	files, err := filepath.Glob(filepath.Join(dir, "*.go"))
+	if err != nil {
+		return nil, err
+	}
+	pkgs := map[string]*ast.Package{} // nolint:staticcheck // SA1019
+	for _, f := range files {
+		file, err := parser.ParseFile(fset, f, nil, 0)
+		if err != nil {
+			return nil, err
+		}
+		if pkgs[file.Name.Name] == nil {
+			pkgs[file.Name.Name] = &ast.Package{Name: file.Name.Name, Files: map[string]*ast.File{}} // nolint:staticcheck // SA1019
+		}
+		pkgs[file.Name.Name].Files[f] = file
+	}
+	return pkgs, nil
 }
 
 func readPackage(pack *ast.Package, ignoredFunctions []string, excludedFiles []string, result *API, internal bool, root bool) error { // nolint:staticcheck // SA1019

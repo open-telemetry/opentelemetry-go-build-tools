@@ -1,16 +1,14 @@
 module go.opentelemetry.io/build-tools/issuegenerator
 
-go 1.24.4
-
-toolchain go1.24.7
+go 1.25.0
 
 require (
-	github.com/google/go-github/v81 v81.0.0
+	github.com/google/go-github/v84 v84.0.0
 	github.com/joshdk/go-junit v1.0.0
 	github.com/migueleliasweb/go-github-mock v1.5.0
 	github.com/stretchr/testify v1.11.1
 	go.uber.org/zap v1.27.1
-	golang.org/x/oauth2 v0.34.0
+	golang.org/x/oauth2 v0.35.0
 )
 
 require (

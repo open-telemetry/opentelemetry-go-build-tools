@@ -32,7 +32,7 @@ func Prune(rc RunConfig) error {
 		return fmt.Errorf("failed to identify root module: %w", err)
 	}
 
-	graph, err := buildDepedencyGraph(rc, rootModulePath)
+	graph, err := buildDependencyGraph(rc, rootModulePath)
 	if err != nil {
 		return fmt.Errorf("failed to build dependency graph: %w", err)
 	}
@@ -52,7 +52,7 @@ func Prune(rc RunConfig) error {
 
 // pruneReplace removes any extraneous intra-repository replace statements.
 func pruneReplace(rootModulePath string, module *moduleInfo, rc RunConfig) {
-	modContents := module.moduleContents
+	modContents := &module.moduleContents
 
 	// check to see if its intra dependency and no longer present
 	for _, rep := range modContents.Replace {
@@ -80,5 +80,5 @@ func pruneReplace(rootModulePath string, module *moduleInfo, rc RunConfig) {
 
 		}
 	}
-	module.moduleContents = modContents
+
 }

@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"errors"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -35,6 +36,7 @@ func validateCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			var errs error
 			for _, entries := range entriesByChangelog {
 				for _, entry := range entries {
 					changelogRequired := len(globalCfg.DefaultChangeLogs) == 0
@@ -43,9 +45,12 @@ func validateCmd() *cobra.Command {
 						validChangeLogs = append(validChangeLogs, changeLogKey)
 					}
 					if err = entry.Validate(changelogRequired, globalCfg.Components, validChangeLogs...); err != nil {
-						return err
+						errs = errors.Join(errs, err)
 					}
 				}
+			}
+			if errs != nil {
+				return errs
 			}
 			cmd.Printf("PASS: all files in %s/ are valid\n", globalCfg.EntriesDir)
 			return nil

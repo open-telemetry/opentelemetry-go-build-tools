@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sync
+package sync // nolint:revive // TODO: rename this internal package
 
 import (
 	"context"
