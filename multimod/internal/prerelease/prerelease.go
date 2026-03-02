@@ -17,6 +17,7 @@ package prerelease
 import (
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -189,7 +190,13 @@ func updateVersionGoFile(path string, ver string) error {
 	// to perform replacement.
 	log.Printf("... Updating version references in %s to %s\n", path, ver)
 
-	data, err := os.ReadFile(filepath.Clean(path))
+	file, err := os.Open(filepath.Clean(path))
+	if err != nil {
+		return fmt.Errorf("error opening version.go file %v: %w", path, err)
+	}
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
 	if err != nil {
 		return fmt.Errorf("error reading version.go file %v: %w", path, err)
 	}

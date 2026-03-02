@@ -17,6 +17,7 @@ package shared // nolint:revive // keeping generic package name until a proper r
 import (
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -67,7 +68,13 @@ func updateGoModVersions(modFilePath ModuleFilePath, newModRefs []ModuleRef) err
 		return errors.New("cannot update file passed that does not end with go.mod")
 	}
 
-	newGoModFile, err := os.ReadFile(filepath.Clean(string(modFilePath)))
+	modFile, err := os.Open(filepath.Clean(string(modFilePath)))
+	if err != nil {
+		panic(err)
+	}
+	defer modFile.Close()
+
+	newGoModFile, err := io.ReadAll(modFile)
 	if err != nil {
 		panic(err)
 	}
