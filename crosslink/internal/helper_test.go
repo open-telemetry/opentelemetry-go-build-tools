@@ -18,7 +18,6 @@ package crosslink
 
 import (
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
@@ -33,23 +32,34 @@ var mockDataDir, _ = filepath.Abs("./mock_test_data")
 // dependabot check would fail. Dependabot does not allow us to ignore directories
 // so instead we rename the gomod files to go.mod after directories are copied.
 func renameGoMod(fp string) error {
-	renameFunc := func(filePath string, _ fs.FileInfo, err error) error {
+	var renameRecursive func(string) error
+	renameRecursive = func(dir string) error {
+		entries, err := os.ReadDir(dir)
 		if err != nil {
-			fmt.Printf("Warning: file could not be read during filepath.Walk: %v", err)
-			return nil
+			return fmt.Errorf("failed to read directory %q: %w", dir, err)
 		}
 
-		if filepath.Base(filePath) == "gomod" {
-			dir, _ := filepath.Split(filePath)
-			err = os.Rename(filePath, filepath.Join(dir, "go.mod"))
-			if err != nil {
-				return fmt.Errorf("failed to rename go.mod file: %w", err)
+		for _, entry := range entries {
+			entryPath := filepath.Join(dir, entry.Name())
+
+			if entry.IsDir() {
+				if err := renameRecursive(entryPath); err != nil {
+					return err
+				}
+				continue
+			}
+
+			if entry.Name() == "gomod" {
+				if err := os.Rename(entryPath, filepath.Join(dir, "go.mod")); err != nil {
+					return fmt.Errorf("failed to rename go.mod file: %w", err)
+				}
 			}
 		}
+
 		return nil
 	}
-	err := filepath.Walk(fp, renameFunc)
-	if err != nil {
+
+	if err := renameRecursive(fp); err != nil {
 		return fmt.Errorf("failed during file walk: %w", err)
 	}
 	return nil
