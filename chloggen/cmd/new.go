@@ -15,6 +15,8 @@
 package cmd
 
 import (
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -29,7 +31,12 @@ func newCmd() *cobra.Command {
 		Use:   "new",
 		Short: "Creates new change file",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			path := filepath.Join(globalCfg.EntriesDir, cleanFileName(filename))
+			sanitizedName := filepath.Base(cleanFileName(filename))
+			if sanitizedName == "." || sanitizedName == ".." || sanitizedName == "" {
+				return fmt.Errorf("invalid filename %q", filename)
+			}
+
+			path := filepath.Join(globalCfg.EntriesDir, sanitizedName)
 			var pathWithExt string
 			switch ext := filepath.Ext(path); ext {
 			case ".yaml":
@@ -40,11 +47,17 @@ func newCmd() *cobra.Command {
 				pathWithExt = path + ".yaml"
 			}
 
-			templateBytes, err := os.ReadFile(filepath.Clean(globalCfg.TemplateYAML))
+			templateFile, err := os.Open(filepath.Clean(globalCfg.TemplateYAML))
 			if err != nil {
 				return err
 			}
-			err = os.WriteFile(pathWithExt, templateBytes, os.FileMode(0644))
+			defer templateFile.Close()
+
+			templateBytes, err := io.ReadAll(templateFile)
+			if err != nil {
+				return err
+			}
+			err = os.WriteFile(filepath.Clean(pathWithExt), templateBytes, os.FileMode(0644))
 			if err != nil {
 				return err
 			}

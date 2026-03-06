@@ -17,6 +17,7 @@
 package chlog
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -61,8 +62,9 @@ var changeTypes = []string{
 
 // Validate validates the changelog entry.
 func (e Entry) Validate(requireChangelog bool, components []string, validChangeLogs ...string) error {
+	var errs error
 	if requireChangelog && len(e.ChangeLogs) == 0 {
-		return fmt.Errorf("specify one or more 'change_logs'")
+		errs = errors.Join(errs, fmt.Errorf("specify one or more 'change_logs'"))
 	}
 	for _, cl := range e.ChangeLogs {
 		var valid bool
@@ -72,33 +74,33 @@ func (e Entry) Validate(requireChangelog bool, components []string, validChangeL
 			}
 		}
 		if !valid {
-			return fmt.Errorf("'%s' is not a valid value in 'change_logs'. Specify one of %v", cl, validChangeLogs)
+			errs = errors.Join(errs, fmt.Errorf("'%s' is not a valid value in 'change_logs'. Specify one of %v", cl, validChangeLogs))
 		}
 	}
 
 	if !slices.Contains(changeTypes, e.ChangeType) {
-		return fmt.Errorf("'%s' is not a valid 'change_type'. Specify one of %v", e.ChangeType, changeTypes)
+		errs = errors.Join(errs, fmt.Errorf("'%s' is not a valid 'change_type'. Specify one of %v", e.ChangeType, changeTypes))
 	}
 
 	if strings.TrimSpace(e.Component) == "" {
-		return fmt.Errorf("specify a 'component'")
+		errs = errors.Join(errs, fmt.Errorf("specify a 'component'"))
 	}
 
 	found := slices.Contains(components, e.Component)
 	// only apply component validation if one or more values are present.
 	if len(components) > 0 && !found {
-		return fmt.Errorf("%s is not a valid 'component'. It must be one of %v", e.Component, components)
+		errs = errors.Join(errs, fmt.Errorf("%s is not a valid 'component'. It must be one of %v", e.Component, components))
 	}
 
 	if strings.TrimSpace(e.Note) == "" {
-		return fmt.Errorf("specify a 'note'")
+		errs = errors.Join(errs, fmt.Errorf("specify a 'note'"))
 	}
 
 	if len(e.Issues) == 0 {
-		return fmt.Errorf("specify one or more issues #'s")
+		errs = errors.Join(errs, fmt.Errorf("specify one or more issues #'s"))
 	}
 
-	return nil
+	return errs
 }
 
 // ReadEntries reads changelog entries from YAML files based on the provided configuration.

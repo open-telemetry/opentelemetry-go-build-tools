@@ -1,0 +1,5 @@
+change_type: enhancement
+component: chloggen
+note: "Update validate command to check all changelog entries and not exit out immediately after finding error."
+issues: [1304]
+subtext: ""

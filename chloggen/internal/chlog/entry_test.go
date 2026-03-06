@@ -48,7 +48,7 @@ func TestEntry(t *testing.T) {
 		{
 			name:      "empty",
 			entry:     Entry{},
-			expectErr: "'' is not a valid 'change_type'. Specify one of [breaking deprecation new_component enhancement bug_fix]",
+			expectErr: "'' is not a valid 'change_type'. Specify one of [breaking deprecation new_component enhancement bug_fix]\nspecify a 'component'\nspecify a 'note'\nspecify one or more issues #'s",
 		},
 		{
 			name: "missing_component",
