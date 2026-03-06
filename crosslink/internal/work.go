@@ -59,11 +59,12 @@ func Work(rc RunConfig) error {
 
 // validateGoVersion checks if goVersion is valid Go release version
 // according to the go.work file syntax:
-// a positive integer followed by a dot and a non-negative integer
-// (for example, 1.19, 1.20).
+// a positive integer followed by a dot and a non-negative integer,
+// optionally followed by a dot and another non-negative integer (patch version)
+// (for example, 1.19, 1.20, 1.23.0).
 // More: https://go.dev/ref/mod#workspaces.
 func validateGoVersion(goVersion string) error {
-	matched, err := regexp.MatchString(`^[1-9]+[0-9]*\.(0|[1-9]+[0-9]*)$`, goVersion)
+	matched, err := regexp.MatchString(`^[1-9]+[0-9]*\.(0|[1-9]+[0-9]*)(\.(0|[1-9]+[0-9]*))?$`, goVersion)
 	if err != nil {
 		return err
 	}
