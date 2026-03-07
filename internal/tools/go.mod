@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/client9/misspell v0.3.4
 	github.com/gogo/protobuf v1.3.2
-	github.com/golangci/golangci-lint/v2 v2.10.1
+	github.com/golangci/golangci-lint/v2 v2.11.1
 	github.com/matryer/moq v0.6.0
 	go.opentelemetry.io/build-tools/chloggen v0.29.0
 	go.opentelemetry.io/build-tools/crosslink v0.29.0
@@ -39,7 +39,7 @@ require (
 	github.com/alecthomas/chroma/v2 v2.23.1 // indirect
 	github.com/alecthomas/go-check-sumtype v0.3.1 // indirect
 	github.com/alexkohler/nakedret/v2 v2.0.6 // indirect
-	github.com/alexkohler/prealloc v1.0.3 // indirect
+	github.com/alexkohler/prealloc v1.1.0 // indirect
 	github.com/alfatraining/structtag v1.0.0 // indirect
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/alingse/nilnesserr v0.2.0 // indirect
