@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"go.uber.org/zap"
+	"golang.org/x/mod/modfile"
 )
 
 // Prune prunes the go.mod replace statements.
@@ -55,29 +56,31 @@ func pruneReplace(rootModulePath string, module *moduleInfo, rc RunConfig) {
 	modContents := &module.moduleContents
 
 	// check to see if its intra dependency and no longer present
+	var toPrune []*modfile.Replace
 	for _, rep := range modContents.Replace {
 		// skip excluded
 		if _, exists := rc.ExcludedPaths[rep.Old.Path]; exists {
-
 			rc.Logger.Debug("Excluded Module, ignoring prune", zap.String("excluded_mod", rep.Old.Path))
-
 			continue
 		}
 
 		if _, ok := module.requiredReplaceStatements[rep.Old.Path]; strings.Contains(rep.Old.Path, rootModulePath) && !ok {
-			if rc.Verbose {
-				rc.Logger.Debug("Pruning replace statement",
-					zap.String("module", modContents.Module.Mod.Path),
-					zap.String("replace_statement", rep.Old.Path+" => "+rep.New.Path))
-			}
-			err := modContents.DropReplace(rep.Old.Path, rep.Old.Version)
-			if err != nil {
-				rc.Logger.Error("error dropping replace statement",
-					zap.Error(err),
-					zap.String("module", modContents.Module.Mod.Path),
-					zap.String("replace_statement", rep.Old.Path+" => "+rep.New.Path))
-			}
+			toPrune = append(toPrune, rep)
+		}
+	}
 
+	for _, rep := range toPrune {
+		if rc.Verbose {
+			rc.Logger.Debug("Pruning replace statement",
+				zap.String("module", modContents.Module.Mod.Path),
+				zap.String("replace_statement", rep.Old.Path+" => "+rep.New.Path))
+		}
+		err := modContents.DropReplace(rep.Old.Path, rep.Old.Version)
+		if err != nil {
+			rc.Logger.Error("error dropping replace statement",
+				zap.Error(err),
+				zap.String("module", modContents.Module.Mod.Path),
+				zap.String("replace_statement", rep.Old.Path+" => "+rep.New.Path))
 		}
 	}
 
