@@ -28,6 +28,7 @@ module-sets:
       - go.opentelemetry.io/build-tools/multimod
 
 excluded-modules:
+  - go.opentelemetry.io/build-tools/grater
   - go.opentelemetry.io/build-tools/internal/tools
   - github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/altpkg/receiver/altreceiver
   - github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/altpkg/receiver/badreceiver
