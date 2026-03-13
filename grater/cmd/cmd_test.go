@@ -5,7 +5,6 @@ package cmd
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"testing"
 
