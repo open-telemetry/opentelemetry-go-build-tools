@@ -4,6 +4,8 @@
 // Grater is a tool to detect regressions introduced in our downstream dependents by our changes.
 package main
 
+import "go.opentelemetry.io/build-tools/grater/cmd"
+
 func main() {
-	// TODO: Implement Grater
+	cmd.Execute()
 }
