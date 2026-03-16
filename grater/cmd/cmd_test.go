@@ -11,6 +11,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func setUpTestDir(t *testing.T) string {
+	testDir := t.TempDir()
+	t.Chdir(testDir)
+	return testDir
+}
+
 func runCobra(t *testing.T, args ...string) (string, error) {
 	cmd := rootCmd()
 
