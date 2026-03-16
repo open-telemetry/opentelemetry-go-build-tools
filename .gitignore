@@ -20,5 +20,6 @@ crosslink/crosslink
 dbotconf/dbotconf
 issuegenerator/issuegenerator
 gotmpl/gotmpl
+grater/grater
 multimod/multimod
 *.exe
