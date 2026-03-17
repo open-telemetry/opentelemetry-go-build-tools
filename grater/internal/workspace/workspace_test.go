@@ -14,62 +14,29 @@ import (
 
 const dirReadOnly = os.FileMode(0o555)
 
-func TestGraterExists(t *testing.T) {
-	var err error
-	testDir := setUpTestDir(t)
+func TestInit(t *testing.T) {
+	testDir := t.TempDir()
+	t.Chdir(testDir)
 
-	err = GraterExists(testDir)
-	assert.True(t, os.IsNotExist(err))
-
-	err = GraterInit(testDir)
+	ws, err := Init(testDir)
 	require.NoError(t, err)
-
-	err = GraterExists(testDir)
-	assert.NoError(t, err)
+	require.NotNil(t, ws)
 }
 
-func TestGraterInitCreatesWorkspace(t *testing.T) {
+func TestInitFails(t *testing.T) {
 	var err error
-	testDir := setUpTestDir(t)
-
-	err = GraterInit(testDir)
-	require.NoError(t, err)
-
-	// Check that the .grater directory was created.
-	err = GraterExists(testDir)
-	assert.NoError(t, err)
-}
-
-func TestGraterInitDirAlreadyExists(t *testing.T) {
-	var err error
-	testDir := setUpTestDir(t)
-
-	err = GraterInit(testDir)
-	require.NoError(t, err)
-
-	// Re-run command to check it does nothing when .grater already exists.
-	err = GraterInit(testDir)
-	assert.NoError(t, err)
-}
-
-func TestGraterInitFailsToCreateDir(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Skipping test on Windows because chmod doesn't affect permissions on Windows, so this test won't work.")
 	}
 
-	var err error
-	testDir := setUpTestDir(t)
+	testDir := t.TempDir()
+	t.Chdir(testDir)
 
-	// Change permission to ReadOnly to invoke failure to create .grater/ directory.
+	// Set the directory to read-only to invoke failure to create .grater/
 	require.NoError(t, os.Chmod(testDir, dirReadOnly))
-	err = GraterInit(testDir)
+	_, err = Init(testDir)
 	require.NoError(t, os.Chmod(testDir, dirReadWrite))
 
 	assert.Error(t, err)
-}
-
-func setUpTestDir(t *testing.T) string {
-	testDir := t.TempDir()
-	t.Chdir(testDir)
-	return testDir
+	assert.Contains(t, err.Error(), "failed to create .grater/ directory")
 }

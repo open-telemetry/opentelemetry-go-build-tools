@@ -12,21 +12,25 @@ import (
 
 const dirReadWrite = os.FileMode(0o755)
 
-// GraterExists checks whether a .grater directory exists in the given path.
-func GraterExists(currentDir string) error {
-	_, err := os.Stat(filepath.Join(currentDir, ".grater"))
-	return err
+// Workspace represents a workspace directory.
+type Workspace struct {
+	dir string
 }
 
-// GraterInit initializes a .grater directory in the given path.
-func GraterInit(currentDir string) error {
+// Init creates a new Workspace instance.
+func Init(root string) (*Workspace, error) {
+	w := &Workspace{
+		dir: root,
+	}
+	err := w.create()
+	return w, err
+}
+
+// Create initializes a .grater directory in the given path.
+func (w *Workspace) create() error {
 	var err error
 
-	if GraterExists(currentDir) == nil {
-		return nil // If .grater already exists, skip.
-	}
-
-	graterDir := filepath.Join(currentDir, ".grater")
+	graterDir := filepath.Join(w.dir, ".grater")
 	err = os.Mkdir(graterDir, dirReadWrite)
 
 	if err != nil {
