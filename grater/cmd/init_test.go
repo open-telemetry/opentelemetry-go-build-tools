@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"os"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -40,6 +41,10 @@ func TestInitGraterDirAlreadyExists(t *testing.T) {
 }
 
 func TestInitFailsToCreateGraterDir(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping test on Windows because chmod doesn't affect permissions on Windows, so this test won't work.")
+	}
+
 	var err error
 	testDir := setUpTestDir(t)
 
