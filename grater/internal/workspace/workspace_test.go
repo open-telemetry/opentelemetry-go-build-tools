@@ -23,6 +23,21 @@ func TestInit(t *testing.T) {
 	require.NotNil(t, ws)
 }
 
+func TestInitDirAlreadyExist(t *testing.T) {
+	testDir := t.TempDir()
+	t.Chdir(testDir)
+
+	ws1, err := Init(testDir)
+	require.NoError(t, err)
+	require.NotNil(t, ws1)
+
+	ws2, err := Init(testDir)
+	require.NoError(t, err)
+	require.NotNil(t, ws2)
+
+	assert.Equal(t, ws1, ws2)
+}
+
 func TestInitFails(t *testing.T) {
 	var err error
 	if runtime.GOOS == "windows" {

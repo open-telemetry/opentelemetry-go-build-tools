@@ -36,7 +36,7 @@ func (w *Workspace) create() error {
 	var err error
 
 	graterDir := filepath.Join(w.dir, ".grater")
-	err = os.Mkdir(graterDir, dirReadWrite)
+	err = os.MkdirAll(graterDir, dirReadWrite)
 
 	if err != nil {
 		return fmt.Errorf("failed to create .grater/ directory: %w", err)
