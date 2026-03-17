@@ -14,31 +14,31 @@ import (
 
 const dirReadOnly = os.FileMode(0o555)
 
-func TestInit(t *testing.T) {
+func TestGetWorkspace(t *testing.T) {
 	testDir := t.TempDir()
 	t.Chdir(testDir)
 
-	ws, err := Init(testDir)
+	ws, err := GetWorkspace()
 	require.NoError(t, err)
 	require.NotNil(t, ws)
 }
 
-func TestInitDirAlreadyExist(t *testing.T) {
+func TestGetWorkspaceDirAlreadyExist(t *testing.T) {
 	testDir := t.TempDir()
 	t.Chdir(testDir)
 
-	ws1, err := Init(testDir)
+	ws1, err := GetWorkspace()
 	require.NoError(t, err)
 	require.NotNil(t, ws1)
 
-	ws2, err := Init(testDir)
+	ws2, err := GetWorkspace()
 	require.NoError(t, err)
 	require.NotNil(t, ws2)
 
 	assert.Equal(t, ws1, ws2)
 }
 
-func TestInitFails(t *testing.T) {
+func TestGetWorkspaceFails(t *testing.T) {
 	var err error
 	if runtime.GOOS == "windows" {
 		t.Skip("Skipping test on Windows because chmod doesn't affect permissions on Windows, so this test won't work.")
@@ -49,7 +49,7 @@ func TestInitFails(t *testing.T) {
 
 	// Set the directory to read-only to invoke failure to create .grater/
 	require.NoError(t, os.Chmod(testDir, dirReadOnly))
-	_, err = Init(testDir)
+	_, err = GetWorkspace()
 	require.NoError(t, os.Chmod(testDir, dirReadWrite))
 
 	assert.Error(t, err)
@@ -60,7 +60,7 @@ func TestAddDependent(t *testing.T) {
 	testDir := t.TempDir()
 	t.Chdir(testDir)
 
-	ws, err := Init(testDir)
+	ws, err := GetWorkspace()
 	require.NoError(t, err)
 
 	err = ws.AddDependent("foo/bar")

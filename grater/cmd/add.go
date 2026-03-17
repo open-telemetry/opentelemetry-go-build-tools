@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
 	"go.opentelemetry.io/build-tools/grater/internal/workspace"
 )
 
@@ -29,7 +30,6 @@ func addCmd() *cobra.Command {
 			}
 
 			cmd.Printf("Successfully added dependent: %s\n", args[0])
-			return
 		},
 	}
 }
