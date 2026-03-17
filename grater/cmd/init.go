@@ -4,8 +4,6 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
@@ -20,15 +18,10 @@ func initCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			var err error
 			graterDir := filepath.Join(".", ".grater")
+			err = workspace.GraterInit(".")
 
-			err = workspace.GraterExists(".")
-			if err == nil {
-				return nil // If .grater already exists, skip.
-			}
-
-			err = os.Mkdir(graterDir, dirReadWrite)
 			if err != nil {
-				return fmt.Errorf("failed to create .grater/ directory: %w", err)
+				return err
 			}
 
 			cmd.Printf("Initialized .grater/ workspace at %s\n", graterDir)
