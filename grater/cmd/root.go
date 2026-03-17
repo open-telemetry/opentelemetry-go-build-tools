@@ -16,6 +16,7 @@ func rootCmd() *cobra.Command {
 		Short: "Detects regressions in downstream dependents",
 		Long:  `Grater is a tool to detect regressions introduced in our downstream dependents by our changes.`,
 	}
+	cmd.AddCommand(addCmd())
 	cmd.SetOut(os.Stdout)
 	return cmd
 }
