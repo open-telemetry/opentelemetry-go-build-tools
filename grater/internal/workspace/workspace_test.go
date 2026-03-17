@@ -47,7 +47,7 @@ func TestGraterInitDirAlreadyExists(t *testing.T) {
 	err = GraterInit(testDir)
 	require.NoError(t, err)
 
-	// Try to initialize again
+	// Re-run command to check it does nothing when .grater already exists.
 	err = GraterInit(testDir)
 	assert.NoError(t, err)
 }
@@ -60,7 +60,7 @@ func TestGraterInitFailsToCreateDir(t *testing.T) {
 	var err error
 	testDir := setUpTestDir(t)
 
-	// Remove write permissions from the test directory
+	// Change permission to ReadOnly to invoke failure to create .grater/ directory.
 	require.NoError(t, os.Chmod(testDir, dirReadOnly))
 	err = GraterInit(testDir)
 	require.NoError(t, os.Chmod(testDir, dirReadWrite))
