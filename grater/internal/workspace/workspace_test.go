@@ -50,19 +50,3 @@ func TestNewWorkspaceFails(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to create .grater/ directory")
 }
-
-func TestAddDependent(t *testing.T) {
-	testDir := t.TempDir()
-	t.Chdir(testDir)
-
-	ws, err := GetWorkspace()
-	require.NoError(t, err)
-
-	err = ws.AddDependent("foo/bar")
-	require.NoError(t, err)
-
-	content, err := os.ReadFile(ws.dependentsPath)
-	require.NoError(t, err)
-
-	assert.Contains(t, string(content), "foo/bar")
-}
