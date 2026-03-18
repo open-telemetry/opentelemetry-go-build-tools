@@ -21,8 +21,8 @@ type Workspace struct {
 	dependentsPath string
 }
 
-// GetWorkspace creates a new Workspace instance.
-func GetWorkspace() (*Workspace, error) {
+// NewWorkspace creates a new Workspace instance.
+func NewWorkspace() (*Workspace, error) {
 	root, err := os.Getwd()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get current working directory: %w", err)

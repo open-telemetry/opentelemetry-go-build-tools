@@ -11,31 +11,31 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetWorkspace(t *testing.T) {
+func TestNewWorkspace(t *testing.T) {
 	testDir := t.TempDir()
 	t.Chdir(testDir)
 
-	ws, err := GetWorkspace()
+	ws, err := NewWorkspace()
 	require.NoError(t, err)
 	require.NotNil(t, ws)
 }
 
-func TestGetWorkspaceDirAlreadyExist(t *testing.T) {
+func TestNewWorkspaceDirAlreadyExist(t *testing.T) {
 	testDir := t.TempDir()
 	t.Chdir(testDir)
 
-	ws1, err := GetWorkspace()
+	ws1, err := NewWorkspace()
 	require.NoError(t, err)
 	require.NotNil(t, ws1)
 
-	ws2, err := GetWorkspace()
+	ws2, err := NewWorkspace()
 	require.NoError(t, err)
 	require.NotNil(t, ws2)
 
 	assert.Equal(t, ws1, ws2)
 }
 
-func TestGetWorkspaceFails(t *testing.T) {
+func TestNewWorkspaceFails(t *testing.T) {
 	var err error
 
 	testDir := t.TempDir()
@@ -45,7 +45,7 @@ func TestGetWorkspaceFails(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, f.Close())
 
-	_, err = GetWorkspace()
+	_, err = NewWorkspace()
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to create .grater/ directory")
