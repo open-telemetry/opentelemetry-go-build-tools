@@ -5,14 +5,11 @@ package workspace
 
 import (
 	"os"
-	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-const dirReadOnly = os.FileMode(0o555)
 
 func TestGetWorkspace(t *testing.T) {
 	testDir := t.TempDir()
@@ -40,17 +37,15 @@ func TestGetWorkspaceDirAlreadyExist(t *testing.T) {
 
 func TestGetWorkspaceFails(t *testing.T) {
 	var err error
-	if runtime.GOOS == "windows" {
-		t.Skip("Skipping test on Windows because chmod doesn't affect permissions on Windows, so this test won't work.")
-	}
 
 	testDir := t.TempDir()
 	t.Chdir(testDir)
 
-	// Set the directory to read-only to invoke failure to create .grater/
-	require.NoError(t, os.Chmod(testDir, dirReadOnly))
+	f, err := os.Create(".grater")
+	require.NoError(t, err)
+	require.NoError(t, f.Close())
+
 	_, err = GetWorkspace()
-	require.NoError(t, os.Chmod(testDir, dirReadWrite))
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to create .grater/ directory")
