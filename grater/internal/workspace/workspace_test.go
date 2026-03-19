@@ -1,0 +1,52 @@
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
+
+package workspace
+
+import (
+	"os"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func TestNewWorkspace(t *testing.T) {
+	testDir := t.TempDir()
+	t.Chdir(testDir)
+
+	ws, err := NewWorkspace()
+	require.NoError(t, err)
+	require.NotNil(t, ws)
+}
+
+func TestNewWorkspaceDirAlreadyExist(t *testing.T) {
+	testDir := t.TempDir()
+	t.Chdir(testDir)
+
+	ws1, err := NewWorkspace()
+	require.NoError(t, err)
+	require.NotNil(t, ws1)
+
+	ws2, err := NewWorkspace()
+	require.NoError(t, err)
+	require.NotNil(t, ws2)
+
+	assert.Equal(t, ws1, ws2)
+}
+
+func TestNewWorkspaceFails(t *testing.T) {
+	var err error
+
+	testDir := t.TempDir()
+	t.Chdir(testDir)
+
+	f, err := os.Create(".grater")
+	require.NoError(t, err)
+	require.NoError(t, f.Close())
+
+	_, err = NewWorkspace()
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to create .grater/ directory")
+}
