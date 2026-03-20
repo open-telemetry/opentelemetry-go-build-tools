@@ -1,12 +1,12 @@
 module go.opentelemetry.io/build-tools/internal/tools
 
-go 1.25.0
+go 1.26
 
 require (
 	github.com/client9/misspell v0.3.4
 	github.com/gogo/protobuf v1.3.2
 	github.com/golangci/golangci-lint/v2 v2.11.3
-	github.com/matryer/moq v0.6.0
+	github.com/matryer/moq v0.7.1
 	go.opentelemetry.io/build-tools/chloggen v0.29.0
 	go.opentelemetry.io/build-tools/crosslink v0.29.0
 	go.opentelemetry.io/build-tools/dbotconf v0.29.0
