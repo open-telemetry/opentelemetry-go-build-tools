@@ -54,6 +54,7 @@ func TestAddDependentsFromFileInvalidFile(t *testing.T) {
 	testDir := t.TempDir()
 	t.Chdir(testDir)
 
+	// Pass path to a file that does not exist to invoke failure.
 	err = AddDependentsFromFile("non_existent.txt")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to read dependents file")

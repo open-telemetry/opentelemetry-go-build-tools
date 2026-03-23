@@ -80,6 +80,7 @@ func TestAddDependentFails(t *testing.T) {
 	ws, err = NewWorkspace()
 	require.NoError(t, err)
 
+	// Create a directory for dependentsPath to fail file creation.
 	err = os.MkdirAll(ws.dependentsPath, dirReadWrite)
 	require.NoError(t, err)
 

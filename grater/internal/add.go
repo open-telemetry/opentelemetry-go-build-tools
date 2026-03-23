@@ -12,7 +12,7 @@ import (
 	"go.opentelemetry.io/build-tools/grater/internal/workspace"
 )
 
-// AddDependents writes the list of dependents to the dependents.txt file.
+// AddDependents adds the list of dependents to the dependents.txt file.
 func AddDependents(dependents []string) error {
 	ws, err := workspace.NewWorkspace()
 	if err != nil {
