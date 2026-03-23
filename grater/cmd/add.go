@@ -13,7 +13,7 @@ import (
 func addCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "add",
-		Short: "Adds a dependent to dependents.txt.",
+		Short: "Adds a new dependent to be tested.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := internal.AddDependents(args)
 			if err != nil {
