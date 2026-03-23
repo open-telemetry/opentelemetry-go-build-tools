@@ -6,5 +6,5 @@ Usage:
 
 ```sh
     # adds a new dependent to be tested.
-    grater add foo/bar
+    grater add foo/bar --file <file_path>
 ```
