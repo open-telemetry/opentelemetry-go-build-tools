@@ -80,10 +80,10 @@ func TestAddDependentFails(t *testing.T) {
 	ws, err = NewWorkspace()
 	require.NoError(t, err)
 
-	os.MkdirAll(ws.dependentsPath, dirReadWrite)
+	err = os.MkdirAll(ws.dependentsPath, dirReadWrite)
 	require.NoError(t, err)
 
 	err = ws.AddDependent("foo/bar")
 	assert.Error(t, err)
-    assert.Contains(t, err.Error(), "failed to open dependents.txt")
+	assert.Contains(t, err.Error(), "failed to open dependents.txt")
 }

@@ -4,9 +4,8 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
+
 	"go.opentelemetry.io/build-tools/grater/internal"
 )
 
@@ -18,9 +17,9 @@ func addCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := internal.AddDependents(args)
 			if err != nil {
-				fmt.Printf("Error adding dependents: %v\n", err)
 				return err
 			}
+
 			cmd.Printf("Successfully added dependents: %s\n", args)
 			return nil
 		},

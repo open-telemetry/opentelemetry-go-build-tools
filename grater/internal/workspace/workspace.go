@@ -52,12 +52,12 @@ func (w *Workspace) create() error {
 
 // AddDependent adds a dependent to the dependents.txt file.
 func (w *Workspace) AddDependent(dependent string) error {
-    f, err := os.OpenFile(w.dependentsPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, fileReadWrite)
-    if err != nil {
-        return fmt.Errorf("failed to open dependents.txt: %w", err)
-    }
-    defer f.Close()
+	f, err := os.OpenFile(w.dependentsPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, fileReadWrite)
+	if err != nil {
+		return fmt.Errorf("failed to open dependents.txt: %w", err)
+	}
+	defer f.Close()
 
-    _, err = fmt.Fprintln(f, dependent)
-    return err
+	_, err = fmt.Fprintln(f, dependent)
+	return err
 }

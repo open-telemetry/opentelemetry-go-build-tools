@@ -3,17 +3,13 @@
 
 package internal
 
-import (
-	"fmt"
-
-	"go.opentelemetry.io/build-tools/grater/internal/workspace"
-)
+import "go.opentelemetry.io/build-tools/grater/internal/workspace"
 
 // AddDependents writes the list of dependents to the dependents.txt file.
 func AddDependents(dependents []string) error {
 	ws, err := workspace.NewWorkspace()
 	if err != nil {
-		return fmt.Errorf("failed to create workspace: %w", err)
+		return err
 	}
 
 	for _, dep := range dependents {
@@ -21,7 +17,7 @@ func AddDependents(dependents []string) error {
 
 		err := ws.AddDependent(dep)
 		if err != nil {
-			return fmt.Errorf("failed to add dependent %q: %w", dep, err)
+			return err
 		}
 	}
 
