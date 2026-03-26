@@ -88,3 +88,42 @@ func TestAddDependentFails(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to open dependents.txt")
 }
+
+func TestGetDependents(t *testing.T) {
+	var err error
+	var ws *Workspace
+
+	testDir := t.TempDir()
+	t.Chdir(testDir)
+
+	ws, err = NewWorkspace()
+	require.NoError(t, err)
+
+	err = ws.AddDependent("foo/bar")
+	require.NoError(t, err)
+
+	dependents, err := ws.GetDependents()
+	require.NoError(t, err)
+
+	assert.Contains(t, dependents, "foo/bar")
+}
+
+func TestGetDependentsFails(t *testing.T) {
+	var err error
+	var ws *Workspace
+
+	testDir := t.TempDir()
+	t.Chdir(testDir)
+
+	ws, err = NewWorkspace()
+	require.NoError(t, err)
+
+	// Create a directory for dependentsPath to fail file creation.
+	err = os.MkdirAll(ws.dependentsPath, dirReadWrite)
+	require.NoError(t, err)
+
+	dependents, err := ws.GetDependents()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to read dependents.txt")
+	assert.Nil(t, dependents)
+}

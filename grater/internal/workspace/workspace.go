@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -60,4 +61,14 @@ func (w *Workspace) AddDependent(dependent string) error {
 
 	_, err = fmt.Fprintln(f, dependent)
 	return err
+}
+
+// GetDependents retrieves the list of dependents from the dependents.txt file.
+func (w *Workspace) GetDependents() ([]string, error) {
+	data, err := os.ReadFile(w.dependentsPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read dependents.txt: %w", err)
+	}
+
+	return strings.Split(string(data), "\n"), nil
 }
