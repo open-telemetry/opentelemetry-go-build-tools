@@ -13,8 +13,8 @@ github.com/kaptinlin/jsonpointer v0.4.10 h1:DIpoLKB3Tr62REbLM6OL96RMa85Aft1qwF4l
 github.com/kaptinlin/jsonpointer v0.4.10/go.mod h1:9y0LgXavlmVE5FSHShY5LRlURJJVhbyVJSRWkilrTqA=
 github.com/kaptinlin/jsonschema v0.6.10 h1:CYded7nrwVu7pU1GaIjtd9dSzgqZjh7+LTKFaWqS08I=
 github.com/kaptinlin/jsonschema v0.6.10/go.mod h1:ZXZ4K5KrRmCCF1i6dgvBsQifl+WTb8XShKj0NpQNrz8=
-github.com/kaptinlin/messageformat-go v0.4.10 h1:ixW2Zf9XUi2lv8NZf+eHUJnWE+YO7K76pFbxuKeqwRs=
-github.com/kaptinlin/messageformat-go v0.4.10/go.mod h1:qZzrGrlvWDz2KyyvN3dOWcK9PVSRV1BnfnNU+zB/RWc=
+github.com/kaptinlin/messageformat-go v0.4.19 h1:A5kuuZ1ybXDQ7kD1aoEWGAOemX7hLsMY0yolgSbgpRI=
+github.com/kaptinlin/messageformat-go v0.4.19/go.mod h1:utSDTfiXTxl66OC5RIEuObLH7Ue3YjbA2X86SYMBYWg=
 github.com/kr/pretty v0.2.1/go.mod h1:ipq/a2n7PKx3OHsz4KJII5eveXtPO4qwEXGdVfWzfnI=
 github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=
 github.com/kr/pretty v0.3.1/go.mod h1:hoEshYVHaxMs3cyo3Yncou5ZscifuDolrwPKZanG3xk=
