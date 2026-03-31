@@ -23,7 +23,7 @@ func Add(ws *workspace.Workspace, data []string) {
 	ws.AddDependents(dependents)
 }
 
-// AddFromFile reads dependents from a file and adds them to the workspace.
+// AddFromFile reads dependents from a .txt file and adds them to the workspace.
 func AddFromFile(ws *workspace.Workspace, path string) error {
 	cleanPath := filepath.Clean(path)
 
@@ -31,6 +31,8 @@ func AddFromFile(ws *workspace.Workspace, path string) error {
 	if err != nil {
 		return fmt.Errorf("failed to read dependents from file: %w", err)
 	}
+
+	// TODO: Handle other file formats like json, csv using a switch case.
 
 	var dependents []dependent.Dependent
 	for _, line := range strings.Fields(string(data)) {

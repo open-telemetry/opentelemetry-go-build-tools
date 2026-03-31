@@ -17,7 +17,7 @@ func addCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add [dependents...]",
 		Short: "Adds one or more dependents to be tested.",
-		Long:  "Adds one or more dependents to be tested. The dependents can be specified as command line arguments or in a file, or both.",
+		Long:  "Adds one or more dependents to be tested. The dependents can be specified as command line arguments or in a .txt file, or both.",
 		Example: `
 grater add foo/bar bar/foo --file dependents.txt
 grater add foo/bar

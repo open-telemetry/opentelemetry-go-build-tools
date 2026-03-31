@@ -5,6 +5,6 @@ Tool that checks for regressions in our downstream dependents due to our changes
 Usage:
 
 ```sh
-    # adds a new dependent to be tested.
+    # Adds one or more dependents to be tested.
     grater add foo/bar --file <file_path>
 ```
