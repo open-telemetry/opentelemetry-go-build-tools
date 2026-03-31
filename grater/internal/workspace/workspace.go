@@ -34,7 +34,7 @@ func NewWorkspace() (*Workspace, error) {
 
 	w := &Workspace{
 		dir:            root,
-		dependentsPath: filepath.Join(root, ".grater", "dependents.txt"),
+		dependentsPath: filepath.Join(root, ".grater", "dependents.json"),
 		dependents:     []dependent.Dependent{},
 	}
 	err = w.create()
