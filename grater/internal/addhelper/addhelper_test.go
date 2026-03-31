@@ -41,7 +41,8 @@ func TestAddFromFile(t *testing.T) {
 	ws, err := workspace.NewWorkspace()
 	require.NoError(t, err)
 
-	os.WriteFile("dependents.txt", []byte("foo/bar\nbar/foo\n"), fileReadWrite)
+	err = os.WriteFile("dependents.txt", []byte("foo/bar\nbar/foo\n"), fileReadWrite)
+	require.NoError(t, err)
 
 	err = AddFromFile(ws, "dependents.txt")
 	require.NoError(t, err)
