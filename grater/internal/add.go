@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go.opentelemetry.io/build-tools/grater/internal/workspace"
 	"go.opentelemetry.io/build-tools/grater/internal/dependent"
+	"go.opentelemetry.io/build-tools/grater/internal/workspace"
 )
 
 // AddDependents adds the list of dependents to the dependents.txt file.

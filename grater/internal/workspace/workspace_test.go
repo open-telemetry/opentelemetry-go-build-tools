@@ -4,9 +4,9 @@
 package workspace
 
 import (
+	"encoding/json"
 	"os"
 	"testing"
-	"encoding/json"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

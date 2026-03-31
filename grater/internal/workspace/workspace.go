@@ -5,10 +5,10 @@
 package workspace
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
-	"encoding/json"
 
 	"go.opentelemetry.io/build-tools/grater/internal/dependent"
 )
