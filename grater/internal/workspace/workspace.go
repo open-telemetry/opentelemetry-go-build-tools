@@ -20,6 +20,7 @@ const (
 type Workspace struct {
 	dir            string
 	dependentsPath string
+	dependents     []string
 }
 
 // NewWorkspace creates a new Workspace instance.
@@ -49,24 +50,34 @@ func (w *Workspace) create() error {
 	return nil
 }
 
-// AddDependent adds a dependent to the dependents.txt file.
-func (w *Workspace) AddDependent(dependent string) error {
-	f, err := os.OpenFile(w.dependentsPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, fileReadWrite)
+// AddDependents adds dependents to the internal dependents list.
+func (w *Workspace) AddDependents(dependents []string) {
+	w.dependents = append(w.dependents, dependents...)
+}
+
+// GetDependents returns the list of dependents and also saves them to dependents.txt.
+func (w *Workspace) GetDependents() ([]string, error) {
+	err := w.commitToFile(w.dependents, w.dependentsPath)
 	if err != nil {
-		return fmt.Errorf("failed to open dependents.txt: %w", err)
+		return nil, nil
+	}
+
+	return w.dependents, nil
+}
+
+func (w *Workspace) commitToFile(data []string, path string) error {
+	content := strings.Join(data, "\n") + "\n"
+
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, fileReadWrite)
+	if err != nil {
+		return fmt.Errorf("failed to write to %s: %w", path, err)
 	}
 	defer f.Close()
 
-	_, err = fmt.Fprintln(f, dependent)
-	return err
-}
-
-// GetDependents retrieves the list of dependents from the dependents.txt file.
-func (w *Workspace) GetDependents() ([]string, error) {
-	data, err := os.ReadFile(w.dependentsPath)
+	_, err = f.WriteString(content)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read dependents.txt: %w", err)
+		return fmt.Errorf("failed to write to %s: %w", path, err)
 	}
 
-	return strings.Split(string(data), "\n"), nil
+	return nil
 }

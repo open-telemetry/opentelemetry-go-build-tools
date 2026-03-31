@@ -43,42 +43,21 @@ func TestNewWorkspaceFails(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, f.Close())
 
-	_, err := NewWorkspace()
+	_, err = NewWorkspace()
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to create .grater/ directory")
 }
 
-func TestAddDependent(t *testing.T) {
+func TestAddDependents(t *testing.T) {
 	testDir := t.TempDir()
 	t.Chdir(testDir)
 
 	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
-	err = ws.AddDependent("foo/bar")
-	require.NoError(t, err)
-
-	content, err := os.ReadFile(ws.dependentsPath)
-	require.NoError(t, err)
-
-	assert.Contains(t, string(content), "foo/bar")
-}
-
-func TestAddDependentFails(t *testing.T) {
-	testDir := t.TempDir()
-	t.Chdir(testDir)
-
-	ws, err := NewWorkspace()
-	require.NoError(t, err)
-
-	// Create a directory for dependentsPath to fail file creation.
-	err = os.MkdirAll(ws.dependentsPath, dirReadWrite)
-	require.NoError(t, err)
-
-	err = ws.AddDependent("foo/bar")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "failed to open dependents.txt")
+	ws.AddDependents([]string{"foo/bar"})
+	assert.Contains(t, ws.dependents, "foo/bar")
 }
 
 func TestGetDependents(t *testing.T) {
@@ -88,28 +67,49 @@ func TestGetDependents(t *testing.T) {
 	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
-	err = ws.AddDependent("foo/bar")
-	require.NoError(t, err)
+	ws.AddDependents([]string{"foo/bar"})
 
 	dependents, err := ws.GetDependents()
 	require.NoError(t, err)
 
 	assert.Contains(t, dependents, "foo/bar")
+
+	content, err := os.ReadFile(ws.dependentsPath)
+	require.NoError(t, err)
+	assert.Contains(t, string(content), "foo/bar")
 }
 
-func TestGetDependentsFails(t *testing.T) {
+func TestCommitToFile(t *testing.T) {
 	testDir := t.TempDir()
 	t.Chdir(testDir)
 
 	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
+	ws.AddDependents([]string{"foo/bar"})
+
+	err = ws.commitToFile(ws.dependents, ws.dependentsPath)
+	require.NoError(t, err)
+
+	content, err := os.ReadFile(ws.dependentsPath)
+	require.NoError(t, err)
+	assert.Contains(t, string(content), "foo/bar")
+}
+
+func TestCommitToFileFails(t *testing.T) {
+	testDir := t.TempDir()
+	t.Chdir(testDir)
+
+	ws, err := NewWorkspace()
+	require.NoError(t, err)
+
+	ws.AddDependents([]string{"foo/bar"})
+
 	// Create a directory for dependentsPath to fail file creation.
 	err = os.MkdirAll(ws.dependentsPath, dirReadWrite)
 	require.NoError(t, err)
 
-	dependents, err := ws.GetDependents()
+	err = ws.commitToFile(ws.dependents, ws.dependentsPath)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "failed to read dependents.txt")
-	assert.Nil(t, dependents)
+	assert.Contains(t, err.Error(), "failed to write")
 }

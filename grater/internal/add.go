@@ -19,12 +19,7 @@ func AddDependents(dependents []string) error {
 		return err
 	}
 
-	for _, dep := range dependents {
-		err := ws.AddDependent(dep)
-		if err != nil {
-			return err
-		}
-	}
+	ws.AddDependents(dependents)
 
 	return nil
 }

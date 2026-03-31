@@ -19,12 +19,6 @@ func TestAddDependents(t *testing.T) {
 
 	err := AddDependents([]string{"foo/bar", "bar/foo"})
 	require.NoError(t, err)
-
-	content, err := os.ReadFile(".grater/dependents.txt")
-	require.NoError(t, err)
-
-	assert.Contains(t, string(content), "foo/bar")
-	assert.Contains(t, string(content), "bar/foo")
 }
 
 func TestAddDependentsFromFile(t *testing.T) {
@@ -36,12 +30,6 @@ func TestAddDependentsFromFile(t *testing.T) {
 
 	err = AddDependentsFromFile("deps.txt")
 	require.NoError(t, err)
-
-	content, err := os.ReadFile(".grater/dependents.txt")
-	require.NoError(t, err)
-
-	assert.Contains(t, string(content), "foo/bar")
-	assert.Contains(t, string(content), "bar/foo")
 }
 
 func TestAddDependentsFromFileInvalidFile(t *testing.T) {
