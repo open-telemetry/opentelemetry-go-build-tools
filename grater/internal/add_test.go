@@ -14,12 +14,10 @@ import (
 const fileReadWrite = os.FileMode(0o644)
 
 func TestAddDependents(t *testing.T) {
-	var err error
-
 	testDir := t.TempDir()
 	t.Chdir(testDir)
 
-	err = AddDependents([]string{"foo/bar", "bar/foo"})
+	err := AddDependents([]string{"foo/bar", "bar/foo"})
 	require.NoError(t, err)
 
 	content, err := os.ReadFile(".grater/dependents.txt")
@@ -30,12 +28,10 @@ func TestAddDependents(t *testing.T) {
 }
 
 func TestAddDependentsFromFile(t *testing.T) {
-	var err error
-
 	testDir := t.TempDir()
 	t.Chdir(testDir)
 
-	err = os.WriteFile("deps.txt", []byte("foo/bar\nbar/foo\n"), fileReadWrite)
+	err := os.WriteFile("deps.txt", []byte("foo/bar\nbar/foo\n"), fileReadWrite)
 	require.NoError(t, err)
 
 	err = AddDependentsFromFile("deps.txt")
@@ -49,13 +45,11 @@ func TestAddDependentsFromFile(t *testing.T) {
 }
 
 func TestAddDependentsFromFileInvalidFile(t *testing.T) {
-	var err error
-
 	testDir := t.TempDir()
 	t.Chdir(testDir)
 
 	// Pass path to a file that does not exist to invoke failure.
-	err = AddDependentsFromFile("non_existent.txt")
+	err := AddDependentsFromFile("non_existent.txt")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to read dependents file")
 }

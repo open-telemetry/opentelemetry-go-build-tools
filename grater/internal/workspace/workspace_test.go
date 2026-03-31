@@ -36,8 +36,6 @@ func TestNewWorkspaceDirAlreadyExist(t *testing.T) {
 }
 
 func TestNewWorkspaceFails(t *testing.T) {
-	var err error
-
 	testDir := t.TempDir()
 	t.Chdir(testDir)
 
@@ -45,20 +43,17 @@ func TestNewWorkspaceFails(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, f.Close())
 
-	_, err = NewWorkspace()
+	_, err := NewWorkspace()
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to create .grater/ directory")
 }
 
 func TestAddDependent(t *testing.T) {
-	var err error
-	var ws *Workspace
-
 	testDir := t.TempDir()
 	t.Chdir(testDir)
 
-	ws, err = NewWorkspace()
+	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
 	err = ws.AddDependent("foo/bar")
@@ -71,13 +66,10 @@ func TestAddDependent(t *testing.T) {
 }
 
 func TestAddDependentFails(t *testing.T) {
-	var err error
-	var ws *Workspace
-
 	testDir := t.TempDir()
 	t.Chdir(testDir)
 
-	ws, err = NewWorkspace()
+	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
 	// Create a directory for dependentsPath to fail file creation.
@@ -90,13 +82,10 @@ func TestAddDependentFails(t *testing.T) {
 }
 
 func TestGetDependents(t *testing.T) {
-	var err error
-	var ws *Workspace
-
 	testDir := t.TempDir()
 	t.Chdir(testDir)
 
-	ws, err = NewWorkspace()
+	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
 	err = ws.AddDependent("foo/bar")
@@ -109,13 +98,10 @@ func TestGetDependents(t *testing.T) {
 }
 
 func TestGetDependentsFails(t *testing.T) {
-	var err error
-	var ws *Workspace
-
 	testDir := t.TempDir()
 	t.Chdir(testDir)
 
-	ws, err = NewWorkspace()
+	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
 	// Create a directory for dependentsPath to fail file creation.

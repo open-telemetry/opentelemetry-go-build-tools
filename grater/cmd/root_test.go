@@ -18,10 +18,7 @@ Available Commands:
   add         Adds a new dependent to be tested.`
 
 func TestRoot(t *testing.T) {
-	var out string
-	var err error
-
-	out, err = runCobra(t)
+	out, err := runCobra(t)
 	assert.Contains(t, out, rootUsage)
 	assert.Empty(t, err)
 }

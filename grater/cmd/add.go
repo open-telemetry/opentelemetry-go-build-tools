@@ -9,10 +9,10 @@ import (
 	"go.opentelemetry.io/build-tools/grater/internal"
 )
 
+var path string
+
 // addCmd represents the add command
 func addCmd() *cobra.Command {
-	var path string
-
 	cmd := &cobra.Command{
 		Use:   "add",
 		Short: "Adds a new dependent to be tested.",

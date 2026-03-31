@@ -21,22 +21,16 @@ Flags:
   -f, --file string   path to the dependents file`
 
 func TestAdd(t *testing.T) {
-	var err error
-	var out string
-
-	out, err = runCobra(t, "add", "--help")
+	out, err := runCobra(t, "add", "--help")
 	require.NoError(t, err)
 	assert.Contains(t, out, addUsage)
 }
 
 func TestAddCmd(t *testing.T) {
-	var err error
-	var out string
-
 	testDir := t.TempDir()
 	t.Chdir(testDir)
 
-	out, err = runCobra(t, "add", "foo/bar", "bar/foo")
+	out, err := runCobra(t, "add", "foo/bar", "bar/foo")
 	require.NoError(t, err)
 	assert.Contains(t, out, "Successfully added dependents.")
 

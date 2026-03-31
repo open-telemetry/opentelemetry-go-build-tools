@@ -39,10 +39,8 @@ func NewWorkspace() (*Workspace, error) {
 
 // Create initializes a .grater directory in the given path.
 func (w *Workspace) create() error {
-	var err error
-
 	graterDir := filepath.Join(w.dir, ".grater")
-	err = os.MkdirAll(graterDir, dirReadWrite)
+	err := os.MkdirAll(graterDir, dirReadWrite)
 
 	if err != nil {
 		return fmt.Errorf("failed to create .grater/ directory: %w", err)
