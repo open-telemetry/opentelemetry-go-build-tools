@@ -18,14 +18,12 @@ func addCmd() *cobra.Command {
 		Short: "Adds a new dependent to be tested.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if path != "" {
-				err := internal.AddDependentsFromFile(path)
-				if err != nil {
+				if err := internal.AddDependentsFromFile(path); err != nil {
 					return err
 				}
 			}
 
-			err := internal.AddDependents(args)
-			if err != nil {
+			if err := internal.AddDependents(args); err != nil {
 				return err
 			}
 
