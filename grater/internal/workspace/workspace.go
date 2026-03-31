@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
+	"encoding/json"
+
+	"go.opentelemetry.io/build-tools/grater/internal/dependent"
 )
 
 const (
@@ -20,7 +22,7 @@ const (
 type Workspace struct {
 	dir            string
 	dependentsPath string
-	dependents     []string
+	dependents     []dependent.Dependent
 }
 
 // NewWorkspace creates a new Workspace instance.
@@ -33,6 +35,7 @@ func NewWorkspace() (*Workspace, error) {
 	w := &Workspace{
 		dir:            root,
 		dependentsPath: filepath.Join(root, ".grater", "dependents.txt"),
+		dependents:     []dependent.Dependent{},
 	}
 	err = w.create()
 	return w, err
@@ -51,30 +54,33 @@ func (w *Workspace) create() error {
 }
 
 // AddDependents adds dependents to the internal dependents list.
-func (w *Workspace) AddDependents(dependents []string) {
+func (w *Workspace) AddDependents(dependents []dependent.Dependent) {
 	w.dependents = append(w.dependents, dependents...)
 }
 
 // GetDependents returns the list of dependents and also saves them to dependents.txt.
-func (w *Workspace) GetDependents() ([]string, error) {
-	err := w.commitToFile(w.dependents, w.dependentsPath)
+func (w *Workspace) GetDependents() ([]dependent.Dependent, error) {
+	content, err := json.MarshalIndent(w.dependents, "", "  ")
 	if err != nil {
-		return nil, nil
+		return nil, err
+	}
+
+	err = w.commitToFile(content, w.dependentsPath)
+	if err != nil {
+		return nil, err
 	}
 
 	return w.dependents, nil
 }
 
-func (w *Workspace) commitToFile(data []string, path string) error {
-	content := strings.Join(data, "\n") + "\n"
-
+func (w *Workspace) commitToFile(content []byte, path string) error {
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, fileReadWrite)
 	if err != nil {
 		return fmt.Errorf("failed to write to %s: %w", path, err)
 	}
 	defer f.Close()
 
-	_, err = f.WriteString(content)
+	_, err = f.Write(content)
 	if err != nil {
 		return fmt.Errorf("failed to write to %s: %w", path, err)
 	}

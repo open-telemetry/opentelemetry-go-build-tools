@@ -6,9 +6,12 @@ package workspace
 import (
 	"os"
 	"testing"
+	"encoding/json"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"go.opentelemetry.io/build-tools/grater/internal/dependent"
 )
 
 func TestNewWorkspace(t *testing.T) {
@@ -56,8 +59,8 @@ func TestAddDependents(t *testing.T) {
 	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
-	ws.AddDependents([]string{"foo/bar"})
-	assert.Contains(t, ws.dependents, "foo/bar")
+	ws.AddDependents([]dependent.Dependent{{Dependent: "foo/bar"}})
+	assert.Contains(t, ws.dependents, dependent.Dependent{Dependent: "foo/bar"})
 }
 
 func TestGetDependents(t *testing.T) {
@@ -67,12 +70,12 @@ func TestGetDependents(t *testing.T) {
 	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
-	ws.AddDependents([]string{"foo/bar"})
+	ws.AddDependents([]dependent.Dependent{{Dependent: "foo/bar"}})
 
 	dependents, err := ws.GetDependents()
 	require.NoError(t, err)
 
-	assert.Contains(t, dependents, "foo/bar")
+	assert.Contains(t, dependents, dependent.Dependent{Dependent: "foo/bar"})
 
 	content, err := os.ReadFile(ws.dependentsPath)
 	require.NoError(t, err)
@@ -86,9 +89,12 @@ func TestCommitToFile(t *testing.T) {
 	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
-	ws.AddDependents([]string{"foo/bar"})
+	ws.AddDependents([]dependent.Dependent{{Dependent: "foo/bar"}})
 
-	err = ws.commitToFile(ws.dependents, ws.dependentsPath)
+	dependentsJSON, err := json.Marshal(ws.dependents)
+	require.NoError(t, err)
+
+	err = ws.commitToFile(dependentsJSON, ws.dependentsPath)
 	require.NoError(t, err)
 
 	content, err := os.ReadFile(ws.dependentsPath)
@@ -103,13 +109,16 @@ func TestCommitToFileFails(t *testing.T) {
 	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
-	ws.AddDependents([]string{"foo/bar"})
+	ws.AddDependents([]dependent.Dependent{{Dependent: "foo/bar"}})
+
+	dependentsJSON, err := json.Marshal(ws.dependents)
+	require.NoError(t, err)
 
 	// Create a directory for dependentsPath to fail file creation.
 	err = os.MkdirAll(ws.dependentsPath, dirReadWrite)
 	require.NoError(t, err)
 
-	err = ws.commitToFile(ws.dependents, ws.dependentsPath)
+	err = ws.commitToFile(dependentsJSON, ws.dependentsPath)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to write")
 }

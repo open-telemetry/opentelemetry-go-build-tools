@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"go.opentelemetry.io/build-tools/grater/internal/workspace"
+	"go.opentelemetry.io/build-tools/grater/internal/dependent"
 )
 
 // AddDependents adds the list of dependents to the dependents.txt file.
@@ -19,7 +20,12 @@ func AddDependents(dependents []string) error {
 		return err
 	}
 
-	ws.AddDependents(dependents)
+	var deps []dependent.Dependent
+	for _, dep := range dependents {
+		deps = append(deps, dependent.Dependent{Dependent: dep})
+	}
+
+	ws.AddDependents(deps)
 
 	return nil
 }
