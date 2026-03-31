@@ -6,7 +6,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	"go.opentelemetry.io/build-tools/grater/internal/add"
+	"go.opentelemetry.io/build-tools/grater/internal/addhelper"
 	"go.opentelemetry.io/build-tools/grater/internal/workspace"
 )
 
@@ -15,8 +15,15 @@ var path string
 // addCmd represents the add command
 func addCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add",
-		Short: "Adds a new dependent to be tested.",
+		Use:   "add [dependents...]",
+		Short: "Adds one or more dependents to be tested.",
+		Long:  "Adds one or more dependents to be tested. The dependents can be specified as command line arguments or in a file, or both.",
+		Example: `
+grater add foo/bar bar/foo --file dependents.txt
+grater add foo/bar
+grater add --file dependents.txt
+grater add -f dependents.txt
+`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ws, err := workspace.NewWorkspace()
 			if err != nil {
@@ -24,14 +31,14 @@ func addCmd() *cobra.Command {
 			}
 
 			if path != "" {
-				if err := add.AddFromFile(ws, path); err != nil {
+				if err := addhelper.AddFromFile(ws, path); err != nil {
 					return err
 				}
 			}
 
-			add.Add(ws, args)
+			addhelper.Add(ws, args)
 
-			cmd.Printf("Successfully added dependents. \n")
+			cmd.Printf("Successfully added dependents.\n")
 			return nil
 		},
 	}

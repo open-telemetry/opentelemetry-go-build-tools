@@ -15,7 +15,7 @@ Usage:
   grater [command]
 
 Available Commands:
-  add         Adds a new dependent to be tested.`
+  add         Adds one or more dependents to be tested.`
 
 func TestRoot(t *testing.T) {
 	out, err := runCobra(t)

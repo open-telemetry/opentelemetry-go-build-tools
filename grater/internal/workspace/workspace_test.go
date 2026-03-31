@@ -99,7 +99,7 @@ func TestCommitToFile(t *testing.T) {
 	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
-	commitToFile([]byte(`foo/bar`), ws.dependentsPath)
+	err = commitToFile([]byte(`foo/bar`), ws.dependentsPath)
 	require.NoError(t, err)
 
 	content, err := os.ReadFile(ws.dependentsPath)

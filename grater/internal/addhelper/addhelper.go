@@ -1,18 +1,20 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-// Package add provides utilities for working with dependents in the .grater directory.
-package add
+// Package addhelper provides utilities for working with dependents in the .grater directory.
+package addhelper
 
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"go.opentelemetry.io/build-tools/grater/internal/dependent"
 	"go.opentelemetry.io/build-tools/grater/internal/workspace"
 )
 
+// Add adds dependents to the workspace.
 func Add(ws *workspace.Workspace, data []string) {
 	var dependents []dependent.Dependent
 	for _, moduleName := range data {
@@ -21,8 +23,11 @@ func Add(ws *workspace.Workspace, data []string) {
 	ws.AddDependents(dependents)
 }
 
+// AddFromFile reads dependents from a file and adds them to the workspace.
 func AddFromFile(ws *workspace.Workspace, path string) error {
-	data, err := os.ReadFile(path)
+	cleanPath := filepath.Clean(path)
+
+	data, err := os.ReadFile(cleanPath)
 	if err != nil {
 		return fmt.Errorf("failed to read dependents from file: %w", err)
 	}
