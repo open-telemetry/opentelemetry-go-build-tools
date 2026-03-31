@@ -74,15 +74,17 @@ func (w *Workspace) GetDependents() ([]dependent.Dependent, error) {
 }
 
 func (w *Workspace) commitToFile(content []byte, path string) error {
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, fileReadWrite)
+	cleanPath := filepath.Clean(path)
+
+	f, err := os.OpenFile(cleanPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, fileReadWrite)
 	if err != nil {
-		return fmt.Errorf("failed to write to %s: %w", path, err)
+		return fmt.Errorf("failed to write to %s: %w", cleanPath, err)
 	}
 	defer f.Close()
 
 	_, err = f.Write(content)
 	if err != nil {
-		return fmt.Errorf("failed to write to %s: %w", path, err)
+		return fmt.Errorf("failed to write to %s: %w", cleanPath, err)
 	}
 
 	return nil
