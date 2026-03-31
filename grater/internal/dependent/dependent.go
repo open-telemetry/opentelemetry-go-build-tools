@@ -6,5 +6,5 @@ package dependent
 
 // Dependent represents a dependent module in the workspace.
 type Dependent struct {
-	Dependent string `json:"dependent"`
+	ModuleName string `json:"module_name"`
 }

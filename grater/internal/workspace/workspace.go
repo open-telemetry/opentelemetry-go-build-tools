@@ -58,19 +58,19 @@ func (w *Workspace) AddDependents(dependents []dependent.Dependent) {
 	w.dependents = append(w.dependents, dependents...)
 }
 
-// GetDependents returns the list of dependents and also saves them to dependents.txt.
+// GetDependents returns the list of dependents.
 func (w *Workspace) GetDependents() ([]dependent.Dependent, error) {
+	return w.dependents, nil
+}
+
+// WriteDependents writes the list of dependents to the dependents.json file.
+func (w *Workspace) WriteDependents() error {
 	content, err := json.MarshalIndent(w.dependents, "", "  ")
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	err = w.commitToFile(content, w.dependentsPath)
-	if err != nil {
-		return nil, err
-	}
-
-	return w.dependents, nil
+	return w.CommitToFile(content, w.dependentsPath)
 }
 
 func (w *Workspace) commitToFile(content []byte, path string) error {

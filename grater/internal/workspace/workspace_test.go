@@ -59,8 +59,8 @@ func TestAddDependents(t *testing.T) {
 	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
-	ws.AddDependents([]dependent.Dependent{{Dependent: "foo/bar"}})
-	assert.Contains(t, ws.dependents, dependent.Dependent{Dependent: "foo/bar"})
+	ws.AddDependents([]dependent.Dependent{{ModuleName: "foo/bar"}})
+	assert.Contains(t, ws.dependents, dependent.Dependent{ModuleName: "foo/bar"})
 }
 
 func TestGetDependents(t *testing.T) {
@@ -70,12 +70,25 @@ func TestGetDependents(t *testing.T) {
 	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
-	ws.AddDependents([]dependent.Dependent{{Dependent: "foo/bar"}})
+	ws.AddDependents([]dependent.Dependent{{ModuleName: "foo/bar"}})
 
 	dependents, err := ws.GetDependents()
 	require.NoError(t, err)
 
-	assert.Contains(t, dependents, dependent.Dependent{Dependent: "foo/bar"})
+	assert.Contains(t, dependents, dependent.Dependent{ModuleName: "foo/bar"})
+}
+
+func TestWriteDependents(t *testing.T) {
+	testDir := t.TempDir()
+	t.Chdir(testDir)
+
+	ws, err := NewWorkspace()
+	require.NoError(t, err)
+
+	ws.AddDependents([]dependent.Dependent{{ModuleName: "foo/bar"}})
+
+	err = ws.WriteDependents()
+	require.NoError(t, err)
 
 	content, err := os.ReadFile(ws.dependentsPath)
 	require.NoError(t, err)
@@ -89,7 +102,7 @@ func TestCommitToFile(t *testing.T) {
 	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
-	ws.AddDependents([]dependent.Dependent{{Dependent: "foo/bar"}})
+	ws.AddDependents([]dependent.Dependent{{ModuleName: "foo/bar"}})
 
 	dependentsJSON, err := json.Marshal(ws.dependents)
 	require.NoError(t, err)
@@ -109,7 +122,7 @@ func TestCommitToFileFails(t *testing.T) {
 	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
-	ws.AddDependents([]dependent.Dependent{{Dependent: "foo/bar"}})
+	ws.AddDependents([]dependent.Dependent{{ModuleName: "foo/bar"}})
 
 	dependentsJSON, err := json.Marshal(ws.dependents)
 	require.NoError(t, err)
