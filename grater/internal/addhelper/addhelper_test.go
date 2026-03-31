@@ -41,10 +41,9 @@ func TestAddFromFile(t *testing.T) {
 	ws, err := workspace.NewWorkspace()
 	require.NoError(t, err)
 
-	err = os.WriteFile("dependents.json", []byte("foo/bar\nbar/foo\n"), fileReadWrite)
-	require.NoError(t, err)
+	os.WriteFile("dependents.txt", []byte("foo/bar\nbar/foo\n"), fileReadWrite)
 
-	err = AddFromFile(ws, "dependents.json")
+	err = AddFromFile(ws, "dependents.txt")
 	require.NoError(t, err)
 
 	dependents := ws.GetDependents()
@@ -62,7 +61,7 @@ func TestAddFromFileFails(t *testing.T) {
 	ws, err := workspace.NewWorkspace()
 	require.NoError(t, err)
 
-	err = AddFromFile(ws, "non_existent.json")
+	err = AddFromFile(ws, "non_existent.txt")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to read dependents from file")
 }
