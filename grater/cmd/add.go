@@ -6,7 +6,8 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	"go.opentelemetry.io/build-tools/grater/internal"
+	"go.opentelemetry.io/build-tools/grater/internal/add"
+	"go.opentelemetry.io/build-tools/grater/internal/workspace"
 )
 
 var path string
@@ -17,15 +18,18 @@ func addCmd() *cobra.Command {
 		Use:   "add",
 		Short: "Adds a new dependent to be tested.",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ws, err := workspace.NewWorkspace()
+			if err != nil {
+				return err
+			}
+
 			if path != "" {
-				if err := internal.AddDependentsFromFile(path); err != nil {
+				if err := add.AddFromFile(ws, path); err != nil {
 					return err
 				}
 			}
 
-			if err := internal.AddDependents(args); err != nil {
-				return err
-			}
+			add.Add(ws, args)
 
 			cmd.Printf("Successfully added dependents. \n")
 			return nil

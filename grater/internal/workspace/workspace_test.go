@@ -4,7 +4,6 @@
 package workspace
 
 import (
-	"encoding/json"
 	"os"
 	"testing"
 
@@ -72,9 +71,7 @@ func TestGetDependents(t *testing.T) {
 
 	ws.AddDependents([]dependent.Dependent{{ModuleName: "foo/bar"}})
 
-	dependents, err := ws.GetDependents()
-	require.NoError(t, err)
-
+	dependents := ws.GetDependents()
 	assert.Contains(t, dependents, dependent.Dependent{ModuleName: "foo/bar"})
 }
 
@@ -102,12 +99,7 @@ func TestCommitToFile(t *testing.T) {
 	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
-	ws.AddDependents([]dependent.Dependent{{ModuleName: "foo/bar"}})
-
-	dependentsJSON, err := json.Marshal(ws.dependents)
-	require.NoError(t, err)
-
-	err = ws.commitToFile(dependentsJSON, ws.dependentsPath)
+	commitToFile([]byte(`foo/bar`), ws.dependentsPath)
 	require.NoError(t, err)
 
 	content, err := os.ReadFile(ws.dependentsPath)
@@ -122,16 +114,12 @@ func TestCommitToFileFails(t *testing.T) {
 	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
-	ws.AddDependents([]dependent.Dependent{{ModuleName: "foo/bar"}})
-
-	dependentsJSON, err := json.Marshal(ws.dependents)
-	require.NoError(t, err)
-
 	// Create a directory for dependentsPath to fail file creation.
 	err = os.MkdirAll(ws.dependentsPath, dirReadWrite)
 	require.NoError(t, err)
 
-	err = ws.commitToFile(dependentsJSON, ws.dependentsPath)
+	err = commitToFile([]byte(`foo/bar`), ws.dependentsPath)
+
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to write")
 }

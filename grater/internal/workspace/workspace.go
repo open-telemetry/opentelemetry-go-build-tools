@@ -53,14 +53,14 @@ func (w *Workspace) create() error {
 	return nil
 }
 
-// AddDependents adds dependents to the internal dependents list.
+// AddDependents adds dependents to the internal list of dependents.
 func (w *Workspace) AddDependents(dependents []dependent.Dependent) {
 	w.dependents = append(w.dependents, dependents...)
 }
 
-// GetDependents returns the list of dependents.
-func (w *Workspace) GetDependents() ([]dependent.Dependent, error) {
-	return w.dependents, nil
+// GetDependents returns the internal list of dependents.
+func (w *Workspace) GetDependents() []dependent.Dependent {
+	return w.dependents
 }
 
 // WriteDependents writes the list of dependents to the dependents.json file.
@@ -70,10 +70,10 @@ func (w *Workspace) WriteDependents() error {
 		return err
 	}
 
-	return w.CommitToFile(content, w.dependentsPath)
+	return commitToFile(content, w.dependentsPath)
 }
 
-func (w *Workspace) commitToFile(content []byte, path string) error {
+func commitToFile(content []byte, path string) error {
 	cleanPath := filepath.Clean(path)
 
 	f, err := os.OpenFile(cleanPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, fileReadWrite)
