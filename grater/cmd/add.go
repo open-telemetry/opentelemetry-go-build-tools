@@ -36,7 +36,9 @@ grater add -f dependents.txt
 				}
 			}
 
-			addhelper.Add(ws, args)
+			if err = addhelper.Add(ws, args); err != nil {
+				return err
+			}
 
 			cmd.Printf("Successfully added dependents.\n")
 			return nil
