@@ -15,12 +15,13 @@ import (
 )
 
 // Add adds dependents to the workspace.
-func Add(ws *workspace.Workspace, data []string) {
+func Add(ws *workspace.Workspace, data []string) error {
 	var dependents []dependent.Dependent
 	for _, moduleName := range data {
 		dependents = append(dependents, dependent.Dependent{ModuleName: moduleName})
 	}
 	ws.AddDependents(dependents)
+	return ws.WriteDependents()
 }
 
 // AddFromFile reads dependents from a .txt file and adds them to the workspace.
@@ -40,5 +41,5 @@ func AddFromFile(ws *workspace.Workspace, path string) error {
 	}
 
 	ws.AddDependents(dependents)
-	return nil
+	return ws.WriteDependents()
 }

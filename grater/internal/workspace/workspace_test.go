@@ -89,7 +89,7 @@ func TestWriteDependents(t *testing.T) {
 
 	content, err := os.ReadFile(ws.dependentsPath)
 	require.NoError(t, err)
-	assert.Contains(t, string(content), "foo/bar")
+	assert.JSONEq(t, `[{"module_name":"foo/bar"}]`, string(content))
 }
 
 func TestCommitToFile(t *testing.T) {

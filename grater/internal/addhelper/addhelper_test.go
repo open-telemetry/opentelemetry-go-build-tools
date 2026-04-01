@@ -24,7 +24,8 @@ func TestAdd(t *testing.T) {
 	ws, err := workspace.NewWorkspace()
 	require.NoError(t, err)
 
-	Add(ws, []string{"foo/bar", "baz/qux"})
+	err = Add(ws, []string{"foo/bar", "baz/qux"})
+	require.NoError(t, err)
 
 	dependents := ws.GetDependents()
 
@@ -32,6 +33,10 @@ func TestAdd(t *testing.T) {
 		{ModuleName: "foo/bar"},
 		{ModuleName: "baz/qux"},
 	})
+
+	content, err := os.ReadFile(".grater/dependents.json")
+	require.NoError(t, err)
+	assert.JSONEq(t, `[{"module_name":"foo/bar"},{"module_name":"baz/qux"}]`, string(content))
 }
 
 func TestAddFromFile(t *testing.T) {
@@ -53,6 +58,10 @@ func TestAddFromFile(t *testing.T) {
 		{ModuleName: "foo/bar"},
 		{ModuleName: "bar/foo"},
 	})
+
+	content, err := os.ReadFile(".grater/dependents.json")
+	require.NoError(t, err)
+	assert.JSONEq(t, `[{"module_name":"foo/bar"},{"module_name":"bar/foo"}]`, string(content))
 }
 
 func TestAddFromFileFails(t *testing.T) {
