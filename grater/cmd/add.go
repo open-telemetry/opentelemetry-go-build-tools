@@ -31,7 +31,7 @@ grater add -f dependents.txt
 			}
 
 			if path != "" {
-				if err := addhelper.AddFromFile(ws, path); err != nil {
+				if err = addhelper.AddFromFile(ws, path); err != nil {
 					return err
 				}
 			}
