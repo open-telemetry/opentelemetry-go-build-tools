@@ -165,6 +165,10 @@ test:
 		  | xargs $(GO) test -timeout $(TIMEOUT)s $(ARGS)); \
 	done
 
+.PHONY: integration-tests
+integration-tests:
+	go test -v -tags=integration ./...
+
 COVERAGE_MODE    = atomic
 COVERAGE_PROFILE = coverage.out
 .PHONY: test-coverage
