@@ -167,7 +167,13 @@ test:
 
 .PHONY: integration-tests
 integration-tests:
-	go test -v -tags=integration ./...
+	@set -e; for dir in $(ALL_GO_MOD_DIRS); do \
+	  if grep -rq "//go:build integration" "$${dir}"; then \
+	    echo "Running integration tests in $${dir}..."; \
+	    (cd "$${dir}" && \
+	      $(GO) test -v -tags=integration,ignore_unit ./...); \
+	  fi \
+	done
 
 COVERAGE_MODE    = atomic
 COVERAGE_PROFILE = coverage.out
