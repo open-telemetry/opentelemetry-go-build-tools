@@ -225,7 +225,6 @@ jobs:
         id: set-mods
         shell: bash
         run: |
-          git fetch --all --prune
           BASE="${{ github.event.pull_request.base.sha }}"
           echo "BASE=$BASE"
           FILES=$(git diff --name-only "$BASE" HEAD || true)
