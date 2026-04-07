@@ -1,17 +1,22 @@
 name: ci
+
 on:
   push:
     branches:
       - main
   pull_request:
   merge_group:
+
 permissions:
   contents: read
+
 env:
   # Path to where test results will be saved.
   TEST_RESULTS: /tmp/test-results
+
 jobs:
   lint:
+    needs: [detect-changes]
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -56,15 +61,22 @@ jobs:
         done
 
     - name: Run linters
-      run: make multimod-verify license-check lint
+      shell: bash
+      run: |
+        AFFECTED_MODULES="${{ needs.detect-changes.outputs.affected_modules }}"
+        make multimod-verify license-check lint ALL_GO_MOD_DIRS="$AFFECTED_MODULES"
 
     - name: Build
-      run: make build
+      shell: bash
+      run: |
+        AFFECTED_MODULES="${{ needs.detect-changes.outputs.affected_modules }}"
+        make build ALL_GO_MOD_DIRS="$AFFECTED_MODULES"
 
     - name: Check clean repository
       run: make check-clean-work-tree
 
   test-race:
+    needs: [detect-changes]
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -93,7 +105,10 @@ jobs:
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/go.sum') }}
 
     - name: Run tests with race detector
-      run: make test-race
+      shell: bash
+      run: |
+        AFFECTED_MODULES="${{ needs.detect-changes.outputs.affected_modules }}"
+        make test-race ALL_GO_MOD_DIRS="$AFFECTED_MODULES"
 
   test-coverage:
     runs-on: ubuntu-latest
@@ -141,6 +156,7 @@ jobs:
       with:
           name: opentelemetry-go-test-output
           path: ${{ env.TEST_RESULTS }}
+
   check-lint:
     runs-on: ubuntu-latest
     needs: [lint]
@@ -150,6 +166,7 @@ jobs:
         run: |
           echo ${{ needs.lint.result }}
           test ${{ needs.lint.result }} == "success"
+
   check-test-race:
     runs-on: ubuntu-latest
     needs: [test-race]
@@ -159,3 +176,25 @@ jobs:
         run: |
           echo ${{ needs.test-race.result }}
           test ${{ needs.test-race.result }} == "success"
+
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      affected_modules: ${{ steps.set-affected-modules.outputs.affected_modules }}
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+
+      - name: set affected modules
+        id: set-affected-modules
+        run: |
+          BASE="${{ github.event.pull_request.base.sha || github.event.before }}"
+          echo "BASE=$BASE"
+          AFFECTED_FILES=$(git diff --name-only "$BASE" HEAD || true)
+          echo "AFFECTED_FILES=$AFFECTED_FILES"
+          chmod +x ./get_affected_pkgs.sh
+          AFFECTED_MODULES=$(./get_affected_pkgs.sh $AFFECTED_FILES)
+          echo "affected_modules=$AFFECTED_MODULES" >> $GITHUB_OUTPUT
