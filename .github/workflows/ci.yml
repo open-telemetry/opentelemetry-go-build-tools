@@ -1,19 +1,15 @@
 name: ci
-
 on:
   push:
     branches:
       - main
   pull_request:
   merge_group:
-
 permissions:
   contents: read
-
 env:
   # Path to where test results will be saved.
   TEST_RESULTS: /tmp/test-results
-
 jobs:
   lint:
     needs: [detect-changes]
@@ -156,7 +152,6 @@ jobs:
       with:
           name: opentelemetry-go-test-output
           path: ${{ env.TEST_RESULTS }}
-
   check-lint:
     runs-on: ubuntu-latest
     needs: [lint]
@@ -166,7 +161,6 @@ jobs:
         run: |
           echo ${{ needs.lint.result }}
           test ${{ needs.lint.result }} == "success"
-
   check-test-race:
     runs-on: ubuntu-latest
     needs: [test-race]
