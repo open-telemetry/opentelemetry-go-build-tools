@@ -223,4 +223,14 @@ jobs:
           echo "AFFECTED_FILES=$AFFECTED_FILES"
           chmod +x ./get_affected_pkgs.sh
           AFFECTED_MODULES=$(./get_affected_pkgs.sh $AFFECTED_FILES)
+
+          # Exclude tools and internal test modules
+          TOOLS_MOD_DIR="./internal/tools"
+          INTERNAL_TEST_MOD_DIRS=$(find ./*/internal/test* -type f -name 'go.mod' -exec dirname {} \;)
+
+          for exclude in $TOOLS_MOD_DIR $INTERNAL_TEST_MOD_DIRS; do
+            AFFECTED_MODULES=$(echo "$AFFECTED_MODULES" | tr ' ' '\n' | grep -v "^${exclude#./}" | tr '\n' ' ')
+          done
+
+          AFFECTED_MODULES=$(echo "$AFFECTED_MODULES" | xargs)
           echo "affected_modules=$AFFECTED_MODULES" >> $GITHUB_OUTPUT
