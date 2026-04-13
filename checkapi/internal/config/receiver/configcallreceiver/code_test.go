@@ -5,11 +5,11 @@ package configreceiver
 
 import "go.opentelemetry.io/collector/component"
 
-func createDefaultConfig() component.Config {
+func createDefaultConfig() component.Config { // nolint:unused // we do need that method for tests
 	return actuallyCreateConfig()
 }
 
-func actuallyCreateConfig() component.Config {
+func actuallyCreateConfig() component.Config { // nolint:unused // we do need that method for tests
 	fooStr := "foo"
 	return &Config{
 		Foo: []string{"foo"},

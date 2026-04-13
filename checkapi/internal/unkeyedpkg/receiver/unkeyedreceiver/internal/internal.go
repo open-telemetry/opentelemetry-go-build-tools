@@ -1,9 +1,10 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+// Package internal contains test fixtures for the unkeyedpkg receiver.
 package internal
 
-// An exported internal struct should not raise any unkeyed literal initialization checks.
-type InternalStruct struct {
+// Struct is an exported type that should not raise any unkeyed literal initialization checks.
+type Struct struct {
 	Foo string
 }
