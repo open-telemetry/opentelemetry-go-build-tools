@@ -27,7 +27,7 @@ type UnkeyedConfig struct {
 type ShutdownFunc func(context.Context) error
 
 type Metadata struct {
-	data map[string][]string
+	data map[string][]string // nolint:unused // we do need that field for tests
 }
 
 type FooWithAnonymousField struct {
@@ -50,6 +50,6 @@ type StructWithTooManyFields struct {
 	Bar5 string
 }
 
-type privateStruct struct {
+type privateStruct struct { // nolint:unused // we do need that struct for tests
 	Foo string
 }

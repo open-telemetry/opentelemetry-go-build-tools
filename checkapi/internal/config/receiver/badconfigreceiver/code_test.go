@@ -5,7 +5,7 @@ package configreceiver
 
 import "go.opentelemetry.io/collector/component"
 
-func createDefaultConfig() component.Config {
+func createDefaultConfig() component.Config { //nolint:unused // we do need this struct for the test
 	return &Config{
 		Foo: []string{"foo"},
 		Sub: SubConfig{

@@ -9,6 +9,6 @@ func NewFactory() receiver.Factory {
 	return nil
 }
 
-func ThisFuncWillError[T ~string](foo T) T {
+func ThisFuncWillError[T ~string](T) T {
 	return T("foo")
 }
