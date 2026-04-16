@@ -42,9 +42,3 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.2 // indirect
 )
-
-replace github.com/docker/docker => github.com/moby/moby v28.5.2+incompatible
-
-replace github.com/docker/docker/api => github.com/moby/moby/api v1.54.0
-
-replace github.com/docker/docker/client => github.com/moby/moby/client v0.3.0
