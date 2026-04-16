@@ -20,9 +20,9 @@ func TestCreateVolume(t *testing.T) {
 	dc, err := NewDockerController()
 	require.NoError(t, err)
 
-	volNames := []string{"test-volume-grater", "test-volume-grater-2"}
-	for _, volName := range volNames {
-		cleanup, createErr := dc.CreateVolume(volName)
+	volumeNames := []string{"test-volume-grater-1", "test-volume-grater-2"}
+	for _, volumeName := range volumeNames {
+		cleanup, createErr := dc.CreateVolume(volumeName)
 		require.NoError(t, createErr)
 		t.Cleanup(cleanup)
 	}
@@ -30,33 +30,33 @@ func TestCreateVolume(t *testing.T) {
 	volumes, err := dc.cli.VolumeList(context.Background(), volume.ListOptions{})
 	require.NoError(t, err)
 
-	volNameList := make([]string, len(volumes.Volumes))
-	for i, v := range volumes.Volumes {
-		volNameList[i] = v.Name
+	volumeNameList := make([]string, len(volumes.Volumes))
+	for i, volume := range volumes.Volumes {
+		volumeNameList[i] = volume.Name
 	}
 
-	assert.Subset(t, volNameList, volNames)
+	assert.Subset(t, volumeNameList, volumeNames)
 }
 
 func TestCreateVolumeCleanupRemovesVolume(t *testing.T) {
 	dc, err := NewDockerController()
 	require.NoError(t, err)
 
-	volName := "test-volume-grater"
-	cleanup, err := dc.CreateVolume(volName)
+	volumeName := "test-volume-grater"
+	cleanup, err := dc.CreateVolume(volumeName)
 	require.NoError(t, err)
 
-	cleanup()
+	cleanup() // Call cleanup immediately to remove volume. 
 
 	volumes, err := dc.cli.VolumeList(context.Background(), volume.ListOptions{})
 	require.NoError(t, err)
 
-	volNameList := make([]string, len(volumes.Volumes))
-	for i, v := range volumes.Volumes {
-		volNameList[i] = v.Name
+	volumeNameList := make([]string, len(volumes.Volumes))
+	for i, volume := range volumes.Volumes {
+		volumeNameList[i] = volume.Name
 	}
 
-	assert.NotContains(t, volNameList, volName)
+	assert.NotContains(t, volumeNameList, volumeName)
 }
 
 func TestUseContainer(t *testing.T) {
@@ -64,7 +64,7 @@ func TestUseContainer(t *testing.T) {
 	require.NoError(t, err)
 
 	imageName := "alpine:latest"
-	resp, cleanup, err := dc.UseContainer(imageName, []string{})
+	containerID, cleanup, err := dc.UseContainer(imageName, []string{})
 	require.NoError(t, err)
 	defer cleanup()
 
@@ -76,47 +76,43 @@ func TestUseContainer(t *testing.T) {
 		containerIDs[i] = c.ID
 	}
 
-	assert.Contains(t, containerIDs, resp)
+	assert.Contains(t, containerIDs, containerID)
 }
 
 func TestUseContainerBindsVolumes(t *testing.T) {
 	dc, err := NewDockerController()
 	require.NoError(t, err)
 
-	volume1 := "test-volume-grater-1"
-	volume2 := "test-volume-grater-2"
-
-	cleanupVol1, err := dc.CreateVolume(volume1)
-	require.NoError(t, err)
-	defer cleanupVol1()
-
-	cleanupVol2, err := dc.CreateVolume(volume2)
-	require.NoError(t, err)
-	defer cleanupVol2()
+	volumeNames := []string{"test-volume-grater-1", "test-volume-grater-2"}
+	for _, volumeName := range volumeNames {
+		cleanup, createErr := dc.CreateVolume(volumeName)
+		require.NoError(t, createErr)
+		t.Cleanup(cleanup)
+	}
 
 	imageName := "alpine:latest"
-	containerID, cleanup, err := dc.UseContainer(imageName, []string{volume1, volume2})
+	containerID, cleanup, err := dc.UseContainer(imageName, volumeNames)
 	require.NoError(t, err)
 	defer cleanup()
 
-	expected := map[string]string{
-		volume1: "/data/" + volume1,
-		volume2: "/data/" + volume2,
+	expectedBinds := map[string]string{
+		volumeNames[0]: "/data/" + volumeNames[0],
+		volumeNames[1]: "/data/" + volumeNames[1],
 	}
 
 	inspect, err := dc.cli.ContainerInspect(context.Background(), containerID)
 	require.NoError(t, err)
 
-	found := make(map[string]bool)
-	for _, m := range inspect.Mounts {
-		if dest, ok := expected[m.Name]; ok && m.Destination == dest {
-			found[m.Name] = true
+	binds := make(map[string]bool)
+	for _, mount := range inspect.Mounts {
+		if path, ok := expectedBinds[mount.Name]; ok && mount.Destination == path {
+			binds[mount.Name] = true
 		}
 	}
 
-	assert.Len(t, found, 2)
-	assert.True(t, found[volume1])
-	assert.True(t, found[volume2])
+	assert.Len(t, binds, 2)
+	assert.True(t, binds[volumeNames[0]])
+	assert.True(t, binds[volumeNames[1]])
 }
 
 func TestUseContainerReadsAndWritesToVolume(t *testing.T) {
@@ -124,27 +120,27 @@ func TestUseContainerReadsAndWritesToVolume(t *testing.T) {
 	require.NoError(t, err)
 
 	volumeName := "test-volume-grater"
-	cleanupVol, err := dc.CreateVolume(volumeName)
+	cleanupVolume, err := dc.CreateVolume(volumeName)
 	require.NoError(t, err)
-	defer cleanupVol()
+	defer cleanupVolume()
 
 	imageName := "alpine:latest"
-	container, cleanup, err := dc.UseContainer(imageName, []string{volumeName})
+	containerID, cleanup, err := dc.UseContainer(imageName, []string{volumeName})
 	require.NoError(t, err)
 	defer cleanup()
 
 	out, inspect, err := dc.ExecuteCommand(
-		container,
+		containerID,
 		[]string{"sh", "-c", "echo 'Hello World' > /data/" + volumeName + "/test_file.txt"},
 	)
 	require.NoError(t, err)
 
-	container2, cleanup2, err := dc.UseContainer(imageName, []string{volumeName})
+	containerID2, cleanup2, err := dc.UseContainer(imageName, []string{volumeName})
 	require.NoError(t, err)
 	defer cleanup2()
 
 	out, inspect, err = dc.ExecuteCommand(
-		container2,
+		containerID2,
 		[]string{"cat", "/data/" + volumeName + "/test_file.txt"},
 	)
 	require.NoError(t, err)
@@ -157,30 +153,29 @@ func TestUseContainerCleanupRemovesContainer(t *testing.T) {
     dc, err := NewDockerController()
     require.NoError(t, err)
 
-    id, cleanup, err := dc.UseContainer("alpine:latest", []string{})
+    containerID, cleanup, err := dc.UseContainer("alpine:latest", []string{})
     require.NoError(t, err)
-    cleanup()
+    cleanup() // Call cleanup immediately to remove container
 
     containers, err := dc.cli.ContainerList(context.Background(), container.ListOptions{All: true})
     require.NoError(t, err)
 
-    ids := make([]string, len(containers))
-    for i, c := range containers {
-        ids[i] = c.ID
+    containerIDs := make([]string, len(containers))
+    for i, container := range containers {
+        containerIDs[i] = container.ID
     }
-    assert.NotContains(t, ids, id)
+    assert.NotContains(t, containerIDs, containerID)
 }
 
 func TestExecuteCommand(t *testing.T) {
 	dc, err := NewDockerController()
 	require.NoError(t, err)
 
-	imageName := "ubuntu:latest"
-	resp, cleanup, err := dc.UseContainer(imageName, []string{})
+	containerID, cleanup, err := dc.UseContainer("ubuntu:latest", []string{})
 	require.NoError(t, err)
 	defer cleanup()
 
-	out, inspect, err := dc.ExecuteCommand(resp, []string{"echo", "hello world"})
+	out, inspect, err := dc.ExecuteCommand(containerID, []string{"echo", "hello world"})
 	require.NoError(t, err)
 
 	assert.Equal(t, "hello world", out)
@@ -191,12 +186,11 @@ func TestExecuteCommandExitCode1(t *testing.T) {
 	dc, err := NewDockerController()
 	require.NoError(t, err)
 
-	imageName := "ubuntu:latest"
-	resp, cleanup, err := dc.UseContainer(imageName, []string{})
+	containerID, cleanup, err := dc.UseContainer("ubuntu:latest", []string{})
 	require.NoError(t, err)
 	defer cleanup()
 
-	out, inspect, err := dc.ExecuteCommand(resp, []string{"false"})
+	out, inspect, err := dc.ExecuteCommand(containerID, []string{"false"})
 	require.NoError(t, err)
 
 	assert.Equal(t, "", out)
@@ -217,11 +211,10 @@ func TestPullImage(t *testing.T) {
 	dc, err := NewDockerController()
 	require.NoError(t, err)
 
-	imageName := "ubuntu:latest"
-	err = dc.pullImage(imageName)
+	err = dc.pullImage("ubuntu:latest")
 	require.NoError(t, err)
 
-	_, _, err = dc.cli.ImageInspectWithRaw(dc.ctx, imageName)
+	_, _, err = dc.cli.ImageInspectWithRaw(dc.ctx, "ubuntu:latest")
 	require.NoError(t, err)
 }
 
@@ -229,7 +222,6 @@ func TestPullImageFails(t *testing.T) {
 	dc, err := NewDockerController()
 	require.NoError(t, err)
 
-	imageName := "invalid-image-name"
-	err = dc.pullImage(imageName)
+	err = dc.pullImage("invalid-image-name")
 	require.Error(t, err)
 }

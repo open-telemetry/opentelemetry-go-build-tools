@@ -42,16 +42,16 @@ func NewDockerController() (*DockerController, error) {
 }
 
 // CreateVolume creates a volume with specified volume name and returns a cleanup function.
-func (dc *DockerController) CreateVolume(volName string) (func(), error) {
+func (dc *DockerController) CreateVolume(volumeName string) (func(), error) {
 	_, err := dc.cli.VolumeCreate(dc.ctx, volume.CreateOptions{
-		Name: volName,
+		Name: volumeName,
 	})
 	if err != nil {
 		return func() {}, err
 	}
 
 	cleanup := func() {
-		_ = dc.cli.VolumeRemove(dc.ctx, volName, true)
+		_ = dc.cli.VolumeRemove(dc.ctx, volumeName, true)
 	}
 
 	return cleanup, nil
