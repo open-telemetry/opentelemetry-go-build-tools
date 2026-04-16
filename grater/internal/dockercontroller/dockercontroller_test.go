@@ -79,6 +79,46 @@ func TestUseContainer(t *testing.T) {
 	assert.Contains(t, containerIDs, resp)
 }
 
+func TestUseContainerBindsVolumes(t *testing.T) {
+	dc, err := NewDockerController()
+	require.NoError(t, err)
+
+	volume1 := "test-volume-grater-1"
+	volume2 := "test-volume-grater-2"
+
+	cleanupVol1, err := dc.CreateVolume(volume1)
+	require.NoError(t, err)
+	defer cleanupVol1()
+
+	cleanupVol2, err := dc.CreateVolume(volume2)
+	require.NoError(t, err)
+	defer cleanupVol2()
+
+	imageName := "alpine:latest"
+	containerID, cleanup, err := dc.UseContainer(imageName, []string{volume1, volume2})
+	require.NoError(t, err)
+	defer cleanup()
+
+	expected := map[string]string{
+		volume1: "/data/" + volume1,
+		volume2: "/data/" + volume2,
+	}
+
+	inspect, err := dc.cli.ContainerInspect(context.Background(), containerID)
+	require.NoError(t, err)
+
+	found := make(map[string]bool)
+	for _, m := range inspect.Mounts {
+		if dest, ok := expected[m.Name]; ok && m.Destination == dest {
+			found[m.Name] = true
+		}
+	}
+
+	assert.Len(t, found, 2)
+	assert.True(t, found[volume1])
+	assert.True(t, found[volume2])
+}
+
 func TestUseContainerCleanupRemovesContainer(t *testing.T) {
     dc, err := NewDockerController()
     require.NoError(t, err)
@@ -110,4 +150,25 @@ func TestExecuteCommand(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "hello world", output)
+}
+
+func TestPullImage(t *testing.T) {
+	dc, err := NewDockerController()
+	require.NoError(t, err)
+
+	imageName := "ubuntu:latest"
+	err = dc.pullImage(imageName)
+	require.NoError(t, err)
+
+	_, _, err = dc.cli.ImageInspectWithRaw(dc.ctx, imageName)
+	require.NoError(t, err)
+}
+
+func TestPullImageFails(t *testing.T) {
+	dc, err := NewDockerController()
+	require.NoError(t, err)
+
+	imageName := "invalid-image-name"
+	err = dc.pullImage(imageName)
+	require.Error(t, err)
 }

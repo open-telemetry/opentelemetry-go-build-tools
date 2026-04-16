@@ -58,37 +58,27 @@ func (dc *DockerController) CreateVolume(volName string) (func(), error) {
 }
 
 // UseContainer creates a container with specified volumes and returns a cleanup function.
-func (dc *DockerController) UseContainer(imageName string, volumes []string) (string, func(), error) {
-	reader, err := dc.cli.ImagePull(dc.ctx, imageName, image.PullOptions{})
-	if err != nil {
-		return "", nil, err
-	}
-	defer reader.Close()
-
-	_, err = io.Copy(io.Discard, reader)
-	if err != nil {
+func (dc *DockerController) UseContainer(imageName string, volumeNames []string) (string, func(), error) {
+	if err := dc.pullImage(imageName); err != nil {
 		return "", nil, err
 	}
 
-	volumeMap := make(map[string]struct{})
-	for _, v := range volumes {
-		volumeMap[v] = struct{}{}
+	binds := make([]string, len(volumeNames))
+	for i, v := range volumeNames {
+		binds[i] = v + ":/data/" + v // Path inside container of format /data/<volume_name>
 	}
 
 	resp, err := dc.cli.ContainerCreate(
 		dc.ctx,
 		&container.Config{
 			Image:   imageName,
-			Volumes: volumeMap,
-			Cmd: []string{"tail", "-f", "/dev/null"},
-			Tty: true,
+			Cmd:     []string{"sleep", "infinity"},
+			Tty:     true,
 		},
 		&container.HostConfig{
-			Binds: volumes,
+			Binds: binds,
 		},
-		nil,
-		nil,
-		"",
+		nil, nil, "",
 	)
 	if err != nil {
 		return "", nil, err
@@ -138,4 +128,19 @@ func (dc *DockerController) ExecuteCommand(containerID string, cmd []string) (st
 	}
 
 	return strings.TrimSpace(buf.String()), nil
+}
+
+func (dc *DockerController) pullImage(imageName string) error {
+	reader, err := dc.cli.ImagePull(dc.ctx, imageName, image.PullOptions{})
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+
+	_, err = io.Copy(io.Discard, reader)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
