@@ -203,6 +203,16 @@ func TestExecuteCommandExitCode1(t *testing.T) {
 	assert.Equal(t, 1, inspect.ExitCode)
 }
 
+func TestExecuteCommandInvalidContainerFails(t *testing.T) {
+	dc, err := NewDockerController()
+	require.NoError(t, err)
+
+	out, inspect, err := dc.ExecuteCommand("invalid-container", []string{"echo", "test"})
+	require.Error(t, err)
+	assert.Empty(t, out)
+	assert.Equal(t, 0, inspect.ExitCode)
+}
+
 func TestPullImage(t *testing.T) {
 	dc, err := NewDockerController()
 	require.NoError(t, err)
