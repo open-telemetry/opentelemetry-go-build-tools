@@ -13,14 +13,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createVolumeTest(t *testing.T) {
+func TestCreateVolume(t *testing.T) {
 	err, dc := NewDockerController()
 	require.NoError(t, err)
 
-	volNames := []string{"test-volume", "test-volume-2"}
+	volNames := []string{"test-volume-grater", "test-volume-grater-2"}
 	for _, volName := range volNames {
-		err := dc.CreateVolume(volName)
+		cleanup, err := dc.CreateVolume(volName)
 		require.NoError(t, err)
+		t.Cleanup(cleanup)
 	}
 
 	volumes, err := dc.cli.VolumeList(context.Background(), volume.ListOptions{})
@@ -31,10 +32,31 @@ func createVolumeTest(t *testing.T) {
 		volNameList[i] = v.Name
 	}
 
-	assert.ElementsMatch(t, volNames, volNameList)
+	assert.Subset(t, volNameList, volNames)
 }
 
-func createContainerTest(t *testing.T) {
+func TestRemoveVolumeCleanupRemovesVolume(t *testing.T) {
+	err, dc := NewDockerController()
+	require.NoError(t, err)
+
+	volName := "test-volume-grater"
+	cleanup, err := dc.CreateVolume(volName)
+	require.NoError(t, err)
+
+	cleanup()
+
+	volumes, err := dc.cli.VolumeList(context.Background(), volume.ListOptions{})
+	require.NoError(t, err)
+
+	volNameList := make([]string, len(volumes.Volumes))
+	for i, v := range volumes.Volumes {
+		volNameList[i] = v.Name
+	}
+
+	assert.NotContains(t, volNameList, volName)
+}
+
+func TestUseContainer(t *testing.T) {
 	err, dc := NewDockerController()
 	require.NoError(t, err)
 
@@ -46,29 +68,42 @@ func createContainerTest(t *testing.T) {
 	containers, err := dc.cli.ContainerList(context.Background(), container.ListOptions{})
 	require.NoError(t, err)
 
-	found := false
-	for _, c := range containers {
-		if c.ID == resp {
-			found = true
-			break
-		}
+	containerIDs := make([]string, len(containers))
+	for i, c := range containers {
+		containerIDs[i] = c.ID
 	}
 
-	assert.True(t, found, "container should exist in container list")
+	assert.Contains(t, containerIDs, resp)
 }
 
-func executeCommandTest(t *testing.T) {
+func TestUseContainerCleanupRemovesContainer(t *testing.T) {
+    err, dc := NewDockerController()
+    require.NoError(t, err)
+
+    id, cleanup, err := dc.UseContainer("alpine:latest", []string{})
+    require.NoError(t, err)
+    cleanup()
+
+    containers, err := dc.cli.ContainerList(context.Background(), container.ListOptions{All: true})
+    require.NoError(t, err)
+
+    ids := make([]string, len(containers))
+    for i, c := range containers {
+        ids[i] = c.ID
+    }
+    assert.NotContains(t, ids, id)
+}
+
+func TestExecuteCommand(t *testing.T) {
 	err, dc := NewDockerController()
 	require.NoError(t, err)
 
-	imageName := "alpine:latest"
+	imageName := "ubuntu:latest"
 	resp, cleanup, err := dc.UseContainer(imageName, []string{})
 	require.NoError(t, err)
 	defer cleanup()
 
-	cmd := []string{"echo", "hello world"}
-
-	output, err := dc.ExecuteCommand(resp, cmd)
+	output, err := dc.ExecuteCommand(resp, []string{"echo", "hello world"})
 	require.NoError(t, err)
 
 	assert.Equal(t, "hello world", output)

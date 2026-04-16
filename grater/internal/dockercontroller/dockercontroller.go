@@ -5,6 +5,7 @@
 package dockercontroller
 
 import (
+	"io"
 	"bytes"
 	"context"
 	"strings"
@@ -16,20 +17,20 @@ import (
 	"github.com/docker/docker/pkg/stdcopy"
 )
 
-type dockercontroller struct {
+type DockerController struct {
 	cli     *client.Client
 	ctx     context.Context
 	volumes []string
 }
 
 // NewDockerController creates a new Docker controller.
-func NewDockerController() (error, *dockercontroller) {
+func NewDockerController() (error, *DockerController) {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return err, nil
 	}
 
-	return nil, &dockercontroller{
+	return nil, &DockerController{
 		cli:     cli,
 		ctx:     context.Background(),
 		volumes: []string{},
@@ -37,20 +38,33 @@ func NewDockerController() (error, *dockercontroller) {
 }
 
 // CreateVolume creates a volume.
-func (dc *dockercontroller) CreateVolume(volName string) error {
+func (dc *DockerController) CreateVolume(volName string) (func(), error) {
 	_, err := dc.cli.VolumeCreate(dc.ctx, volume.CreateOptions{
 		Name: volName,
 	})
-	return err
+	if err != nil {
+		return func() {}, err
+	}
+
+	cleanup := func() {
+		_ = dc.cli.VolumeRemove(dc.ctx, volName, true)
+	}
+
+	return cleanup, nil
 }
 
 // UseContainer creates a container with specified volumes and returns a cleanup function.
-func (dc *dockercontroller) UseContainer(imageName string, volumes []string) (string, func(), error) {
+func (dc *DockerController) UseContainer(imageName string, volumes []string) (string, func(), error) {
 	reader, err := dc.cli.ImagePull(dc.ctx, imageName, image.PullOptions{})
 	if err != nil {
 		return "", nil, err
 	}
 	defer reader.Close()
+
+	_, err = io.Copy(io.Discard, reader)
+	if err != nil {
+		return "", nil, err
+	}
 
 	volumeMap := make(map[string]struct{})
 	for _, v := range volumes {
@@ -62,6 +76,8 @@ func (dc *dockercontroller) UseContainer(imageName string, volumes []string) (st
 		&container.Config{
 			Image:   imageName,
 			Volumes: volumeMap,
+			Cmd: []string{"tail", "-f", "/dev/null"},
+			Tty: true,
 		},
 		&container.HostConfig{
 			Binds: volumes,
@@ -79,16 +95,21 @@ func (dc *dockercontroller) UseContainer(imageName string, volumes []string) (st
 	}
 
 	cleanup := func() {
-		timeout := 10
-		dc.cli.ContainerStop(dc.ctx, resp.ID, container.StopOptions{Timeout: &timeout})
-		dc.cli.ContainerRemove(dc.ctx, resp.ID, container.RemoveOptions{Force: true})
+		err := dc.cli.ContainerStop(dc.ctx, resp.ID, container.StopOptions{})
+		if err != nil {
+			return
+		}
+		err = dc.cli.ContainerRemove(dc.ctx, resp.ID, container.RemoveOptions{Force: true})
+		if err != nil {
+			return
+		}
 	}
 
 	return resp.ID, cleanup, nil
 }
 
 // ExecuteCommand executes a command in a container and returns the output.
-func (dc *dockercontroller) ExecuteCommand(containerID string, cmd []string) (string, error) {
+func (dc *DockerController) ExecuteCommand(containerID string, cmd []string) (string, error) {
 	execConfig := container.ExecOptions{
 		Cmd:          cmd,
 		AttachStdout: true,
