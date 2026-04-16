@@ -39,7 +39,7 @@ func TestCreateVolume(t *testing.T) {
 }
 
 func TestRemoveVolumeCleanupRemovesVolume(t *testing.T) {
-	err, dc := NewDockerController()
+	dc, err := NewDockerController()
 	require.NoError(t, err)
 
 	volName := "test-volume-grater"
@@ -60,7 +60,7 @@ func TestRemoveVolumeCleanupRemovesVolume(t *testing.T) {
 }
 
 func TestUseContainer(t *testing.T) {
-	err, dc := NewDockerController()
+	dc, err := NewDockerController()
 	require.NoError(t, err)
 
 	imageName := "alpine:latest"
@@ -80,7 +80,7 @@ func TestUseContainer(t *testing.T) {
 }
 
 func TestUseContainerCleanupRemovesContainer(t *testing.T) {
-    err, dc := NewDockerController()
+    dc, err := NewDockerController()
     require.NoError(t, err)
 
     id, cleanup, err := dc.UseContainer("alpine:latest", []string{})
@@ -98,7 +98,7 @@ func TestUseContainerCleanupRemovesContainer(t *testing.T) {
 }
 
 func TestExecuteCommand(t *testing.T) {
-	err, dc := NewDockerController()
+	dc, err := NewDockerController()
 	require.NoError(t, err)
 
 	imageName := "ubuntu:latest"
