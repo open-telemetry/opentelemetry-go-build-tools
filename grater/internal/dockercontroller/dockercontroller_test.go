@@ -119,6 +119,40 @@ func TestUseContainerBindsVolumes(t *testing.T) {
 	assert.True(t, found[volume2])
 }
 
+func TestUseContainerReadsAndWritesToVolume(t *testing.T) {
+	dc, err := NewDockerController()
+	require.NoError(t, err)
+
+	volumeName := "test-volume-grater"
+	cleanupVol, err := dc.CreateVolume(volumeName)
+	require.NoError(t, err)
+	defer cleanupVol()
+
+	imageName := "alpine:latest"
+	container, cleanup, err := dc.UseContainer(imageName, []string{volumeName})
+	require.NoError(t, err)
+	defer cleanup()
+
+	out, inspect, err := dc.ExecuteCommand(
+		container,
+		[]string{"sh", "-c", "echo 'Hello World' > /data/" + volumeName + "/test_file.txt"},
+	)
+	require.NoError(t, err)
+
+	container2, cleanup2, err := dc.UseContainer(imageName, []string{volumeName})
+	require.NoError(t, err)
+	defer cleanup2()
+
+	out, inspect, err = dc.ExecuteCommand(
+		container2,
+		[]string{"cat", "/data/" + volumeName + "/test_file.txt"},
+	)
+	require.NoError(t, err)
+
+	assert.Equal(t, "Hello World", out)
+	assert.Equal(t, 0, inspect.ExitCode)
+}
+
 func TestUseContainerCleanupRemovesContainer(t *testing.T) {
     dc, err := NewDockerController()
     require.NoError(t, err)
@@ -146,10 +180,27 @@ func TestExecuteCommand(t *testing.T) {
 	require.NoError(t, err)
 	defer cleanup()
 
-	output, err := dc.ExecuteCommand(resp, []string{"echo", "hello world"})
+	out, inspect, err := dc.ExecuteCommand(resp, []string{"echo", "hello world"})
 	require.NoError(t, err)
 
-	assert.Equal(t, "hello world", output)
+	assert.Equal(t, "hello world", out)
+	assert.Equal(t, 0, inspect.ExitCode)
+}
+
+func TestExecuteCommandExitCode1(t *testing.T) {
+	dc, err := NewDockerController()
+	require.NoError(t, err)
+
+	imageName := "ubuntu:latest"
+	resp, cleanup, err := dc.UseContainer(imageName, []string{})
+	require.NoError(t, err)
+	defer cleanup()
+
+	out, inspect, err := dc.ExecuteCommand(resp, []string{"false"})
+	require.NoError(t, err)
+
+	assert.Equal(t, "", out)
+	assert.Equal(t, 1, inspect.ExitCode)
 }
 
 func TestPullImage(t *testing.T) {

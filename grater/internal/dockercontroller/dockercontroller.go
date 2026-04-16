@@ -103,7 +103,7 @@ func (dc *DockerController) UseContainer(imageName string, volumeNames []string)
 }
 
 // ExecuteCommand executes a command in a container and returns the output.
-func (dc *DockerController) ExecuteCommand(containerID string, cmd []string) (string, error) {
+func (dc *DockerController) ExecuteCommand(containerID string, cmd []string) (string, container.ExecInspect, error) {
 	execConfig := container.ExecOptions{
 		Cmd:          cmd,
 		AttachStdout: true,
@@ -112,22 +112,27 @@ func (dc *DockerController) ExecuteCommand(containerID string, cmd []string) (st
 
 	execID, err := dc.cli.ContainerExecCreate(dc.ctx, containerID, execConfig)
 	if err != nil {
-		return "", err
+		return "", container.ExecInspect{}, err
 	}
 
 	resp, err := dc.cli.ContainerExecAttach(dc.ctx, execID.ID, container.ExecStartOptions{})
 	if err != nil {
-		return "", err
+		return "", container.ExecInspect{}, err
 	}
 	defer resp.Close()
 
 	var buf bytes.Buffer
 	_, err = stdcopy.StdCopy(&buf, &buf, resp.Reader)
 	if err != nil {
-		return "", err
+		return "", container.ExecInspect{}, err
 	}
 
-	return strings.TrimSpace(buf.String()), nil
+	inspect, err := dc.cli.ContainerExecInspect(dc.ctx, execID.ID)
+	if err != nil {
+		return "", container.ExecInspect{}, err
+	}
+
+	return strings.TrimSpace(buf.String()), inspect, nil
 }
 
 func (dc *DockerController) pullImage(imageName string) error {
