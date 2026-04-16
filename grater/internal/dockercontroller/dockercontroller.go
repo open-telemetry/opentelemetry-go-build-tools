@@ -17,6 +17,7 @@ import (
 	"github.com/docker/docker/pkg/stdcopy"
 )
 
+// DockerController is a controller for managing Docker containers and volumes.
 type DockerController struct {
 	cli     *client.Client
 	ctx     context.Context
@@ -24,17 +25,17 @@ type DockerController struct {
 }
 
 // NewDockerController creates a new Docker controller.
-func NewDockerController() (error, *DockerController) {
+func NewDockerController() (*DockerController, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 
-	return nil, &DockerController{
+	return &DockerController{
 		cli:     cli,
 		ctx:     context.Background(),
 		volumes: []string{},
-	}
+	}, nil
 }
 
 // CreateVolume creates a volume.

@@ -1,6 +1,8 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+//go:build integration
+// +build integration
 package dockercontroller
 
 import (
@@ -14,13 +16,13 @@ import (
 )
 
 func TestCreateVolume(t *testing.T) {
-	err, dc := NewDockerController()
+	dc, err := NewDockerController()
 	require.NoError(t, err)
 
 	volNames := []string{"test-volume-grater", "test-volume-grater-2"}
 	for _, volName := range volNames {
-		cleanup, err := dc.CreateVolume(volName)
-		require.NoError(t, err)
+		cleanup, createErr := dc.CreateVolume(volName)
+		require.NoError(t, createErr)
 		t.Cleanup(cleanup)
 	}
 
