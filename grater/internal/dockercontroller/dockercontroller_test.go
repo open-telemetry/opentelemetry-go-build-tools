@@ -38,7 +38,7 @@ func TestCreateVolume(t *testing.T) {
 	assert.Subset(t, volNameList, volNames)
 }
 
-func TestRemoveVolumeCleanupRemovesVolume(t *testing.T) {
+func TestCreateVolumeCleanupRemovesVolume(t *testing.T) {
 	dc, err := NewDockerController()
 	require.NoError(t, err)
 
