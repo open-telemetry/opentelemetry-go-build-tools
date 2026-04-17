@@ -18,6 +18,7 @@ import (
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
+	"go.opentelemetry.io/build-tools/grater/internal/controller"
 )
 
 // DockerController is a controller for managing Docker containers and volumes.
@@ -27,8 +28,10 @@ type DockerController struct {
 	volumes []string
 }
 
+var _ controller.Controller = (*DockerController)(nil)
+
 // NewDockerController creates a new Docker controller.
-func NewDockerController() (*DockerController, error) {
+func NewDockerController() (controller.Controller, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, err
