@@ -28,7 +28,7 @@ type DockerController struct {
 	volumes []string
 }
 
-var _ controller.Controller = (*DockerController)(nil)
+var _ controller.Container = (*DockerController)(nil)
 
 // NewDockerController creates a new Docker controller.
 func NewDockerController() (*DockerController, error) {

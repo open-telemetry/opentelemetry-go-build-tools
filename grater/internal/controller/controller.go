@@ -8,8 +8,8 @@ import (
     "github.com/docker/docker/api/types/container"
 )
 
-// Controller is an interface for managing Docker containers and volumes.
-type Controller interface {
+// Container is an interface for managing Docker containers and volumes.
+type Container interface {
 	CreateVolume(volumeName string) (func(), error)
     UseContainer(imageName string, volumeNames []string) (string, func(), error)
     ExecuteCommand(containerID string, cmd []string) (string, container.ExecInspect, error)

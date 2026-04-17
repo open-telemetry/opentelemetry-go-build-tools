@@ -16,7 +16,7 @@ type MockDockerController struct {
 	ExecuteCommandMock func(string, []string) (string, container.ExecInspect, error)
 }
 
-var _ controller.Controller = (*MockDockerController)(nil)
+var _ controller.Container = (*MockDockerController)(nil)
 
 // NewMockDockerController creates a new instance of MockDockerController.
 func NewMockDockerController() *MockDockerController {
