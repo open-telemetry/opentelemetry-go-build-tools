@@ -13,12 +13,12 @@ import (
 	"context"
 	"strings"
 
-	"github.com/docker/docker/api/types/container"
+	dockercontainer "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
-	"go.opentelemetry.io/build-tools/grater/internal/controller"
+	"go.opentelemetry.io/build-tools/grater/internal/container"
 )
 
 // DockerController is a controller for managing Docker containers and volumes.
@@ -28,7 +28,7 @@ type DockerController struct {
 	volumes []string
 }
 
-var _ controller.Container = (*DockerController)(nil)
+var _ container.Container = (*DockerController)(nil)
 
 // NewDockerController creates a new Docker controller.
 func NewDockerController() (*DockerController, error) {
@@ -73,12 +73,12 @@ func (dc *DockerController) UseContainer(imageName string, volumeNames []string)
 
 	resp, err := dc.cli.ContainerCreate(
 		dc.ctx,
-		&container.Config{
+		&dockercontainer.Config{
 			Image:   imageName,
 			Cmd:     []string{"sleep", "infinity"},
 			Tty:     true,
 		},
-		&container.HostConfig{
+		&dockercontainer.HostConfig{
 			Binds: binds,
 		},
 		nil, nil, "",
@@ -87,16 +87,16 @@ func (dc *DockerController) UseContainer(imageName string, volumeNames []string)
 		return "", nil, err
 	}
 
-	if err := dc.cli.ContainerStart(dc.ctx, resp.ID, container.StartOptions{}); err != nil {
+	if err := dc.cli.ContainerStart(dc.ctx, resp.ID, dockercontainer.StartOptions{}); err != nil {
 		return "", nil, err
 	}
 
 	cleanup := func() {
-		err := dc.cli.ContainerStop(dc.ctx, resp.ID, container.StopOptions{})
+		err := dc.cli.ContainerStop(dc.ctx, resp.ID, dockercontainer.StopOptions{})
 		if err != nil {
 			return
 		}
-		err = dc.cli.ContainerRemove(dc.ctx, resp.ID, container.RemoveOptions{Force: true})
+		err = dc.cli.ContainerRemove(dc.ctx, resp.ID, dockercontainer.RemoveOptions{Force: true})
 		if err != nil {
 			return
 		}
@@ -106,8 +106,8 @@ func (dc *DockerController) UseContainer(imageName string, volumeNames []string)
 }
 
 // ExecuteCommand executes a command in a container and returns the output.
-func (dc *DockerController) ExecuteCommand(containerID string, cmd []string) (string, container.ExecInspect, error) {
-	execConfig := container.ExecOptions{
+func (dc *DockerController) ExecuteCommand(containerID string, cmd []string) (string, dockercontainer.ExecInspect, error) {
+	execConfig := dockercontainer.ExecOptions{
 		Cmd:          cmd,
 		AttachStdout: true,
 		AttachStderr: true,
@@ -115,24 +115,24 @@ func (dc *DockerController) ExecuteCommand(containerID string, cmd []string) (st
 
 	execID, err := dc.cli.ContainerExecCreate(dc.ctx, containerID, execConfig)
 	if err != nil {
-		return "", container.ExecInspect{}, err
+		return "", dockercontainer.ExecInspect{}, err
 	}
 
-	resp, err := dc.cli.ContainerExecAttach(dc.ctx, execID.ID, container.ExecStartOptions{})
+	resp, err := dc.cli.ContainerExecAttach(dc.ctx, execID.ID, dockercontainer.ExecStartOptions{})
 	if err != nil {
-		return "", container.ExecInspect{}, err
+		return "", dockercontainer.ExecInspect{}, err
 	}
 	defer resp.Close()
 
 	var buf bytes.Buffer
 	_, err = stdcopy.StdCopy(&buf, &buf, resp.Reader)
 	if err != nil {
-		return "", container.ExecInspect{}, err
+		return "", dockercontainer.ExecInspect{}, err
 	}
 
 	inspect, err := dc.cli.ContainerExecInspect(dc.ctx, execID.ID)
 	if err != nil {
-		return "", container.ExecInspect{}, err
+		return "", dockercontainer.ExecInspect{}, err
 	}
 
 	return strings.TrimSpace(buf.String()), inspect, nil

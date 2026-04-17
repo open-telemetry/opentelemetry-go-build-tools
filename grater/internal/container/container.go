@@ -1,8 +1,8 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-// Package controller provides an interface for managing Docker containers and volumes.
-package controller
+// Package container provides an interface for managing Docker containers and volumes.
+package container
 
 import (
     "github.com/docker/docker/api/types/container"

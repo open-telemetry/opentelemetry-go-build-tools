@@ -6,7 +6,7 @@ package dockercontroller
 import (
 	"testing"
 
-	"github.com/docker/docker/api/types/container"
+	dockercontainer "github.com/docker/docker/api/types/container"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -47,10 +47,10 @@ func TestMockUseContainer(t *testing.T) {
 func TestMockExecuteCommand(t *testing.T) {
 	m := NewMockDockerController()
 
-	m.ExecuteCommandMock = func(id string, cmd []string) (string, container.ExecInspect, error) {
+	m.ExecuteCommandMock = func(id string, cmd []string) (string, dockercontainer.ExecInspect, error) {
 		assert.Equal(t, "container-id", id)
 		assert.Equal(t, []string{"ls", "-la"}, cmd)
-		return "output", container.ExecInspect{ExitCode: 0}, nil
+		return "output", dockercontainer.ExecInspect{ExitCode: 0}, nil
 	}
 
 	output, execInspect, err := m.ExecuteCommand("container-id", []string{"ls", "-la"})

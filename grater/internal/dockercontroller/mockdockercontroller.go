@@ -5,18 +5,18 @@
 package dockercontroller
 
 import (
-	"github.com/docker/docker/api/types/container"
-	"go.opentelemetry.io/build-tools/grater/internal/controller"
+	dockercontainer "github.com/docker/docker/api/types/container"
+	"go.opentelemetry.io/build-tools/grater/internal/container"
 )
 
 // MockDockerController is a mock implementation of the DockerController interface.
 type MockDockerController struct {
 	CreateVolumeMock  func(string) (func(), error)
 	UseContainerMock  func(string, []string) (string, func(), error)
-	ExecuteCommandMock func(string, []string) (string, container.ExecInspect, error)
+	ExecuteCommandMock func(string, []string) (string, dockercontainer.ExecInspect, error)
 }
 
-var _ controller.Container = (*MockDockerController)(nil)
+var _ container.Container = (*MockDockerController)(nil)
 
 // NewMockDockerController creates a new instance of MockDockerController.
 func NewMockDockerController() *MockDockerController {
@@ -40,9 +40,9 @@ func (m *MockDockerController) UseContainer(imageName string, volumeNames []stri
 }
 
 // ExecuteCommand creates a mock instance of executing a command.
-func (m *MockDockerController) ExecuteCommand(containerID string, cmd []string) (string, container.ExecInspect, error) {
+func (m *MockDockerController) ExecuteCommand(containerID string, cmd []string) (string, dockercontainer.ExecInspect, error) {
 	if m.ExecuteCommandMock != nil {
 		return m.ExecuteCommandMock(containerID, cmd)
 	}
-	return "", container.ExecInspect{}, nil
+	return "", dockercontainer.ExecInspect{}, nil
 }

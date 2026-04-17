@@ -10,7 +10,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/docker/docker/api/types/container"
+	dockercontainer "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/volume"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -68,7 +68,7 @@ func TestUseContainer(t *testing.T) {
 	require.NoError(t, err)
 	defer cleanup()
 
-	containers, err := dc.cli.ContainerList(context.Background(), container.ListOptions{})
+	containers, err := dc.cli.ContainerList(context.Background(), dockercontainer.ListOptions{})
 	require.NoError(t, err)
 
 	containerIDs := make([]string, len(containers))
@@ -157,7 +157,7 @@ func TestUseContainerCleanupRemovesContainer(t *testing.T) {
     require.NoError(t, err)
     cleanup() // Call cleanup immediately to remove container
 
-    containers, err := dc.cli.ContainerList(context.Background(), container.ListOptions{All: true})
+    containers, err := dc.cli.ContainerList(context.Background(), dockercontainer.ListOptions{All: true})
     require.NoError(t, err)
 
     containerIDs := make([]string, len(containers))
