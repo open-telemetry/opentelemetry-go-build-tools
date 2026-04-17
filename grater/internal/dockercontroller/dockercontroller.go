@@ -31,7 +31,7 @@ type DockerController struct {
 var _ controller.Controller = (*DockerController)(nil)
 
 // NewDockerController creates a new Docker controller.
-func NewDockerController() (controller.Controller, error) {
+func NewDockerController() (*DockerController, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, err

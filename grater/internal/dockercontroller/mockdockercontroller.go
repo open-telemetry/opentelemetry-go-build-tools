@@ -1,35 +1,48 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+// Package dockercontroller provides a mock implementation of the DockerController interface.
 package dockercontroller
 
 import (
-    "github.com/stretchr/testify/mock"
 	"github.com/docker/docker/api/types/container"
 	"go.opentelemetry.io/build-tools/grater/internal/controller"
 )
 
+// MockDockerController is a mock implementation of the DockerController interface.
 type MockDockerController struct {
-    mock.Mock
+	CreateVolumeMock  func(string) (func(), error)
+	UseContainerMock  func(string, []string) (string, func(), error)
+	ExecuteCommandMock func(string, []string) (string, container.ExecInspect, error)
 }
 
 var _ controller.Controller = (*MockDockerController)(nil)
 
+// NewMockDockerController creates a new instance of MockDockerController.
 func NewMockDockerController() *MockDockerController {
-    return &MockDockerController{}
+	return &MockDockerController{}
 }
 
+// CreateVolume creates a mock instance of Volume.
 func (m *MockDockerController) CreateVolume(volumeName string) (func(), error) {
-    args := m.Called(volumeName)
-    return args.Get(0).(func()), args.Error(1)
+	if m.CreateVolumeMock != nil {
+		return m.CreateVolumeMock(volumeName)
+	}
+	return func() {}, nil
 }
 
+// UseContainer creates a mock instance of Container.
 func (m *MockDockerController) UseContainer(imageName string, volumeNames []string) (string, func(), error) {
-    args := m.Called(imageName, volumeNames)
-    return args.String(0), args.Get(1).(func()), args.Error(2)
+	if m.UseContainerMock != nil {
+		return m.UseContainerMock(imageName, volumeNames)
+	}
+	return "", func() {}, nil
 }
 
+// ExecuteCommand creates a mock instance of executing a command.
 func (m *MockDockerController) ExecuteCommand(containerID string, cmd []string) (string, container.ExecInspect, error) {
-    args := m.Called(containerID, cmd)
-    return args.String(0), args.Get(1).(container.ExecInspect), args.Error(2)
+	if m.ExecuteCommandMock != nil {
+		return m.ExecuteCommandMock(containerID, cmd)
+	}
+	return "", container.ExecInspect{}, nil
 }
