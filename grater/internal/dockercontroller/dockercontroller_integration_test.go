@@ -10,8 +10,7 @@ import (
 	"context"
 	"testing"
 
-	dockercontainer "github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/volume"
+	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -27,11 +26,11 @@ func TestCreateVolume(t *testing.T) {
 		t.Cleanup(cleanup)
 	}
 
-	volumes, err := dc.cli.VolumeList(context.Background(), volume.ListOptions{})
+	volumes, err := dc.cli.VolumeList(context.Background(), client.VolumeListOptions{})
 	require.NoError(t, err)
 
-	volumeNameList := make([]string, len(volumes.Volumes))
-	for i, volume := range volumes.Volumes {
+	volumeNameList := make([]string, len(volumes.Items))
+	for i, volume := range volumes.Items {
 		volumeNameList[i] = volume.Name
 	}
 
@@ -46,13 +45,13 @@ func TestCreateVolumeCleanupRemovesVolume(t *testing.T) {
 	cleanup, err := dc.CreateVolume(volumeName)
 	require.NoError(t, err)
 
-	cleanup() // Call cleanup immediately to remove volume. 
+	cleanup()
 
-	volumes, err := dc.cli.VolumeList(context.Background(), volume.ListOptions{})
+	volumes, err := dc.cli.VolumeList(context.Background(), client.VolumeListOptions{})
 	require.NoError(t, err)
 
-	volumeNameList := make([]string, len(volumes.Volumes))
-	for i, volume := range volumes.Volumes {
+	volumeNameList := make([]string, len(volumes.Items))
+	for i, volume := range volumes.Items {
 		volumeNameList[i] = volume.Name
 	}
 
@@ -68,11 +67,11 @@ func TestUseContainer(t *testing.T) {
 	require.NoError(t, err)
 	defer cleanup()
 
-	containers, err := dc.cli.ContainerList(context.Background(), dockercontainer.ListOptions{})
+	containers, err := dc.cli.ContainerList(context.Background(), client.ContainerListOptions{})
 	require.NoError(t, err)
 
-	containerIDs := make([]string, len(containers))
-	for i, c := range containers {
+	containerIDs := make([]string, len(containers.Items))
+	for i, c := range containers.Items {
 		containerIDs[i] = c.ID
 	}
 
@@ -100,11 +99,11 @@ func TestUseContainerBindsVolumes(t *testing.T) {
 		volumeNames[1]: "/data/" + volumeNames[1],
 	}
 
-	inspect, err := dc.cli.ContainerInspect(context.Background(), containerID)
+	inspect, err := dc.cli.ContainerInspect(context.Background(), containerID, client.ContainerInspectOptions{})
 	require.NoError(t, err)
 
 	binds := make(map[string]bool)
-	for _, mount := range inspect.Mounts {
+	for _, mount := range inspect.Container.Mounts {
 		if path, ok := expectedBinds[mount.Name]; ok && mount.Destination == path {
 			binds[mount.Name] = true
 		}
@@ -150,21 +149,21 @@ func TestUseContainerReadsAndWritesToVolume(t *testing.T) {
 }
 
 func TestUseContainerCleanupRemovesContainer(t *testing.T) {
-    dc, err := NewDockerController()
-    require.NoError(t, err)
+	dc, err := NewDockerController()
+	require.NoError(t, err)
 
-    containerID, cleanup, err := dc.UseContainer("alpine:latest", []string{})
-    require.NoError(t, err)
-    cleanup() // Call cleanup immediately to remove container
+	containerID, cleanup, err := dc.UseContainer("alpine:latest", []string{})
+	require.NoError(t, err)
+	cleanup()
 
-    containers, err := dc.cli.ContainerList(context.Background(), dockercontainer.ListOptions{All: true})
-    require.NoError(t, err)
+	containers, err := dc.cli.ContainerList(context.Background(), client.ContainerListOptions{All: true})
+	require.NoError(t, err)
 
-    containerIDs := make([]string, len(containers))
-    for i, container := range containers {
-        containerIDs[i] = container.ID
-    }
-    assert.NotContains(t, containerIDs, containerID)
+	containerIDs := make([]string, len(containers.Items))
+	for i, c := range containers.Items {
+		containerIDs[i] = c.ID
+	}
+	assert.NotContains(t, containerIDs, containerID)
 }
 
 func TestExecuteCommand(t *testing.T) {
@@ -214,7 +213,7 @@ func TestPullImage(t *testing.T) {
 	err = dc.pullImage("ubuntu:latest")
 	require.NoError(t, err)
 
-	_, _, err = dc.cli.ImageInspectWithRaw(dc.ctx, "ubuntu:latest")
+	_, err = dc.cli.ImageInspect(dc.ctx, "ubuntu:latest")
 	require.NoError(t, err)
 }
 

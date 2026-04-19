@@ -1,15 +1,12 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build integration
-// +build integration
-
 package dockercontroller
 
 import (
 	"testing"
 
-	dockercontainer "github.com/docker/docker/api/types/container"
+	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -50,10 +47,10 @@ func TestMockUseContainer(t *testing.T) {
 func TestMockExecuteCommand(t *testing.T) {
 	m := NewMockDockerController()
 
-	m.ExecuteCommandMock = func(id string, cmd []string) (string, dockercontainer.ExecInspect, error) {
+	m.ExecuteCommandMock = func(id string, cmd []string) (string, client.ExecInspectResult, error) {
 		assert.Equal(t, "container-id", id)
 		assert.Equal(t, []string{"ls", "-la"}, cmd)
-		return "output", dockercontainer.ExecInspect{ExitCode: 0}, nil
+		return "output", client.ExecInspectResult{ExitCode: 0}, nil
 	}
 
 	output, execInspect, err := m.ExecuteCommand("container-id", []string{"ls", "-la"})
