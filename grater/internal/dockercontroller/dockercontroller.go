@@ -25,7 +25,7 @@ var _ container.Container = (*DockerController)(nil)
 
 // NewDockerController creates a new Docker controller.
 func NewDockerController() (*DockerController, error) {
-	cli, err := client.New(client.FromEnv, client.WithAPIVersionNegotiation())
+	cli, err := client.New(client.FromEnv)
 	if err != nil {
 		return nil, err
 	}
