@@ -11,8 +11,8 @@ import (
 
 // MockDockerController is a mock implementation of the DockerController interface.
 type MockDockerController struct {
-	CreateVolumeMock  func(string) (func(), error)
-	UseContainerMock  func(string, []string) (string, func(), error)
+	CreateVolumeMock   func(string) (func(), error)
+	UseContainerMock   func(string, []string) (string, func(), error)
 	ExecuteCommandMock func(string, []string) (string, client.ExecInspectResult, error)
 }
 
