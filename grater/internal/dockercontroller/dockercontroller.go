@@ -12,6 +12,7 @@ import (
 
 	dockercontainer "github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
+
 	"go.opentelemetry.io/build-tools/grater/internal/container"
 )
 

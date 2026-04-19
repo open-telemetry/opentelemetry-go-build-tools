@@ -6,6 +6,7 @@ package dockercontroller
 
 import (
 	"github.com/moby/moby/client"
+
 	"go.opentelemetry.io/build-tools/grater/internal/container"
 )
 
