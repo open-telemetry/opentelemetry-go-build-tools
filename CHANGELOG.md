@@ -4,6 +4,27 @@
 
 <!-- next version -->
 
+## v0.30.0
+
+### 🛑 Breaking changes 🛑
+
+- `all`: Bump minimum Go version to 1.25 (#1587)
+- `githubgen`: Stop generating the .github/ALLOWLIST file (#1505)
+  This file has no bearing to GitHub, the CODEOWNERS file already contains a list of unmaintained components.
+  Further, this file is flagged incorrectly by security tools as problematic.
+  
+
+### 💡 Enhancements 💡
+
+- `chloggen`: Update validate command to check all changelog entries and not exit out immediately after finding error. (#1304)
+- `crosslink`: Support Go versions with patch numbers (e.g., 1.23.0) in `crosslink work` command (#1499)
+
+### 🧰 Bug fixes 🧰
+
+- `chloggen`: Correctly handle absolute paths for config file, entries_dir, template_yaml, and change_logs. (#1387)
+- `crosslink`: Fix false negatives in `crosslink tidylist --validate` (#1437)
+- `githubgen`: Replace panic with proper error handling for unknown generator arguments (#1549)
+
 ## v0.29.0
 
 ### 💡 Enhancements 💡
