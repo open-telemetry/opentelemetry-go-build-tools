@@ -4,7 +4,7 @@
 //go:build integration
 // +build integration
 
-package dockercontroller
+package dockercontainer
 
 import (
 	"context"
@@ -16,7 +16,7 @@ import (
 )
 
 func TestCreateVolume(t *testing.T) {
-	dc, err := NewDockerController()
+	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
 	volumeNames := []string{"test-volume-grater-1", "test-volume-grater-2"}
@@ -38,7 +38,7 @@ func TestCreateVolume(t *testing.T) {
 }
 
 func TestCreateVolumeCleanupRemovesVolume(t *testing.T) {
-	dc, err := NewDockerController()
+	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
 	volumeName := "test-volume-grater"
@@ -59,7 +59,7 @@ func TestCreateVolumeCleanupRemovesVolume(t *testing.T) {
 }
 
 func TestUseContainer(t *testing.T) {
-	dc, err := NewDockerController()
+	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
 	imageName := "alpine:latest"
@@ -79,7 +79,7 @@ func TestUseContainer(t *testing.T) {
 }
 
 func TestUseContainerBindsVolumes(t *testing.T) {
-	dc, err := NewDockerController()
+	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
 	volumeNames := []string{"test-volume-grater-1", "test-volume-grater-2"}
@@ -115,7 +115,7 @@ func TestUseContainerBindsVolumes(t *testing.T) {
 }
 
 func TestUseContainerReadsAndWritesToVolume(t *testing.T) {
-	dc, err := NewDockerController()
+	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
 	volumeName := "test-volume-grater"
@@ -149,7 +149,7 @@ func TestUseContainerReadsAndWritesToVolume(t *testing.T) {
 }
 
 func TestUseContainerCleanupRemovesContainer(t *testing.T) {
-	dc, err := NewDockerController()
+	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
 	containerID, cleanup, err := dc.UseContainer("alpine:latest", []string{})
@@ -167,7 +167,7 @@ func TestUseContainerCleanupRemovesContainer(t *testing.T) {
 }
 
 func TestExecuteCommand(t *testing.T) {
-	dc, err := NewDockerController()
+	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
 	containerID, cleanup, err := dc.UseContainer("ubuntu:latest", []string{})
@@ -182,7 +182,7 @@ func TestExecuteCommand(t *testing.T) {
 }
 
 func TestExecuteCommandExitCode1(t *testing.T) {
-	dc, err := NewDockerController()
+	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
 	containerID, cleanup, err := dc.UseContainer("ubuntu:latest", []string{})
@@ -197,7 +197,7 @@ func TestExecuteCommandExitCode1(t *testing.T) {
 }
 
 func TestExecuteCommandInvalidContainerFails(t *testing.T) {
-	dc, err := NewDockerController()
+	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
 	out, inspect, err := dc.ExecuteCommand("invalid-container", []string{"echo", "test"})
@@ -207,7 +207,7 @@ func TestExecuteCommandInvalidContainerFails(t *testing.T) {
 }
 
 func TestPullImage(t *testing.T) {
-	dc, err := NewDockerController()
+	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
 	err = dc.pullImage("ubuntu:latest")
@@ -218,7 +218,7 @@ func TestPullImage(t *testing.T) {
 }
 
 func TestPullImageFails(t *testing.T) {
-	dc, err := NewDockerController()
+	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
 	err = dc.pullImage("invalid-image-name")

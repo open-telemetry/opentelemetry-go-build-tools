@@ -16,29 +16,29 @@ import (
 	"go.opentelemetry.io/build-tools/grater/internal/container"
 )
 
-// DockerController is a controller for managing Docker containers and volumes.
-type DockerController struct {
+// DockerContainer is a controller for managing Docker containers and volumes.
+type DockerContainer struct {
 	cli *client.Client
 	ctx context.Context
 }
 
-var _ container.Container = (*DockerController)(nil)
+var _ container.Container = (*DockerContainer)(nil)
 
-// NewDockerController creates a new Docker controller.
-func NewDockerController() (*DockerController, error) {
+// NewDockerContainer creates a new Docker container.
+func NewDockerContainer() (*DockerContainer, error) {
 	cli, err := client.New(client.FromEnv)
 	if err != nil {
 		return nil, err
 	}
 
-	return &DockerController{
+	return &DockerContainer{
 		cli: cli,
 		ctx: context.Background(),
 	}, nil
 }
 
 // CreateVolume creates a volume with specified volume name and returns a cleanup function.
-func (dc *DockerController) CreateVolume(volumeName string) (func(), error) {
+func (dc *DockerContainer) CreateVolume(volumeName string) (func(), error) {
 	_, err := dc.cli.VolumeCreate(dc.ctx, client.VolumeCreateOptions{
 		Name: volumeName,
 	})
@@ -54,7 +54,7 @@ func (dc *DockerController) CreateVolume(volumeName string) (func(), error) {
 }
 
 // UseContainer creates a container with specified volumes and returns a cleanup function.
-func (dc *DockerController) UseContainer(imageName string, volumeNames []string) (string, func(), error) {
+func (dc *DockerContainer) UseContainer(imageName string, volumeNames []string) (string, func(), error) {
 	if err := dc.pullImage(imageName); err != nil {
 		return "", nil, err
 	}
@@ -93,7 +93,7 @@ func (dc *DockerController) UseContainer(imageName string, volumeNames []string)
 }
 
 // ExecuteCommand executes a command in a container and returns the output.
-func (dc *DockerController) ExecuteCommand(containerID string, cmd []string) (string, client.ExecInspectResult, error) {
+func (dc *DockerContainer) ExecuteCommand(containerID string, cmd []string) (string, client.ExecInspectResult, error) {
 	execID, err := dc.cli.ExecCreate(dc.ctx, containerID, client.ExecCreateOptions{
 		Cmd:          cmd,
 		AttachStdout: true,
@@ -123,7 +123,7 @@ func (dc *DockerController) ExecuteCommand(containerID string, cmd []string) (st
 	return strings.TrimSpace(buf.String()), inspect, nil
 }
 
-func (dc *DockerController) pullImage(imageName string) error {
+func (dc *DockerContainer) pullImage(imageName string) error {
 	reader, err := dc.cli.ImagePull(dc.ctx, imageName, client.ImagePullOptions{})
 	if err != nil {
 		return err

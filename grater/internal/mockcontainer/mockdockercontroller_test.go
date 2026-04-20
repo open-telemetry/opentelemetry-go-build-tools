@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package dockercontroller
+package mockcontainer
 
 import (
 	"testing"
@@ -11,7 +11,7 @@ import (
 )
 
 func TestMockCreateVolume(t *testing.T) {
-	m := NewMockDockerController()
+	m := NewMockDockerContainer()
 
 	called := false
 
@@ -29,7 +29,7 @@ func TestMockCreateVolume(t *testing.T) {
 }
 
 func TestMockUseContainer(t *testing.T) {
-	m := NewMockDockerController()
+	m := NewMockDockerContainer()
 
 	m.UseContainerMock = func(image string, vols []string) (string, func(), error) {
 		assert.Equal(t, "test-image", image)
@@ -45,7 +45,7 @@ func TestMockUseContainer(t *testing.T) {
 }
 
 func TestMockExecuteCommand(t *testing.T) {
-	m := NewMockDockerController()
+	m := NewMockDockerContainer()
 
 	m.ExecuteCommandMock = func(id string, cmd []string) (string, client.ExecInspectResult, error) {
 		assert.Equal(t, "container-id", id)
