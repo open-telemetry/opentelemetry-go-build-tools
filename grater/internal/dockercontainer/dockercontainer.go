@@ -1,8 +1,8 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-// Package dockercontroller provides a controller for managing Docker.
-package dockercontroller
+// Package dockercontainer provides an implementation of the Container interface.
+package dockercontainer
 
 import (
 	"bytes"
