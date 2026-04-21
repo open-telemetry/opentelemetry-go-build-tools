@@ -6,7 +6,6 @@ package mockcontainer
 import (
 	"testing"
 
-	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -47,15 +46,15 @@ func TestMockUseContainer(t *testing.T) {
 func TestMockExecuteCommand(t *testing.T) {
 	m := NewMockDockerContainer()
 
-	m.ExecuteCommandMock = func(id string, cmd []string) (string, client.ExecInspectResult, error) {
+	m.ExecuteCommandMock = func(id string, cmd []string) (string, int, error) {
 		assert.Equal(t, "container-id", id)
 		assert.Equal(t, []string{"ls", "-la"}, cmd)
-		return "output", client.ExecInspectResult{ExitCode: 0}, nil
+		return "output", 0, nil
 	}
 
-	output, execInspect, err := m.ExecuteCommand("container-id", []string{"ls", "-la"})
+	output, exitCode, err := m.ExecuteCommand("container-id", []string{"ls", "-la"})
 	assert.NoError(t, err)
 
 	assert.Equal(t, "output", output)
-	assert.Equal(t, 0, execInspect.ExitCode)
+	assert.Equal(t, 0, exitCode)
 }

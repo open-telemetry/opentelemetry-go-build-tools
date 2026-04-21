@@ -1,20 +1,16 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-// Package mockcontainer provides a mock implementation of the DockerController interface.
+// Package mockcontainer provides a mock implementation of the Container interface.
 package mockcontainer
 
-import (
-	"github.com/moby/moby/client"
+import "go.opentelemetry.io/build-tools/grater/internal/container"
 
-	"go.opentelemetry.io/build-tools/grater/internal/container"
-)
-
-// MockDockerContainer is a mock implementation of the DockerContainer interface.
+// MockDockerContainer is a mock implementation of the Container interface.
 type MockDockerContainer struct {
 	CreateVolumeMock   func(string) (func(), error)
 	UseContainerMock   func(string, []string) (string, func(), error)
-	ExecuteCommandMock func(string, []string) (string, client.ExecInspectResult, error)
+	ExecuteCommandMock func(string, []string) (string, int, error)
 }
 
 var _ container.Container = (*MockDockerContainer)(nil)
@@ -41,9 +37,9 @@ func (m *MockDockerContainer) UseContainer(imageName string, volumeNames []strin
 }
 
 // ExecuteCommand creates a mock instance of executing a command.
-func (m *MockDockerContainer) ExecuteCommand(containerID string, cmd []string) (string, client.ExecInspectResult, error) {
+func (m *MockDockerContainer) ExecuteCommand(containerID string, cmd []string) (string, int, error) {
 	if m.ExecuteCommandMock != nil {
 		return m.ExecuteCommandMock(containerID, cmd)
 	}
-	return "", client.ExecInspectResult{}, nil
+	return "", 0, nil
 }

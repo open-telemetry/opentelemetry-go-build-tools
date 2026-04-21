@@ -93,7 +93,7 @@ func (dc *DockerContainer) UseContainer(imageName string, volumeNames []string) 
 }
 
 // ExecuteCommand executes a command in a container and returns the output.
-func (dc *DockerContainer) ExecuteCommand(containerID string, cmd []string) (string, client.ExecInspectResult, error) {
+func (dc *DockerContainer) ExecuteCommand(containerID string, cmd []string) (string, int, error) {
 	execID, err := dc.cli.ExecCreate(dc.ctx, containerID, client.ExecCreateOptions{
 		Cmd:          cmd,
 		AttachStdout: true,
@@ -101,26 +101,27 @@ func (dc *DockerContainer) ExecuteCommand(containerID string, cmd []string) (str
 		TTY:          true,
 	})
 	if err != nil {
-		return "", client.ExecInspectResult{}, err
+		return "", 0, err
 	}
 
 	resp, err := dc.cli.ExecAttach(dc.ctx, execID.ID, client.ExecAttachOptions{TTY: true})
 	if err != nil {
-		return "", client.ExecInspectResult{}, err
+		return "", 0, err
 	}
 	defer resp.Close()
 
 	var buf bytes.Buffer
 	if _, err = io.Copy(&buf, resp.Reader); err != nil {
-		return "", client.ExecInspectResult{}, err
+		return "", 0, err
 	}
 
 	inspect, err := dc.cli.ExecInspect(dc.ctx, execID.ID, client.ExecInspectOptions{})
 	if err != nil {
-		return "", client.ExecInspectResult{}, err
+		return "", 0, err
 	}
+	exitCode := inspect.ExitCode
 
-	return strings.TrimSpace(buf.String()), inspect, nil
+	return strings.TrimSpace(buf.String()), exitCode, nil
 }
 
 func (dc *DockerContainer) pullImage(imageName string) error {

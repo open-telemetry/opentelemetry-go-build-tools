@@ -128,7 +128,7 @@ func TestUseContainerReadsAndWritesToVolume(t *testing.T) {
 	require.NoError(t, err)
 	defer cleanup()
 
-	out, inspect, err := dc.ExecuteCommand(
+	out, exitCode, err := dc.ExecuteCommand(
 		containerID,
 		[]string{"sh", "-c", "echo 'Hello World' > /data/" + volumeName + "/test_file.txt"},
 	)
@@ -138,14 +138,14 @@ func TestUseContainerReadsAndWritesToVolume(t *testing.T) {
 	require.NoError(t, err)
 	defer cleanup2()
 
-	out, inspect, err = dc.ExecuteCommand(
+	out, exitCode, err = dc.ExecuteCommand(
 		containerID2,
 		[]string{"cat", "/data/" + volumeName + "/test_file.txt"},
 	)
 	require.NoError(t, err)
 
 	assert.Equal(t, "Hello World", out)
-	assert.Equal(t, 0, inspect.ExitCode)
+	assert.Equal(t, 0, exitCode)
 }
 
 func TestUseContainerCleanupRemovesContainer(t *testing.T) {
@@ -174,11 +174,11 @@ func TestExecuteCommand(t *testing.T) {
 	require.NoError(t, err)
 	defer cleanup()
 
-	out, inspect, err := dc.ExecuteCommand(containerID, []string{"echo", "hello world"})
+	out, exitCode, err := dc.ExecuteCommand(containerID, []string{"echo", "hello world"})
 	require.NoError(t, err)
 
 	assert.Equal(t, "hello world", out)
-	assert.Equal(t, 0, inspect.ExitCode)
+	assert.Equal(t, 0, exitCode)
 }
 
 func TestExecuteCommandExitCode1(t *testing.T) {
@@ -189,21 +189,21 @@ func TestExecuteCommandExitCode1(t *testing.T) {
 	require.NoError(t, err)
 	defer cleanup()
 
-	out, inspect, err := dc.ExecuteCommand(containerID, []string{"false"})
+	out, exitCode, err := dc.ExecuteCommand(containerID, []string{"false"})
 	require.NoError(t, err)
 
 	assert.Equal(t, "", out)
-	assert.Equal(t, 1, inspect.ExitCode)
+	assert.Equal(t, 1, exitCode)
 }
 
 func TestExecuteCommandInvalidContainerFails(t *testing.T) {
 	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
-	out, inspect, err := dc.ExecuteCommand("invalid-container", []string{"echo", "test"})
+	out, exitCode, err := dc.ExecuteCommand("invalid-container", []string{"echo", "test"})
 	require.Error(t, err)
 	assert.Empty(t, out)
-	assert.Equal(t, 0, inspect.ExitCode)
+	assert.Equal(t, 0, exitCode)
 }
 
 func TestPullImage(t *testing.T) {
