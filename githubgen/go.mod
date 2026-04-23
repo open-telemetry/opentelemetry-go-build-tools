@@ -3,7 +3,7 @@ module go.opentelemetry.io/build-tools/githubgen
 go 1.25.0
 
 require (
-	github.com/google/go-github/v84 v84.0.0
+	github.com/google/go-github/v85 v85.0.0
 	github.com/stretchr/testify v1.11.1
 	gopkg.in/yaml.v3 v3.0.1
 )
