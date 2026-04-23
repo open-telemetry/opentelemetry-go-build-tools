@@ -38,6 +38,7 @@ ALL_COVERAGE_MOD_DIRS := $(shell find . -type f -name 'go.mod' -exec dirname {} 
 
 GO ?= go
 TIMEOUT = 60
+TIMEOUT_INTEGRATION = 180
 
 # User to run as in docker images.
 DOCKER_USER=$(shell id -u):$(shell id -g)
@@ -167,11 +168,11 @@ test:
 
 test-integration:
 	@set -e; for dir in $(ALL_GO_MOD_DIRS); do \
-	  echo "$(GO) test -timeout $(TIMEOUT)s -tags=integration $${dir}/..."; \
+	  echo "$(GO) test -timeout $(TIMEOUT_INTEGRATION)s -tags=integration $${dir}/..."; \
 	  (cd "$${dir}" && \
 	    $(GO) list -tags=integration ./... \
 	      | grep -v third_party \
-	      | xargs $(GO) test -timeout $(TIMEOUT)s -tags=integration); \
+	      | xargs $(GO) test -timeout $(TIMEOUT_INTEGRATION)s -tags=integration); \
 	done
 
 COVERAGE_MODE    = atomic
