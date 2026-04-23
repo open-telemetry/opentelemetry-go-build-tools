@@ -11,7 +11,7 @@ require (
 	go.opentelemetry.io/build-tools/crosslink v0.30.0
 	go.opentelemetry.io/build-tools/dbotconf v0.30.0
 	go.opentelemetry.io/build-tools/multimod v0.30.0
-	golang.org/x/vuln v1.2.0
+	golang.org/x/vuln v1.3.0
 )
 
 require (
