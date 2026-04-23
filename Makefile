@@ -182,11 +182,11 @@ test-coverage:
 	@set -e; \
 	printf "" > coverage.txt; \
 	for dir in $(ALL_COVERAGE_MOD_DIRS); do \
-	  echo "$(GO) test -coverpkg=./... -covermode=$(COVERAGE_MODE) -coverprofile="$(COVERAGE_PROFILE)" $${dir}/..."; \
+	  echo "$(GO) test -tags=integration -coverpkg=./... -covermode=$(COVERAGE_MODE) -coverprofile="$(COVERAGE_PROFILE)" $${dir}/..."; \
 	  (cd "$${dir}" && \
-	    $(GO) list ./... \
+	    $(GO) list -tags=integration ./... \
 	    | grep -v third_party \
-	    | xargs $(GO) test -coverpkg=./... -covermode=$(COVERAGE_MODE) -coverprofile="$(COVERAGE_PROFILE)" && \
+	    | xargs $(GO) test -tags=integration -coverpkg=./... -covermode=$(COVERAGE_MODE) -coverprofile="$(COVERAGE_PROFILE)" && \
 	  $(GO) tool cover -html=coverage.out -o coverage.html); \
 	  [ -f "$${dir}/coverage.out" ] && cat "$${dir}/coverage.out" >> coverage.txt; \
 	done; \
