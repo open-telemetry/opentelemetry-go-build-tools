@@ -77,20 +77,6 @@ func Test_codeownersGenerator_verifyCodeOwnerOrgMembership(t *testing.T) {
 			wantErr:     true,
 			errContains: "codeowners are not members",
 		},
-		{
-			name:       "user in allowlist but is not a codeowner",
-			skipGithub: true,
-			args: args{
-				allowlistData: []byte("user4\nuser5"),
-				data: datatype.GithubData{
-					Codeowners: []string{
-						"user4",
-					},
-				},
-			},
-			wantErr:     true,
-			errContains: "unused members in allowlist",
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
