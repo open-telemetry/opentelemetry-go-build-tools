@@ -19,8 +19,8 @@ Usage:
 
 Examples:
 
-grater add foo/bar bar/foo --file dependents.txt
-grater add foo/bar
+grater add github.com/foo/bar/v bar/foo/v --file dependents.txt
+grater add github.com/foo/bar/v
 grater add --file dependents.txt
 grater add -f dependents.txt
 
