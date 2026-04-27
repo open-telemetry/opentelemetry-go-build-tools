@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"go.opentelemetry.io/build-tools/grater/internal/dependent"
+	"go.opentelemetry.io/build-tools/grater/internal/module"
 )
 
 func TestNewWorkspace(t *testing.T) {
@@ -58,8 +58,9 @@ func TestAddDependents(t *testing.T) {
 	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
-	ws.AddDependents([]dependent.Dependent{{ModuleName: "foo/bar"}})
-	assert.Contains(t, ws.dependents, dependent.Dependent{ModuleName: "foo/bar"})
+	dependent := module.NewModule("foo/bar")
+	ws.AddDependents([]module.Module{*dependent})
+	assert.Contains(t, ws.dependents, *dependent)
 }
 
 func TestGetDependents(t *testing.T) {
@@ -69,10 +70,11 @@ func TestGetDependents(t *testing.T) {
 	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
-	ws.AddDependents([]dependent.Dependent{{ModuleName: "foo/bar"}})
+	dependent := module.NewModule("foo/bar")
+	ws.AddDependents([]module.Module{*dependent})
 
 	dependents := ws.GetDependents()
-	assert.Contains(t, dependents, dependent.Dependent{ModuleName: "foo/bar"})
+	assert.Contains(t, dependents, *dependent)
 }
 
 func TestWriteDependents(t *testing.T) {
@@ -82,14 +84,15 @@ func TestWriteDependents(t *testing.T) {
 	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
-	ws.AddDependents([]dependent.Dependent{{ModuleName: "foo/bar"}})
+	dependent := module.NewModule("foo/bar")
+	ws.AddDependents([]module.Module{*dependent})
 
 	err = ws.WriteDependents()
 	require.NoError(t, err)
 
 	content, err := os.ReadFile(ws.dependentsPath)
 	require.NoError(t, err)
-	assert.JSONEq(t, `[{"module_name":"foo/bar"}]`, string(content))
+	assert.JSONEq(t, `[{"module_name":"bar","module_path":"foo/bar"}]`, string(content))
 }
 
 func TestCommitToFile(t *testing.T) {

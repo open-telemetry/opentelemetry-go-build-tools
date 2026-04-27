@@ -10,15 +10,15 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go.opentelemetry.io/build-tools/grater/internal/dependent"
+	"go.opentelemetry.io/build-tools/grater/internal/module"
 	"go.opentelemetry.io/build-tools/grater/internal/workspace"
 )
 
 // Add adds dependents to the workspace.
 func Add(ws *workspace.Workspace, data []string) error {
-	var dependents []dependent.Dependent
-	for _, moduleName := range data {
-		dependents = append(dependents, dependent.Dependent{ModuleName: moduleName})
+	var dependents []module.Module
+	for _, modulePath := range data {
+		dependents = append(dependents, *module.NewModule(modulePath))
 	}
 	ws.AddDependents(dependents)
 	return ws.WriteDependents()
@@ -35,9 +35,9 @@ func AddFromFile(ws *workspace.Workspace, path string) error {
 
 	// TODO: Handle other file formats like json, csv using a switch case.
 
-	var dependents []dependent.Dependent
-	for _, line := range strings.Fields(string(data)) {
-		dependents = append(dependents, dependent.Dependent{ModuleName: line})
+	var dependents []module.Module
+	for _, modulePath := range strings.Fields(string(data)) {
+		dependents = append(dependents, *module.NewModule(modulePath))
 	}
 
 	ws.AddDependents(dependents)

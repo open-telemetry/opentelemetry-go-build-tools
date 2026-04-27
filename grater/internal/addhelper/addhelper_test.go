@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"go.opentelemetry.io/build-tools/grater/internal/dependent"
+	"go.opentelemetry.io/build-tools/grater/internal/module"
 	"go.opentelemetry.io/build-tools/grater/internal/workspace"
 )
 
@@ -29,14 +29,14 @@ func TestAdd(t *testing.T) {
 
 	dependents := ws.GetDependents()
 
-	assert.ElementsMatch(t, dependents, []dependent.Dependent{
-		{ModuleName: "foo/bar"},
-		{ModuleName: "baz/qux"},
+	assert.ElementsMatch(t, dependents, []module.Module{
+		*module.NewModule("foo/bar"),
+		*module.NewModule("baz/qux"),
 	})
 
 	content, err := os.ReadFile(".grater/dependents.json")
 	require.NoError(t, err)
-	assert.JSONEq(t, `[{"module_name":"foo/bar"},{"module_name":"baz/qux"}]`, string(content))
+	assert.JSONEq(t, `[{"module_name":"bar","module_path":"foo/bar"},{"module_name":"qux","module_path":"baz/qux"}]`, string(content))
 }
 
 func TestAddFromFile(t *testing.T) {
@@ -54,14 +54,14 @@ func TestAddFromFile(t *testing.T) {
 
 	dependents := ws.GetDependents()
 
-	assert.ElementsMatch(t, dependents, []dependent.Dependent{
-		{ModuleName: "foo/bar"},
-		{ModuleName: "bar/foo"},
+	assert.ElementsMatch(t, dependents, []module.Module{
+		*module.NewModule("foo/bar"),
+		*module.NewModule("bar/foo"),
 	})
 
 	content, err := os.ReadFile(".grater/dependents.json")
 	require.NoError(t, err)
-	assert.JSONEq(t, `[{"module_name":"foo/bar"},{"module_name":"bar/foo"}]`, string(content))
+	assert.JSONEq(t, `[{"module_name":"bar","module_path":"foo/bar"},{"module_name":"foo","module_path":"bar/foo"}]`, string(content))
 }
 
 func TestAddFromFileFails(t *testing.T) {
