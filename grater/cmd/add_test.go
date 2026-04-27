@@ -12,7 +12,7 @@ import (
 )
 
 const fileReadWrite = os.FileMode(0o644)
-const addUsage = `Adds one or more dependents to be tested. The dependents can be specified as command line arguments or in a .txt file, or both.
+const addUsage = `Adds one or more dependents to be tested. The dependents local or remote path can be specified as command line arguments or in a .txt file, or both.
 
 Usage:
   grater add [dependents...] [flags]
