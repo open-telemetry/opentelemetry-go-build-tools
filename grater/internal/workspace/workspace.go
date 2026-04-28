@@ -10,7 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"go.opentelemetry.io/build-tools/grater/internal/dependent"
+	"go.opentelemetry.io/build-tools/grater/internal/module"
 )
 
 const (
@@ -22,7 +22,7 @@ const (
 type Workspace struct {
 	dir            string
 	dependentsPath string
-	dependents     []dependent.Dependent
+	dependents     []module.Module
 }
 
 // NewWorkspace creates a new Workspace instance.
@@ -35,7 +35,7 @@ func NewWorkspace() (*Workspace, error) {
 	w := &Workspace{
 		dir:            root,
 		dependentsPath: filepath.Join(root, ".grater", "dependents.json"),
-		dependents:     []dependent.Dependent{},
+		dependents:     []module.Module{},
 	}
 	err = w.create()
 	return w, err
@@ -54,12 +54,12 @@ func (w *Workspace) create() error {
 }
 
 // AddDependents adds dependents to the internal list of dependents.
-func (w *Workspace) AddDependents(dependents []dependent.Dependent) {
+func (w *Workspace) AddDependents(dependents []module.Module) {
 	w.dependents = append(w.dependents, dependents...)
 }
 
 // GetDependents returns the internal list of dependents.
-func (w *Workspace) GetDependents() []dependent.Dependent {
+func (w *Workspace) GetDependents() []module.Module {
 	return w.dependents
 }
 
