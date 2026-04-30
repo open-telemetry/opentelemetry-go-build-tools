@@ -10,7 +10,6 @@ import (
 	"io"
 	"strings"
 
-	"fmt"
 	"path/filepath"
 
 	"github.com/moby/go-archive"
@@ -87,15 +86,18 @@ func (dc *DockerContainer) UseContainer(imageName string, volumeNames, localPath
 	}
 
 	for _, localPath := range localPaths {
+		if _, _, err := dc.ExecuteCommand(resp.ID, []string{"mkdir", "-p", "/data/" + filepath.Base(localPath)}); err != nil {
+			return "", nil, err
+		}
 		tar, err := archive.TarWithOptions(localPath, &archive.TarOptions{})
 		if err != nil {
-			return "", nil, fmt.Errorf("tar %s: %w", localPath, err)
+			return "", nil, err
 		}
 		if _, err := dc.cli.CopyToContainer(dc.ctx, resp.ID, client.CopyToContainerOptions{
 			DestinationPath: "/data/" + filepath.Base(localPath),
 			Content:         tar,
 		}); err != nil {
-			return "", nil, fmt.Errorf("copy %s: %w", localPath, err)
+			return "", nil, err
 		}
 	}
 

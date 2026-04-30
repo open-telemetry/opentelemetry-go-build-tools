@@ -7,6 +7,7 @@
 package dockercontainer
 
 import (
+	"os"
 	"context"
 	"testing"
 	"path/filepath"
@@ -157,6 +158,11 @@ func TestUseContainerBindsLocalPaths(t *testing.T) {
 	t.Chdir(testDir)
 
 	localPath := "./testdata"
+	require.NoError(t, os.MkdirAll(localPath, 0755))
+	f, err := os.Create(filepath.Join(localPath, "hello.txt"))
+	require.NoError(t, err)
+	f.Close()
+
 	containerID, cleanup, err := dc.UseContainer("alpine:latest", []string{}, []string{localPath})
 	require.NoError(t, err)
 	defer cleanup()
@@ -165,7 +171,7 @@ func TestUseContainerBindsLocalPaths(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, 0, exitCode)
-	assert.NotEmpty(t, out)
+	assert.Contains(t, out, "hello.txt")
 }
 
 func TestUseContainerCleanupRemovesContainer(t *testing.T) {
