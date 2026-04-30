@@ -9,6 +9,7 @@ package dockercontainer
 import (
 	"context"
 	"testing"
+	"path/filepath"
 
 	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/assert"
@@ -63,7 +64,7 @@ func TestUseContainer(t *testing.T) {
 	require.NoError(t, err)
 
 	imageName := "alpine:latest"
-	containerID, cleanup, err := dc.UseContainer(imageName, []string{})
+	containerID, cleanup, err := dc.UseContainer(imageName, []string{}, []string{})
 	require.NoError(t, err)
 	defer cleanup()
 
@@ -90,7 +91,7 @@ func TestUseContainerBindsVolumes(t *testing.T) {
 	}
 
 	imageName := "alpine:latest"
-	containerID, cleanup, err := dc.UseContainer(imageName, volumeNames)
+	containerID, cleanup, err := dc.UseContainer(imageName, volumeNames, []string{})
 	require.NoError(t, err)
 	defer cleanup()
 
@@ -124,7 +125,7 @@ func TestUseContainerReadsAndWritesToVolume(t *testing.T) {
 	defer cleanupVolume()
 
 	imageName := "alpine:latest"
-	containerID, cleanup, err := dc.UseContainer(imageName, []string{volumeName})
+	containerID, cleanup, err := dc.UseContainer(imageName, []string{volumeName}, []string{})
 	require.NoError(t, err)
 	defer cleanup()
 
@@ -134,7 +135,7 @@ func TestUseContainerReadsAndWritesToVolume(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	containerID2, cleanup2, err := dc.UseContainer(imageName, []string{volumeName})
+	containerID2, cleanup2, err := dc.UseContainer(imageName, []string{volumeName}, []string{})
 	require.NoError(t, err)
 	defer cleanup2()
 
@@ -156,7 +157,7 @@ func TestUseContainerBindsLocalPaths(t *testing.T) {
 	t.Chdir(testDir)
 
 	localPath := "./testdata"
-	_, cleanup, err := dc.UseContainer("alpine:latest", []string{}, []string{localPath})
+	containerID, cleanup, err := dc.UseContainer("alpine:latest", []string{}, []string{localPath})
 	require.NoError(t, err)
 	defer cleanup()
 
@@ -171,7 +172,7 @@ func TestUseContainerCleanupRemovesContainer(t *testing.T) {
 	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
-	containerID, cleanup, err := dc.UseContainer("alpine:latest", []string{})
+	containerID, cleanup, err := dc.UseContainer("alpine:latest", []string{}, []string{})
 	require.NoError(t, err)
 	cleanup()
 
@@ -189,7 +190,7 @@ func TestExecuteCommand(t *testing.T) {
 	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
-	containerID, cleanup, err := dc.UseContainer("ubuntu:latest", []string{})
+	containerID, cleanup, err := dc.UseContainer("ubuntu:latest", []string{}, []string{})
 	require.NoError(t, err)
 	defer cleanup()
 
@@ -204,7 +205,7 @@ func TestExecuteCommandExitCode1(t *testing.T) {
 	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
-	containerID, cleanup, err := dc.UseContainer("ubuntu:latest", []string{})
+	containerID, cleanup, err := dc.UseContainer("ubuntu:latest", []string{}, []string{})
 	require.NoError(t, err)
 	defer cleanup()
 
