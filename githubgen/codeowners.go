@@ -173,11 +173,6 @@ func (cg *codeownersGenerator) verifyCodeOwnerOrgMembership(allowlistData []byte
 		sort.Strings(duplicateCodeowners)
 		return fmt.Errorf("codeowners members duplicate in allowlist: %s", strings.Join(duplicateCodeowners, ", "))
 	}
-	if len(unusedAllowlist) > 0 {
-		unused := append([]string{}, unusedAllowlist...)
-		sort.Strings(unused)
-		return fmt.Errorf("unused members in allowlist: %s", strings.Join(unused, ", "))
-	}
 	return err
 }
 
