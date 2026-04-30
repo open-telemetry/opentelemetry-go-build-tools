@@ -10,6 +10,10 @@ import (
 	"io"
 	"strings"
 
+	"fmt"
+	"path/filepath"
+
+	"github.com/moby/go-archive"
 	dockercontainer "github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 
@@ -54,7 +58,7 @@ func (dc *DockerContainer) CreateVolume(volumeName string) (func(), error) {
 }
 
 // UseContainer creates a container with specified volumes and returns a cleanup function.
-func (dc *DockerContainer) UseContainer(imageName string, volumeNames []string) (string, func(), error) {
+func (dc *DockerContainer) UseContainer(imageName string, volumeNames, localPaths []string) (string, func(), error) {
 	if err := dc.pullImage(imageName); err != nil {
 		return "", nil, err
 	}
@@ -80,6 +84,19 @@ func (dc *DockerContainer) UseContainer(imageName string, volumeNames []string) 
 
 	if _, err := dc.cli.ContainerStart(dc.ctx, resp.ID, client.ContainerStartOptions{}); err != nil {
 		return "", nil, err
+	}
+
+	for _, localPath := range localPaths {
+		tar, err := archive.TarWithOptions(localPath, &archive.TarOptions{})
+		if err != nil {
+			return "", nil, fmt.Errorf("tar %s: %w", localPath, err)
+		}
+		if _, err := dc.cli.CopyToContainer(dc.ctx, resp.ID, client.CopyToContainerOptions{
+			DestinationPath: "/data/" + filepath.Base(localPath),
+			Content:         tar,
+		}); err != nil {
+			return "", nil, fmt.Errorf("copy %s: %w", localPath, err)
+		}
 	}
 
 	cleanup := func() {

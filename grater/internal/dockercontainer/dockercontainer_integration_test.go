@@ -148,6 +148,25 @@ func TestUseContainerReadsAndWritesToVolume(t *testing.T) {
 	assert.Equal(t, 0, exitCode)
 }
 
+func TestUseContainerBindsLocalPaths(t *testing.T) {
+	dc, err := NewDockerContainer()
+	require.NoError(t, err)
+
+	testDir := t.TempDir()
+	t.Chdir(testDir)
+
+	localPath := "./testdata"
+	_, cleanup, err := dc.UseContainer("alpine:latest", []string{}, []string{localPath})
+	require.NoError(t, err)
+	defer cleanup()
+
+	out, exitCode, err := dc.ExecuteCommand(containerID, []string{"ls", "/data/" + filepath.Base(localPath)})
+	require.NoError(t, err)
+
+	assert.Equal(t, 0, exitCode)
+	assert.NotEmpty(t, out)
+}
+
 func TestUseContainerCleanupRemovesContainer(t *testing.T) {
 	dc, err := NewDockerContainer()
 	require.NoError(t, err)

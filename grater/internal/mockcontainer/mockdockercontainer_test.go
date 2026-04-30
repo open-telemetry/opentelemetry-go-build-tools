@@ -30,13 +30,14 @@ func TestMockCreateVolume(t *testing.T) {
 func TestMockUseContainer(t *testing.T) {
 	m := NewMockDockerContainer()
 
-	m.UseContainerMock = func(image string, vols []string) (string, func(), error) {
+	m.UseContainerMock = func(image string, vols, locals []string) (string, func(), error) {
 		assert.Equal(t, "test-image", image)
 		assert.Equal(t, []string{"test-volume"}, vols)
+		assert.Equal(t, []string{"./testdata"}, locals)
 		return "container-id", func() {}, nil
 	}
 
-	containerID, cleanup, err := m.UseContainer("test-image", []string{"test-volume"})
+	containerID, cleanup, err := m.UseContainer("test-image", []string{"test-volume"}, []string{"./testdata"})
 	assert.NoError(t, err)
 
 	assert.Equal(t, "container-id", containerID)

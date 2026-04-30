@@ -9,7 +9,7 @@ import "go.opentelemetry.io/build-tools/grater/internal/container"
 // MockDockerContainer is a mock implementation of the Container interface.
 type MockDockerContainer struct {
 	CreateVolumeMock   func(string) (func(), error)
-	UseContainerMock   func(string, []string) (string, func(), error)
+	UseContainerMock   func(string, []string, []string) (string, func(), error)
 	ExecuteCommandMock func(string, []string) (string, int, error)
 }
 
@@ -29,9 +29,9 @@ func (m *MockDockerContainer) CreateVolume(volumeName string) (func(), error) {
 }
 
 // UseContainer creates a mock instance of Container.
-func (m *MockDockerContainer) UseContainer(imageName string, volumeNames []string) (string, func(), error) {
+func (m *MockDockerContainer) UseContainer(imageName string, volumeNames, localPaths []string) (string, func(), error) {
 	if m.UseContainerMock != nil {
-		return m.UseContainerMock(imageName, volumeNames)
+		return m.UseContainerMock(imageName, volumeNames, localPaths)
 	}
 	return "", func() {}, nil
 }

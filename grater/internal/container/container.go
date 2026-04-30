@@ -7,6 +7,6 @@ package container
 // Container defines the interface for managing Docker containers and volumes.
 type Container interface {
 	CreateVolume(volumeName string) (func(), error)
-	UseContainer(imageName string, volumeNames []string) (string, func(), error)
+	UseContainer(imageName string, volumeNames, localPaths []string) (string, func(), error)
 	ExecuteCommand(containerID string, cmd []string) (string, int, error)
 }
