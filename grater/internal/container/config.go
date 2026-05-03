@@ -6,12 +6,22 @@ package container
 // ExecuteCommandConfig is a group of options for executing a command in a container.
 type ExecuteCommandConfig struct {
 	containerID string
-	cmd         string
+	cmd         []string
+}
+
+// ContainerID returns the container ID.
+func (cfg *ExecuteCommandConfig) ContainerID() string {
+	return cfg.containerID
+}
+
+// Cmd returns the command to execute.
+func (cfg *ExecuteCommandConfig) Cmd() []string {
+	return cfg.cmd
 }
 
 // NewExecuteCommandConfig applies all the options to a returned ExecuteCommandConfig.
 func NewExecuteCommandConfig(options ...ExecuteCommandOption) ExecuteCommandConfig {
-	config := ExecuteCommandConfig{containerID: "", cmd: ""}
+	config := ExecuteCommandConfig{containerID: "", cmd: []string{}}
 	for _, option := range options {
 		config = option.apply(config)
 	}
@@ -32,6 +42,11 @@ func (fn executeCommandOptionFunc) apply(cfg ExecuteCommandConfig) ExecuteComman
 // CreateVolumeConfig is a group of options for creating a volume in a container.
 type CreateVolumeConfig struct {
 	volumeName string
+}
+
+// VolumeName returns the volume name.
+func (cfg *CreateVolumeConfig) VolumeName() string {
+	return cfg.volumeName
 }
 
 // NewCreateVolumeConfig applies all the options to a returned CreateVolumeConfig.
@@ -59,6 +74,21 @@ type UseContainerConfig struct {
 	imageName              string
 	binds                  []string
 	hostPaths              []string
+}
+
+// ImageName returns the image name.
+func (cfg *UseContainerConfig) ImageName() string {
+	return cfg.imageName
+}
+
+// Binds returns the binds.
+func (cfg *UseContainerConfig) Binds() []string {
+	return cfg.binds
+}
+
+// HostPaths returns the host paths.
+func (cfg *UseContainerConfig) HostPaths() []string {
+	return cfg.hostPaths
 }
 
 // NewUseContainerConfig applies all the options to a returned UseContainerConfig.
@@ -94,7 +124,7 @@ func WithContainerID(id string) ExecuteCommandOption {
 }
 
 // WithCommand sets the command to execute.
-func WithCommand(cmd string) ExecuteCommandOption {
+func WithCommand(cmd []string) ExecuteCommandOption {
 	return executeCommandOptionFunc(func(cfg ExecuteCommandConfig) ExecuteCommandConfig {
 		cfg.cmd = cmd
 		return cfg

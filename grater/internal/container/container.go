@@ -5,25 +5,45 @@
 package container
 
 type ExecuteCommandResponse struct {
-	Output    string
-	ExitCode  int
-	Error     error
+	Output   string
+	ExitCode int
 }
 
 type UseContainerResponse struct {
 	ContainerID string
-	cleanup     func()
-	Error       error
+	Cleanup     func()
 }
 
 type CreateVolumeResponse struct {
-	cleanup func()
-	Error   error
+	Cleanup func()
+}
+
+// NewExecuteCommandResponse creates a new ExecuteCommandResponse.
+func NewExecuteCommandResponse(output string, exitCode int) ExecuteCommandResponse {
+	return ExecuteCommandResponse{
+		Output:   output,
+		ExitCode: exitCode,
+	}
+}
+
+// NewUseContainerResponse creates a new UseContainerResponse.
+func NewUseContainerResponse(containerID string, cleanup func()) UseContainerResponse {
+	return UseContainerResponse{
+		ContainerID: containerID,
+		Cleanup:     cleanup,
+	}
+}
+
+// NewCreateVolumeResponse creates a new CreateVolumeResponse.
+func NewCreateVolumeResponse(cleanup func()) CreateVolumeResponse {
+	return CreateVolumeResponse{
+		Cleanup: cleanup,
+	}
 }
 
 // Container defines the interface for managing Docker containers and volumes.
 type Container interface {
-	CreateVolume(volumeName string) (func(), error)
-	UseContainer(imageName string, volumeNames, localPaths []string) (string, func(), error)
-	ExecuteCommand(containerID string, cmd []string) (string, int, error)
+	CreateVolume(cfg CreateVolumeConfig) (CreateVolumeResponse, error)
+	UseContainer(cfg UseContainerConfig) (UseContainerResponse, error)
+	ExecuteCommand(cfg ExecuteCommandConfig) (ExecuteCommandResponse, error)
 }

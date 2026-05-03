@@ -12,10 +12,10 @@ import (
 func TestNewExecuteCommandConfigAllOptions(t *testing.T) {
 	cfg := NewExecuteCommandConfig(
 		WithContainerID("test-container"),
-		WithCommand("echo hello"),
+		WithCommand([]string{"echo", "hello"}),
 	)
 	assert.Equal(t, "test-container", cfg.containerID)
-	assert.Equal(t, "echo hello", cfg.cmd)
+	assert.Equal(t, []string{"echo", "hello"}, cfg.cmd)
 }
 
 func TestNewExecuteCommandConfigSomeOptions(t *testing.T) {
@@ -26,10 +26,10 @@ func TestNewExecuteCommandConfigSomeOptions(t *testing.T) {
 	assert.Empty(t, cfg.cmd)
 
 	cfg = NewExecuteCommandConfig(
-		WithCommand("echo hello"),
+		WithCommand([]string{"echo", "hello"}),
 	)
 	assert.Empty(t, cfg.containerID)
-	assert.Equal(t, "echo hello", cfg.cmd)
+	assert.Equal(t, []string{"echo", "hello"}, cfg.cmd)
 }
 
 func TestNewExecuteCommandConfigNoOptions(t *testing.T) {

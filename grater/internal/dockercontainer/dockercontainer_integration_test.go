@@ -7,14 +7,15 @@
 package dockercontainer
 
 import (
-	"os"
 	"context"
-	"testing"
+	"os"
 	"path/filepath"
+	"testing"
 
 	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/build-tools/grater/internal/container"
 )
 
 func TestCreateVolume(t *testing.T) {
@@ -23,9 +24,11 @@ func TestCreateVolume(t *testing.T) {
 
 	volumeNames := []string{"test-volume-grater-1", "test-volume-grater-2"}
 	for _, volumeName := range volumeNames {
-		cleanup, createErr := dc.CreateVolume(volumeName)
+		resp, createErr := dc.CreateVolume(container.NewCreateVolumeConfig(
+			container.WithVolumeName(volumeName),
+		))
 		require.NoError(t, createErr)
-		t.Cleanup(cleanup)
+		t.Cleanup(resp.Cleanup)
 	}
 
 	volumes, err := dc.cli.VolumeList(context.Background(), client.VolumeListOptions{})
@@ -44,10 +47,12 @@ func TestCreateVolumeCleanupRemovesVolume(t *testing.T) {
 	require.NoError(t, err)
 
 	volumeName := "test-volume-grater"
-	cleanup, err := dc.CreateVolume(volumeName)
+	resp, err := dc.CreateVolume(container.NewCreateVolumeConfig(
+		container.WithVolumeName(volumeName),
+	))
 	require.NoError(t, err)
 
-	cleanup()
+	resp.Cleanup()
 
 	volumes, err := dc.cli.VolumeList(context.Background(), client.VolumeListOptions{})
 	require.NoError(t, err)
@@ -64,10 +69,11 @@ func TestUseContainer(t *testing.T) {
 	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
-	imageName := "alpine:latest"
-	containerID, cleanup, err := dc.UseContainer(imageName, []string{}, []string{})
+	resp, err := dc.UseContainer(container.NewUseContainerConfig(
+		container.WithImageName("alpine:latest"),
+	))
 	require.NoError(t, err)
-	defer cleanup()
+	defer resp.Cleanup()
 
 	containers, err := dc.cli.ContainerList(context.Background(), client.ContainerListOptions{})
 	require.NoError(t, err)
@@ -77,7 +83,7 @@ func TestUseContainer(t *testing.T) {
 		containerIDs[i] = c.ID
 	}
 
-	assert.Contains(t, containerIDs, containerID)
+	assert.Contains(t, containerIDs, resp.ContainerID)
 }
 
 func TestUseContainerBindsVolumes(t *testing.T) {
@@ -86,22 +92,26 @@ func TestUseContainerBindsVolumes(t *testing.T) {
 
 	volumeNames := []string{"test-volume-grater-1", "test-volume-grater-2"}
 	for _, volumeName := range volumeNames {
-		cleanup, createErr := dc.CreateVolume(volumeName)
+		volResp, createErr := dc.CreateVolume(container.NewCreateVolumeConfig(
+			container.WithVolumeName(volumeName),
+		))
 		require.NoError(t, createErr)
-		t.Cleanup(cleanup)
+		t.Cleanup(volResp.Cleanup)
 	}
 
-	imageName := "alpine:latest"
-	containerID, cleanup, err := dc.UseContainer(imageName, volumeNames, []string{})
+	resp, err := dc.UseContainer(container.NewUseContainerConfig(
+		container.WithImageName("alpine:latest"),
+		container.WithBinds(volumeNames),
+	))
 	require.NoError(t, err)
-	defer cleanup()
+	defer resp.Cleanup()
 
 	expectedBinds := map[string]string{
 		volumeNames[0]: "/data/" + volumeNames[0],
 		volumeNames[1]: "/data/" + volumeNames[1],
 	}
 
-	inspect, err := dc.cli.ContainerInspect(context.Background(), containerID, client.ContainerInspectOptions{})
+	inspect, err := dc.cli.ContainerInspect(context.Background(), resp.ContainerID, client.ContainerInspectOptions{})
 	require.NoError(t, err)
 
 	binds := make(map[string]bool)
@@ -121,33 +131,42 @@ func TestUseContainerReadsAndWritesToVolume(t *testing.T) {
 	require.NoError(t, err)
 
 	volumeName := "test-volume-grater"
-	cleanupVolume, err := dc.CreateVolume(volumeName)
+	volResp, err := dc.CreateVolume(container.NewCreateVolumeConfig(
+		container.WithVolumeName(volumeName),
+	))
 	require.NoError(t, err)
-	defer cleanupVolume()
+	defer volResp.Cleanup()
 
-	imageName := "alpine:latest"
-	containerID, cleanup, err := dc.UseContainer(imageName, []string{volumeName}, []string{})
+	resp, err := dc.UseContainer(container.NewUseContainerConfig(
+		container.WithImageName("alpine:latest"),
+		container.WithBinds([]string{volumeName}),
+	))
 	require.NoError(t, err)
-	defer cleanup()
+	defer resp.Cleanup()
 
-	out, exitCode, err := dc.ExecuteCommand(
-		containerID,
-		[]string{"sh", "-c", "echo 'Hello World' > /data/" + volumeName + "/test_file.txt"},
+	_, err = dc.ExecuteCommand(
+		container.NewExecuteCommandConfig(
+			container.WithContainerID(resp.ContainerID),
+			container.WithCommand([]string{"sh", "-c", "echo 'Hello World' > /data/" + volumeName + "/test_file.txt"}),
+		),
 	)
 	require.NoError(t, err)
 
-	containerID2, cleanup2, err := dc.UseContainer(imageName, []string{volumeName}, []string{})
+	resp2, err := dc.UseContainer(container.NewUseContainerConfig(
+		container.WithImageName("alpine:latest"),
+		container.WithBinds([]string{volumeName}),
+	))
 	require.NoError(t, err)
-	defer cleanup2()
+	defer resp2.Cleanup()
 
-	out, exitCode, err = dc.ExecuteCommand(
-		containerID2,
-		[]string{"cat", "/data/" + volumeName + "/test_file.txt"},
-	)
+	cmdResp2, err := dc.ExecuteCommand(container.NewExecuteCommandConfig(
+		container.WithContainerID(resp2.ContainerID),
+		container.WithCommand([]string{"cat", "/data/" + volumeName + "/test_file.txt"}),
+	))
 	require.NoError(t, err)
 
-	assert.Equal(t, "Hello World", out)
-	assert.Equal(t, 0, exitCode)
+	assert.Equal(t, "Hello World", cmdResp2.Output)
+	assert.Equal(t, 0, cmdResp2.ExitCode)
 }
 
 func TestUseContainerBindsLocalPaths(t *testing.T) {
@@ -163,24 +182,32 @@ func TestUseContainerBindsLocalPaths(t *testing.T) {
 	require.NoError(t, err)
 	f.Close()
 
-	containerID, cleanup, err := dc.UseContainer("alpine:latest", []string{}, []string{localPath})
+	resp, err := dc.UseContainer(container.NewUseContainerConfig(
+		container.WithImageName("alpine:latest"),
+		container.WithHostPaths([]string{localPath}),
+	))
 	require.NoError(t, err)
-	defer cleanup()
+	defer resp.Cleanup()
 
-	out, exitCode, err := dc.ExecuteCommand(containerID, []string{"ls", "/data/" + filepath.Base(localPath)})
+	cmdResp, err := dc.ExecuteCommand(container.NewExecuteCommandConfig(
+		container.WithContainerID(resp.ContainerID),
+		container.WithCommand([]string{"ls", "/data/" + filepath.Base(localPath)}),
+	))
 	require.NoError(t, err)
 
-	assert.Equal(t, 0, exitCode)
-	assert.Contains(t, out, "hello.txt")
+	assert.Equal(t, 0, cmdResp.ExitCode)
+	assert.Contains(t, cmdResp.Output, "hello.txt")
 }
 
 func TestUseContainerCleanupRemovesContainer(t *testing.T) {
 	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
-	containerID, cleanup, err := dc.UseContainer("alpine:latest", []string{}, []string{})
+	resp, err := dc.UseContainer(container.NewUseContainerConfig(
+		container.WithImageName("alpine:latest"),
+	))
 	require.NoError(t, err)
-	cleanup()
+	resp.Cleanup()
 
 	containers, err := dc.cli.ContainerList(context.Background(), client.ContainerListOptions{All: true})
 	require.NoError(t, err)
@@ -189,47 +216,60 @@ func TestUseContainerCleanupRemovesContainer(t *testing.T) {
 	for i, c := range containers.Items {
 		containerIDs[i] = c.ID
 	}
-	assert.NotContains(t, containerIDs, containerID)
+	assert.NotContains(t, containerIDs, resp.ContainerID)
 }
 
 func TestExecuteCommand(t *testing.T) {
 	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
-	containerID, cleanup, err := dc.UseContainer("ubuntu:latest", []string{}, []string{})
+	resp, err := dc.UseContainer(container.NewUseContainerConfig(
+		container.WithImageName("ubuntu:latest"),
+	))
 	require.NoError(t, err)
-	defer cleanup()
+	defer resp.Cleanup()
 
-	out, exitCode, err := dc.ExecuteCommand(containerID, []string{"echo", "hello world"})
+	cmdResp, err := dc.ExecuteCommand(container.NewExecuteCommandConfig(
+		container.WithContainerID(resp.ContainerID),
+		container.WithCommand([]string{"echo", "hello world"}),
+	))
 	require.NoError(t, err)
 
-	assert.Equal(t, "hello world", out)
-	assert.Equal(t, 0, exitCode)
+	assert.Equal(t, "hello world", cmdResp.Output)
+	assert.Equal(t, 0, cmdResp.ExitCode)
 }
 
 func TestExecuteCommandExitCode1(t *testing.T) {
 	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
-	containerID, cleanup, err := dc.UseContainer("ubuntu:latest", []string{}, []string{})
+	resp, err := dc.UseContainer(container.NewUseContainerConfig(
+		container.WithImageName("ubuntu:latest"),
+	))
 	require.NoError(t, err)
-	defer cleanup()
+	defer resp.Cleanup()
 
-	out, exitCode, err := dc.ExecuteCommand(containerID, []string{"false"})
+	cmdResp, err := dc.ExecuteCommand(container.NewExecuteCommandConfig(
+		container.WithContainerID(resp.ContainerID),
+		container.WithCommand([]string{"false"}),
+	))
 	require.NoError(t, err)
 
-	assert.Equal(t, "", out)
-	assert.Equal(t, 1, exitCode)
+	assert.Equal(t, "", cmdResp.Output)
+	assert.Equal(t, 1, cmdResp.ExitCode)
 }
 
 func TestExecuteCommandInvalidContainerFails(t *testing.T) {
 	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
-	out, exitCode, err := dc.ExecuteCommand("invalid-container", []string{"echo", "test"})
+	cmdResp, err := dc.ExecuteCommand(container.NewExecuteCommandConfig(
+		container.WithContainerID("invalid-container"),
+		container.WithCommand([]string{"echo", "test"}),
+	))
 	require.Error(t, err)
-	assert.Empty(t, out)
-	assert.Equal(t, 0, exitCode)
+	assert.Empty(t, cmdResp.Output)
+	assert.Equal(t, 0, cmdResp.ExitCode)
 }
 
 func TestPullImage(t *testing.T) {
