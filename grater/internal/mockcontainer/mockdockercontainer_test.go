@@ -17,7 +17,7 @@ func TestMockCreateVolume(t *testing.T) {
 
 	called := false
 
-	m.CreateVolumeMock = func(ctx context.Context, cfg container.CreateVolumeConfig) (container.CreateVolumeResponse, error) {
+	m.CreateVolumeMock = func(_ context.Context, _ container.CreateVolumeConfig) (container.CreateVolumeResponse, error) {
 		called = true
 		return container.CreateVolumeResponse{}, nil
 	}
@@ -34,7 +34,7 @@ func TestMockUseContainer(t *testing.T) {
 
 	called := false
 
-	m.UseContainerMock = func(ctx context.Context, cfg container.UseContainerConfig) (container.UseContainerResponse, error) {
+	m.UseContainerMock = func(_ context.Context, _ container.UseContainerConfig) (container.UseContainerResponse, error) {
 		called = true
 		return container.UseContainerResponse{}, nil
 	}
@@ -53,7 +53,7 @@ func TestMockExecuteCommand(t *testing.T) {
 
 	called := false
 
-	m.ExecuteCommandMock = func(ctx context.Context, cfg container.ExecuteCommandConfig) (container.ExecuteCommandResponse, error) {
+	m.ExecuteCommandMock = func(_ context.Context, _ container.ExecuteCommandConfig) (container.ExecuteCommandResponse, error) {
 		called = true
 		return container.ExecuteCommandResponse{}, nil
 	}
