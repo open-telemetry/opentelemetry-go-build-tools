@@ -1,8 +1,8 @@
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/go-json-experiment/json v0.0.0-20260213210345-44df1a37e875 h1:XGPtjxqp0FS8jj1Z7QGcSOSgyq1fUPjNyJXvi3KfI4A=
-github.com/go-json-experiment/json v0.0.0-20260213210345-44df1a37e875/go.mod h1:uNVvRXArCGbZ508SxYYTC5v1JWoz2voff5pm25jU1Ok=
+github.com/go-json-experiment/json v0.0.0-20260430182902-b6187a392ed4 h1:2WmHkJINIjgXXYDGik8d3oJvFA3DAwPy00csDJ3vo+o=
+github.com/go-json-experiment/json v0.0.0-20260430182902-b6187a392ed4/go.mod h1:tphK2c80bpPhMOI4v6bIc2xWywPfbqi1Z06+RcrMkDg=
 github.com/goccy/go-json v0.10.6 h1:p8HrPJzOakx/mn/bQtjgNjdTcN+/S6FcG2CTtQOrHVU=
 github.com/goccy/go-json v0.10.6/go.mod h1:oq7eo15ShAhp70Anwd5lgX2pLfOS3QCiwU/PULtXL6M=
 github.com/goccy/go-yaml v1.19.2 h1:PmFC1S6h8ljIz6gMRBopkjP1TVT7xuwrButHID66PoM=
@@ -13,8 +13,8 @@ github.com/kaptinlin/jsonpointer v0.4.10 h1:DIpoLKB3Tr62REbLM6OL96RMa85Aft1qwF4l
 github.com/kaptinlin/jsonpointer v0.4.10/go.mod h1:9y0LgXavlmVE5FSHShY5LRlURJJVhbyVJSRWkilrTqA=
 github.com/kaptinlin/jsonschema v0.6.10 h1:CYded7nrwVu7pU1GaIjtd9dSzgqZjh7+LTKFaWqS08I=
 github.com/kaptinlin/jsonschema v0.6.10/go.mod h1:ZXZ4K5KrRmCCF1i6dgvBsQifl+WTb8XShKj0NpQNrz8=
-github.com/kaptinlin/messageformat-go v0.4.10 h1:ixW2Zf9XUi2lv8NZf+eHUJnWE+YO7K76pFbxuKeqwRs=
-github.com/kaptinlin/messageformat-go v0.4.10/go.mod h1:qZzrGrlvWDz2KyyvN3dOWcK9PVSRV1BnfnNU+zB/RWc=
+github.com/kaptinlin/messageformat-go v0.6.3 h1:m9ZE/fCjnsk8bdkv7Qs56L/ZoHbmQqhz9mRZSAQLU5g=
+github.com/kaptinlin/messageformat-go v0.6.3/go.mod h1:2KOZ/hgo/SveZ+uyi7vPUpUXieX65Mppzbc3VpGyqKs=
 github.com/kr/pretty v0.2.1/go.mod h1:ipq/a2n7PKx3OHsz4KJII5eveXtPO4qwEXGdVfWzfnI=
 github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=
 github.com/kr/pretty v0.3.1/go.mod h1:hoEshYVHaxMs3cyo3Yncou5ZscifuDolrwPKZanG3xk=
