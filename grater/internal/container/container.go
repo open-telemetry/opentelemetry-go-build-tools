@@ -4,16 +4,19 @@
 // Package container provides an interface for managing Docker containers and volumes.
 package container
 
+// ExecuteCommandResponse represents the response from executing a command in a container.
 type ExecuteCommandResponse struct {
 	Output   string
 	ExitCode int
 }
 
+// UseContainerResponse represents the response from using a container.
 type UseContainerResponse struct {
 	ContainerID string
 	Cleanup     func()
 }
 
+// CreateVolumeResponse represents the response from creating a volume.
 type CreateVolumeResponse struct {
 	Cleanup func()
 }
