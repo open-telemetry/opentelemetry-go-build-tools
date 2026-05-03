@@ -9,71 +9,166 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewExecuteCommandConfigAllOptions(t *testing.T) {
-	cfg := NewExecuteCommandConfig(
-		WithContainerID("test-container"),
-		WithCommand([]string{"echo", "hello"}),
-	)
-	assert.Equal(t, "test-container", cfg.containerID)
-	assert.Equal(t, []string{"echo", "hello"}, cfg.cmd)
+func TestNewExecuteCommandConfig(t *testing.T) {
+	tests := []struct {
+		options  []ExecuteCommandOption
+		expected ExecuteCommandConfig
+	}{
+		{
+			[]ExecuteCommandOption{},
+			ExecuteCommandConfig{
+				cmd: []string{},
+			},
+		},
+		{
+			[]ExecuteCommandOption{
+				WithContainerID("test-container"),
+			},
+			ExecuteCommandConfig{
+				containerID: "test-container",
+				cmd:         []string{},
+			},
+		},
+		{
+			[]ExecuteCommandOption{
+				WithContainerID("test-container"),
+				WithContainerID("test-container-2"),
+			},
+			ExecuteCommandConfig{
+				containerID: "test-container-2",
+				cmd:         []string{},
+			},
+		},
+		{
+			[]ExecuteCommandOption{
+				WithCommand([]string{"echo", "hello"}),
+			},
+			ExecuteCommandConfig{
+				cmd: []string{"echo", "hello"},
+			},
+		},
+		{
+			[]ExecuteCommandOption{
+				WithCommand([]string{"echo", "hello"}),
+				WithCommand([]string{"echo", "world"}),
+			},
+			ExecuteCommandConfig{
+				cmd: []string{"echo", "world"},
+			},
+		},
+		{
+			[]ExecuteCommandOption{
+				WithContainerID("test-container"),
+				WithCommand([]string{"echo", "hello"}),
+			},
+			ExecuteCommandConfig{
+				containerID: "test-container",
+				cmd:         []string{"echo", "hello"},
+			},
+		},
+	}
+	for _, test := range tests {
+		assert.Equal(t, test.expected, NewExecuteCommandConfig(test.options...))
+	}
 }
 
-func TestNewExecuteCommandConfigSomeOptions(t *testing.T) {
-	cfg := NewExecuteCommandConfig(
-		WithContainerID("test-container"),
-	)
-	assert.Equal(t, "test-container", cfg.containerID)
-	assert.Empty(t, cfg.cmd)
-
-	cfg = NewExecuteCommandConfig(
-		WithCommand([]string{"echo", "hello"}),
-	)
-	assert.Empty(t, cfg.containerID)
-	assert.Equal(t, []string{"echo", "hello"}, cfg.cmd)
+func TestNewCreateVolumeConfig(t *testing.T) {
+	tests := []struct {
+		options  []CreateVolumeOption
+		expected CreateVolumeConfig
+	}{
+		{
+			[]CreateVolumeOption{},
+			CreateVolumeConfig{},
+		},
+		{
+			[]CreateVolumeOption{
+				WithVolumeName("test-volume"),
+			},
+			CreateVolumeConfig{
+				volumeName: "test-volume",
+			},
+		},
+		{
+			[]CreateVolumeOption{
+				WithVolumeName("test-volume"),
+				WithVolumeName("test-volume-2"),
+			},
+			CreateVolumeConfig{
+				volumeName: "test-volume-2",
+			},
+		},
+	}
+	for _, test := range tests {
+		assert.Equal(t, test.expected, NewCreateVolumeConfig(test.options...))
+	}
 }
 
-func TestNewExecuteCommandConfigNoOptions(t *testing.T) {
-	cfg := NewExecuteCommandConfig()
-	assert.Empty(t, cfg.containerID)
-	assert.Empty(t, cfg.cmd)
-}
-
-func TestNewCreateVolumeConfigAllOptions(t *testing.T) {
-	cfg := NewCreateVolumeConfig(
-		WithVolumeName("test-volume"),
-	)
-	assert.Equal(t, "test-volume", cfg.volumeName)
-}
-
-func TestNewCreateVolumeConfigNoOptions(t *testing.T) {
-	cfg := NewCreateVolumeConfig()
-	assert.Empty(t, cfg.volumeName)
-}
-
-func TestNewUseContainerConfigAllOptions(t *testing.T) {
-	cfg := NewUseContainerConfig(
-		WithImageName("test-image"),
-		WithBinds([]string{"test-bind"}),
-		WithHostPaths([]string{"test-host-path"}),
-	)
-	assert.Equal(t, "test-image", cfg.imageName)
-	assert.Equal(t, []string{"test-bind"}, cfg.binds)
-	assert.Equal(t, []string{"test-host-path"}, cfg.hostPaths)
-}
-
-func TestNewUseContainerConfigSomeOptions(t *testing.T) {
-	cfg := NewUseContainerConfig(
-		WithImageName("test-image"),
-		WithBinds([]string{"test-bind"}),
-	)
-	assert.Equal(t, "test-image", cfg.imageName)
-	assert.Equal(t, []string{"test-bind"}, cfg.binds)
-	assert.Empty(t, cfg.hostPaths)
-}
-
-func TestNewUseContainerConfigNoOptions(t *testing.T) {
-	cfg := NewUseContainerConfig()
-	assert.Empty(t, cfg.imageName)
-	assert.Empty(t, cfg.binds)
-	assert.Empty(t, cfg.hostPaths)
+func TestNewUseContainerConfig(t *testing.T) {
+	tests := []struct {
+		options  []UseContainerOption
+		expected UseContainerConfig
+	}{
+		{
+			[]UseContainerOption{},
+			UseContainerConfig{
+				binds:     []string{},
+				hostPaths: []string{},
+			},
+		},
+		{
+			[]UseContainerOption{
+				WithImageName("test-image"),
+			},
+			UseContainerConfig{
+				imageName: "test-image",
+				binds:     []string{},
+				hostPaths: []string{},
+			},
+		},
+		{
+			[]UseContainerOption{
+				WithImageName("test-image"),
+				WithImageName("test-image-2"),
+			},
+			UseContainerConfig{
+				imageName: "test-image-2",
+				binds:     []string{},
+				hostPaths: []string{},
+			},
+		},
+		{
+			[]UseContainerOption{
+				WithBinds([]string{"test-bind"}),
+			},
+			UseContainerConfig{
+				binds:     []string{"test-bind"},
+				hostPaths: []string{},
+			},
+		},
+		{
+			[]UseContainerOption{
+				WithHostPaths([]string{"test-host-path"}),
+			},
+			UseContainerConfig{
+				binds:     []string{},
+				hostPaths: []string{"test-host-path"},
+			},
+		},
+		{
+			[]UseContainerOption{
+				WithImageName("test-image"),
+				WithBinds([]string{"test-bind"}),
+				WithHostPaths([]string{"test-host-path"}),
+			},
+			UseContainerConfig{
+				imageName: "test-image",
+				binds:     []string{"test-bind"},
+				hostPaths: []string{"test-host-path"},
+			},
+		},
+	}
+	for _, test := range tests {
+		assert.Equal(t, test.expected, NewUseContainerConfig(test.options...))
+	}
 }
