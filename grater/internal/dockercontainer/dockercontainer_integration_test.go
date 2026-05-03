@@ -24,7 +24,7 @@ func TestCreateVolume(t *testing.T) {
 
 	volumeNames := []string{"test-volume-grater-1", "test-volume-grater-2"}
 	for _, volumeName := range volumeNames {
-		resp, createErr := dc.CreateVolume(container.NewCreateVolumeConfig(
+		resp, createErr := dc.CreateVolume(context.Background(), container.NewCreateVolumeConfig(
 			container.WithVolumeName(volumeName),
 		))
 		require.NoError(t, createErr)
@@ -47,7 +47,7 @@ func TestCreateVolumeCleanupRemovesVolume(t *testing.T) {
 	require.NoError(t, err)
 
 	volumeName := "test-volume-grater"
-	resp, err := dc.CreateVolume(container.NewCreateVolumeConfig(
+	resp, err := dc.CreateVolume(context.Background(), container.NewCreateVolumeConfig(
 		container.WithVolumeName(volumeName),
 	))
 	require.NoError(t, err)
@@ -69,7 +69,7 @@ func TestUseContainer(t *testing.T) {
 	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
-	resp, err := dc.UseContainer(container.NewUseContainerConfig(
+	resp, err := dc.UseContainer(context.Background(), container.NewUseContainerConfig(
 		container.WithImageName("alpine:latest"),
 	))
 	require.NoError(t, err)
@@ -92,27 +92,30 @@ func TestUseContainerBindsVolumes(t *testing.T) {
 
 	volumeNames := []string{"test-volume-grater-1", "test-volume-grater-2"}
 	for _, volumeName := range volumeNames {
-		volResp, createErr := dc.CreateVolume(container.NewCreateVolumeConfig(
+		volResp, createErr := dc.CreateVolume(context.Background(), container.NewCreateVolumeConfig(
 			container.WithVolumeName(volumeName),
 		))
 		require.NoError(t, createErr)
 		t.Cleanup(volResp.Cleanup)
 	}
 
-	resp, err := dc.UseContainer(container.NewUseContainerConfig(
+	resp, err := dc.UseContainer(context.Background(), container.NewUseContainerConfig(
 		container.WithImageName("alpine:latest"),
-		container.WithBinds(volumeNames),
+		container.WithBindMounts(map[string]string{
+			volumeNames[0]: "/data/" + volumeNames[0],
+			volumeNames[1]: "/data/" + volumeNames[1],
+		}),
 	))
 	require.NoError(t, err)
 	defer resp.Cleanup()
+
+	inspect, err := dc.cli.ContainerInspect(context.Background(), resp.ContainerID, client.ContainerInspectOptions{})
+	require.NoError(t, err)
 
 	expectedBinds := map[string]string{
 		volumeNames[0]: "/data/" + volumeNames[0],
 		volumeNames[1]: "/data/" + volumeNames[1],
 	}
-
-	inspect, err := dc.cli.ContainerInspect(context.Background(), resp.ContainerID, client.ContainerInspectOptions{})
-	require.NoError(t, err)
 
 	binds := make(map[string]bool)
 	for _, mount := range inspect.Container.Mounts {
@@ -131,45 +134,47 @@ func TestUseContainerReadsAndWritesToVolume(t *testing.T) {
 	require.NoError(t, err)
 
 	volumeName := "test-volume-grater"
-	volResp, err := dc.CreateVolume(container.NewCreateVolumeConfig(
+	volResp, err := dc.CreateVolume(context.Background(), container.NewCreateVolumeConfig(
 		container.WithVolumeName(volumeName),
 	))
 	require.NoError(t, err)
 	defer volResp.Cleanup()
 
-	resp, err := dc.UseContainer(container.NewUseContainerConfig(
+	resp, err := dc.UseContainer(context.Background(), container.NewUseContainerConfig(
 		container.WithImageName("alpine:latest"),
-		container.WithBinds([]string{volumeName}),
+		container.WithBindMounts(map[string]string{
+			volumeName: "/data/" + volumeName,
+		}),
 	))
 	require.NoError(t, err)
 	defer resp.Cleanup()
 
-	_, err = dc.ExecuteCommand(
-		container.NewExecuteCommandConfig(
-			container.WithContainerID(resp.ContainerID),
-			container.WithCommand([]string{"sh", "-c", "echo 'Hello World' > /data/" + volumeName + "/test_file.txt"}),
-		),
-	)
+	_, err = dc.ExecuteCommand(context.Background(), container.NewExecuteCommandConfig(
+		container.WithContainerID(resp.ContainerID),
+		container.WithCommand([]string{"sh", "-c", "echo 'Hello World' > /data/" + volumeName + "/test_file.txt"}),
+	))
 	require.NoError(t, err)
 
-	resp2, err := dc.UseContainer(container.NewUseContainerConfig(
+	resp2, err := dc.UseContainer(context.Background(), container.NewUseContainerConfig(
 		container.WithImageName("alpine:latest"),
-		container.WithBinds([]string{volumeName}),
+		container.WithBindMounts(map[string]string{
+			volumeName: "/data/" + volumeName,
+		}),
 	))
 	require.NoError(t, err)
 	defer resp2.Cleanup()
 
-	cmdResp2, err := dc.ExecuteCommand(container.NewExecuteCommandConfig(
+	cmdResp, err := dc.ExecuteCommand(context.Background(), container.NewExecuteCommandConfig(
 		container.WithContainerID(resp2.ContainerID),
 		container.WithCommand([]string{"cat", "/data/" + volumeName + "/test_file.txt"}),
 	))
 	require.NoError(t, err)
 
-	assert.Equal(t, "Hello World", cmdResp2.Output)
-	assert.Equal(t, 0, cmdResp2.ExitCode)
+	assert.Equal(t, "Hello World", cmdResp.Output)
+	assert.Equal(t, 0, cmdResp.ExitCode)
 }
 
-func TestUseContainerBindsLocalPaths(t *testing.T) {
+func TestUseContainerCopiesLocalPaths(t *testing.T) {
 	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
@@ -182,14 +187,16 @@ func TestUseContainerBindsLocalPaths(t *testing.T) {
 	require.NoError(t, err)
 	f.Close()
 
-	resp, err := dc.UseContainer(container.NewUseContainerConfig(
+	resp, err := dc.UseContainer(context.Background(), container.NewUseContainerConfig(
 		container.WithImageName("alpine:latest"),
-		container.WithHostPaths([]string{localPath}),
+		container.WithHostToContainerPaths(map[string]string{
+			localPath: "/data/" + filepath.Base(localPath),
+		}),
 	))
 	require.NoError(t, err)
 	defer resp.Cleanup()
 
-	cmdResp, err := dc.ExecuteCommand(container.NewExecuteCommandConfig(
+	cmdResp, err := dc.ExecuteCommand(context.Background(), container.NewExecuteCommandConfig(
 		container.WithContainerID(resp.ContainerID),
 		container.WithCommand([]string{"ls", "/data/" + filepath.Base(localPath)}),
 	))
@@ -203,7 +210,7 @@ func TestUseContainerCleanupRemovesContainer(t *testing.T) {
 	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
-	resp, err := dc.UseContainer(container.NewUseContainerConfig(
+	resp, err := dc.UseContainer(context.Background(), container.NewUseContainerConfig(
 		container.WithImageName("alpine:latest"),
 	))
 	require.NoError(t, err)
@@ -223,13 +230,13 @@ func TestExecuteCommand(t *testing.T) {
 	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
-	resp, err := dc.UseContainer(container.NewUseContainerConfig(
+	resp, err := dc.UseContainer(context.Background(), container.NewUseContainerConfig(
 		container.WithImageName("ubuntu:latest"),
 	))
 	require.NoError(t, err)
 	defer resp.Cleanup()
 
-	cmdResp, err := dc.ExecuteCommand(container.NewExecuteCommandConfig(
+	cmdResp, err := dc.ExecuteCommand(context.Background(), container.NewExecuteCommandConfig(
 		container.WithContainerID(resp.ContainerID),
 		container.WithCommand([]string{"echo", "hello world"}),
 	))
@@ -243,13 +250,13 @@ func TestExecuteCommandExitCode1(t *testing.T) {
 	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
-	resp, err := dc.UseContainer(container.NewUseContainerConfig(
+	resp, err := dc.UseContainer(context.Background(), container.NewUseContainerConfig(
 		container.WithImageName("ubuntu:latest"),
 	))
 	require.NoError(t, err)
 	defer resp.Cleanup()
 
-	cmdResp, err := dc.ExecuteCommand(container.NewExecuteCommandConfig(
+	cmdResp, err := dc.ExecuteCommand(context.Background(), container.NewExecuteCommandConfig(
 		container.WithContainerID(resp.ContainerID),
 		container.WithCommand([]string{"false"}),
 	))
@@ -263,7 +270,7 @@ func TestExecuteCommandInvalidContainerFails(t *testing.T) {
 	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
-	cmdResp, err := dc.ExecuteCommand(container.NewExecuteCommandConfig(
+	cmdResp, err := dc.ExecuteCommand(context.Background(), container.NewExecuteCommandConfig(
 		container.WithContainerID("invalid-container"),
 		container.WithCommand([]string{"echo", "test"}),
 	))
@@ -276,10 +283,10 @@ func TestPullImage(t *testing.T) {
 	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
-	err = dc.pullImage("ubuntu:latest")
+	err = dc.pullImage(context.Background(), "ubuntu:latest")
 	require.NoError(t, err)
 
-	_, err = dc.cli.ImageInspect(dc.ctx, "ubuntu:latest")
+	_, err = dc.cli.ImageInspect(context.Background(), "ubuntu:latest")
 	require.NoError(t, err)
 }
 
@@ -287,6 +294,6 @@ func TestPullImageFails(t *testing.T) {
 	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
-	err = dc.pullImage("invalid-image-name")
+	err = dc.pullImage(context.Background(), "invalid-image-name")
 	require.Error(t, err)
 }

@@ -71,9 +71,9 @@ func (fn createVolumeOptionFunc) apply(cfg CreateVolumeConfig) CreateVolumeConfi
 
 // UseContainerConfig is a group of options for using a container.
 type UseContainerConfig struct {
-	imageName              string
-	binds                  []string
-	hostPaths              []string
+	imageName            string
+	bindMounts           map[string]string
+	hostToContainerPaths map[string]string
 }
 
 // ImageName returns the image name.
@@ -81,22 +81,22 @@ func (cfg *UseContainerConfig) ImageName() string {
 	return cfg.imageName
 }
 
-// Binds returns the binds.
-func (cfg *UseContainerConfig) Binds() []string {
-	return cfg.binds
+// BindMounts returns the bind mounts.
+func (cfg *UseContainerConfig) BindMounts() map[string]string {
+	return cfg.bindMounts
 }
 
-// HostPaths returns the host paths.
-func (cfg *UseContainerConfig) HostPaths() []string {
-	return cfg.hostPaths
+// HostToContainerPaths returns the host to container paths.
+func (cfg *UseContainerConfig) HostToContainerPaths() map[string]string {
+	return cfg.hostToContainerPaths
 }
 
 // NewUseContainerConfig applies all the options to a returned UseContainerConfig.
 func NewUseContainerConfig(options ...UseContainerOption) UseContainerConfig {
 	config := UseContainerConfig{
-		imageName:  "",
-		binds:      []string{},
-		hostPaths:  []string{},
+		imageName:            "",
+		bindMounts:           map[string]string{},
+		hostToContainerPaths: map[string]string{},
 	}
 	for _, option := range options {
 		config = option.apply(config)
@@ -147,18 +147,18 @@ func WithImageName(name string) UseContainerOption {
 	})
 }
 
-// WithBinds sets the binds.
-func WithBinds(binds []string) UseContainerOption {
+// WithBindMounts sets the source to container path mappings.
+func WithBindMounts(bindMounts map[string]string) UseContainerOption {
 	return useContainerOptionFunc(func(cfg UseContainerConfig) UseContainerConfig {
-		cfg.binds = binds
+		cfg.bindMounts = bindMounts
 		return cfg
 	})
 }
 
-// WithHostPaths sets the host paths.
-func WithHostPaths(hostPaths []string) UseContainerOption {
+// WithHostToContainerPaths sets the host to container paths.
+func WithHostToContainerPaths(hostToContainerPaths map[string]string) UseContainerOption {
 	return useContainerOptionFunc(func(cfg UseContainerConfig) UseContainerConfig {
-		cfg.hostPaths = hostPaths
+		cfg.hostToContainerPaths = hostToContainerPaths
 		return cfg
 	})
 }

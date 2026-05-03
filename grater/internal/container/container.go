@@ -4,6 +4,10 @@
 // Package container provides an interface for managing Docker containers and volumes.
 package container
 
+import (
+	"context"
+)
+
 // ExecuteCommandResponse represents the response from executing a command in a container.
 type ExecuteCommandResponse struct {
 	Output   string
@@ -46,7 +50,7 @@ func NewCreateVolumeResponse(cleanup func()) CreateVolumeResponse {
 
 // Container defines the interface for managing Docker containers and volumes.
 type Container interface {
-	CreateVolume(cfg CreateVolumeConfig) (CreateVolumeResponse, error)
-	UseContainer(cfg UseContainerConfig) (UseContainerResponse, error)
-	ExecuteCommand(cfg ExecuteCommandConfig) (ExecuteCommandResponse, error)
+	CreateVolume(ctx context.Context, cfg CreateVolumeConfig) (CreateVolumeResponse, error)
+	UseContainer(ctx context.Context, cfg UseContainerConfig) (UseContainerResponse, error)
+	ExecuteCommand(ctx context.Context, cfg ExecuteCommandConfig) (ExecuteCommandResponse, error)
 }

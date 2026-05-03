@@ -112,8 +112,8 @@ func TestNewUseContainerConfig(t *testing.T) {
 		{
 			[]UseContainerOption{},
 			UseContainerConfig{
-				binds:     []string{},
-				hostPaths: []string{},
+				bindMounts:           map[string]string{},
+				hostToContainerPaths: map[string]string{},
 			},
 		},
 		{
@@ -121,9 +121,9 @@ func TestNewUseContainerConfig(t *testing.T) {
 				WithImageName("test-image"),
 			},
 			UseContainerConfig{
-				imageName: "test-image",
-				binds:     []string{},
-				hostPaths: []string{},
+				imageName:            "test-image",
+				bindMounts:           map[string]string{},
+				hostToContainerPaths: map[string]string{},
 			},
 		},
 		{
@@ -132,39 +132,39 @@ func TestNewUseContainerConfig(t *testing.T) {
 				WithImageName("test-image-2"),
 			},
 			UseContainerConfig{
-				imageName: "test-image-2",
-				binds:     []string{},
-				hostPaths: []string{},
+				imageName:            "test-image-2",
+				bindMounts:           map[string]string{},
+				hostToContainerPaths: map[string]string{},
 			},
 		},
 		{
 			[]UseContainerOption{
-				WithBinds([]string{"test-bind"}),
+				WithBindMounts(map[string]string{"test-src": "/data/test-src"}),
 			},
 			UseContainerConfig{
-				binds:     []string{"test-bind"},
-				hostPaths: []string{},
+				bindMounts:           map[string]string{"test-src": "/data/test-src"},
+				hostToContainerPaths: map[string]string{},
 			},
 		},
 		{
 			[]UseContainerOption{
-				WithHostPaths([]string{"test-host-path"}),
+				WithHostToContainerPaths(map[string]string{"./testdata": "/data/testdata"}),
 			},
 			UseContainerConfig{
-				binds:     []string{},
-				hostPaths: []string{"test-host-path"},
+				bindMounts:           map[string]string{},
+				hostToContainerPaths: map[string]string{"./testdata": "/data/testdata"},
 			},
 		},
 		{
 			[]UseContainerOption{
 				WithImageName("test-image"),
-				WithBinds([]string{"test-bind"}),
-				WithHostPaths([]string{"test-host-path"}),
+				WithBindMounts(map[string]string{"test-src": "/data/test-src"}),
+				WithHostToContainerPaths(map[string]string{"./testdata": "/data/testdata"}),
 			},
 			UseContainerConfig{
-				imageName: "test-image",
-				binds:     []string{"test-bind"},
-				hostPaths: []string{"test-host-path"},
+				imageName:            "test-image",
+				bindMounts:           map[string]string{"test-src": "/data/test-src"},
+				hostToContainerPaths: map[string]string{"./testdata": "/data/testdata"},
 			},
 		},
 	}

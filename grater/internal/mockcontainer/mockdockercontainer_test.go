@@ -4,6 +4,7 @@
 package mockcontainer
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,12 +16,12 @@ func TestMockCreateVolume(t *testing.T) {
 
 	called := false
 
-	m.CreateVolumeMock = func(container.CreateVolumeConfig) (container.CreateVolumeResponse, error) {
+	m.CreateVolumeMock = func(ctx context.Context, cfg container.CreateVolumeConfig) (container.CreateVolumeResponse, error) {
 		called = true
 		return container.CreateVolumeResponse{}, nil
 	}
 
-	_, err := m.CreateVolume(container.NewCreateVolumeConfig(
+	_, err := m.CreateVolume(context.Background(), container.NewCreateVolumeConfig(
 		container.WithVolumeName("test-volume"),
 	))
 	assert.NoError(t, err)
@@ -32,15 +33,15 @@ func TestMockUseContainer(t *testing.T) {
 
 	called := false
 
-	m.UseContainerMock = func(container.UseContainerConfig) (container.UseContainerResponse, error) {
+	m.UseContainerMock = func(ctx context.Context, cfg container.UseContainerConfig) (container.UseContainerResponse, error) {
 		called = true
 		return container.UseContainerResponse{}, nil
 	}
 
-	_, err := m.UseContainer(container.NewUseContainerConfig(
+	_, err := m.UseContainer(context.Background(), container.NewUseContainerConfig(
 		container.WithImageName("test-image"),
-		container.WithBinds([]string{"test-volume"}),
-		container.WithHostPaths([]string{"./testdata"}),
+		container.WithBindMounts(map[string]string{"test-volume": "/data/test-volume"}),
+		container.WithHostToContainerPaths(map[string]string{"./testdata": "/data/testdata"}),
 	))
 	assert.NoError(t, err)
 	assert.True(t, called)
@@ -51,12 +52,12 @@ func TestMockExecuteCommand(t *testing.T) {
 
 	called := false
 
-	m.ExecuteCommandMock = func(container.ExecuteCommandConfig) (container.ExecuteCommandResponse, error) {
+	m.ExecuteCommandMock = func(ctx context.Context, cfg container.ExecuteCommandConfig) (container.ExecuteCommandResponse, error) {
 		called = true
 		return container.ExecuteCommandResponse{}, nil
 	}
 
-	_, err := m.ExecuteCommand(container.NewExecuteCommandConfig(
+	_, err := m.ExecuteCommand(context.Background(), container.NewExecuteCommandConfig(
 		container.WithContainerID("container-id"),
 		container.WithCommand([]string{"ls", "-la"}),
 	))

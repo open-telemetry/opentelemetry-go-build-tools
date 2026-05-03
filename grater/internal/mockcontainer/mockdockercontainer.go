@@ -4,13 +4,17 @@
 // Package mockcontainer provides a mock implementation of the Container interface.
 package mockcontainer
 
-import "go.opentelemetry.io/build-tools/grater/internal/container"
+import (
+	"context"
+
+	"go.opentelemetry.io/build-tools/grater/internal/container"
+)
 
 // MockDockerContainer is a mock implementation of the Container interface.
 type MockDockerContainer struct {
-	CreateVolumeMock   func(container.CreateVolumeConfig) (container.CreateVolumeResponse, error)
-	UseContainerMock   func(container.UseContainerConfig) (container.UseContainerResponse, error)
-	ExecuteCommandMock func(container.ExecuteCommandConfig) (container.ExecuteCommandResponse, error)
+	CreateVolumeMock   func(context.Context, container.CreateVolumeConfig) (container.CreateVolumeResponse, error)
+	UseContainerMock   func(context.Context, container.UseContainerConfig) (container.UseContainerResponse, error)
+	ExecuteCommandMock func(context.Context, container.ExecuteCommandConfig) (container.ExecuteCommandResponse, error)
 }
 
 var _ container.Container = (*MockDockerContainer)(nil)
@@ -21,25 +25,25 @@ func NewMockDockerContainer() *MockDockerContainer {
 }
 
 // CreateVolume creates a mock instance of Volume.
-func (m *MockDockerContainer) CreateVolume(cfg container.CreateVolumeConfig) (container.CreateVolumeResponse, error) {
+func (m *MockDockerContainer) CreateVolume(ctx context.Context, cfg container.CreateVolumeConfig) (container.CreateVolumeResponse, error) {
 	if m.CreateVolumeMock != nil {
-		return m.CreateVolumeMock(cfg)
+		return m.CreateVolumeMock(ctx, cfg)
 	}
 	return container.CreateVolumeResponse{}, nil
 }
 
 // UseContainer creates a mock instance of Container.
-func (m *MockDockerContainer) UseContainer(cfg container.UseContainerConfig) (container.UseContainerResponse, error) {
+func (m *MockDockerContainer) UseContainer(ctx context.Context, cfg container.UseContainerConfig) (container.UseContainerResponse, error) {
 	if m.UseContainerMock != nil {
-		return m.UseContainerMock(cfg)
+		return m.UseContainerMock(ctx, cfg)
 	}
 	return container.UseContainerResponse{}, nil
 }
 
 // ExecuteCommand creates a mock instance of executing a command.
-func (m *MockDockerContainer) ExecuteCommand(cfg container.ExecuteCommandConfig) (container.ExecuteCommandResponse, error) {
+func (m *MockDockerContainer) ExecuteCommand(ctx context.Context, cfg container.ExecuteCommandConfig) (container.ExecuteCommandResponse, error) {
 	if m.ExecuteCommandMock != nil {
-		return m.ExecuteCommandMock(cfg)
+		return m.ExecuteCommandMock(ctx, cfg)
 	}
 	return container.ExecuteCommandResponse{}, nil
 }
