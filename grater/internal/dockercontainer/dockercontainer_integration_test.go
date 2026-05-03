@@ -174,7 +174,35 @@ func TestUseContainerReadsAndWritesToVolume(t *testing.T) {
 	assert.Equal(t, 0, cmdResp.ExitCode)
 }
 
-func TestUseContainerCopiesLocalPaths(t *testing.T) {
+func TestUseContainerBindsHostPaths(t *testing.T) {
+	dc, err := NewDockerContainer()
+	require.NoError(t, err)
+
+	testDir := t.TempDir()
+	f, err := os.Create(filepath.Join(testDir, "hello.txt"))
+	require.NoError(t, err)
+	f.Close()
+
+	resp, err := dc.UseContainer(context.Background(), container.NewUseContainerConfig(
+		container.WithImageName("alpine:latest"),
+		container.WithHostToContainerPaths(map[string]string{
+			testDir: "/data/" + filepath.Base(testDir),
+		}),
+	))
+	require.NoError(t, err)
+	defer resp.Cleanup()
+
+	cmdResp, err := dc.ExecuteCommand(context.Background(), container.NewExecuteCommandConfig(
+		container.WithContainerID(resp.ContainerID),
+		container.WithCommand([]string{"ls", "/data/" + filepath.Base(testDir)}),
+	))
+	require.NoError(t, err)
+
+	assert.Equal(t, 0, cmdResp.ExitCode)
+	assert.Contains(t, cmdResp.Output, "hello.txt")
+}
+
+func TestUseContainerCopiesHostPathsDirToContainer(t *testing.T) {
 	dc, err := NewDockerContainer()
 	require.NoError(t, err)
 
