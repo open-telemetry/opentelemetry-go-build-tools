@@ -16,9 +16,7 @@ func TestNewExecuteCommandConfig(t *testing.T) {
 	}{
 		{
 			[]ExecuteCommandOption{},
-			ExecuteCommandConfig{
-				cmd: []string{},
-			},
+			ExecuteCommandConfig{},
 		},
 		{
 			[]ExecuteCommandOption{
@@ -26,7 +24,6 @@ func TestNewExecuteCommandConfig(t *testing.T) {
 			},
 			ExecuteCommandConfig{
 				containerID: "test-container",
-				cmd:         []string{},
 			},
 		},
 		{
@@ -36,7 +33,6 @@ func TestNewExecuteCommandConfig(t *testing.T) {
 			},
 			ExecuteCommandConfig{
 				containerID: "test-container-2",
-				cmd:         []string{},
 			},
 		},
 		{
@@ -111,19 +107,14 @@ func TestNewUseContainerConfig(t *testing.T) {
 	}{
 		{
 			[]UseContainerOption{},
-			UseContainerConfig{
-				bindMounts:           map[string]string{},
-				hostToContainerPaths: map[string]string{},
-			},
+			UseContainerConfig{},
 		},
 		{
 			[]UseContainerOption{
 				WithImageName("test-image"),
 			},
 			UseContainerConfig{
-				imageName:            "test-image",
-				bindMounts:           map[string]string{},
-				hostToContainerPaths: map[string]string{},
+				imageName: "test-image",
 			},
 		},
 		{
@@ -132,9 +123,7 @@ func TestNewUseContainerConfig(t *testing.T) {
 				WithImageName("test-image-2"),
 			},
 			UseContainerConfig{
-				imageName:            "test-image-2",
-				bindMounts:           map[string]string{},
-				hostToContainerPaths: map[string]string{},
+				imageName: "test-image-2",
 			},
 		},
 		{
@@ -142,8 +131,7 @@ func TestNewUseContainerConfig(t *testing.T) {
 				WithBindMounts(map[string]string{"test-src": "/data/test-src"}),
 			},
 			UseContainerConfig{
-				bindMounts:           map[string]string{"test-src": "/data/test-src"},
-				hostToContainerPaths: map[string]string{},
+				bindMounts: map[string]string{"test-src": "/data/test-src"},
 			},
 		},
 		{
@@ -151,7 +139,6 @@ func TestNewUseContainerConfig(t *testing.T) {
 				WithHostToContainerPaths(map[string]string{"./testdata": "/data/testdata"}),
 			},
 			UseContainerConfig{
-				bindMounts:           map[string]string{},
 				hostToContainerPaths: map[string]string{"./testdata": "/data/testdata"},
 			},
 		},

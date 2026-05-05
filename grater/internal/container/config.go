@@ -21,7 +21,7 @@ func (cfg *ExecuteCommandConfig) Cmd() []string {
 
 // NewExecuteCommandConfig applies all the options to a returned ExecuteCommandConfig.
 func NewExecuteCommandConfig(options ...ExecuteCommandOption) ExecuteCommandConfig {
-	config := ExecuteCommandConfig{containerID: "", cmd: []string{}}
+	var config ExecuteCommandConfig
 	for _, option := range options {
 		config = option.apply(config)
 	}
@@ -51,7 +51,7 @@ func (cfg *CreateVolumeConfig) VolumeName() string {
 
 // NewCreateVolumeConfig applies all the options to a returned CreateVolumeConfig.
 func NewCreateVolumeConfig(options ...CreateVolumeOption) CreateVolumeConfig {
-	config := CreateVolumeConfig{volumeName: ""}
+	var config CreateVolumeConfig
 	for _, option := range options {
 		config = option.apply(config)
 	}
@@ -93,11 +93,7 @@ func (cfg *UseContainerConfig) HostToContainerPaths() map[string]string {
 
 // NewUseContainerConfig applies all the options to a returned UseContainerConfig.
 func NewUseContainerConfig(options ...UseContainerOption) UseContainerConfig {
-	config := UseContainerConfig{
-		imageName:            "",
-		bindMounts:           map[string]string{},
-		hostToContainerPaths: map[string]string{},
-	}
+	var config UseContainerConfig
 	for _, option := range options {
 		config = option.apply(config)
 	}
