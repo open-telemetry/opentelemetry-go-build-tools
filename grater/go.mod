@@ -3,14 +3,14 @@ module go.opentelemetry.io/build-tools/grater
 go 1.25.0
 
 require (
+	github.com/moby/go-archive v0.2.0
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
 )
 
 require (
 	github.com/containerd/log v0.1.0 // indirect
-	github.com/klauspost/compress v1.18.2 // indirect
-	github.com/moby/go-archive v0.2.0 // indirect
+	github.com/klauspost/compress v1.18.6 // indirect
 	github.com/moby/patternmatcher v0.6.0 // indirect
 	github.com/moby/sys/sequential v0.6.0 // indirect
 	github.com/moby/sys/user v0.4.0 // indirect
