@@ -9,16 +9,16 @@ import (
 
 // RunTestsConfig holds the configuration for running tests.
 type RunTestsConfig struct {
-	module  module.Module
+	mainModule  module.Module
 	baseRef  string
 	headRef  string
 	dependents []module.Module
 	injections []module.Module
 }
 
-// Module returns the module for the run tests configuration.
-func (cfg *RunTestsConfig) Module() module.Module {
-	return cfg.module
+// MainModule returns the main module for the run tests configuration.
+func (cfg *RunTestsConfig) MainModule() module.Module {
+	return cfg.mainModule
 }
 
 // BaseRef returns the base reference for the run tests configuration.
@@ -42,7 +42,7 @@ func (cfg *RunTestsConfig) Injections() []module.Module {
 }
 
 // NewRunTestsConfig applies all the options to a returned RunTestsConfig.
-func NewRunTestsConfig(options ...RunTestsOption) *RunTestsConfig {
+func NewRunTestsConfig(options ...RunTestsOption) RunTestsConfig {
 	var config RunTestsConfig
 	for _, option := range options {
 		config = option.apply(config)
@@ -61,10 +61,10 @@ func (fn RunTestsOptionFunc) apply(cfg RunTestsConfig) RunTestsConfig {
 	return fn(cfg)
 }
 
-// WithModule sets the module.
-func WithModule(module module.Module) RunTestsOption {
+// WithMainModule sets the main module.
+func WithMainModule(mainModule module.Module) RunTestsOption {
 	return RunTestsOptionFunc(func(cfg RunTestsConfig) RunTestsConfig {
-		cfg.module = module
+		cfg.mainModule = mainModule
 		return cfg
 	})
 }
