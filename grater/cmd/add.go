@@ -19,8 +19,8 @@ func addCmd() *cobra.Command {
 		Short: "Adds one or more dependents to be tested.",
 		Long:  "Adds one or more dependents to be tested. The dependents local or remote path can be specified as command line arguments or in a .txt file, or both.",
 		Example: `
-grater add github.com/foo/bar/v bar/foo/v --file dependents.txt
-grater add github.com/foo/bar/v
+grater add github.com/foo/bar/v bar/foo/v@v1.0.0 --file dependents.txt
+grater add github.com/foo/bar/v@v1.0.2
 grater add --file dependents.txt
 grater add -f dependents.txt
 `,

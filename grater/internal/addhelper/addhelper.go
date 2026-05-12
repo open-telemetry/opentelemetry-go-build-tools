@@ -17,8 +17,13 @@ import (
 // Add adds dependents to the workspace.
 func Add(ws *workspace.Workspace, data []string) error {
 	var dependents []module.Module
-	for _, modulePath := range data {
-		dependents = append(dependents, *module.NewModule(modulePath))
+	for _, moduleData := range data {
+		modulePath, moduleVersion, found := strings.Cut(moduleData, "@")
+		if found {
+			dependents = append(dependents, *module.NewModule(modulePath, moduleVersion))
+		} else {
+			dependents = append(dependents, *module.NewModule(moduleData, ""))
+		}
 	}
 	ws.AddDependents(dependents)
 	return ws.WriteDependents()
@@ -36,8 +41,13 @@ func AddFromFile(ws *workspace.Workspace, path string) error {
 	// TODO: Handle other file formats like json, csv using a switch case.
 
 	var dependents []module.Module
-	for _, modulePath := range strings.Fields(string(data)) {
-		dependents = append(dependents, *module.NewModule(modulePath))
+	for _, moduleData := range strings.Fields(string(data)) {
+		modulePath, moduleVersion, found := strings.Cut(moduleData, "@")
+		if found {
+			dependents = append(dependents, *module.NewModule(modulePath, moduleVersion))
+		} else {
+			dependents = append(dependents, *module.NewModule(moduleData, ""))
+		}
 	}
 
 	ws.AddDependents(dependents)
