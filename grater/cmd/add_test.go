@@ -19,8 +19,8 @@ Usage:
 
 Examples:
 
-grater add github.com/foo/bar/v bar/foo/v --file dependents.txt
-grater add github.com/foo/bar/v
+grater add github.com/foo/bar/v bar/foo/v@v1.0.0 --file dependents.txt
+grater add github.com/foo/bar/v@v1.0.2
 grater add --file dependents.txt
 grater add -f dependents.txt
 
@@ -39,11 +39,11 @@ func TestAddCmd(t *testing.T) {
 	testDir := t.TempDir()
 	t.Chdir(testDir)
 
-	out, err := runCobra(t, "add", "foo/bar", "bar/foo")
+	out, err := runCobra(t, "add", "foo/bar", "bar/foo@v1.0.0")
 	require.NoError(t, err)
 	assert.Contains(t, out, "Successfully added dependents.")
 
-	err = os.WriteFile("deps.txt", []byte("foo/bar/foo\nbar/foo/bar\n"), fileReadWrite)
+	err = os.WriteFile("deps.txt", []byte("foo/bar@v1.0.0\nbar/foo\n"), fileReadWrite)
 	require.NoError(t, err)
 	out, err = runCobra(t, "add", "--file", "deps.txt")
 	require.NoError(t, err)

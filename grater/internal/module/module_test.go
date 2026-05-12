@@ -11,9 +11,9 @@ import (
 )
 
 func TestIsRemotePath(t *testing.T) {
-	module := NewModule("github.com/foo/bar")
+	module := NewModule("github.com/foo/bar", "v1.0.01")
 	assert.True(t, module.IsRemotePath())
 
-	module = NewModule("foo/bar")
+	module = NewModule("foo/bar", "v1.0.01")
 	assert.False(t, module.IsRemotePath())
 }

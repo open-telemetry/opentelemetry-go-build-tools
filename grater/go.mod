@@ -11,11 +11,11 @@ require (
 require (
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/klauspost/compress v1.18.6 // indirect
-	github.com/moby/patternmatcher v0.6.0 // indirect
+	github.com/moby/patternmatcher v0.6.1 // indirect
 	github.com/moby/sys/sequential v0.6.0 // indirect
 	github.com/moby/sys/user v0.4.0 // indirect
 	github.com/moby/sys/userns v0.1.0 // indirect
-	github.com/sirupsen/logrus v1.9.3 // indirect
+	github.com/sirupsen/logrus v1.9.4 // indirect
 )
 
 require (
@@ -43,6 +43,6 @@ require (
 	go.opentelemetry.io/otel v1.43.0 // indirect
 	go.opentelemetry.io/otel/metric v1.43.0 // indirect
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
-	golang.org/x/sys v0.43.0 // indirect
+	golang.org/x/sys v0.44.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

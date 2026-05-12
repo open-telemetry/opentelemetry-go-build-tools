@@ -58,7 +58,7 @@ func TestAddDependents(t *testing.T) {
 	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
-	dependent := module.NewModule("foo/bar")
+	dependent := module.NewModule("foo/bar", "")
 	ws.AddDependents([]module.Module{*dependent})
 	assert.Contains(t, ws.dependents, *dependent)
 }
@@ -70,7 +70,7 @@ func TestGetDependents(t *testing.T) {
 	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
-	dependent := module.NewModule("foo/bar")
+	dependent := module.NewModule("foo/bar", "")
 	ws.AddDependents([]module.Module{*dependent})
 
 	dependents := ws.GetDependents()
@@ -84,7 +84,7 @@ func TestWriteDependents(t *testing.T) {
 	ws, err := NewWorkspace()
 	require.NoError(t, err)
 
-	dependent := module.NewModule("foo/bar")
+	dependent := module.NewModule("foo/bar", "")
 	ws.AddDependents([]module.Module{*dependent})
 
 	err = ws.WriteDependents()
@@ -92,7 +92,7 @@ func TestWriteDependents(t *testing.T) {
 
 	content, err := os.ReadFile(ws.dependentsPath)
 	require.NoError(t, err)
-	assert.JSONEq(t, `[{"module_name":"bar","module_path":"foo/bar"}]`, string(content))
+	assert.JSONEq(t, `[{"module_name":"bar","module_path":"foo/bar","module_version":""}]`, string(content))
 }
 
 func TestCommitToFile(t *testing.T) {

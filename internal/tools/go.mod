@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/client9/misspell v0.3.4
 	github.com/gogo/protobuf v1.3.2
-	github.com/golangci/golangci-lint/v2 v2.12.1
+	github.com/golangci/golangci-lint/v2 v2.12.2
 	github.com/matryer/moq v0.6.0
 	go.opentelemetry.io/build-tools/chloggen v0.30.0
 	go.opentelemetry.io/build-tools/crosslink v0.30.0
@@ -24,7 +24,7 @@ require (
 	dev.gaijin.team/go/exhaustruct/v4 v4.0.0 // indirect
 	dev.gaijin.team/go/golib v0.8.1 // indirect
 	github.com/4meepo/tagalign v1.4.3 // indirect
-	github.com/Abirdcfly/dupword v0.1.7 // indirect
+	github.com/Abirdcfly/dupword v0.1.8 // indirect
 	github.com/AdminBenni/iota-mixing v1.0.0 // indirect
 	github.com/AlwxSin/noinlineerr v1.0.5 // indirect
 	github.com/Antonboom/errname v1.1.1 // indirect
@@ -61,7 +61,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charithe/durationcheck v0.0.11 // indirect
 	github.com/charmbracelet/colorprofile v0.4.3 // indirect
-	github.com/charmbracelet/ultraviolet v0.0.0-20260428153724-66037269d7be // indirect
+	github.com/charmbracelet/ultraviolet v0.0.0-20260511121909-c840852527f3 // indirect
 	github.com/charmbracelet/x/ansi v0.11.7 // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
 	github.com/charmbracelet/x/termios v0.1.1 // indirect
@@ -88,7 +88,7 @@ require (
 	github.com/go-critic/go-critic v0.14.3 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.9.0 // indirect
-	github.com/go-git/go-git/v5 v5.18.0 // indirect
+	github.com/go-git/go-git/v5 v5.19.0 // indirect
 	github.com/go-toolsmith/astcast v1.1.0 // indirect
 	github.com/go-toolsmith/astcopy v1.1.0 // indirect
 	github.com/go-toolsmith/astequal v1.2.0 // indirect
@@ -127,7 +127,7 @@ require (
 	github.com/hexops/gotextdiff v1.0.3 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
-	github.com/jgautheron/goconst v1.10.0 // indirect
+	github.com/jgautheron/goconst v1.10.1 // indirect
 	github.com/jjti/go-spancheck v0.6.5 // indirect
 	github.com/julz/importas v0.2.0 // indirect
 	github.com/karamaru-alpha/copyloopvar v1.2.2 // indirect
@@ -229,15 +229,15 @@ require (
 	go.uber.org/zap v1.28.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/crypto v0.50.0 // indirect
-	golang.org/x/exp/typeparams v0.0.0-20260410095643-746e56fc9e2f // indirect
-	golang.org/x/mod v0.35.0 // indirect
-	golang.org/x/net v0.53.0 // indirect
+	golang.org/x/crypto v0.51.0 // indirect
+	golang.org/x/exp/typeparams v0.0.0-20260508232706-74f9aab9d74a // indirect
+	golang.org/x/mod v0.36.0 // indirect
+	golang.org/x/net v0.54.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/sys v0.43.0 // indirect
-	golang.org/x/telemetry v0.0.0-20260506145330-5a0966d74795 // indirect
-	golang.org/x/text v0.36.0 // indirect
-	golang.org/x/tools v0.44.0 // indirect
+	golang.org/x/sys v0.44.0 // indirect
+	golang.org/x/telemetry v0.0.0-20260508192327-42602be52be6 // indirect
+	golang.org/x/text v0.37.0 // indirect
+	golang.org/x/tools v0.45.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
