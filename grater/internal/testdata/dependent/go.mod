@@ -1,6 +1,6 @@
 module dependent
 
-go 1.25.1
+go 1.25.0
 
 require module v0.0.0
 
