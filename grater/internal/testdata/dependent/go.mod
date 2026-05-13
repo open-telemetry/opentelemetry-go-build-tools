@@ -1,8 +1,8 @@
-module dependent
+module go.opentelemetry.io/build-tools/grater/dependent
 
 go 1.25.0
 
-require module v0.0.0
+require go.opentelemetry.io/build-tools/grater/module v0.0.0
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -11,4 +11,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace module => ../modulePass
+replace go.opentelemetry.io/build-tools/grater/module => ../modulePass

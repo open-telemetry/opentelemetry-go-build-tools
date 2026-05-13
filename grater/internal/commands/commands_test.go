@@ -81,7 +81,7 @@ func TestSetReplaceDirective(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	err = SetReplaceDirective(ctx, c, useContainerResp, "module", "../moduleFail", "/dependent/")
+	err = SetReplaceDirective(ctx, c, useContainerResp, "go.opentelemetry.io/build-tools/grater/module", "../moduleFail", "/dependent/")
 	require.NoError(t, err)
 
 	resp, err := c.ExecuteCommand(ctx,
@@ -91,7 +91,7 @@ func TestSetReplaceDirective(t *testing.T) {
 		),
 	)
 
-	assert.Contains(t, resp.Output, `replace module => ../moduleFail`)
+	assert.Contains(t, resp.Output, `replace go.opentelemetry.io/build-tools/grater/module => ../moduleFail`)
 }
 
 func TestRunModuleTest(t *testing.T) {
@@ -104,7 +104,7 @@ func TestRunModuleTest(t *testing.T) {
 
 	binds := map[string]string{
 		"../testdata/dependent":"/dependent/",
-		"../testdata/modulePass":"/modulePass",
+		"../testdata/modulePass":"/modulePass/",
 	}
 	useContainerResp, err := c.UseContainer(ctx,
 		container.NewUseContainerConfig(
@@ -115,7 +115,6 @@ func TestRunModuleTest(t *testing.T) {
 	require.NoError(t, err)
 
 	resp, err := RunModuleTest(ctx, c, useContainerResp, "/dependent/")
-	t.Log(resp.Output)
 	require.NoError(t, err)
 	assert.Equal(t, 0, resp.ExitCode)
 }
