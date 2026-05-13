@@ -18,7 +18,7 @@ func ShallowClone(ctx context.Context, c container.Container, useContainerResp c
 	if branch != "" {
 		args = append(args, "--branch", branch)
 	}
-	args = append(args, "https://" + module.ModulePath + ".git", modulePath)
+	args = append(args, "https://"+module.ModulePath+".git", modulePath)
 
 	_, err := c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
@@ -49,8 +49,8 @@ func CheckoutBranch(ctx context.Context, c container.Container, useContainerResp
 }
 
 // SetReplaceDirective adds a new replace directive in the go.mod file on the given path.
-func SetReplaceDirective(ctx context.Context, c container.Container, useContainerResp container.UseContainerResponse, old, new, modulePath string) error {
-	replace := fmt.Sprintf("%s=%s", old, new)
+func SetReplaceDirective(ctx context.Context, c container.Container, useContainerResp container.UseContainerResponse, oldRef, newRef, modulePath string) error {
+	replace := fmt.Sprintf("%s=%s", oldRef, newRef)
 
 	_, err := c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
@@ -80,7 +80,7 @@ func SetReplaceDirective(ctx context.Context, c container.Container, useContaine
 }
 
 // RunModuleTest runs the test of a single module and returns an execute command response.
-func RunModuleTest(ctx context.Context, c container.Container, useContainerResp container.UseContainerResponse, modulePath string) (container.ExecuteCommandResponse, error){
+func RunModuleTest(ctx context.Context, c container.Container, useContainerResp container.UseContainerResponse, modulePath string) (container.ExecuteCommandResponse, error) {
 	resp, err := c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
 			container.WithContainerID(useContainerResp.ContainerID),

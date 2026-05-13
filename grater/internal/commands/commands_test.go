@@ -81,7 +81,7 @@ func TestSetReplaceDirective(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	err = SetReplaceDirective(ctx, c, useContainerResp, "go.opentelemetry.io/build-tools/grater/module", "../moduleFail", "/dependent/")
+	err = SetReplaceDirective(ctx, c, useContainerResp, "go.opentelemetry.io/build-tools/grater/internal/testdata/module", "../moduleFail", "/dependent/")
 	require.NoError(t, err)
 
 	resp, err := c.ExecuteCommand(ctx,
@@ -91,7 +91,7 @@ func TestSetReplaceDirective(t *testing.T) {
 		),
 	)
 
-	assert.Contains(t, resp.Output, `replace go.opentelemetry.io/build-tools/grater/module => ../moduleFail`)
+	assert.Contains(t, resp.Output, `replace go.opentelemetry.io/build-tools/grater/internal/testdata/module => ../moduleFail`)
 }
 
 func TestRunModuleTest(t *testing.T) {

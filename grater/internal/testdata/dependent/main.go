@@ -5,7 +5,7 @@
 package dependent
 
 import (
-	"go.opentelemetry.io/build-tools/grater/module"
+	"go.opentelemetry.io/build-tools/grater/internal/testdata/module"
 )
 
 // Add method uses Add from the module imported.

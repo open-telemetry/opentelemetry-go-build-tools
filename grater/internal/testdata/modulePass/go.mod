@@ -1,4 +1,4 @@
-module go.opentelemetry.io/build-tools/grater/module
+module go.opentelemetry.io/build-tools/grater/internal/testdata/module
 
 go 1.25.0
 
