@@ -30,8 +30,7 @@ module-sets:
 excluded-modules:
   - go.opentelemetry.io/build-tools/grater
   - go.opentelemetry.io/build-tools/grater/internal/testdata/dependent
-  - go.opentelemetry.io/build-tools/grater/internal/testdata/moduleFail
-  - go.opentelemetry.io/build-tools/grater/internal/testdata/modulePass
+  - go.opentelemetry.io/build-tools/grater/internal/testdata/module
   - go.opentelemetry.io/build-tools/internal/tools
   - github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/altpkg/receiver/altreceiver
   - github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/altpkg/receiver/badreceiver
