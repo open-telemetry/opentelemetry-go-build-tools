@@ -18,44 +18,32 @@ import (
 	"go.opentelemetry.io/build-tools/grater/internal/module"
 )
 
-func TestShallowClone(t *testing.T) {
-	ctx := context.Background()
+func TestGetModule(t *testing.T) {
+    ctx := context.Background()
+    var c container.Container
+    c, err := dockercontainer.NewDockerContainer()
+    require.NoError(t, err)
 
-	var c container.Container
+    useContainerResp, err := c.UseContainer(ctx,
+        container.NewUseContainerConfig(
+            container.WithImageName("golang:1.22"),
+        ),
+    )
+    require.NoError(t, err)
 
-	c, err := dockercontainer.NewDockerContainer()
-	require.NoError(t, err)
+    mod := module.NewModule("go.opentelemetry.io/otel", "v1.24.0")
 
-	useContainerResp, err := c.UseContainer(ctx,
-		container.NewUseContainerConfig(
-			container.WithImageName("golang:1.22"),
-		),
-	)
+    err = GetModule(ctx, c, useContainerResp, *mod, "/module/")
+    require.NoError(t, err)
 
-	module := *module.NewModule("github.com/open-telemetry/opentelemetry-go-build-tools", "")
-	modulePath := "/mainModule/" + module.ModuleName
-	branch := "main"
-
-	err = ShallowClone(ctx, c, useContainerResp, module, branch, modulePath)
-	require.NoError(t, err)
-
-	resp, err := c.ExecuteCommand(ctx,
-		container.NewExecuteCommandConfig(
-			container.WithContainerID(useContainerResp.ContainerID),
-			container.WithCommand([]string{"ls", "/mainModule/"}),
-		),
-	)
-	require.NoError(t, err)
-	assert.Equal(t, "opentelemetry-go-build-tools", resp.Output)
-
-	resp, err = c.ExecuteCommand(ctx,
-    container.NewExecuteCommandConfig(
-        container.WithContainerID(useContainerResp.ContainerID),
-        container.WithCommand([]string{"git", "-C", modulePath, "rev-parse", "--is-shallow-repository"}),
-		),
-	)
-	require.NoError(t, err)
-	assert.Equal(t, "true", resp.Output)
+    resp, err := c.ExecuteCommand(ctx,
+        container.NewExecuteCommandConfig(
+            container.WithContainerID(useContainerResp.ContainerID),
+            container.WithCommand([]string{"cat", "/module/go.mod"}),
+        ),
+    )
+    require.NoError(t, err)
+    assert.Contains(t, resp.Output, "go.opentelemetry.io/otel")
 }
 
 func TestCheckoutBranch(t *testing.T) {
@@ -81,7 +69,10 @@ func TestSetReplaceDirective(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	err = SetReplaceDirective(ctx, c, useContainerResp, "go.opentelemetry.io/build-tools/grater/internal/testdata/module", "../moduleFail", "/dependent/")
+	oldModule := *module.NewModule("go.opentelemetry.io/build-tools/grater/internal/testdata/module", "")
+	newModule := *module.NewModule("../moduleFail", "")
+
+	err = SetReplaceDirective(ctx, c, useContainerResp, oldModule, newModule, "/dependent/")
 	require.NoError(t, err)
 
 	resp, err := c.ExecuteCommand(ctx,

@@ -12,18 +12,26 @@ import (
 	"go.opentelemetry.io/build-tools/grater/internal/module"
 )
 
-// ShallowClone shallow clones a module inside a container to the given path.
-func ShallowClone(ctx context.Context, c container.Container, useContainerResp container.UseContainerResponse, module module.Module, branch, modulePath string) error {
-	args := []string{"git", "clone", "--depth=1"}
-	if branch != "" {
-		args = append(args, "--branch", branch)
-	}
-	args = append(args, "https://"+module.ModulePath+".git", modulePath)
+// GetModule downloads a module via the Go module proxy to the given path.
+func GetModule(ctx context.Context, c container.Container, useContainerResp container.UseContainerResponse, module module.Module, modulePath string) error {
+	script := fmt.Sprintf(
+		`set -e
+GOMODCACHE=$(mktemp -d)
+GOPATH=$(mktemp -d)
+OUT=$(GOMODCACHE="$GOMODCACHE" GOPATH="$GOPATH" GONOSUMCHECK="*" GONOSUMDB="*" \
+  go mod download -json %s@%s)
+DIR=$(echo "$OUT" | grep '"Dir"' | awk -F'"' '{print $4}')
+mkdir -p %s
+cp -r "$DIR"/. %s/
+rm -rf "$GOMODCACHE" "$GOPATH"`,
+		module.ModulePath, module.ModuleVersion,
+		modulePath, modulePath,
+	)
 
 	_, err := c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
 			container.WithContainerID(useContainerResp.ContainerID),
-			container.WithCommand(args),
+			container.WithCommand([]string{"sh", "-c", script}),
 		),
 	)
 	if err != nil {
@@ -49,34 +57,44 @@ func CheckoutBranch(ctx context.Context, c container.Container, useContainerResp
 }
 
 // SetReplaceDirective adds a new replace directive in the go.mod file on the given path.
-func SetReplaceDirective(ctx context.Context, c container.Container, useContainerResp container.UseContainerResponse, oldRef, newRef, modulePath string) error {
-	replace := fmt.Sprintf("%s=%s", oldRef, newRef)
+func SetReplaceDirective(ctx context.Context, c container.Container, useContainerResp container.UseContainerResponse, oldModule, newModule module.Module, modulePath string) error {
+    oldRef := oldModule.ModulePath
+    if oldModule.ModuleVersion != "" {
+        oldRef = fmt.Sprintf("%s@%s", oldModule.ModulePath, oldModule.ModuleVersion)
+    }
 
-	_, err := c.ExecuteCommand(ctx,
-		container.NewExecuteCommandConfig(
-			container.WithContainerID(useContainerResp.ContainerID),
-			container.WithCommand([]string{
-				"sh", "-c", fmt.Sprintf(`cd %s && go mod edit -replace %s`, modulePath, replace),
-			}),
-		),
-	)
-	if err != nil {
-		return err
-	}
+    newRef := newModule.ModulePath
+    if newModule.ModuleVersion != "" {
+        newRef = fmt.Sprintf("%s@%s", newModule.ModulePath, newModule.ModuleVersion)
+    }
 
-	_, err = c.ExecuteCommand(ctx,
-		container.NewExecuteCommandConfig(
-			container.WithContainerID(useContainerResp.ContainerID),
-			container.WithCommand([]string{
-				"sh", "-c", fmt.Sprintf(`cd %s && go mod tidy`, modulePath),
-			}),
-		),
-	)
-	if err != nil {
-		return err
-	}
+    replace := fmt.Sprintf("%s=%s", oldRef, newRef)
 
-	return nil
+    _, err := c.ExecuteCommand(ctx,
+        container.NewExecuteCommandConfig(
+            container.WithContainerID(useContainerResp.ContainerID),
+            container.WithCommand([]string{
+                "sh", "-c", fmt.Sprintf(`cd %s && go mod edit -replace %s`, modulePath, replace),
+            }),
+        ),
+    )
+    if err != nil {
+        return err
+    }
+
+    _, err = c.ExecuteCommand(ctx,
+        container.NewExecuteCommandConfig(
+            container.WithContainerID(useContainerResp.ContainerID),
+            container.WithCommand([]string{
+                "sh", "-c", fmt.Sprintf(`cd %s && go mod tidy`, modulePath),
+            }),
+        ),
+    )
+    if err != nil {
+        return err
+    }
+
+    return nil
 }
 
 // RunModuleTest runs the test of a single module and returns an execute command response.
