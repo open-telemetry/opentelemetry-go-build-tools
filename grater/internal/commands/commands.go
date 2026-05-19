@@ -1,6 +1,5 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
-
 // Package commands provides utilities to execute commands.
 package commands
 
@@ -28,7 +27,7 @@ rm -rf "$GOMODCACHE" "$GOPATH"`,
 		modulePath, modulePath,
 	)
 
-	_, err := c.ExecuteCommand(ctx,
+	resp, err := c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
 			container.WithContainerID(useContainerResp.ContainerID),
 			container.WithCommand([]string{"sh", "-c", script}),
@@ -42,12 +41,11 @@ rm -rf "$GOMODCACHE" "$GOPATH"`,
 
 // CheckoutBranch checks out the provided branch on the given path.
 func CheckoutBranch(ctx context.Context, c container.Container, useContainerResp container.UseContainerResponse, branch, modulePath string) error {
-	_, err := c.ExecuteCommand(ctx,
+	resp, err := c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
 			container.WithContainerID(useContainerResp.ContainerID),
-			container.WithCommand([]string{
-				"git", "-C", modulePath, "checkout", branch,
-			}),
+			container.WithWorkingDir(modulePath),
+			container.WithCommand([]string{"git", "checkout", branch}),
 		),
 	)
 	if err != nil {
@@ -70,24 +68,22 @@ func SetReplaceDirective(ctx context.Context, c container.Container, useContaine
 
 	replace := fmt.Sprintf("%s=%s", oldRef, newRef)
 
-	_, err := c.ExecuteCommand(ctx,
+	resp, err := c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
 			container.WithContainerID(useContainerResp.ContainerID),
-			container.WithCommand([]string{
-				"sh", "-c", fmt.Sprintf(`cd %s && go mod edit -replace %s`, modulePath, replace),
-			}),
+			container.WithWorkingDir(modulePath),
+			container.WithCommand([]string{"go", "mod", "edit", "-replace", replace}),
 		),
 	)
 	if err != nil {
 		return err
 	}
 
-	_, err = c.ExecuteCommand(ctx,
+	resp, err = c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
 			container.WithContainerID(useContainerResp.ContainerID),
-			container.WithCommand([]string{
-				"sh", "-c", fmt.Sprintf(`cd %s && go mod tidy`, modulePath),
-			}),
+			container.WithWorkingDir(modulePath),
+			container.WithCommand([]string{"go", "mod", "tidy"}),
 		),
 	)
 	if err != nil {
@@ -102,15 +98,12 @@ func RunModuleTest(ctx context.Context, c container.Container, useContainerResp 
 	resp, err := c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
 			container.WithContainerID(useContainerResp.ContainerID),
-			container.WithCommand([]string{
-				"sh", "-c", "cd " + modulePath + " && go test -v ./...",
-			}),
+			container.WithWorkingDir(modulePath),
+			container.WithCommand([]string{"go", "test", "-v", "./..."}),
 		),
 	)
-
 	if err != nil {
 		return container.ExecuteCommandResponse{}, err
 	}
-
 	return resp, nil
 }

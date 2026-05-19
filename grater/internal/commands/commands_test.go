@@ -26,7 +26,7 @@ func TestGetModule(t *testing.T) {
 
     useContainerResp, err := c.UseContainer(ctx,
         container.NewUseContainerConfig(
-            container.WithImageName("golang:1.22"),
+            container.WithImageName("golang:1.25"),
         ),
     )
     require.NoError(t, err)
@@ -59,11 +59,12 @@ func TestSetReplaceDirective(t *testing.T) {
 	require.NoError(t, err)
 
 	binds := map[string]string{
-		"../testdata/dependent":"/dependent/",
+		"../testdata/dependent": "/dependent/",
+		"../testdata/moduleFail": "/moduleFail/",
 	}
 	useContainerResp, err := c.UseContainer(ctx,
 		container.NewUseContainerConfig(
-			container.WithImageName("golang:1.22"),
+			container.WithImageName("golang:1.25.0"),
 			container.WithHostToContainerPaths(binds),
 		),
 	)
