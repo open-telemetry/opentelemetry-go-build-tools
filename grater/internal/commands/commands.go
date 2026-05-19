@@ -1,5 +1,6 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
+
 // Package commands provides utilities to execute commands.
 package commands
 
@@ -11,7 +12,7 @@ import (
 	"go.opentelemetry.io/build-tools/grater/internal/module"
 )
 
-// GetModule downloads a module via the Go module proxy to the given path.
+// GetModuleFromProxy downloads a module via the Go module proxy to the given path.
 func GetModuleFromProxy(ctx context.Context, c container.Container, useContainerResp container.UseContainerResponse, module module.Module, modulePath string) error {
 	script := fmt.Sprintf(
 		`set -e
