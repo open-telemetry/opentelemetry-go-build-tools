@@ -12,7 +12,7 @@ import (
 )
 
 // GetModule downloads a module via the Go module proxy to the given path.
-func GetModule(ctx context.Context, c container.Container, useContainerResp container.UseContainerResponse, module module.Module, modulePath string) error {
+func GetModuleFromProxy(ctx context.Context, c container.Container, useContainerResp container.UseContainerResponse, module module.Module, modulePath string) error {
 	script := fmt.Sprintf(
 		`set -e
 	GOMODCACHE=$(mktemp -d)

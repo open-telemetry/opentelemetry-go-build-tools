@@ -18,7 +18,7 @@ import (
 	"go.opentelemetry.io/build-tools/grater/internal/module"
 )
 
-func TestGetModule(t *testing.T) {
+func TestGetModuleFromProxy(t *testing.T) {
 	ctx := context.Background()
 	var c container.Container
 	c, err := dockercontainer.NewDockerContainer()
@@ -43,7 +43,7 @@ func TestGetModule(t *testing.T) {
 
 	mod := module.NewModule("go.opentelemetry.io/otel", "v1.24.0")
 
-	err = GetModule(ctx, c, useContainerResp, *mod, "/module/")
+	err = GetModuleFromProxy(ctx, c, useContainerResp, *mod, "/module/")
 	require.NoError(t, err)
 
 	resp, err := c.ExecuteCommand(ctx,
