@@ -4,6 +4,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"go.opentelemetry.io/build-tools/grater/internal/replacehelper"
@@ -22,6 +24,7 @@ func replaceCmd() *cobra.Command {
 		Example: `
 grater replace github.com/foo/bar github.com/foo/bar@v1.0.0
 grater replace github.com/foo/bar@v1.0.0 ../local/module
+grater replace old/module1 new/module1 old/module2 new/module2
 grater replace --file replacements.txt
 grater replace -f replacements.txt
 `,
@@ -37,10 +40,20 @@ grater replace -f replacements.txt
 				}
 			}
 
-			if len(args) > 0 {
-				if err = replacehelper.Replace(ws, []string{
-					args[0] + " " + args[1],
-				}); err != nil {
+			if len(args)%2 != 0 {
+				return fmt.Errorf("replacements must be provided in pairs")
+			}
+
+			var replacements []string
+
+			for i := 0; i < len(args); i += 2 {
+				replacements = append(replacements,
+					args[i]+" "+args[i+1],
+				)
+			}
+
+			if len(replacements) > 0 {
+				if err = replacehelper.Replace(ws, replacements); err != nil {
 					return err
 				}
 			}

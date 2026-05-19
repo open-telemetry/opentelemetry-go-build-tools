@@ -20,6 +20,7 @@ Examples:
 
 grater replace github.com/foo/bar github.com/foo/bar@v1.0.0
 grater replace github.com/foo/bar@v1.0.0 ../local/module
+grater replace old/module1 new/module1 old/module2 new/module2
 grater replace --file replacements.txt
 grater replace -f replacements.txt
 
@@ -44,6 +45,8 @@ func TestReplaceCmd(t *testing.T) {
 		"replace",
 		"foo/bar@v1.0.0",
 		"baz/qux@v2.0.0",
+		"abc/def",
+		"xyz/pqr@v3.0.0",
 	)
 	require.NoError(t, err)
 
@@ -66,10 +69,28 @@ func TestReplaceCmd(t *testing.T) {
 		"replace",
 		"foo/bar",
 		"baz/qux",
+		"abc/def@v1.0.0",
+		"xyz/pqr",
 		"--file",
 		"replacements.txt",
 	)
 	require.NoError(t, err)
 
 	assert.Contains(t, out, "Successfully added replacements.")
+}
+
+func TestReplaceCmdFailsOddArgs(t *testing.T) {
+	testDir := t.TempDir()
+	t.Chdir(testDir)
+
+	_, err := runCobra(
+		t,
+		"replace",
+		"foo/bar",
+		"baz/qux",
+		"abc/def",
+	)
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "replacements must be provided in pairs")
 }
