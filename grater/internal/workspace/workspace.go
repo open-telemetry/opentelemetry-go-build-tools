@@ -77,12 +77,12 @@ func (w *Workspace) WriteDependents() error {
 	return commitToFile(content, w.dependentsPath)
 }
 
-// Add Replacements adds replacements to the inetrnal list of replacements.
+// AddReplacements adds replacements to the inetrnal list of replacements.
 func (w *Workspace) AddReplacements(replacements [][]module.Module) {
 	w.replacements = append(w.replacements, replacements...)
 }
 
-// // GetReplacements returns the internal list of replacements.
+// GetReplacements returns the internal list of replacements.
 func (w *Workspace) GetReplacements() [][]module.Module {
 	return w.replacements
 }
