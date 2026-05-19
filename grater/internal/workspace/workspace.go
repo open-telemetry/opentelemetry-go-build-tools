@@ -20,9 +20,11 @@ const (
 
 // Workspace represents a workspace directory.
 type Workspace struct {
-	dir            string
-	dependentsPath string
-	dependents     []module.Module
+	dir              string
+	dependentsPath   string
+	replacementsPath string
+	dependents       []module.Module
+	replacements     [][]module.Module
 }
 
 // NewWorkspace creates a new Workspace instance.
@@ -33,9 +35,11 @@ func NewWorkspace() (*Workspace, error) {
 	}
 
 	w := &Workspace{
-		dir:            root,
-		dependentsPath: filepath.Join(root, ".grater", "dependents.json"),
-		dependents:     []module.Module{},
+		dir:              root,
+		dependentsPath:   filepath.Join(root, ".grater", "dependents.json"),
+		replacementsPath: filepath.Join(root, ".grater", "replacements.json"),
+		dependents:       []module.Module{},
+		replacements:     [][]module.Module{},
 	}
 	err = w.create()
 	return w, err
@@ -71,6 +75,26 @@ func (w *Workspace) WriteDependents() error {
 	}
 
 	return commitToFile(content, w.dependentsPath)
+}
+
+// Add Replacements adds replacements to the inetrnal list of replacements.
+func (w *Workspace) AddReplacements(replacements [][]module.Module) {
+	w.replacements = append(w.replacements, replacements...)
+}
+
+// // GetReplacements returns the internal list of replacements.
+func (w *Workspace) GetReplacements() [][]module.Module {
+	return w.replacements
+}
+
+// WriteReplacements writes the list of replacements to the replacements.json file.
+func (w *Workspace) WriteReplacements() error {
+	content, err := json.MarshalIndent(w.replacements, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	return commitToFile(content, w.replacementsPath)
 }
 
 func commitToFile(content []byte, path string) error {
