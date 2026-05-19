@@ -15,21 +15,26 @@ import (
 func GetModule(ctx context.Context, c container.Container, useContainerResp container.UseContainerResponse, module module.Module, modulePath string) error {
 	script := fmt.Sprintf(
 		`set -e
-GOMODCACHE=$(mktemp -d)
-GOPATH=$(mktemp -d)
-OUT=$(GOMODCACHE="$GOMODCACHE" GOPATH="$GOPATH" GONOSUMCHECK="*" GONOSUMDB="*" \
-  go mod download -json %s@%s)
-DIR=$(echo "$OUT" | grep '"Dir"' | awk -F'"' '{print $4}')
-mkdir -p %s
-cp -r "$DIR"/. %s/
-rm -rf "$GOMODCACHE" "$GOPATH"`,
-		module.ModulePath, module.ModuleVersion,
-		modulePath, modulePath,
+	GOMODCACHE=$(mktemp -d)
+	GOPATH=$(mktemp -d)
+
+	OUT=$(GOMODCACHE="$GOMODCACHE" GOPATH="$GOPATH" \
+	GONOSUMCHECK="*" GONOSUMDB="*" \
+	go mod download -json %s@%s)
+
+	DIR=$(echo "$OUT" | grep '"Dir"' | awk -F'"' '{print $4}')
+
+	cp -r "$DIR"/. .
+
+	rm -rf "$GOMODCACHE" "$GOPATH"`,
+		module.ModulePath,
+		module.ModuleVersion,
 	)
 
-	resp, err := c.ExecuteCommand(ctx,
+	_, err := c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
 			container.WithContainerID(useContainerResp.ContainerID),
+			container.WithWorkingDir(modulePath),
 			container.WithCommand([]string{"sh", "-c", script}),
 		),
 	)
@@ -53,7 +58,7 @@ func SetReplaceDirective(ctx context.Context, c container.Container, useContaine
 
 	replace := fmt.Sprintf("%s=%s", oldRef, newRef)
 
-	resp, err := c.ExecuteCommand(ctx,
+	_, err := c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
 			container.WithContainerID(useContainerResp.ContainerID),
 			container.WithWorkingDir(modulePath),
@@ -64,7 +69,7 @@ func SetReplaceDirective(ctx context.Context, c container.Container, useContaine
 		return err
 	}
 
-	resp, err = c.ExecuteCommand(ctx,
+	_, err = c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
 			container.WithContainerID(useContainerResp.ContainerID),
 			container.WithWorkingDir(modulePath),

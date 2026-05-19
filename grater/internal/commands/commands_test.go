@@ -19,31 +19,41 @@ import (
 )
 
 func TestGetModule(t *testing.T) {
-    ctx := context.Background()
-    var c container.Container
-    c, err := dockercontainer.NewDockerContainer()
-    require.NoError(t, err)
+	ctx := context.Background()
+	var c container.Container
+	c, err := dockercontainer.NewDockerContainer()
+	require.NoError(t, err)
 
-    useContainerResp, err := c.UseContainer(ctx,
-        container.NewUseContainerConfig(
-            container.WithImageName("golang:1.25"),
-        ),
-    )
-    require.NoError(t, err)
+	useContainerResp, err := c.UseContainer(ctx,
+		container.NewUseContainerConfig(
+			container.WithImageName("golang:1.25"),
+		),
+	)
+	require.NoError(t, err)
 
-    mod := module.NewModule("go.opentelemetry.io/otel", "v1.24.0")
+	_, err = c.ExecuteCommand(ctx,
+		container.NewExecuteCommandConfig(
+			container.WithContainerID(useContainerResp.ContainerID),
+			container.WithCommand([]string{
+				"mkdir", "-p", "/module/",
+			}),
+		),
+	)
+	require.NoError(t, err)
 
-    err = GetModule(ctx, c, useContainerResp, *mod, "/module/")
-    require.NoError(t, err)
+	mod := module.NewModule("go.opentelemetry.io/otel", "v1.24.0")
 
-    resp, err := c.ExecuteCommand(ctx,
-        container.NewExecuteCommandConfig(
-            container.WithContainerID(useContainerResp.ContainerID),
-            container.WithCommand([]string{"cat", "/module/go.mod"}),
-        ),
-    )
-    require.NoError(t, err)
-    assert.Contains(t, resp.Output, "go.opentelemetry.io/otel")
+	err = GetModule(ctx, c, useContainerResp, *mod, "/module/")
+	require.NoError(t, err)
+
+	resp, err := c.ExecuteCommand(ctx,
+		container.NewExecuteCommandConfig(
+			container.WithContainerID(useContainerResp.ContainerID),
+			container.WithCommand([]string{"cat", "/module/go.mod"}),
+		),
+	)
+	require.NoError(t, err)
+	assert.Contains(t, resp.Output, "go.opentelemetry.io/otel")
 }
 
 func TestSetReplaceDirective(t *testing.T) {
