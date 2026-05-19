@@ -139,6 +139,7 @@ jobs:
           make test-integration ALL_GO_MOD_DIRS="$AFFECTED_MODULES"
 
   test-coverage:
+    needs: [detect-changes]
     runs-on: ubuntu-latest
     steps:
     - name: Install Go
@@ -165,14 +166,15 @@ jobs:
 
     - name: Run coverage tests
       run: |
-        make test-coverage
+        AFFECTED_MODULES="${{ needs.detect-changes.outputs.affected_modules }}"
+        make test-coverage ALL_COVERAGE_MOD_DIRS="$AFFECTED_MODULES"
         mkdir $TEST_RESULTS
         cp coverage.out $TEST_RESULTS
         cp coverage.txt $TEST_RESULTS
         cp coverage.html $TEST_RESULTS
 
     - name: Upload coverage report
-      uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
+      uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
       with:
         file: ./coverage.txt
         fail_ci_if_error: true
