@@ -58,43 +58,43 @@ func CheckoutBranch(ctx context.Context, c container.Container, useContainerResp
 
 // SetReplaceDirective adds a new replace directive in the go.mod file on the given path.
 func SetReplaceDirective(ctx context.Context, c container.Container, useContainerResp container.UseContainerResponse, oldModule, newModule module.Module, modulePath string) error {
-    oldRef := oldModule.ModulePath
-    if oldModule.ModuleVersion != "" {
-        oldRef = fmt.Sprintf("%s@%s", oldModule.ModulePath, oldModule.ModuleVersion)
-    }
+	oldRef := oldModule.ModulePath
+	if oldModule.ModuleVersion != "" {
+		oldRef = fmt.Sprintf("%s@%s", oldModule.ModulePath, oldModule.ModuleVersion)
+	}
 
-    newRef := newModule.ModulePath
-    if newModule.ModuleVersion != "" {
-        newRef = fmt.Sprintf("%s@%s", newModule.ModulePath, newModule.ModuleVersion)
-    }
+	newRef := newModule.ModulePath
+	if newModule.ModuleVersion != "" {
+		newRef = fmt.Sprintf("%s@%s", newModule.ModulePath, newModule.ModuleVersion)
+	}
 
-    replace := fmt.Sprintf("%s=%s", oldRef, newRef)
+	replace := fmt.Sprintf("%s=%s", oldRef, newRef)
 
-    _, err := c.ExecuteCommand(ctx,
-        container.NewExecuteCommandConfig(
-            container.WithContainerID(useContainerResp.ContainerID),
-            container.WithCommand([]string{
-                "sh", "-c", fmt.Sprintf(`cd %s && go mod edit -replace %s`, modulePath, replace),
-            }),
-        ),
-    )
-    if err != nil {
-        return err
-    }
+	_, err := c.ExecuteCommand(ctx,
+		container.NewExecuteCommandConfig(
+			container.WithContainerID(useContainerResp.ContainerID),
+			container.WithCommand([]string{
+				"sh", "-c", fmt.Sprintf(`cd %s && go mod edit -replace %s`, modulePath, replace),
+			}),
+		),
+	)
+	if err != nil {
+		return err
+	}
 
-    _, err = c.ExecuteCommand(ctx,
-        container.NewExecuteCommandConfig(
-            container.WithContainerID(useContainerResp.ContainerID),
-            container.WithCommand([]string{
-                "sh", "-c", fmt.Sprintf(`cd %s && go mod tidy`, modulePath),
-            }),
-        ),
-    )
-    if err != nil {
-        return err
-    }
+	_, err = c.ExecuteCommand(ctx,
+		container.NewExecuteCommandConfig(
+			container.WithContainerID(useContainerResp.ContainerID),
+			container.WithCommand([]string{
+				"sh", "-c", fmt.Sprintf(`cd %s && go mod tidy`, modulePath),
+			}),
+		),
+	)
+	if err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }
 
 // RunModuleTest runs the test of a single module and returns an execute command response.

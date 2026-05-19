@@ -7,6 +7,7 @@ package container
 type ExecuteCommandConfig struct {
 	containerID string
 	cmd         []string
+	workingDir  string
 }
 
 // ContainerID returns the container ID.
@@ -17,6 +18,11 @@ func (cfg *ExecuteCommandConfig) ContainerID() string {
 // Cmd returns the command to execute.
 func (cfg *ExecuteCommandConfig) Cmd() []string {
 	return cfg.cmd
+}
+
+// WorkingDir returns the workingDir.
+func (cfg *ExecuteCommandConfig) WorkingDir() string {
+	return cfg.workingDir
 }
 
 // NewExecuteCommandConfig applies all the options to a returned ExecuteCommandConfig.
@@ -123,6 +129,14 @@ func WithContainerID(id string) ExecuteCommandOption {
 func WithCommand(cmd []string) ExecuteCommandOption {
 	return executeCommandOptionFunc(func(cfg ExecuteCommandConfig) ExecuteCommandConfig {
 		cfg.cmd = cmd
+		return cfg
+	})
+}
+
+// WithWorkingDir sets the workingDir.
+func WithWorkingDir(workingDir string) ExecuteCommandOption {
+	return executeCommandOptionFunc(func(cfg ExecuteCommandConfig) ExecuteCommandConfig {
+		cfg.workingDir = workingDir
 		return cfg
 	})
 }
