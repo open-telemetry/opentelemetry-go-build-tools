@@ -39,21 +39,6 @@ rm -rf "$GOMODCACHE" "$GOPATH"`,
 	return nil
 }
 
-// CheckoutBranch checks out the provided branch on the given path.
-func CheckoutBranch(ctx context.Context, c container.Container, useContainerResp container.UseContainerResponse, branch, modulePath string) error {
-	resp, err := c.ExecuteCommand(ctx,
-		container.NewExecuteCommandConfig(
-			container.WithContainerID(useContainerResp.ContainerID),
-			container.WithWorkingDir(modulePath),
-			container.WithCommand([]string{"git", "checkout", branch}),
-		),
-	)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // SetReplaceDirective adds a new replace directive in the go.mod file on the given path.
 func SetReplaceDirective(ctx context.Context, c container.Container, useContainerResp container.UseContainerResponse, oldModule, newModule module.Module, modulePath string) error {
 	oldRef := oldModule.ModulePath

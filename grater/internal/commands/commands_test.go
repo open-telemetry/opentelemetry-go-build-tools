@@ -46,10 +46,6 @@ func TestGetModule(t *testing.T) {
     assert.Contains(t, resp.Output, "go.opentelemetry.io/otel")
 }
 
-func TestCheckoutBranch(t *testing.T) {
-	// TODO: Add remote testing functionality for checkout branch.
-}
-
 func TestSetReplaceDirective(t *testing.T) {
 	ctx := context.Background()
 
