@@ -110,6 +110,81 @@ func TestCommitToFile(t *testing.T) {
 	assert.Contains(t, string(content), "foo/bar")
 }
 
+func TestAddReplacements(t *testing.T) {
+	testDir := t.TempDir()
+	t.Chdir(testDir)
+
+	ws, err := NewWorkspace()
+	require.NoError(t, err)
+
+	oldModule := module.NewModule("foo/old", "v1.0.0")
+	newModule := module.NewModule("foo/new", "v1.1.0")
+
+	replacement := []module.Module{*oldModule, *newModule}
+
+	ws.AddReplacements([][]module.Module{replacement})
+
+	assert.Contains(t, ws.replacements, replacement)
+}
+
+func TestGetReplacements(t *testing.T) {
+	testDir := t.TempDir()
+	t.Chdir(testDir)
+
+	ws, err := NewWorkspace()
+	require.NoError(t, err)
+
+	oldModule := module.NewModule("foo/old", "v1.0.0")
+	newModule := module.NewModule("foo/new", "v1.1.0")
+
+	replacement := []module.Module{*oldModule, *newModule}
+
+	ws.AddReplacements([][]module.Module{replacement})
+
+	replacements := ws.GetReplacements()
+
+	assert.Contains(t, replacements, replacement)
+}
+
+func TestWriteReplacements(t *testing.T) {
+	testDir := t.TempDir()
+	t.Chdir(testDir)
+
+	ws, err := NewWorkspace()
+	require.NoError(t, err)
+
+	oldModule := module.NewModule("foo/old", "v1.0.0")
+	newModule := module.NewModule("foo/new", "v1.1.0")
+
+	replacement := []module.Module{*oldModule, *newModule}
+
+	ws.AddReplacements([][]module.Module{replacement})
+
+	err = ws.WriteReplacements()
+	require.NoError(t, err)
+
+	content, err := os.ReadFile(ws.replacementsPath)
+	require.NoError(t, err)
+
+	assert.JSONEq(t,
+		`[
+			[
+				{
+					"module_name":"old",
+					"module_path":"foo/old",
+					"module_version":"v1.0.0"
+				},
+				{
+					"module_name":"new",
+					"module_path":"foo/new",
+					"module_version":"v1.1.0"
+				}
+			]
+		]`,
+		string(content),
+	)
+}
+
 func TestCommitToFileFails(t *testing.T) {
 	testDir := t.TempDir()
 	t.Chdir(testDir)
