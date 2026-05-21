@@ -117,6 +117,7 @@ func (dc *DockerContainer) ExecuteCommand(ctx context.Context, cfg container.Exe
 		AttachStdout: true,
 		AttachStderr: true,
 		TTY:          true,
+		WorkingDir:   cfg.WorkingDir(),
 	})
 	if err != nil {
 		return container.ExecuteCommandResponse{}, err

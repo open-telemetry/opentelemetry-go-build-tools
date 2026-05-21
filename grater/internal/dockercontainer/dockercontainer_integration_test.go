@@ -307,6 +307,38 @@ func TestExecuteCommandInvalidContainerFails(t *testing.T) {
 	assert.Equal(t, 0, cmdResp.ExitCode)
 }
 
+func TestExecuteCommandSetsWorkingDir(t *testing.T) {
+	dc, err := NewDockerContainer()
+	require.NoError(t, err)
+
+	resp, err := dc.UseContainer(context.Background(), container.NewUseContainerConfig(
+		container.WithImageName("ubuntu:latest"),
+	))
+	require.NoError(t, err)
+	defer resp.Cleanup()
+
+	cmdResp, err := dc.ExecuteCommand(context.Background(), container.NewExecuteCommandConfig(
+		container.WithContainerID(resp.ContainerID),
+		container.WithCommand([]string{"mkdir", "-p", "/module/"}),
+	))
+	require.NoError(t, err)
+
+	cmdResp, err = dc.ExecuteCommand(context.Background(), container.NewExecuteCommandConfig(
+		container.WithContainerID(resp.ContainerID),
+		container.WithCommand([]string{"mkdir", "test-module"}),
+		container.WithWorkingDir("/module/"),
+	))
+	require.NoError(t, err)
+
+	cmdResp, err = dc.ExecuteCommand(context.Background(), container.NewExecuteCommandConfig(
+		container.WithContainerID(resp.ContainerID),
+		container.WithCommand([]string{"ls", "test-module"}),
+		container.WithWorkingDir("/module/"),
+	))
+	require.NoError(t, err)
+	assert.Equal(t, 0, cmdResp.ExitCode)
+}
+
 func TestPullImage(t *testing.T) {
 	dc, err := NewDockerContainer()
 	require.NoError(t, err)
