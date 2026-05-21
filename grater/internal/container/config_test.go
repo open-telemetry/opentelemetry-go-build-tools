@@ -62,6 +62,35 @@ func TestNewExecuteCommandConfig(t *testing.T) {
 				cmd:         []string{"echo", "hello"},
 			},
 		},
+		{
+			[]ExecuteCommandOption{
+				WithWorkingDir("/some/path"),
+			},
+			ExecuteCommandConfig{
+				workingDir: "/some/path",
+			},
+		},
+		{
+			[]ExecuteCommandOption{
+				WithWorkingDir("/some/path"),
+				WithWorkingDir("/other/path"),
+			},
+			ExecuteCommandConfig{
+				workingDir: "/other/path",
+			},
+		},
+		{
+			[]ExecuteCommandOption{
+				WithContainerID("test-container"),
+				WithCommand([]string{"go", "mod", "tidy"}),
+				WithWorkingDir("/some/path"),
+			},
+			ExecuteCommandConfig{
+				containerID: "test-container",
+				cmd:         []string{"go", "mod", "tidy"},
+				workingDir:  "/some/path",
+			},
+		},
 	}
 	for _, test := range tests {
 		assert.Equal(t, test.expected, NewExecuteCommandConfig(test.options...))
