@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/google/go-github/v85 v85.0.0
-	github.com/google/go-github/v86 v86.0.0
+	github.com/google/go-github/v87 v87.0.0
 	github.com/joshdk/go-junit v1.0.0
 	github.com/migueleliasweb/go-github-mock v1.5.0
 	github.com/stretchr/testify v1.11.1
