@@ -53,5 +53,5 @@ type Container interface {
 	CreateVolume(ctx context.Context, cfg CreateVolumeConfig) (CreateVolumeResponse, error)
 	UseContainer(ctx context.Context, cfg UseContainerConfig) (UseContainerResponse, error)
 	ExecuteCommand(ctx context.Context, cfg ExecuteCommandConfig) (ExecuteCommandResponse, error)
-	CopyToContainer(ctx context.Context, containerID string, hostToContainerPaths map[string]string) (error)
+	CopyToContainer(ctx context.Context, containerID string, hostToContainerPaths map[string]string) error
 }
