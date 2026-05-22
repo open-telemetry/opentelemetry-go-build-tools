@@ -76,7 +76,7 @@ func TestCopyToContainer(t *testing.T) {
 		return nil
 	}
 
-	err := m.CopyToContainer(context.Background(), "containerID", map[string]string{ "host/path": "/data/"})
+	err := m.CopyToContainer(context.Background(), "containerID", map[string]string{"host/path": "/data/"})
 	assert.NoError(t, err)
 	assert.True(t, called)
 }

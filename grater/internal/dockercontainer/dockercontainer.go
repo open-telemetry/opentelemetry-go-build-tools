@@ -77,7 +77,7 @@ func (dc *DockerContainer) UseContainer(ctx context.Context, cfg container.UseCo
 		return container.UseContainerResponse{}, err
 	}
 
-	if _, err := dc.cli.ContainerStart(ctx, resp.ID, client.ContainerStartOptions{}); err != nil {
+	if _, err = dc.cli.ContainerStart(ctx, resp.ID, client.ContainerStartOptions{}); err != nil {
 		return container.UseContainerResponse{}, err
 	}
 
@@ -131,7 +131,7 @@ func (dc *DockerContainer) ExecuteCommand(ctx context.Context, cfg container.Exe
 	), nil
 }
 
-// CopyToContainer copies a Dir inside a container by specifiying its host and container paths.
+// CopyToContainer copies a Dir inside a container by specifying its host and container paths.
 func (dc *DockerContainer) CopyToContainer(ctx context.Context, containerID string, hostToContainerPaths map[string]string) error {
 	for hostPath, containerPath := range hostToContainerPaths {
 		if _, err := dc.ExecuteCommand(ctx, container.NewExecuteCommandConfig(

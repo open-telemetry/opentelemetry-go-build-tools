@@ -15,7 +15,7 @@ type MockDockerContainer struct {
 	CreateVolumeMock    func(context.Context, container.CreateVolumeConfig) (container.CreateVolumeResponse, error)
 	UseContainerMock    func(context.Context, container.UseContainerConfig) (container.UseContainerResponse, error)
 	ExecuteCommandMock  func(context.Context, container.ExecuteCommandConfig) (container.ExecuteCommandResponse, error)
-	CopyToContainerMock func(context.Context, string, map[string]string) (error)
+	CopyToContainerMock func(context.Context, string, map[string]string) error
 }
 
 var _ container.Container = (*MockDockerContainer)(nil)
