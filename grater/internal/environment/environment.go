@@ -30,6 +30,62 @@ func (env *Environment) RunTests(ctx context.Context, mainModuleBase, mainModule
 	// for every set up container run tests
 }
 
+func (env *Environment) getReplacementBinds(ctx context.Context, replacements [][]module.Module) (func(), map[string]string, map[string]string, error) {
+    binds := make(map[string]string)
+    hostBinds := make(map[string]string)
+    volumeName := "remote_replacements_volume"
+
+    respCreateVolume, err := env.c.CreateVolume(ctx,
+        container.NewCreateVolumeConfig(
+            container.WithVolumeName(volumeName),
+        ),
+    )
+    if err != nil {
+        return nil, map[string]string{}, map[string]string{}, err
+    }
+
+    respUseContainer, err := env.c.UseContainer(ctx,
+        container.NewUseContainerConfig(
+            container.WithImageName("golang:1.22"),
+            container.WithBindMounts(map[string]string{volumeName: "/remoteReplacements"}),
+        ),
+    )
+    if err != nil {
+        respCreateVolume.Cleanup()
+        return nil, map[string]string{}, map[string]string{}, err
+    }
+    defer respUseContainer.Cleanup()
+
+    for _, replacementPair := range replacements {
+        for _, replacement := range replacementPair {
+            if replacement.IsRemotePath() {
+                modulePath := "/remoteReplacements/" + replacement.ModuleName
+                _, err := env.c.ExecuteCommand(ctx,
+                    container.NewExecuteCommandConfig(
+                        container.WithContainerID(respUseContainer.ContainerID),
+                        container.WithCommand([]string{"mkdir", "-p", modulePath}),
+                    ),
+                )
+                if err != nil {
+                    respCreateVolume.Cleanup()
+                    return nil, map[string]string{}, map[string]string{}, err
+                }
+                _ = commands.GetModuleFromProxy(ctx, env.c, respUseContainer, replacement, modulePath)
+            } else {
+                absPath, err := filepath.Abs(replacement.ModulePath)
+                if err != nil {
+                    respCreateVolume.Cleanup()
+                    return nil, map[string]string{}, map[string]string{}, err
+                }
+                hostBinds[absPath] = "/hostReplacements/" + replacement.ModuleName
+            }
+        }
+    }
+    binds[volumeName] = "/remoteReplacements"
+
+    return respCreateVolume.Cleanup, binds, hostBinds, nil
+}
+
 func (env *Environment) getMainModuleBinds(ctx context.Context, mainModuleBase, headModuleBase module.Module) (func(), map[string]string, map[string]string, error) {
     binds := make(map[string]string)
     hostBinds := make(map[string]string)
