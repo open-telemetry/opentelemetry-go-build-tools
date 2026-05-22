@@ -339,6 +339,38 @@ func TestExecuteCommandSetsWorkingDir(t *testing.T) {
 	assert.Equal(t, 0, cmdResp.ExitCode)
 }
 
+func TestCopyToContainer(t *testing.T) {
+	ctx := context.Background()
+	dc, err := NewDockerContainer()
+	require.NoError(t, err)
+
+	testDir := t.TempDir()
+	t.Chdir(testDir)
+
+	localPath := "./testdata"
+	require.NoError(t, os.MkdirAll(localPath, 0755))
+	f, err := os.Create(filepath.Join(localPath, "hello.txt"))
+	require.NoError(t, err)
+	f.Close()
+
+	resp, err := dc.UseContainer(ctx, container.NewUseContainerConfig(
+		container.WithImageName("alpine:latest"),
+	))
+	require.NoError(t, err)
+	defer resp.Cleanup()
+
+	err = dc.CopyToContainer(ctx, resp.ContainerID, map[string]string{localPath: "/data/" + filepath.Base(localPath),},)
+
+	cmdResp, err := dc.ExecuteCommand(ctx, container.NewExecuteCommandConfig(
+		container.WithContainerID(resp.ContainerID),
+		container.WithCommand([]string{"ls", "/data/" + filepath.Base(localPath)}),
+	))
+	require.NoError(t, err)
+
+	assert.Equal(t, 0, cmdResp.ExitCode)
+	assert.Contains(t, cmdResp.Output, "hello.txt")
+}
+
 func TestPullImage(t *testing.T) {
 	dc, err := NewDockerContainer()
 	require.NoError(t, err)
