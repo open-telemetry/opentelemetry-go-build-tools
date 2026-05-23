@@ -59,9 +59,7 @@ func TestGetModuleFromProxy(t *testing.T) {
 
 func TestSetReplaceDirective(t *testing.T) {
 	ctx := context.Background()
-
 	var c container.Container
-
 	c, err := dockercontainer.NewDockerContainer()
 	require.NoError(t, err)
 
