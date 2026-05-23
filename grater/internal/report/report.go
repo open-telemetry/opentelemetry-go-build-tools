@@ -1,15 +1,17 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
+
 // Package report holds utilities to generate reports for tests.
 package report
 
 import (
-	"context"
 	"encoding/json"
+
 	"go.opentelemetry.io/build-tools/grater/internal/container"
 	"go.opentelemetry.io/build-tools/grater/internal/module"
 )
 
+// Result struct holds an instance of a result of a test run.
 type Result struct {
 	Dependent  string `json:"dependent"`
 	Status     string `json:"status"`
@@ -40,7 +42,7 @@ func classifyResult(base, head container.ExecuteCommandResponse) string {
 }
 
 // GetReport generates a report for all test results as JSON bytes.
-func GetReport(ctx context.Context, dependents []module.Module, results [][]container.ExecuteCommandResponse) ([]byte, error) {
+func GetReport(dependents []module.Module, results [][]container.ExecuteCommandResponse) ([]byte, error) {
 	report := []Result{}
 	for i, result := range results {
 		report = append(report, NewResult(dependents[i], result))
@@ -49,7 +51,7 @@ func GetReport(ctx context.Context, dependents []module.Module, results [][]cont
 }
 
 // GetRegressionReport generates a report containing only regressions as JSON bytes.
-func GetRegressionReport(ctx context.Context, dependents []module.Module, results [][]container.ExecuteCommandResponse) ([]byte, error) {
+func GetRegressionReport(dependents []module.Module, results [][]container.ExecuteCommandResponse) ([]byte, error) {
 	report := []Result{}
 	for i, result := range results {
 		if classifyResult(result[0], result[1]) == "regression" {

@@ -3,12 +3,12 @@
 package report
 
 import (
-	"context"
 	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
 	"go.opentelemetry.io/build-tools/grater/internal/container"
 	"go.opentelemetry.io/build-tools/grater/internal/module"
 )
@@ -21,7 +21,7 @@ func TestClassifyResult(t *testing.T) {
 }
 
 func TestGetReport(t *testing.T) {
-	bytes, err := GetReport(context.Background(),
+	bytes, err := GetReport(
 		[]module.Module{*module.NewModule("moduleA", ""), *module.NewModule("moduleB", ""), *module.NewModule("moduleC", "")},
 		[][]container.ExecuteCommandResponse{
 			{{ExitCode: 0, Output: "ok"}, {ExitCode: 0, Output: "ok"}},
@@ -40,7 +40,7 @@ func TestGetReport(t *testing.T) {
 }
 
 func TestGetRegressionReport(t *testing.T) {
-	bytes, err := GetRegressionReport(context.Background(),
+	bytes, err := GetRegressionReport(
 		[]module.Module{*module.NewModule("moduleA", ""), *module.NewModule("moduleB", ""), *module.NewModule("moduleC", "")},
 		[][]container.ExecuteCommandResponse{
 			{{ExitCode: 0, Output: "ok"}, {ExitCode: 0, Output: "ok"}},
