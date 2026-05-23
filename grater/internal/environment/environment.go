@@ -125,7 +125,7 @@ func (env *Environment) setReplaceDirectivesForDependent(ctx context.Context, re
 		if oldModule.ModuleVersion != "" {
 			oldRef = fmt.Sprintf("%s@%s", oldModule.ModulePath, oldModule.ModuleVersion)
 		}
-		newRef := "../replacements/" + newModule.ModuleName + newModule.ModuleVersion
+		newRef := "../../replacements/" + newModule.ModuleName + newModule.ModuleVersion
 		err := commands.SetReplaceDirective(ctx, env.c, respUseContainer, oldRef, newRef, "/dependent/"+dependent.ModuleName+dependent.ModuleVersion)
 		if err != nil {
 			return err

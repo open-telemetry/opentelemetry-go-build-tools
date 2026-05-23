@@ -141,8 +141,8 @@ func TestSetUpRunTestContainer(t *testing.T) {
 		),
 	)
 
-	assert.Contains(t, resp.Output, "replace go.opentelemetry.io/build-tools/grater/internal/testdata/module => ../replacements/modulePass")
-	assert.Contains(t, resp.Output, "replace go.opentelemetry.io/otel v1.24.0 => ../replacements/otelv1.23.0")
+	assert.Contains(t, resp.Output, "replace go.opentelemetry.io/build-tools/grater/internal/testdata/module => ../../replacements/modulePass")
+	assert.Contains(t, resp.Output, "replace go.opentelemetry.io/otel v1.24.0 => ../../replacements/otelv1.23.0")
 }
 
 func TestSetReplaceDirectivesForDependent(t *testing.T) {
@@ -191,8 +191,8 @@ func TestSetReplaceDirectivesForDependent(t *testing.T) {
 		),
 	)
 
-	assert.Contains(t, resp.Output, "replace go.opentelemetry.io/build-tools/grater/internal/testdata/module => ../replacements/modulePass")
-	assert.Contains(t, resp.Output, "replace go.opentelemetry.io/otel v1.24.0 => ../replacements/otelv1.23.0")
+	assert.Contains(t, resp.Output, "replace go.opentelemetry.io/build-tools/grater/internal/testdata/module => ../../replacements/modulePass")
+	assert.Contains(t, resp.Output, "replace go.opentelemetry.io/otel v1.24.0 => ../../replacements/otelv1.23.0")
 }
 
 func TestGetDependentInContainerRemote(t *testing.T) {
