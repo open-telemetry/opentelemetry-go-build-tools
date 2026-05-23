@@ -5,6 +5,7 @@ package environment
 
 import (
 	"context"
+    "fmt"
     "path/filepath"
 
 	"go.opentelemetry.io/build-tools/grater/internal/module"
@@ -34,25 +35,11 @@ func (env *Environment) runTest() {
     // setup container
     // run tests of module base and head
 }
-/*
-func (env *Environment) getRunTestContainer(ctx context.Context,
-    mainModuleBase, mainModuleHead module.Module,
-    replacements [][]module.Module,
-    dependent module.Module) (container.UseContainerResponse, error) {
-    mainModuleBinds, err := env.getMainModuleBinds(ctx, mainModuleBase, mainModuleHead)
-    if err != nil {
-        return container.UseContainerResponse{}, err
-    }
-    replacementBinds, err := env.getReplacementBinds(ctx, replacements)
-    if err != nil {
-        return container.UseContainerResponse{}, err
-    }
 
-    binds := mergeMaps(mainModuleBinds, replacementBinds)
-
+func (env *Environment) getRunTestContainer(ctx context.Context, binds map[string]string, dependent module.Module, replacements [][]module.Module) (container.UseContainerResponse, error) {
     respUseContainer, err := env.c.UseContainer(ctx,
         container.NewUseContainerConfig(
-            container.WithImageName("golang:1.25"),
+            container.WithImageName("golang:1.22"),
             container.WithBindMounts(binds),
         ),
     )
@@ -65,11 +52,29 @@ func (env *Environment) getRunTestContainer(ctx context.Context,
         return container.UseContainerResponse{}, err
     }
 
-    for _, dependentPair := range dependents {
-        oldModule, newModule := dependentPair[0], dependentPair[1]
-        err = commands.SetReplaceDirective(ctx, env.c, respUseContainer, oldModule, newModule, modulePath)
+    err = env.setReplaceDirectivesForDependent(ctx, respUseContainer, dependent, replacements)
+    if err != nil {
+        return container.UseContainerResponse{}, err
     }
-}*/
+
+    return respUseContainer, nil
+}
+
+func (env *Environment) setReplaceDirectivesForDependent(ctx context.Context, respUseContainer container.UseContainerResponse, dependent module.Module, replacements [][]module.Module) error {
+    for _, replacementPair := range replacements {
+        oldModule, newModule := replacementPair[0], replacementPair[1]
+        oldRef := oldModule.ModulePath
+        if oldModule.ModuleVersion != "" {
+            oldRef = fmt.Sprintf("%s@%s", oldModule.ModulePath, oldModule.ModuleVersion)
+        }
+        newRef := "../replacements/" + newModule.ModuleName + newModule.ModuleVersion
+        err := commands.SetReplaceDirective(ctx, env.c, respUseContainer, oldRef, newRef, "/dependent/" + dependent.ModuleName + dependent.ModuleVersion)
+        if err != nil {
+            return err
+        }
+    }
+    return nil
+}
 
 func (env *Environment) getDependentInContainer(ctx context.Context, respUseContainer container.UseContainerResponse, dependent module.Module) error {
     dependentPath := "/dependent/" + dependent.ModuleName + dependent.ModuleVersion
@@ -106,12 +111,11 @@ func (env *Environment) getReplacementBinds(ctx context.Context, replacements []
     defer respUseContainer.Cleanup()
 
     for _, replacementPair := range replacements {
-        for _, replacement := range replacementPair {
-            err := env.getModuleInContainer(ctx, respUseContainer, replacement, "/replacements/" + replacement.ModuleName + replacement.ModuleVersion)
-            if err != nil {
-                respCreateVolume.Cleanup()
-                return nil, map[string]string{}, err
-            }
+        replacement := replacementPair[1]
+        err := env.getModuleInContainer(ctx, respUseContainer, replacement, "/replacements/" + replacement.ModuleName + replacement.ModuleVersion)
+        if err != nil {
+            respCreateVolume.Cleanup()
+            return nil, map[string]string{}, err
         }
     }
     binds[volumeName] = "/replacements"
@@ -119,10 +123,9 @@ func (env *Environment) getReplacementBinds(ctx context.Context, replacements []
     return respCreateVolume.Cleanup, binds, nil
 }
 
-func (env *Environment) getMainModuleBinds(ctx context.Context, mainModuleBase, mainModuleHead module.Module) (func(), map[string]string, error) {
+func (env *Environment) getMainModuleBinds(ctx context.Context, mainModuleHead module.Module) (func(), map[string]string, error) {
     binds := make(map[string]string)
     volumeName := "main_module_volume"
-    modulePathBase := "/mainModule/" + mainModuleBase.ModuleName + mainModuleBase.ModuleVersion
     modulePathHead := "/mainModule/" + mainModuleHead.ModuleName + mainModuleHead.ModuleVersion
 
     respCreateVolume, err := env.c.CreateVolume(ctx,
@@ -145,12 +148,6 @@ func (env *Environment) getMainModuleBinds(ctx context.Context, mainModuleBase, 
         return nil, map[string]string{}, err
     }
     defer respUseContainer.Cleanup()
-
-    err = env.getModuleInContainer(ctx, respUseContainer, mainModuleBase, modulePathBase)
-    if err != nil {
-        respCreateVolume.Cleanup()
-        return nil, map[string]string{}, err
-    }
 
     err = env.getModuleInContainer(ctx, respUseContainer, mainModuleHead, modulePathHead)
     if err != nil {
