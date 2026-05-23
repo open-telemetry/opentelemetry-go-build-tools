@@ -1,14 +1,17 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
+
+// Package cmd provides the CLI commands for grater.
 package cmd
 
 import (
 	"github.com/spf13/cobra"
+
 	"go.opentelemetry.io/build-tools/grater/internal/findhelper"
 	"go.opentelemetry.io/build-tools/grater/internal/workspace"
 )
 
-// findCmd represents the find command
+// findCmd represents the find command.
 func findCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "find [module@version]",
