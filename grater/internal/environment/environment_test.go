@@ -9,14 +9,60 @@ package environment
 import (
 	"testing"
 	"context"
-	//"path/filepath"
+	"path/filepath"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/build-tools/grater/internal/dockercontainer"
 	"go.opentelemetry.io/build-tools/grater/internal/module"
 	"go.opentelemetry.io/build-tools/grater/internal/container"
+	"go.opentelemetry.io/build-tools/grater/internal/commands"
 )
+
+func TestRunTest(t *testing.T) {
+    ctx := context.Background()
+
+    dc, err := dockercontainer.NewDockerContainer()
+    require.NoError(t, err)
+
+    env := NewEnvironment(dc)
+
+    mainModuleBase := *module.NewModule("go.opentelemetry.io/build-tools/grater/internal/testdata/module", "")
+    mainModuleHead := *module.NewModule("../testdata/moduleFail", "")
+
+    replacements := [][]module.Module{}
+
+    CleanupMainModule, bindsMainModule, err := env.getMainModuleBinds(ctx, mainModuleHead)
+    require.NoError(t, err)
+    defer CleanupMainModule()
+
+    CleanupReplacements, bindsReplacements, err := env.getReplacementBinds(ctx, replacements)
+    require.NoError(t, err)
+    defer CleanupReplacements()
+
+    dependent := *module.NewModule("../testdata/dependent", "")
+	dependentPath := "/dependent/" + dependent.ModuleName + dependent.ModuleVersion
+    binds := mergeMaps(bindsMainModule, bindsReplacements)
+
+    respUseContainer, err := env.getRunTestContainer(ctx, binds, dependent, replacements)
+    require.NoError(t, err)
+    defer respUseContainer.Cleanup()
+
+	// Route the local path dependencies to container's local paths.
+	externalModule := *module.NewModule("../testdata/modulePass", "")
+	absPath, err := filepath.Abs(externalModule.ModulePath)
+	require.NoError(t, err)
+	err = env.c.CopyToContainer(ctx, respUseContainer.ContainerID, map[string]string{absPath:"/external/modulePass"})
+	require.NoError(t, err)
+	err = commands.SetReplaceDirective(ctx, env.c, respUseContainer, "go.opentelemetry.io/build-tools/grater/internal/testdata/module", "../../external/modulePass", dependentPath)
+	require.NoError(t, err)
+
+    results, err := env.runTest(ctx, respUseContainer, mainModuleBase, mainModuleHead, dependent)
+    require.NoError(t, err)
+
+    assert.Equal(t, 0, results[0].ExitCode)
+    assert.Equal(t, 1, results[1].ExitCode)
+}
 
 func TestSetUpRunTestContainer(t *testing.T) {
 	ctx := context.Background()
@@ -328,14 +374,6 @@ func TestGetReplacementBindsRemoteModules(t *testing.T) {
 		),
 	)
 	assert.Equal(t, respExecuteCommand.ExitCode, 1)
-
-	respExecuteCommand, err = env.c.ExecuteCommand(ctx,
-		container.NewExecuteCommandConfig(
-			container.WithContainerID(respUseContainer.ContainerID),
-			container.WithCommand([]string{"ls", "/replacements/"}),
-		),
-	)
-	t.Log(respExecuteCommand.Output)
 
 	respExecuteCommand, err = env.c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(

@@ -25,21 +25,49 @@ func NewEnvironment(c container.Container) *Environment {
 
 // RunTests runs tests of dependents of main module with specified replacements.
 func (env *Environment) RunTests(ctx context.Context, mainModuleBase, mainModuleHead module.Module, dependents []module.Module, replacements [][]module.Module) {
-	// Setup main module
-	// setup replacements
-	// Set up container with binds
-	// for every set up container run tests
+	
 }
 
-func (env *Environment) runTest() {
-    // setup container
-    // run tests of module base and head
+func (env *Environment) runTest(ctx context.Context, respUseContainer container.UseContainerResponse, mainModuleBase, mainModuleHead, dependent module.Module) ([]container.ExecuteCommandResponse, error) {
+    dependentPath := "/dependent/" + dependent.ModuleName + dependent.ModuleVersion
+
+    executeCommandRespBase, err := commands.RunModuleTest(ctx, env.c, respUseContainer, dependentPath)
+    if err != nil {
+        return nil, err
+    }
+
+    oldRef := mainModuleBase.ModulePath
+    if mainModuleBase.ModuleVersion != "" {
+        oldRef = fmt.Sprintf("%s@%s", mainModuleBase.ModulePath, mainModuleBase.ModuleVersion)
+    }
+    newRef := "../../mainModule/" + mainModuleHead.ModuleName + mainModuleHead.ModuleVersion
+
+    err = commands.SetReplaceDirective(ctx, env.c, respUseContainer, oldRef, newRef, dependentPath)
+    if err != nil {
+        return nil, err
+    }
+
+	respExecuteCommand, err := env.c.ExecuteCommand(ctx,
+		container.NewExecuteCommandConfig(
+			container.WithContainerID(respUseContainer.ContainerID),
+			container.WithCommand([]string{"cat", "/dependent/dependent/go.mod"}),
+		),
+	)
+    fmt.Println(respExecuteCommand.Output)
+    executeCommandRespHead, err := commands.RunModuleTest(ctx, env.c, respUseContainer, dependentPath)
+    if err != nil {
+        return nil, err
+    }
+
+    defer respUseContainer.Cleanup()
+
+    return []container.ExecuteCommandResponse{executeCommandRespBase, executeCommandRespHead}, nil
 }
 
 func (env *Environment) getRunTestContainer(ctx context.Context, binds map[string]string, dependent module.Module, replacements [][]module.Module) (container.UseContainerResponse, error) {
     respUseContainer, err := env.c.UseContainer(ctx,
         container.NewUseContainerConfig(
-            container.WithImageName("golang:1.22"),
+            container.WithImageName("golang:1.25"),
             container.WithBindMounts(binds),
         ),
     )
