@@ -24,8 +24,24 @@ func NewEnvironment(c container.Container) *Environment {
 }
 
 // RunTests runs tests of dependents of main module with specified replacements.
-func (env *Environment) RunTests(ctx context.Context, mainModuleBase, mainModuleHead module.Module, dependents []module.Module, replacements [][]module.Module) {
-	
+func (env *Environment) RunTests(ctx context.Context, mainModuleBase, mainModuleHead module.Module, dependents []module.Module, replacements [][]module.Module) ([][]container.ExecuteCommandResponse, error) {
+	mainModuleBinds := getMainModuleBinds(ctx, mainModuleHead)
+    replacementBinds := getReplacementBinds(ctx, replacements)
+    binds := mergeMaps(mainModuleBinds, replacementBinds)
+    var results [][]container.ExecuteCommandResponse
+
+    for _, dependent := range dependents {
+        respUseContainer, err := env.getRunTestContainer(ctx, binds, dependent, replacements)
+        if err != nil {
+            return nil, err
+        }
+        result, err := env.runTest(ctx, respUseContainer, mainModuleBase, mainModuleHead, dependent)
+        if err != nil {
+            return nil, err
+        }
+        results = append(results, result)
+    }
+    return results, nil
 }
 
 func (env *Environment) runTest(ctx context.Context, respUseContainer container.UseContainerResponse, mainModuleBase, mainModuleHead, dependent module.Module) ([]container.ExecuteCommandResponse, error) {

@@ -19,6 +19,10 @@ import (
 	"go.opentelemetry.io/build-tools/grater/internal/commands"
 )
 
+func TestRunTests(t *testing.T) {
+	// TODO: Add an E2E test.
+}
+
 func TestRunTest(t *testing.T) {
     ctx := context.Background()
 
