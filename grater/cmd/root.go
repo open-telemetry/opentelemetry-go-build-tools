@@ -18,6 +18,7 @@ func rootCmd() *cobra.Command {
 	}
 	cmd.AddCommand(addCmd())
 	cmd.AddCommand(replaceCmd())
+	cmd.AddCommand(findCmd())
 	cmd.SetOut(os.Stdout)
 	return cmd
 }

@@ -9,6 +9,8 @@ require (
 )
 
 require (
+	github.com/PuerkitoBio/goquery v1.12.0 // indirect
+	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/klauspost/compress v1.18.6 // indirect
 	github.com/moby/patternmatcher v0.6.1 // indirect
@@ -16,6 +18,7 @@ require (
 	github.com/moby/sys/user v0.4.0 // indirect
 	github.com/moby/sys/userns v0.1.0 // indirect
 	github.com/sirupsen/logrus v1.9.4 // indirect
+	golang.org/x/net v0.52.0 // indirect
 )
 
 require (
