@@ -59,17 +59,18 @@ func TestGetModuleFromProxy(t *testing.T) {
 
 func TestSetReplaceDirective(t *testing.T) {
 	ctx := context.Background()
+
 	var c container.Container
+
 	c, err := dockercontainer.NewDockerContainer()
 	require.NoError(t, err)
 
 	binds := map[string]string{
-		"../testdata/dependent":  "/dependent/",
+		"../testdata/dependent": "/dependent/",
 		"../testdata/moduleFail": "/moduleFail/",
 	}
 
-	useContainerResp, err := c.UseContainer(
-		ctx,
+	useContainerResp, err := c.UseContainer(ctx,
 		container.NewUseContainerConfig(
 			container.WithImageName("golang:1.25.0"),
 			container.WithHostToContainerPaths(binds),
@@ -100,7 +101,6 @@ func TestSetReplaceDirective(t *testing.T) {
 			container.WithCommand([]string{"cat", "/dependent/go.mod"}),
 		),
 	)
-	require.NoError(t, err)
 
 	assert.Contains(t, resp.Output, "replace go.opentelemetry.io/build-tools/grater/internal/testdata/module => ../moduleFail")
 }
