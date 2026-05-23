@@ -69,7 +69,6 @@ func TestSetReplaceDirective(t *testing.T) {
 		"../testdata/dependent": "/dependent/",
 		"../testdata/moduleFail": "/moduleFail/",
 	}
-
 	useContainerResp, err := c.UseContainer(ctx,
 		container.NewUseContainerConfig(
 			container.WithImageName("golang:1.25.0"),
@@ -94,8 +93,7 @@ func TestSetReplaceDirective(t *testing.T) {
 	err = SetReplaceDirective(ctx, c, useContainerResp, oldRef, newRef, "/dependent/")
 	require.NoError(t, err)
 
-	resp, err := c.ExecuteCommand(
-		ctx,
+	resp, err := c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
 			container.WithContainerID(useContainerResp.ContainerID),
 			container.WithCommand([]string{"cat", "/dependent/go.mod"}),
