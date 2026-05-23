@@ -513,3 +513,10 @@ func TestGetModuleInContainerRemote(t *testing.T) {
 	)
 	assert.Contains(t, respExecuteCommand.Output, "go.opentelemetry.io/otel")
 }
+
+func TestMergeMaps(t *testing.T) {
+    a := map[string]string{"x": "1", "y": "2"}
+    b := map[string]string{"z": "3"}
+    result := mergeMaps(a, b)
+    assert.Equal(t, map[string]string{"x": "1", "y": "2", "z": "3"}, result)
+}
