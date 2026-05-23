@@ -59,7 +59,7 @@ func TestGetModuleFromProxy(t *testing.T) {
 
 func TestSetReplaceDirective(t *testing.T) {
 	ctx := context.Background()
-
+	var c container.Container
 	c, err := dockercontainer.NewDockerContainer()
 	require.NoError(t, err)
 
@@ -78,7 +78,6 @@ func TestSetReplaceDirective(t *testing.T) {
 	require.NoError(t, err)
 
 	oldModule := module.NewModule("go.opentelemetry.io/build-tools/grater/internal/testdata/module", "",)
-
 	newModule := module.NewModule("../moduleFail", "")
 
 	oldRef := oldModule.ModulePath
