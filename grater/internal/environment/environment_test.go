@@ -18,6 +18,64 @@ import (
 	"go.opentelemetry.io/build-tools/grater/internal/container"
 )
 
+func TestGetDependentInContainerRemote(t *testing.T) {
+	ctx := context.Background()
+	
+	dc, err := dockercontainer.NewDockerContainer()
+	require.NoError(t, err)
+
+	env := NewEnvironment(dc)
+
+	respUseContainer, err := env.c.UseContainer(ctx,
+		container.NewUseContainerConfig(
+			container.WithImageName("golang:1.25"),
+		),
+	)
+	require.NoError(t, err)
+	defer respUseContainer.Cleanup()
+
+	dependent := *module.NewModule("go.opentelemetry.io/otel", "v1.24.0")
+	err = env.getDependentInContainer(ctx, respUseContainer, dependent)
+	require.NoError(t, err)
+
+	respExecuteCommand, err := env.c.ExecuteCommand(ctx,
+		container.NewExecuteCommandConfig(
+			container.WithContainerID(respUseContainer.ContainerID),
+			container.WithCommand([]string{"cat", "/dependent/otelv1.24.0/go.mod"}),
+		),
+	)
+	assert.Contains(t, respExecuteCommand.Output, "go.opentelemetry.io/otel")
+}
+
+func TestGetDependentInContainerHost(t *testing.T) {
+	ctx := context.Background()
+	
+	dc, err := dockercontainer.NewDockerContainer()
+	require.NoError(t, err)
+
+	env := NewEnvironment(dc)
+
+	respUseContainer, err := env.c.UseContainer(ctx,
+		container.NewUseContainerConfig(
+			container.WithImageName("golang:1.25"),
+		),
+	)
+	require.NoError(t, err)
+	defer respUseContainer.Cleanup()
+
+	dependent := *module.NewModule("../testdata/modulePass", "")
+	err = env.getDependentInContainer(ctx, respUseContainer, dependent)
+	require.NoError(t, err)
+
+	respExecuteCommand, err := env.c.ExecuteCommand(ctx,
+		container.NewExecuteCommandConfig(
+			container.WithContainerID(respUseContainer.ContainerID),
+			container.WithCommand([]string{"cat", "/dependent/modulePass/go.mod"}),
+		),
+	)
+	assert.Contains(t, respExecuteCommand.Output, "go.opentelemetry.io/build-tools/grater/internal/testdata/module")
+}
+
 func TestGetReplacementBindsHostAndRemoteModules(t *testing.T) {
 	ctx := context.Background()
 	
@@ -34,7 +92,7 @@ func TestGetReplacementBindsHostAndRemoteModules(t *testing.T) {
 		},
 	}
 
-	Cleanup, binds, hostBinds, err := env.getReplacementBinds(ctx, replacements)
+	Cleanup, binds, err := env.getReplacementBinds(ctx, replacements)
 	require.NoError(t, err)
 	defer Cleanup()
 
@@ -42,7 +100,6 @@ func TestGetReplacementBindsHostAndRemoteModules(t *testing.T) {
 		container.NewUseContainerConfig(
 			container.WithImageName("golang:1.25"),
 			container.WithBindMounts(binds),
-			container.WithHostToContainerPaths(hostBinds),
 		),
 	)
 	require.NoError(t, err)
@@ -51,7 +108,7 @@ func TestGetReplacementBindsHostAndRemoteModules(t *testing.T) {
 	respExecuteCommand, err := env.c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
 			container.WithContainerID(respUseContainer.ContainerID),
-			container.WithCommand([]string{"cat", "/hostReplacements/modulePass/go.mod"}),
+			container.WithCommand([]string{"cat", "/replacements/modulePass/go.mod"}),
 		),
 	)
 	assert.Contains(t, respExecuteCommand.Output, "go.opentelemetry.io/build-tools/grater/internal/testdata/module")
@@ -59,7 +116,7 @@ func TestGetReplacementBindsHostAndRemoteModules(t *testing.T) {
 	respExecuteCommand, err = env.c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
 			container.WithContainerID(respUseContainer.ContainerID),
-			container.WithCommand([]string{"cat", "/remoteReplacements/otel/go.mod"}),
+			container.WithCommand([]string{"cat", "/replacements/otelv1.24.0/go.mod"}),
 		),
 	)
 	assert.Contains(t, respExecuteCommand.Output, "go.opentelemetry.io/otel")
@@ -81,7 +138,7 @@ func TestGetReplacementBindsHostModules(t *testing.T) {
 		},
 	}
 
-	Cleanup, binds, hostBinds, err := env.getReplacementBinds(ctx, replacements)
+	Cleanup, binds, err := env.getReplacementBinds(ctx, replacements)
 	require.NoError(t, err)
 	defer Cleanup()
 
@@ -89,7 +146,6 @@ func TestGetReplacementBindsHostModules(t *testing.T) {
 		container.NewUseContainerConfig(
 			container.WithImageName("golang:1.25"),
 			container.WithBindMounts(binds),
-			container.WithHostToContainerPaths(hostBinds),
 		),
 	)
 	require.NoError(t, err)
@@ -98,7 +154,7 @@ func TestGetReplacementBindsHostModules(t *testing.T) {
 	respExecuteCommand, err := env.c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
 			container.WithContainerID(respUseContainer.ContainerID),
-			container.WithCommand([]string{"cat", "/hostReplacements/modulePass/go.mod"}),
+			container.WithCommand([]string{"cat", "/replacements/modulePass/go.mod"}),
 		),
 	)
 	assert.Contains(t, respExecuteCommand.Output, "go.opentelemetry.io/build-tools/grater/internal/testdata/module")
@@ -106,7 +162,7 @@ func TestGetReplacementBindsHostModules(t *testing.T) {
 	respExecuteCommand, err = env.c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
 			container.WithContainerID(respUseContainer.ContainerID),
-			container.WithCommand([]string{"cat", "/hostReplacements/moduleFail/go.mod"}),
+			container.WithCommand([]string{"cat", "/replacements/moduleFail/go.mod"}),
 		),
 	)
 	assert.Contains(t, respExecuteCommand.Output, "go.opentelemetry.io/build-tools/grater/internal/testdata/module")
@@ -124,11 +180,11 @@ func TestGetReplacementBindsRemoteModules(t *testing.T) {
 		{
 			
 			*module.NewModule("go.opentelemetry.io/otel", "v1.24.0"),
-			*module.NewModule("go.opentelemetry.io/otel", "v1.24.0"),
+			*module.NewModule("go.opentelemetry.io/otel", "v1.23.0"),
 		},
 	}
 
-	Cleanup, binds, hostBinds, err := env.getReplacementBinds(ctx, replacements)
+	Cleanup, binds, err := env.getReplacementBinds(ctx, replacements)
 	require.NoError(t, err)
 	defer Cleanup()
 
@@ -136,7 +192,6 @@ func TestGetReplacementBindsRemoteModules(t *testing.T) {
 		container.NewUseContainerConfig(
 			container.WithImageName("golang:1.22"),
 			container.WithBindMounts(binds),
-			container.WithHostToContainerPaths(hostBinds),
 		),
 	)
 	require.NoError(t, err)
@@ -145,7 +200,7 @@ func TestGetReplacementBindsRemoteModules(t *testing.T) {
 	respExecuteCommand, err := env.c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
 			container.WithContainerID(respUseContainer.ContainerID),
-			container.WithCommand([]string{"cat", "/remoteReplacements/otel/go.mod"}),
+			container.WithCommand([]string{"cat", "/replacements/otelv1.24.0/go.mod"}),
 		),
 	)
 	assert.Contains(t, respExecuteCommand.Output, "go.opentelemetry.io/otel")
@@ -153,7 +208,7 @@ func TestGetReplacementBindsRemoteModules(t *testing.T) {
 	respExecuteCommand, err = env.c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
 			container.WithContainerID(respUseContainer.ContainerID),
-			container.WithCommand([]string{"cat", "/remoteReplacements/otel/go.mod"}),
+			container.WithCommand([]string{"cat", "/replacements/otelv1.23.0/go.mod"}),
 		),
 	)
 	assert.Contains(t, respExecuteCommand.Output, "go.opentelemetry.io/otel")
@@ -170,14 +225,13 @@ func TestGetMainModuleBindsHostAndRemoteModules(t *testing.T) {
 	moduleBase := *module.NewModule("../testdata/dependent", "")
 	moduleHead := *module.NewModule("go.opentelemetry.io/otel", "v1.24.0")
 
-	Cleanup, binds, hostBinds, err := env.getMainModuleBinds(ctx, moduleBase, moduleHead)
+	Cleanup, binds, err := env.getMainModuleBinds(ctx, moduleBase, moduleHead)
 	require.NoError(t, err)
 	defer Cleanup()
 
 	respUseContainer, err := env.c.UseContainer(ctx,
         container.NewUseContainerConfig(
             container.WithImageName("golang:1.25"),
-            container.WithHostToContainerPaths(hostBinds),
 			container.WithBindMounts(binds),
         ),
     )
@@ -187,7 +241,7 @@ func TestGetMainModuleBindsHostAndRemoteModules(t *testing.T) {
 	respExecuteCommand, err := env.c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
 			container.WithContainerID(respUseContainer.ContainerID),
-			container.WithCommand([]string{"cat", "/hostMainModule/base/" + moduleBase.ModuleName + "/go.mod"}),
+			container.WithCommand([]string{"cat", "/mainModule/" + moduleBase.ModuleName + moduleBase.ModuleVersion + "/go.mod"}),
 		),
 	)
 	assert.Contains(t, respExecuteCommand.Output, "go.opentelemetry.io/build-tools/grater/internal/testdata/dependent")
@@ -195,7 +249,7 @@ func TestGetMainModuleBindsHostAndRemoteModules(t *testing.T) {
 	respExecuteCommand, err = env.c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
 			container.WithContainerID(respUseContainer.ContainerID),
-			container.WithCommand([]string{"cat", "/remoteMainModule/head/" + moduleHead.ModuleName + "/go.mod"}),
+			container.WithCommand([]string{"cat", "/mainModule/" + moduleHead.ModuleName + moduleHead.ModuleVersion + "/go.mod"}),
 		),
 	)
 	assert.Contains(t, respExecuteCommand.Output, "go.opentelemetry.io/otel")
@@ -212,14 +266,13 @@ func TestGetMainModuleBindsHostModules(t *testing.T) {
 	moduleBase := *module.NewModule("../testdata/dependent", "")
 	moduleHead := *module.NewModule("../testdata/modulePass", "")
 
-	Cleanup, binds, hostBinds, err := env.getMainModuleBinds(ctx, moduleBase, moduleHead)
+	Cleanup, binds, err := env.getMainModuleBinds(ctx, moduleBase, moduleHead)
 	require.NoError(t, err)
 	defer Cleanup()
 
 	respUseContainer, err := env.c.UseContainer(ctx,
         container.NewUseContainerConfig(
             container.WithImageName("golang:1.25"),
-            container.WithHostToContainerPaths(hostBinds),
 			container.WithBindMounts(binds),
         ),
     )
@@ -229,7 +282,7 @@ func TestGetMainModuleBindsHostModules(t *testing.T) {
 	respExecuteCommand, err := env.c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
 			container.WithContainerID(respUseContainer.ContainerID),
-			container.WithCommand([]string{"cat", "/hostMainModule/base/" + moduleBase.ModuleName + "/go.mod"}),
+			container.WithCommand([]string{"cat", "/mainModule/" + moduleBase.ModuleName + moduleBase.ModuleVersion + "/go.mod"}),
 		),
 	)
 	assert.Contains(t, respExecuteCommand.Output, "go.opentelemetry.io/build-tools/grater/internal/testdata/dependent")
@@ -237,7 +290,7 @@ func TestGetMainModuleBindsHostModules(t *testing.T) {
 	respExecuteCommand, err = env.c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
 			container.WithContainerID(respUseContainer.ContainerID),
-			container.WithCommand([]string{"cat", "/hostMainModule/head/" + moduleHead.ModuleName + "/go.mod"}),
+			container.WithCommand([]string{"cat", "/mainModule/" + moduleHead.ModuleName + moduleHead.ModuleVersion + "/go.mod"}),
 		),
 	)
 	assert.Contains(t, respExecuteCommand.Output, "go.opentelemetry.io/build-tools/grater/internal/testdata/module")
@@ -252,9 +305,9 @@ func TestGetMainModuleBindsRemoteModules(t *testing.T) {
 	env := NewEnvironment(dc)
 
 	moduleBase := *module.NewModule("go.opentelemetry.io/otel", "v1.24.0")
-	moduleHead := *module.NewModule("go.opentelemetry.io/otel", "v1.24.0")
+	moduleHead := *module.NewModule("go.opentelemetry.io/otel", "v1.23.0")
 
-	Cleanup, binds, hostBinds, err := env.getMainModuleBinds(ctx, moduleBase, moduleHead)
+	Cleanup, binds, err := env.getMainModuleBinds(ctx, moduleBase, moduleHead)
 	require.NoError(t, err)
 	defer Cleanup()
 
@@ -262,7 +315,6 @@ func TestGetMainModuleBindsRemoteModules(t *testing.T) {
         container.NewUseContainerConfig(
             container.WithImageName("golang:1.22"),
             container.WithBindMounts(binds),
-			container.WithHostToContainerPaths(hostBinds),
         ),
     )
 	require.NoError(t, err)
@@ -271,7 +323,7 @@ func TestGetMainModuleBindsRemoteModules(t *testing.T) {
 	respExecuteCommand, err := env.c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
 			container.WithContainerID(respUseContainer.ContainerID),
-			container.WithCommand([]string{"cat", "/remoteMainModule/base/" + moduleBase.ModuleName + "/go.mod"}),
+			container.WithCommand([]string{"cat", "/mainModule/" + moduleBase.ModuleName + moduleBase.ModuleVersion + "/go.mod"}),
 		),
 	)
 	assert.Contains(t, respExecuteCommand.Output, "go.opentelemetry.io/otel")
@@ -279,7 +331,69 @@ func TestGetMainModuleBindsRemoteModules(t *testing.T) {
 	respExecuteCommand, err = env.c.ExecuteCommand(ctx,
 		container.NewExecuteCommandConfig(
 			container.WithContainerID(respUseContainer.ContainerID),
-			container.WithCommand([]string{"cat", "/remoteMainModule/head/" + moduleHead.ModuleName + "/go.mod"}),
+			container.WithCommand([]string{"cat", "/mainModule/" + moduleHead.ModuleName + moduleHead.ModuleVersion + "/go.mod"}),
+		),
+	)
+	assert.Contains(t, respExecuteCommand.Output, "go.opentelemetry.io/otel")
+}
+
+func TestGetModuleInContainerHost(t *testing.T) {
+	ctx := context.Background()
+
+	dc, err := dockercontainer.NewDockerContainer()
+	require.NoError(t, err)
+
+	env := NewEnvironment(dc)
+
+	respUseContainer, err := env.c.UseContainer(ctx,
+        container.NewUseContainerConfig(
+            container.WithImageName("golang:1.22"),
+        ),
+    )
+	require.NoError(t, err)
+	defer respUseContainer.Cleanup()
+
+	module := *module.NewModule("../testdata/modulePass", "")
+	modulePath := "/modulePath/" + module.ModuleName
+
+	err = env.getModuleInContainer(ctx, respUseContainer, module, modulePath)
+	require.NoError(t, err)
+
+	respExecuteCommand, err := env.c.ExecuteCommand(ctx,
+		container.NewExecuteCommandConfig(
+			container.WithContainerID(respUseContainer.ContainerID),
+			container.WithCommand([]string{"cat", modulePath + "/go.mod"}),
+		),
+	)
+	assert.Contains(t, respExecuteCommand.Output, "go.opentelemetry.io/build-tools/grater/internal/testdata/module")
+}
+
+func TestGetModuleInContainerRemote(t *testing.T) {
+	ctx := context.Background()
+
+	dc, err := dockercontainer.NewDockerContainer()
+	require.NoError(t, err)
+
+	env := NewEnvironment(dc)
+
+	respUseContainer, err := env.c.UseContainer(ctx,
+        container.NewUseContainerConfig(
+            container.WithImageName("golang:1.22"),
+        ),
+    )
+	require.NoError(t, err)
+	defer respUseContainer.Cleanup()
+
+	module := *module.NewModule("go.opentelemetry.io/otel", "v1.24.0")
+	modulePath := "/modulePath/" + module.ModuleName
+
+	err = env.getModuleInContainer(ctx, respUseContainer, module, modulePath)
+	require.NoError(t, err)
+
+	respExecuteCommand, err := env.c.ExecuteCommand(ctx,
+		container.NewExecuteCommandConfig(
+			container.WithContainerID(respUseContainer.ContainerID),
+			container.WithCommand([]string{"cat", modulePath + "/go.mod"}),
 		),
 	)
 	assert.Contains(t, respExecuteCommand.Output, "go.opentelemetry.io/otel")
