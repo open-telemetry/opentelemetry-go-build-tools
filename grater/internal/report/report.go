@@ -7,7 +7,6 @@ package report
 import (
 	"go.opentelemetry.io/build-tools/grater/internal/container"
 	"go.opentelemetry.io/build-tools/grater/internal/module"
-	"go.opentelemetry.io/build-tools/grater/internal/workspace"
 )
 
 // Result struct holds an instance of a result of a test run.
@@ -40,22 +39,22 @@ func classifyResult(base, head container.ExecuteCommandResponse) string {
 	return ""
 }
 
-// GetReport generates and writes a report for all test results.
-func GetReport(ws *workspace.Workspace, dependents []module.Module, results [][]container.ExecuteCommandResponse) error {
+// GetReport generates a report for all test results.
+func GetReport(dependents []module.Module, results [][]container.ExecuteCommandResponse) []Result {
 	report := []Result{}
 	for i, result := range results {
 		report = append(report, NewResult(dependents[i], result))
 	}
-	return ws.WriteReport(report)
+	return report
 }
 
-// GetRegressionReport generates and writes a report containing only regressions.
-func GetRegressionReport(ws *workspace.Workspace, dependents []module.Module, results [][]container.ExecuteCommandResponse) error {
+// GetRegressionReport generates a report containing only regressions.
+func GetRegressionReport(dependents []module.Module, results [][]container.ExecuteCommandResponse) []Result {
 	report := []Result{}
 	for i, result := range results {
 		if classifyResult(result[0], result[1]) == "regression" {
 			report = append(report, NewResult(dependents[i], result))
 		}
 	}
-	return ws.WriteRegressionReport(report)
+	return report
 }
