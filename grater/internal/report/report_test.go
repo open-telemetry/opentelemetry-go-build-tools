@@ -1,16 +1,17 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
+
 package report
 
 import (
-	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
 	"go.opentelemetry.io/build-tools/grater/internal/container"
 	"go.opentelemetry.io/build-tools/grater/internal/module"
+	"go.opentelemetry.io/build-tools/grater/internal/workspace"
 )
 
 func TestClassifyResult(t *testing.T) {
@@ -21,7 +22,13 @@ func TestClassifyResult(t *testing.T) {
 }
 
 func TestGetReport(t *testing.T) {
-	bytes, err := GetReport(
+	testDir := t.TempDir()
+	t.Chdir(testDir)
+
+	ws, err := workspace.NewWorkspace()
+	require.NoError(t, err)
+
+	err = GetReport(ws,
 		[]module.Module{*module.NewModule("moduleA", ""), *module.NewModule("moduleB", ""), *module.NewModule("moduleC", "")},
 		[][]container.ExecuteCommandResponse{
 			{{ExitCode: 0, Output: "ok"}, {ExitCode: 0, Output: "ok"}},
@@ -31,16 +38,23 @@ func TestGetReport(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	var report []Result
-	require.NoError(t, json.Unmarshal(bytes, &report))
-
-	assert.Equal(t, Result{Dependent: "moduleA", Status: "pass", BaseOutput: "ok", HeadOutput: "ok"}, report[0])
-	assert.Equal(t, Result{Dependent: "moduleB", Status: "broken", BaseOutput: "fail", HeadOutput: "fail"}, report[1])
-	assert.Equal(t, Result{Dependent: "moduleC", Status: "regression", BaseOutput: "ok", HeadOutput: "fail"}, report[2])
+	content, err := os.ReadFile(".grater/report.json")
+	require.NoError(t, err)
+	assert.JSONEq(t, `[
+		{"dependent":"moduleA","status":"pass","base_output":"ok","head_output":"ok"},
+		{"dependent":"moduleB","status":"broken","base_output":"fail","head_output":"fail"},
+		{"dependent":"moduleC","status":"regression","base_output":"ok","head_output":"fail"}
+	]`, string(content))
 }
 
 func TestGetRegressionReport(t *testing.T) {
-	bytes, err := GetRegressionReport(
+	testDir := t.TempDir()
+	t.Chdir(testDir)
+
+	ws, err := workspace.NewWorkspace()
+	require.NoError(t, err)
+
+	err = GetRegressionReport(ws,
 		[]module.Module{*module.NewModule("moduleA", ""), *module.NewModule("moduleB", ""), *module.NewModule("moduleC", "")},
 		[][]container.ExecuteCommandResponse{
 			{{ExitCode: 0, Output: "ok"}, {ExitCode: 0, Output: "ok"}},
@@ -50,9 +64,9 @@ func TestGetRegressionReport(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	var report []Result
-	require.NoError(t, json.Unmarshal(bytes, &report))
-
-	assert.Len(t, report, 1)
-	assert.Equal(t, Result{Dependent: "moduleC", Status: "regression", BaseOutput: "ok", HeadOutput: "fail"}, report[0])
+	content, err := os.ReadFile(".grater/regression_report.json")
+	require.NoError(t, err)
+	assert.JSONEq(t, `[
+		{"dependent":"moduleC","status":"regression","base_output":"ok","head_output":"fail"}
+	]`, string(content))
 }

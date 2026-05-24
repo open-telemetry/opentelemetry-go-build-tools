@@ -5,10 +5,9 @@
 package report
 
 import (
-	"encoding/json"
-
 	"go.opentelemetry.io/build-tools/grater/internal/container"
 	"go.opentelemetry.io/build-tools/grater/internal/module"
+	"go.opentelemetry.io/build-tools/grater/internal/workspace"
 )
 
 // Result struct holds an instance of a result of a test run.
@@ -41,22 +40,22 @@ func classifyResult(base, head container.ExecuteCommandResponse) string {
 	return ""
 }
 
-// GetReport generates a report for all test results as JSON bytes.
-func GetReport(dependents []module.Module, results [][]container.ExecuteCommandResponse) ([]byte, error) {
+// GetReport generates and writes a report for all test results.
+func GetReport(ws *workspace.Workspace, dependents []module.Module, results [][]container.ExecuteCommandResponse) error {
 	report := []Result{}
 	for i, result := range results {
 		report = append(report, NewResult(dependents[i], result))
 	}
-	return json.MarshalIndent(report, "", "  ")
+	return ws.WriteReport(report)
 }
 
-// GetRegressionReport generates a report containing only regressions as JSON bytes.
-func GetRegressionReport(dependents []module.Module, results [][]container.ExecuteCommandResponse) ([]byte, error) {
+// GetRegressionReport generates and writes a report containing only regressions.
+func GetRegressionReport(ws *workspace.Workspace, dependents []module.Module, results [][]container.ExecuteCommandResponse) error {
 	report := []Result{}
 	for i, result := range results {
 		if classifyResult(result[0], result[1]) == "regression" {
 			report = append(report, NewResult(dependents[i], result))
 		}
 	}
-	return json.MarshalIndent(report, "", "  ")
+	return ws.WriteRegressionReport(report)
 }
