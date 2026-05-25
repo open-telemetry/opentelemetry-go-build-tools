@@ -65,3 +65,18 @@ func TestMockExecuteCommand(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, called)
 }
+
+func TestCopyToContainer(t *testing.T) {
+	m := NewMockDockerContainer()
+
+	called := false
+
+	m.CopyToContainerMock = func(_ context.Context, _ string, _ map[string]string) error {
+		called = true
+		return nil
+	}
+
+	err := m.CopyToContainer(context.Background(), "containerID", map[string]string{"host/path": "/data/"})
+	assert.NoError(t, err)
+	assert.True(t, called)
+}

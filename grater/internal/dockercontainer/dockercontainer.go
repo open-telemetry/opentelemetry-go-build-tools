@@ -77,27 +77,13 @@ func (dc *DockerContainer) UseContainer(ctx context.Context, cfg container.UseCo
 		return container.UseContainerResponse{}, err
 	}
 
-	if _, err := dc.cli.ContainerStart(ctx, resp.ID, client.ContainerStartOptions{}); err != nil {
+	if _, err = dc.cli.ContainerStart(ctx, resp.ID, client.ContainerStartOptions{}); err != nil {
 		return container.UseContainerResponse{}, err
 	}
 
-	for hostPath, containerPath := range cfg.HostToContainerPaths() {
-		if _, err := dc.ExecuteCommand(ctx, container.NewExecuteCommandConfig(
-			container.WithContainerID(resp.ID),
-			container.WithCommand([]string{"mkdir", "-p", containerPath}),
-		)); err != nil {
-			return container.UseContainerResponse{}, err
-		}
-		tar, err := archive.TarWithOptions(hostPath, &archive.TarOptions{})
-		if err != nil {
-			return container.UseContainerResponse{}, err
-		}
-		if _, err := dc.cli.CopyToContainer(ctx, resp.ID, client.CopyToContainerOptions{
-			DestinationPath: containerPath,
-			Content:         tar,
-		}); err != nil {
-			return container.UseContainerResponse{}, err
-		}
+	err = dc.CopyToContainer(ctx, resp.ID, cfg.HostToContainerPaths())
+	if err != nil {
+		return container.UseContainerResponse{}, err
 	}
 
 	cleanup := func() {
@@ -143,6 +129,29 @@ func (dc *DockerContainer) ExecuteCommand(ctx context.Context, cfg container.Exe
 		strings.TrimSpace(buf.String()),
 		inspect.ExitCode,
 	), nil
+}
+
+// CopyToContainer copies a Dir inside a container by specifying its host and container paths.
+func (dc *DockerContainer) CopyToContainer(ctx context.Context, containerID string, hostToContainerPaths map[string]string) error {
+	for hostPath, containerPath := range hostToContainerPaths {
+		if _, err := dc.ExecuteCommand(ctx, container.NewExecuteCommandConfig(
+			container.WithContainerID(containerID),
+			container.WithCommand([]string{"mkdir", "-p", containerPath}),
+		)); err != nil {
+			return err
+		}
+		tar, err := archive.TarWithOptions(hostPath, &archive.TarOptions{})
+		if err != nil {
+			return err
+		}
+		if _, err := dc.cli.CopyToContainer(ctx, containerID, client.CopyToContainerOptions{
+			DestinationPath: containerPath,
+			Content:         tar,
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (dc *DockerContainer) pullImage(ctx context.Context, imageName string) error {
