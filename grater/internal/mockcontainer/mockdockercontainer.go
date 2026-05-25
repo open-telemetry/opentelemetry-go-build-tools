@@ -12,9 +12,10 @@ import (
 
 // MockDockerContainer is a mock implementation of the Container interface.
 type MockDockerContainer struct {
-	CreateVolumeMock   func(context.Context, container.CreateVolumeConfig) (container.CreateVolumeResponse, error)
-	UseContainerMock   func(context.Context, container.UseContainerConfig) (container.UseContainerResponse, error)
-	ExecuteCommandMock func(context.Context, container.ExecuteCommandConfig) (container.ExecuteCommandResponse, error)
+	CreateVolumeMock    func(context.Context, container.CreateVolumeConfig) (container.CreateVolumeResponse, error)
+	UseContainerMock    func(context.Context, container.UseContainerConfig) (container.UseContainerResponse, error)
+	ExecuteCommandMock  func(context.Context, container.ExecuteCommandConfig) (container.ExecuteCommandResponse, error)
+	CopyToContainerMock func(context.Context, string, map[string]string) error
 }
 
 var _ container.Container = (*MockDockerContainer)(nil)
@@ -46,4 +47,12 @@ func (m *MockDockerContainer) ExecuteCommand(ctx context.Context, cfg container.
 		return m.ExecuteCommandMock(ctx, cfg)
 	}
 	return container.ExecuteCommandResponse{}, nil
+}
+
+// CopyToContainer creates a mock instance of copying to a container.
+func (m *MockDockerContainer) CopyToContainer(ctx context.Context, containerID string, hostToContainerPaths map[string]string) error {
+	if m.CopyToContainerMock != nil {
+		return m.CopyToContainerMock(ctx, containerID, hostToContainerPaths)
+	}
+	return nil
 }

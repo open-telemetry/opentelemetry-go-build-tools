@@ -9,6 +9,7 @@ package commands
 import (
 	"testing"
 	"context"
+	"fmt"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -79,7 +80,17 @@ func TestSetReplaceDirective(t *testing.T) {
 	oldModule := *module.NewModule("go.opentelemetry.io/build-tools/grater/internal/testdata/module", "")
 	newModule := *module.NewModule("../moduleFail", "")
 
-	err = SetReplaceDirective(ctx, c, useContainerResp, oldModule, newModule, "/dependent/")
+	oldRef := oldModule.ModulePath
+	if oldModule.ModuleVersion != "" {
+		oldRef = fmt.Sprintf("%s@%s", oldModule.ModulePath, oldModule.ModuleVersion)
+	}
+
+	newRef := newModule.ModulePath
+	if newModule.ModuleVersion != "" {
+		newRef = fmt.Sprintf("%s@%s", newModule.ModulePath, newModule.ModuleVersion)
+	}
+
+	err = SetReplaceDirective(ctx, c, useContainerResp, oldRef, newRef, "/dependent/")
 	require.NoError(t, err)
 
 	resp, err := c.ExecuteCommand(ctx,
