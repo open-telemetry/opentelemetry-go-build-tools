@@ -46,17 +46,7 @@ func GetModuleFromProxy(ctx context.Context, c container.Container, useContainer
 }
 
 // SetReplaceDirective adds a new replace directive in the go.mod file on the given path.
-func SetReplaceDirective(ctx context.Context, c container.Container, useContainerResp container.UseContainerResponse, oldModule, newModule module.Module, modulePath string) error {
-	oldRef := oldModule.ModulePath
-	if oldModule.ModuleVersion != "" {
-		oldRef = fmt.Sprintf("%s@%s", oldModule.ModulePath, oldModule.ModuleVersion)
-	}
-
-	newRef := newModule.ModulePath
-	if newModule.ModuleVersion != "" {
-		newRef = fmt.Sprintf("%s@%s", newModule.ModulePath, newModule.ModuleVersion)
-	}
-
+func SetReplaceDirective(ctx context.Context, c container.Container, useContainerResp container.UseContainerResponse, oldRef, newRef, modulePath string) error {
 	replace := fmt.Sprintf("%s=%s", oldRef, newRef)
 
 	_, err := c.ExecuteCommand(ctx,
