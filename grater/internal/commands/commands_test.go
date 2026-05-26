@@ -9,7 +9,6 @@ package commands
 import (
 	"testing"
 	"context"
-	"fmt"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -59,7 +58,9 @@ func TestGetModuleFromProxy(t *testing.T) {
 
 func TestSetReplaceDirective(t *testing.T) {
 	ctx := context.Background()
+
 	var c container.Container
+
 	c, err := dockercontainer.NewDockerContainer()
 	require.NoError(t, err)
 
@@ -75,30 +76,20 @@ func TestSetReplaceDirective(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	oldModule := module.NewModule("go.opentelemetry.io/build-tools/grater/internal/testdata/module", "",)
-	newModule := module.NewModule("../moduleFail", "")
+	oldModule := *module.NewModule("go.opentelemetry.io/build-tools/grater/internal/testdata/module", "")
+	newModule := *module.NewModule("../moduleFail", "")
 
-	oldRef := oldModule.ModulePath
-	if oldModule.ModuleVersion != "" {
-		oldRef = fmt.Sprintf("%s@%s", oldModule.ModulePath, oldModule.ModuleVersion)
-	}
-
-	newRef := newModule.ModulePath
-	if newModule.ModuleVersion != "" {
-		newRef = fmt.Sprintf("%s@%s", newModule.ModulePath, newModule.ModuleVersion)
-	}
-
-	err = SetReplaceDirective(ctx, c, useContainerResp, oldRef, newRef, "/dependent/")
+	err = SetReplaceDirective(ctx, c, useContainerResp, oldModule, newModule, "/dependent/")
 	require.NoError(t, err)
 
 	resp, err := c.ExecuteCommand(ctx,
-		container.NewExecuteCommandConfig(
+	container.NewExecuteCommandConfig(
 			container.WithContainerID(useContainerResp.ContainerID),
 			container.WithCommand([]string{"cat", "/dependent/go.mod"}),
 		),
 	)
 
-	assert.Contains(t, resp.Output, "replace go.opentelemetry.io/build-tools/grater/internal/testdata/module => ../moduleFail")
+	assert.Contains(t, resp.Output, `replace go.opentelemetry.io/build-tools/grater/internal/testdata/module => ../moduleFail`)
 }
 
 func TestRunModuleTest(t *testing.T) {
