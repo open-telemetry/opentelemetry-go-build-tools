@@ -79,6 +79,16 @@ func TestSetReplaceDirective(t *testing.T) {
 	oldModule := *module.NewModule("go.opentelemetry.io/build-tools/grater/internal/testdata/module", "")
 	newModule := *module.NewModule("../moduleFail", "")
 
+	oldRef := oldModule.ModulePath
+	if oldModule.ModuleVersion != "" {
+		oldRef = fmt.Sprintf("%s@%s", oldModule.ModulePath, oldModule.ModuleVersion)
+	}
+
+	newRef := newModule.ModulePath
+	if newModule.ModuleVersion != "" {
+		newRef = fmt.Sprintf("%s@%s", newModule.ModulePath, newModule.ModuleVersion)
+	}
+
 	err = SetReplaceDirective(ctx, c, useContainerResp, oldModule, newModule, "/dependent/")
 	require.NoError(t, err)
 
