@@ -9,6 +9,7 @@ package commands
 import (
 	"testing"
 	"context"
+	"fmt"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -89,7 +90,7 @@ func TestSetReplaceDirective(t *testing.T) {
 		newRef = fmt.Sprintf("%s@%s", newModule.ModulePath, newModule.ModuleVersion)
 	}
 
-	err = SetReplaceDirective(ctx, c, useContainerResp, oldModule, newModule, "/dependent/")
+	err = SetReplaceDirective(ctx, c, useContainerResp, oldRef, newRef, "/dependent/")
 	require.NoError(t, err)
 
 	resp, err := c.ExecuteCommand(ctx,
