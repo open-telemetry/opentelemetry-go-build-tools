@@ -74,16 +74,6 @@ func (env *Environment) runTest(ctx context.Context, respUseContainer container.
 		return nil, err
 	}
 
-	_, err = env.c.ExecuteCommand(ctx,
-		container.NewExecuteCommandConfig(
-			container.WithContainerID(respUseContainer.ContainerID),
-			container.WithCommand([]string{"cat", "/dependent/dependent/go.mod"}),
-		),
-	)
-	if err != nil {
-		return nil, err
-	}
-
 	executeCommandRespHead, err := commands.RunModuleTest(ctx, env.c, respUseContainer, dependentPath)
 	if err != nil {
 		return nil, err
