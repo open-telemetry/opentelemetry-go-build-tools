@@ -13,3 +13,8 @@ Usage:
     # Adds one or more replacements.
     grater replace foo/bar@v1.0.0 bar/foo@v1.0.1 --file <file_path>
 ```
+
+```sh
+    # Finds dependents for a remote module.
+    grater replace foo/bar@v1.0.0
+```
