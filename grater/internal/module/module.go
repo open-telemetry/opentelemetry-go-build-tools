@@ -30,6 +30,7 @@ func NewModule(modulePath string, moduleVersion string) *Module {
 // IsRemotePath checks if the module is a remote path.
 func (m *Module) IsRemotePath() bool {
 	cleanPath := path.Clean(m.ModulePath)
-	match, _ := regexp.MatchString(`^(go\.|github\.com/)`, cleanPath)
+	pattern := `^([a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+)/([a-zA-Z0-9-_~.]+)+`
+	match, _ := regexp.MatchString(pattern, cleanPath)
 	return match
 }
