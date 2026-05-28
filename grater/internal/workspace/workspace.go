@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 
 	"go.opentelemetry.io/build-tools/grater/internal/module"
+	"go.opentelemetry.io/build-tools/grater/internal/report"
 )
 
 const (
@@ -20,11 +21,13 @@ const (
 
 // Workspace represents a workspace directory.
 type Workspace struct {
-	dir              string
-	dependentsPath   string
-	replacementsPath string
-	dependents       []module.Module
-	replacements     [][]module.Module
+	dir                  string
+	dependentsPath       string
+	replacementsPath     string
+	reportPath           string
+	regressionReportPath string
+	dependents           []module.Module
+	replacements         [][]module.Module
 }
 
 // NewWorkspace creates a new Workspace instance.
@@ -33,13 +36,14 @@ func NewWorkspace() (*Workspace, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get current working directory: %w", err)
 	}
-
 	w := &Workspace{
-		dir:              root,
-		dependentsPath:   filepath.Join(root, ".grater", "dependents.json"),
-		replacementsPath: filepath.Join(root, ".grater", "replacements.json"),
-		dependents:       []module.Module{},
-		replacements:     [][]module.Module{},
+		dir:                  root,
+		dependentsPath:       filepath.Join(root, ".grater", "dependents.json"),
+		replacementsPath:     filepath.Join(root, ".grater", "replacements.json"),
+		reportPath:           filepath.Join(root, ".grater", "report.json"),
+		regressionReportPath: filepath.Join(root, ".grater", "regression_report.json"),
+		dependents:           []module.Module{},
+		replacements:         [][]module.Module{},
 	}
 	err = w.create()
 	return w, err
@@ -49,11 +53,9 @@ func NewWorkspace() (*Workspace, error) {
 func (w *Workspace) create() error {
 	graterDir := filepath.Join(w.dir, ".grater")
 	err := os.MkdirAll(graterDir, dirReadWrite)
-
 	if err != nil {
 		return fmt.Errorf("failed to create .grater/ directory: %w", err)
 	}
-
 	return nil
 }
 
@@ -73,11 +75,10 @@ func (w *Workspace) WriteDependents() error {
 	if err != nil {
 		return err
 	}
-
 	return commitToFile(content, w.dependentsPath)
 }
 
-// AddReplacements adds replacements to the inetrnal list of replacements.
+// AddReplacements adds replacements to the internal list of replacements.
 func (w *Workspace) AddReplacements(replacements [][]module.Module) {
 	w.replacements = append(w.replacements, replacements...)
 }
@@ -93,23 +94,37 @@ func (w *Workspace) WriteReplacements() error {
 	if err != nil {
 		return err
 	}
-
 	return commitToFile(content, w.replacementsPath)
+}
+
+// WriteReport writes the test report to the report.json file.
+func (w *Workspace) WriteReport(results []report.Result) error {
+	content, err := json.MarshalIndent(results, "", "  ")
+	if err != nil {
+		return err
+	}
+	return commitToFile(content, w.reportPath)
+}
+
+// WriteRegressionReport writes the regression report to the regression_report.json file.
+func (w *Workspace) WriteRegressionReport(results []report.Result) error {
+	content, err := json.MarshalIndent(results, "", "  ")
+	if err != nil {
+		return err
+	}
+	return commitToFile(content, w.regressionReportPath)
 }
 
 func commitToFile(content []byte, path string) error {
 	cleanPath := filepath.Clean(path)
-
 	f, err := os.OpenFile(cleanPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, fileReadWrite)
 	if err != nil {
 		return fmt.Errorf("failed to write to %s: %w", cleanPath, err)
 	}
 	defer f.Close()
-
 	_, err = f.Write(content)
 	if err != nil {
 		return fmt.Errorf("failed to write to %s: %w", cleanPath, err)
 	}
-
 	return nil
 }
