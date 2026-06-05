@@ -8,7 +8,7 @@ component: githubgen
 note: Fix unmaintained codeowners to be relative to the root folder instead of absolute paths.
 
 # One or more tracking issues related to the change
-issues: []
+issues: [1932]
 
 # (Optional) One or more lines of additional information to render under the primary note.
 # These lines will be padded with 2 spaces and then inserted directly into the document.
