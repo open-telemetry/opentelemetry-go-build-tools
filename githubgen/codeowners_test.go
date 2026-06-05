@@ -4,6 +4,7 @@
 package main
 
 import (
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -378,7 +379,7 @@ func Test_codeownersGenerator_Generate_unmaintainedFolderTrimPrefix(t *testing.T
 				skipGithub:       true,
 				getGitHubMembers: mockGithubMembers,
 				getFile: func(path string) ([]byte, error) {
-					if strings.Contains(path, ".github/CODEOWNERS") {
+					if strings.Contains(filepath.ToSlash(path), ".github/CODEOWNERS") {
 						return []byte(codeownersTemplate), nil
 					}
 					return []byte(""), nil
@@ -424,7 +425,7 @@ func mockGithubMembers(bool, string) (map[string]struct{}, error) {
 func mockGetFile(path string) ([]byte, error) {
 	if path == "allowlist" {
 		return []byte(""), nil
-	} else if strings.Contains(path, ".github/CODEOWNERS") {
+	} else if strings.Contains(filepath.ToSlash(path), ".github/CODEOWNERS") {
 		return []byte("aaa\n\n\nbbb"), nil
 	}
 	return []byte(""), nil
