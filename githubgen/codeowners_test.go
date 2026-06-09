@@ -4,9 +4,12 @@
 package main
 
 import (
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"go.opentelemetry.io/build-tools/githubgen/datatype"
 )
@@ -310,6 +313,107 @@ func Test_codeownersGenerator_Generate(t *testing.T) {
 	}
 }
 
+func Test_codeownersGenerator_Generate_unmaintainedFolderTrimPrefix(t *testing.T) {
+	codeownersTemplate := startUnmaintainedList + "\n\n" + endUnmaintainedList
+
+	tests := []struct {
+		name             string
+		rootFolder       string
+		folder           string
+		maxLength        int
+		defaultCodeOwner string
+		wantContains     string
+		wantNotContains  string
+	}{
+		{
+			name:             "folder with root prefix is stripped",
+			rootFolder:       "root",
+			folder:           "root/mycomponent",
+			maxLength:        20,
+			defaultCodeOwner: "@team",
+			wantContains:     "mycomponent/",
+			wantNotContains:  "root/mycomponent/",
+		},
+		{
+			name:             "folder without root prefix is unchanged",
+			rootFolder:       "root",
+			folder:           "mycomponent",
+			maxLength:        20,
+			defaultCodeOwner: "@team",
+			wantContains:     "mycomponent/",
+			wantNotContains:  "",
+		},
+		{
+			name:             "nested folder with root prefix is stripped",
+			rootFolder:       "root",
+			folder:           "root/receivers/myreceiver",
+			maxLength:        30,
+			defaultCodeOwner: "@team",
+			wantContains:     "receivers/myreceiver/",
+			wantNotContains:  "root/receivers/myreceiver/",
+		},
+		{
+			name:             "folder matching root exactly is not stripped (prefix includes trailing slash)",
+			rootFolder:       "root",
+			folder:           "root",
+			maxLength:        10,
+			defaultCodeOwner: "@team",
+			wantContains:     "root/",
+			wantNotContains:  "",
+		},
+		{
+			name:             "default codeowner is included in unmaintained entry",
+			rootFolder:       "repo",
+			folder:           "repo/internal/comp",
+			maxLength:        25,
+			defaultCodeOwner: "@open-telemetry/team",
+			wantContains:     "@open-telemetry/team",
+			wantNotContains:  "repo/internal/comp/",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var capturedContent []byte
+			cg := &codeownersGenerator{
+				skipGithub:       true,
+				getGitHubMembers: mockGithubMembers,
+				getFile: func(path string) ([]byte, error) {
+					if strings.Contains(filepath.ToSlash(path), ".github/CODEOWNERS") {
+						return []byte(codeownersTemplate), nil
+					}
+					return []byte(""), nil
+				},
+				setFile: func(_ string, data []byte) error {
+					capturedContent = data
+					return nil
+				},
+			}
+
+			data := datatype.GithubData{
+				RootFolder:        tt.rootFolder,
+				Folders:           []string{tt.folder},
+				Codeowners:        []string{},
+				AllowlistFilePath: "allowlist",
+				MaxLength:         tt.maxLength,
+				DefaultCodeOwner:  tt.defaultCodeOwner,
+				Components: map[string]datatype.Metadata{
+					tt.folder: {
+						Status: &datatype.Status{
+							Stability: map[string][]string{
+								unmaintainedStatus: {""},
+							},
+						},
+					},
+				},
+			}
+
+			require.NoError(t, cg.Generate(data))
+			require.Containsf(t, string(capturedContent), tt.wantContains, "generated CODEOWNERS does not contain %q", tt.wantContains)
+		})
+	}
+}
+
 func mockGithubMembers(bool, string) (map[string]struct{}, error) {
 	return map[string]struct{}{
 		"user1": {},
@@ -321,7 +425,7 @@ func mockGithubMembers(bool, string) (map[string]struct{}, error) {
 func mockGetFile(path string) ([]byte, error) {
 	if path == "allowlist" {
 		return []byte(""), nil
-	} else if strings.Contains(path, ".github/CODEOWNERS") {
+	} else if strings.Contains(filepath.ToSlash(path), ".github/CODEOWNERS") {
 		return []byte("aaa\n\n\nbbb"), nil
 	}
 	return []byte(""), nil

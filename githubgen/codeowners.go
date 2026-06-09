@@ -44,7 +44,7 @@ LOOP:
 		// check if component is unmaintained or deprecated
 		for stability := range m.Status.Stability {
 			if stability == unmaintainedStatus {
-				unmaintainedCodeowners = append(unmaintainedCodeowners, fmt.Sprintf("%s/%s %s", folder, strings.Repeat(" ", data.MaxLength-len(folder)), data.DefaultCodeOwner))
+				unmaintainedCodeowners = append(unmaintainedCodeowners, fmt.Sprintf("%s/%s %s", strings.TrimPrefix(folder, data.RootFolder+"/"), strings.Repeat(" ", data.MaxLength-len(folder)), data.DefaultCodeOwner))
 				continue LOOP
 			}
 		}
