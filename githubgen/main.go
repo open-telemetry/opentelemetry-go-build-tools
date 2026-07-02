@@ -29,6 +29,7 @@ func main() {
 	defaultCodeOwner := flag.String("default-codeowner", "@open-telemetry/collector-contrib-approvers", "GitHub user or team name that will be used as default codeowner")
 	trimSuffixes := flag.String("trim-component-suffixes", "receiver, exporter, extension, processor, connector, internal", "Define a comma-separated list of suffixes that should be trimmed from paths during generation of issue templates")
 	githubOrgSlug := flag.String("github-org", "open-telemetry", "GitHub organization name to check if codeowners are org members")
+	githubTeamSlug := flag.String("github-team", "", "if set, the org team slug that codeowners must be members of (in addition to being org members)")
 
 	flag.Parse()
 
@@ -42,7 +43,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err = run(*folder, *allowlistFilePath, generators, distributions, *defaultCodeOwner, *githubOrgSlug); err != nil {
+	if err = run(*folder, *allowlistFilePath, generators, distributions, *defaultCodeOwner, *githubOrgSlug, *githubTeamSlug); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -93,7 +94,7 @@ func loadMetadata(filePath string) (datatype.Metadata, error) {
 	return md, nil
 }
 
-func run(folder string, allowlistFilePath string, generators []datatype.Generator, distros []datatype.DistributionData, defaultCodeOwner string, githubOrg string) error {
+func run(folder string, allowlistFilePath string, generators []datatype.Generator, distros []datatype.DistributionData, defaultCodeOwner string, githubOrg string, githubTeam string) error {
 	components := map[string]datatype.Metadata{}
 	var foldersList []string
 	maxLength := 0
@@ -168,6 +169,7 @@ func run(folder string, allowlistFilePath string, generators []datatype.Generato
 		Distributions:     distros,
 		DefaultCodeOwner:  defaultCodeOwner,
 		GitHubOrg:         githubOrg,
+		GitHubTeam:        githubTeam,
 		Chloggen:          chloggenCfg,
 	}
 
@@ -200,7 +202,7 @@ func newIssueTemplatesGenerator(trimSuffixes string) *issueTemplatesGenerator {
 }
 
 func newCodeownersGenerator(skipGithubCheck *bool) *codeownersGenerator {
-	return &codeownersGenerator{skipGithub: *skipGithubCheck, getGitHubMembers: getGithubMembers, getFile: getFile, setFile: setFile}
+	return &codeownersGenerator{skipGithub: *skipGithubCheck, getGitHubMembers: getGithubMembers, getGitHubTeamMembers: getGithubTeamMembers, getFile: getFile, setFile: setFile}
 }
 
 func newDistributionsGenerator() *distributionsGenerator {
