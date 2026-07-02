@@ -95,6 +95,145 @@ func Test_codeownersGenerator_verifyCodeOwnerOrgMembership(t *testing.T) {
 	}
 }
 
+func Test_codeownersGenerator_verifyCodeOwnerTeamMembership(t *testing.T) {
+	tests := []struct {
+		name        string
+		skipGithub  bool
+		allowlist   []byte
+		data        datatype.GithubData
+		wantErr     bool
+		errContains string
+	}{
+		{
+			name: "all codeowners are team members",
+			data: datatype.GithubData{
+				GitHubOrg:  "open-telemetry",
+				GitHubTeam: "some-team",
+				Codeowners: []string{"user1", "user2"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "codeowner is an org member but not a team member",
+			data: datatype.GithubData{
+				GitHubOrg:  "open-telemetry",
+				GitHubTeam: "some-team",
+				Codeowners: []string{"user1", "user3"},
+			},
+			wantErr:     true,
+			errContains: "codeowners are not members of the open-telemetry/some-team team: user3",
+		},
+		{
+			name:      "non-org-member on the allowlist is exempt from the team check",
+			allowlist: []byte("user4"),
+			data: datatype.GithubData{
+				GitHubOrg:  "open-telemetry",
+				GitHubTeam: "some-team",
+				Codeowners: []string{"user1", "user4"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "org team handle is exempt from the team check",
+			data: datatype.GithubData{
+				GitHubOrg:  "open-telemetry",
+				GitHubTeam: "some-team",
+				Codeowners: []string{"user1", "open-telemetry/some-other-team"},
+			},
+			wantErr: false,
+		},
+		{
+			name:       "team check is skipped when skipGithub is set",
+			skipGithub: true,
+			data: datatype.GithubData{
+				GitHubOrg:  "open-telemetry",
+				GitHubTeam: "some-team",
+				Codeowners: []string{"user1", "user3"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "no team configured preserves org-only behavior",
+			data: datatype.GithubData{
+				GitHubOrg:  "open-telemetry",
+				Codeowners: []string{"user1", "user3"},
+			},
+			wantErr: false,
+		},
+		{
+			name:      "org member on the allowlist reports a duplicate, not a missing team member",
+			allowlist: []byte("user3"),
+			data: datatype.GithubData{
+				GitHubOrg:  "open-telemetry",
+				GitHubTeam: "some-team",
+				Codeowners: []string{"user3"},
+			},
+			wantErr:     true,
+			errContains: "codeowners members duplicate in allowlist: user3",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cg := &codeownersGenerator{
+				skipGithub:           tt.skipGithub,
+				getGitHubMembers:     mockGithubMembers,
+				getGitHubTeamMembers: mockGithubTeamMembers,
+			}
+			err := cg.verifyCodeOwnerOrgMembership(tt.allowlist, tt.data)
+			if tt.wantErr {
+				require.Error(t, err)
+				if tt.errContains != "" {
+					require.Contains(t, err.Error(), tt.errContains)
+				}
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func Test_getGithubTeamMembers(t *testing.T) {
+	tests := []struct {
+		name       string
+		skipGithub bool
+		org        string
+		team       string
+		token      string
+		wantErr    bool
+	}{
+		{
+			name:       "skipGithub returns an empty set without calling GitHub",
+			skipGithub: true,
+			org:        "open-telemetry",
+			team:       "some-team",
+		},
+		{
+			name: "empty team returns an empty set without calling GitHub",
+			org:  "open-telemetry",
+			team: "",
+		},
+		{
+			name:    "missing token errors",
+			org:     "open-telemetry",
+			team:    "some-team",
+			token:   "",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("GITHUB_TOKEN", tt.token)
+			got, err := getGithubTeamMembers(tt.skipGithub, tt.org, tt.team)
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Empty(t, got)
+		})
+	}
+}
+
 func Test_codeownersGenerator_longestNameSpaces(t *testing.T) {
 	longName := "name-looooong"
 	type args struct {
@@ -419,6 +558,15 @@ func mockGithubMembers(bool, string) (map[string]struct{}, error) {
 		"user1": {},
 		"user2": {},
 		"user3": {},
+	}, nil
+}
+
+// mockGithubTeamMembers returns a subset of mockGithubMembers: user3 is an org
+// member but not a team member.
+func mockGithubTeamMembers(bool, string, string) (map[string]struct{}, error) {
+	return map[string]struct{}{
+		"user1": {},
+		"user2": {},
 	}, nil
 }
 

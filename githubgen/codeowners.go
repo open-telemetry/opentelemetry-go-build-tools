@@ -19,10 +19,11 @@ import (
 )
 
 type codeownersGenerator struct {
-	skipGithub       bool
-	getGitHubMembers func(skipGithub bool, githubOrg string) (map[string]struct{}, error)
-	getFile          func(fileName string) ([]byte, error)
-	setFile          func(fileName string, data []byte) error
+	skipGithub           bool
+	getGitHubMembers     func(skipGithub bool, githubOrg string) (map[string]struct{}, error)
+	getGitHubTeamMembers func(skipGithub bool, githubOrg, teamSlug string) (map[string]struct{}, error)
+	getFile              func(fileName string) ([]byte, error)
+	setFile              func(fileName string, data []byte) error
 }
 
 func (cg *codeownersGenerator) Generate(data datatype.GithubData) error {
@@ -125,8 +126,12 @@ func (cg *codeownersGenerator) longestNameSpaces(data datatype.GithubData) int {
 //
 // If a codeOwner is not part of the GitHub org, that user will be looked for in the allowlist.
 //
+// When data.GitHubTeam is set, codeOwners must additionally be members of that
+// org team. Allowlisted code owners are exempt.
+//
 // The method returns an error if:
 // - there are code owners that are not org members and not in the allowlist (only if skipGithub is set to false)
+// - there are code owners that are not members of the required team and not in the allowlist (only if a team is configured and skipGithub is set to false)
 // - there are redundant entries in the allowlist
 // - there are entries in the allowlist that are unused
 func (cg *codeownersGenerator) verifyCodeOwnerOrgMembership(allowlistData []byte, data datatype.GithubData) error {
@@ -137,6 +142,7 @@ func (cg *codeownersGenerator) verifyCodeOwnerOrgMembership(allowlistData []byte
 	unusedAllowlist := append([]string{}, allowlist...)
 
 	var missingCodeowners []string
+	var missingTeamMembers []string
 	var duplicateCodeowners []string
 
 	members, err := cg.getGitHubMembers(cg.skipGithub, data.GitHubOrg)
@@ -144,11 +150,20 @@ func (cg *codeownersGenerator) verifyCodeOwnerOrgMembership(allowlistData []byte
 		return err
 	}
 
+	var teamMembers map[string]struct{}
+	if data.GitHubTeam != "" {
+		teamMembers, err = cg.getGitHubTeamMembers(cg.skipGithub, data.GitHubOrg, data.GitHubTeam)
+		if err != nil {
+			return err
+		}
+	}
+
 	// sort codeowners
 	for _, codeowner := range data.Codeowners {
 		_, ownerPresentInMembers := members[codeowner]
 
-		if !ownerPresentInMembers {
+		switch {
+		case !ownerPresentInMembers:
 			ownerInAllowlist := slices.Contains(allowlist, codeowner)
 			unusedAllowlist = slices.DeleteFunc(unusedAllowlist, func(s string) bool {
 				return s == codeowner
@@ -159,8 +174,12 @@ func (cg *codeownersGenerator) verifyCodeOwnerOrgMembership(allowlistData []byte
 			if !ownerInAllowlist {
 				missingCodeowners = append(missingCodeowners, codeowner)
 			}
-		} else if slices.Contains(allowlist, codeowner) {
+		case slices.Contains(allowlist, codeowner):
 			duplicateCodeowners = append(duplicateCodeowners, codeowner)
+		case data.GitHubTeam != "":
+			if _, ownerPresentInTeam := teamMembers[codeowner]; !ownerPresentInTeam {
+				missingTeamMembers = append(missingTeamMembers, codeowner)
+			}
 		}
 	}
 
@@ -168,6 +187,10 @@ func (cg *codeownersGenerator) verifyCodeOwnerOrgMembership(allowlistData []byte
 	if len(missingCodeowners) > 0 && !cg.skipGithub {
 		sort.Strings(missingCodeowners)
 		return fmt.Errorf("codeowners are not members: %s", strings.Join(missingCodeowners, ", "))
+	}
+	if len(missingTeamMembers) > 0 && !cg.skipGithub {
+		sort.Strings(missingTeamMembers)
+		return fmt.Errorf("codeowners are not members of the %s/%s team: %s", data.GitHubOrg, data.GitHubTeam, strings.Join(missingTeamMembers, ", "))
 	}
 	if len(duplicateCodeowners) > 0 {
 		sort.Strings(duplicateCodeowners)
@@ -207,6 +230,42 @@ func getGithubMembers(skipGithub bool, githubOrg string) (map[string]struct{}, e
 		}
 		allUsers = append(allUsers, users...)
 		pageIndex++
+	}
+
+	usernames := make(map[string]struct{}, len(allUsers))
+	for _, u := range allUsers {
+		usernames[*u.Login] = struct{}{}
+	}
+	return usernames, nil
+}
+
+func getGithubTeamMembers(skipGithub bool, githubOrg, teamSlug string) (map[string]struct{}, error) {
+	if skipGithub || teamSlug == "" {
+		// don't try to get team members if no token is expected or no team is configured
+		return map[string]struct{}{}, nil
+	}
+	githubToken := os.Getenv("GITHUB_TOKEN")
+	if githubToken == "" {
+		return nil, fmt.Errorf("set the environment variable `GITHUB_TOKEN` to a PAT token to authenticate")
+	}
+	client := github.NewClient(nil).WithAuthToken(githubToken)
+	var allUsers []*github.User
+	opts := &github.TeamListTeamMembersOptions{
+		ListOptions: github.ListOptions{
+			PerPage: 50,
+		},
+	}
+	for {
+		users, resp, err := client.Teams.ListTeamMembersBySlug(context.Background(), githubOrg, teamSlug, opts)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+		allUsers = append(allUsers, users...)
+		if resp.NextPage == 0 {
+			break
+		}
+		opts.Page = resp.NextPage
 	}
 
 	usernames := make(map[string]struct{}, len(allUsers))
