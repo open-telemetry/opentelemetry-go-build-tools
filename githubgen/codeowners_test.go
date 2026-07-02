@@ -192,6 +192,48 @@ func Test_codeownersGenerator_verifyCodeOwnerTeamMembership(t *testing.T) {
 	}
 }
 
+func Test_getGithubTeamMembers(t *testing.T) {
+	tests := []struct {
+		name       string
+		skipGithub bool
+		org        string
+		team       string
+		token      string
+		wantErr    bool
+	}{
+		{
+			name:       "skipGithub returns an empty set without calling GitHub",
+			skipGithub: true,
+			org:        "open-telemetry",
+			team:       "some-team",
+		},
+		{
+			name: "empty team returns an empty set without calling GitHub",
+			org:  "open-telemetry",
+			team: "",
+		},
+		{
+			name:    "missing token errors",
+			org:     "open-telemetry",
+			team:    "some-team",
+			token:   "",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("GITHUB_TOKEN", tt.token)
+			got, err := getGithubTeamMembers(tt.skipGithub, tt.org, tt.team)
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Empty(t, got)
+		})
+	}
+}
+
 func Test_codeownersGenerator_longestNameSpaces(t *testing.T) {
 	longName := "name-looooong"
 	type args struct {

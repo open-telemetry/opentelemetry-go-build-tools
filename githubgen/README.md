@@ -44,10 +44,10 @@ OpenTelemetry organization, the script will error out.
 ## Checking codeowners against a team
 
 Optionally, you can require codeowners to be members of a specific org team in
-addition to being members of the organization by passing `--github-team
-<team-slug>`. Team membership is what grants the repository access required for
-a code owner to be requested as a reviewer, so an org member who is not on the
-team cannot be auto-requested for reviews.
+addition to being members of the organization by passing
+`--github-team <team-slug>`. Team membership is what grants the repository
+access required for a code owner to be requested as a reviewer, so an org member
+who is not on the team cannot be auto-requested for reviews.
 
 When `--github-team` is set, each codeowner (other than allowlisted users and
 org team handles) must be a member of that team. Codeowners in `allowlist.txt`

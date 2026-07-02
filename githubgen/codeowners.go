@@ -162,7 +162,8 @@ func (cg *codeownersGenerator) verifyCodeOwnerOrgMembership(allowlistData []byte
 	for _, codeowner := range data.Codeowners {
 		_, ownerPresentInMembers := members[codeowner]
 
-		if !ownerPresentInMembers {
+		switch {
+		case !ownerPresentInMembers:
 			ownerInAllowlist := slices.Contains(allowlist, codeowner)
 			unusedAllowlist = slices.DeleteFunc(unusedAllowlist, func(s string) bool {
 				return s == codeowner
@@ -173,9 +174,9 @@ func (cg *codeownersGenerator) verifyCodeOwnerOrgMembership(allowlistData []byte
 			if !ownerInAllowlist {
 				missingCodeowners = append(missingCodeowners, codeowner)
 			}
-		} else if slices.Contains(allowlist, codeowner) {
+		case slices.Contains(allowlist, codeowner):
 			duplicateCodeowners = append(duplicateCodeowners, codeowner)
-		} else if data.GitHubTeam != "" {
+		case data.GitHubTeam != "":
 			if _, ownerPresentInTeam := teamMembers[codeowner]; !ownerPresentInTeam {
 				missingTeamMembers = append(missingTeamMembers, codeowner)
 			}
