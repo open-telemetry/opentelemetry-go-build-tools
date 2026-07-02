@@ -160,6 +160,17 @@ func Test_codeownersGenerator_verifyCodeOwnerTeamMembership(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name:      "org member on the allowlist reports a duplicate, not a missing team member",
+			allowlist: []byte("user3"),
+			data: datatype.GithubData{
+				GitHubOrg:  "open-telemetry",
+				GitHubTeam: "some-team",
+				Codeowners: []string{"user3"},
+			},
+			wantErr:     true,
+			errContains: "codeowners members duplicate in allowlist: user3",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
