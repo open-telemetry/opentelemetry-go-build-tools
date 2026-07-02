@@ -8,7 +8,7 @@ component: githubgen
 note: Add a `--github-team` flag to require codeowners to be members of a specific org team
 
 # One or more tracking issues related to the change
-issues: []
+issues: [1993]
 
 # (Optional) One or more lines of additional information to render under the primary note.
 # These lines will be padded with 2 spaces and then inserted directly into the document.
