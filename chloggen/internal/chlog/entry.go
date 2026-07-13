@@ -40,6 +40,8 @@ const (
 	Enhancement = "enhancement"
 	// BugFix is a bug fix change.
 	BugFix = "bug_fix"
+	// Telemetry is for changes in signals.
+	Telemetry = "telemetry"
 )
 
 // Entry represents a changelog entry.
@@ -58,6 +60,7 @@ var changeTypes = []string{
 	NewComponent,
 	Enhancement,
 	BugFix,
+	Telemetry,
 }
 
 // Validate validates the changelog entry.
