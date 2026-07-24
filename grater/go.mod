@@ -3,7 +3,7 @@ module go.opentelemetry.io/build-tools/grater
 go 1.25.0
 
 require (
-	github.com/moby/go-archive v0.2.0
+	github.com/moby/go-archive v0.2.1
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
 )
