@@ -26,6 +26,8 @@ jobs:
 
     - name: Checkout Repo
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      with:
+        persist-credentials: false
 
     - name: Module cache
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
@@ -58,14 +60,16 @@ jobs:
 
     - name: Run linters
       shell: bash
+      env:
+        AFFECTED_MODULES: ${{ needs.detect-changes.outputs.affected_modules }}
       run: |
-        AFFECTED_MODULES="${{ needs.detect-changes.outputs.affected_modules }}"
         make multimod-verify license-check lint ALL_GO_MOD_DIRS="$AFFECTED_MODULES"
 
     - name: Build
       shell: bash
+      env:
+        AFFECTED_MODULES: ${{ needs.detect-changes.outputs.affected_modules }}
       run: |
-        AFFECTED_MODULES="${{ needs.detect-changes.outputs.affected_modules }}"
         make build ALL_GO_MOD_DIRS="$AFFECTED_MODULES"
 
     - name: Check clean repository
@@ -86,6 +90,8 @@ jobs:
 
     - name: Checkout Repo
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      with:
+        persist-credentials: false
 
     - name: Setup Environment
       run: |
@@ -102,8 +108,9 @@ jobs:
 
     - name: Run tests with race detector
       shell: bash
+      env:
+        AFFECTED_MODULES: ${{ needs.detect-changes.outputs.affected_modules }}
       run: |
-        AFFECTED_MODULES="${{ needs.detect-changes.outputs.affected_modules }}"
         make test-race ALL_GO_MOD_DIRS="$AFFECTED_MODULES"
 
   test-integration:
@@ -118,6 +125,8 @@ jobs:
 
       - name: Checkout Repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
       - name: Setup Environment
         run: |
@@ -134,8 +143,9 @@ jobs:
 
       - name: Run integration tests
         shell: bash
+        env:
+          AFFECTED_MODULES: ${{ needs.detect-changes.outputs.affected_modules }}
         run: |
-          AFFECTED_MODULES="${{ needs.detect-changes.outputs.affected_modules }}"
           make test-integration ALL_GO_MOD_DIRS="$AFFECTED_MODULES"
 
   test-coverage:
@@ -150,6 +160,8 @@ jobs:
 
     - name: Checkout Repo
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      with:
+        persist-credentials: false
 
     - name: Setup Environment
       run: |
@@ -165,8 +177,9 @@ jobs:
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/go.sum') }}
 
     - name: Run coverage tests
+      env:
+        AFFECTED_MODULES: ${{ needs.detect-changes.outputs.affected_modules }}
       run: |
-        AFFECTED_MODULES="${{ needs.detect-changes.outputs.affected_modules }}"
         make test-coverage ALL_COVERAGE_MOD_DIRS="$AFFECTED_MODULES"
         mkdir $TEST_RESULTS
         cp coverage.out $TEST_RESULTS
@@ -214,6 +227,7 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - name: set affected modules
