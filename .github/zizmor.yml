@@ -1,0 +1,9 @@
+# dbotconf/internal/testdata/dependabot.yml is a generated fixture for
+# dbotconf's parser tests, not a live Dependabot configuration, so the cooldown
+# audit does not apply to it. It is the only dependabot.yml in this repository;
+# if a real .github/dependabot.yml is ever added, narrow or remove this rule so
+# that it is audited.
+rules:
+  dependabot-cooldown:
+    ignore:
+      - dependabot.yml
