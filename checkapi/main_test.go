@@ -98,6 +98,24 @@ func TestComponentCallConfig(t *testing.T) {
 	require.NoError(t, err, "all config structs are valid")
 }
 
+func TestDefaultConstructorLiteral(t *testing.T) {
+	t.Chdir(filepath.Join("internal", "defaultctorpkg", "receiver", "literalreceiver"))
+	err := run(".", filepath.Join("..", "..", "config.yaml"))
+	require.EqualError(t, err, "[.] code_test.go:12 builds component.BuildInfo as a struct literal, use component.NewDefaultBuildInfo() instead")
+}
+
+func TestDefaultConstructorUsed(t *testing.T) {
+	t.Chdir(filepath.Join("internal", "defaultctorpkg", "receiver", "ctorreceiver"))
+	err := run(".", filepath.Join("..", "..", "config.yaml"))
+	require.NoError(t, err)
+}
+
+func TestDefaultConstructorDisabled(t *testing.T) {
+	t.Chdir(filepath.Join("internal", "defaultctorpkg", "receiver", "literalreceiver"))
+	err := run(".", filepath.Join("..", "..", "config_disabled.yaml"))
+	require.NoError(t, err, "the check does not run unless it is enabled")
+}
+
 func TestComponentConfigBadStruct(t *testing.T) {
 	t.Chdir(filepath.Join("internal", "config", "receiver", "badconfigreceiver"))
 	err := run(".", filepath.Join("..", "..", "config.yaml"))

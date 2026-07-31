@@ -33,6 +33,16 @@ type API struct {
 	Structs          []APIstruct `json:"structs,omitempty"`
 	Functions        []Function  `json:"functions,omitempty"`
 	ConfigStructName string
+	// DefaultConfigLiterals holds the literals built in the default config function.
+	DefaultConfigLiterals []TypeLiteral
+}
+
+// TypeLiteral is a composite literal of a type belonging to another package.
+type TypeLiteral struct {
+	// Type is the type as written in the source, for example "configgrpc.ClientConfig".
+	Type string
+	File string
+	Line int
 }
 
 // FunctionDescription represents a function description.
@@ -53,6 +63,16 @@ type Config struct {
 	ComponentAPI       bool                  `yaml:"component_api"`
 	ComponentAPIStrict bool                  `yaml:"component_api_strict"`
 	JSONSchema         JSONSchemaConfig      `yaml:"json_schema"`
+	DefaultCtors       DefaultConstructors   `yaml:"default_constructors"`
+}
+
+// DefaultConstructors configures the default constructor check: config structs borrowed
+// from other packages must be built with their NewDefault* constructor.
+type DefaultConstructors struct {
+	Enabled bool `yaml:"enabled"`
+	// Types maps a type, as written in the source, to the constructor building it,
+	// for example "configgrpc.ClientConfig": "NewDefaultClientConfig".
+	Types map[string]string `yaml:"types"`
 }
 
 // JSONSchemaConfig represents the configuration of JSON schema validation and mapping

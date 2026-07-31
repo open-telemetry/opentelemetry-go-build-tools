@@ -31,4 +31,8 @@ ignored_functions:
 unkeyed_literal_initialization:
   enabled: <bool>
   limit: <number of fields under which we should prevent unkeyed literal initialization> 
+default_constructors:
+  enabled: <bool>
+  types:
+    <type as written in the source>: <constructor to use>
 ```
