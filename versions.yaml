@@ -42,3 +42,4 @@ excluded-modules:
   - github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/config/receiver/badconfigreceiver
   - github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/config/receiver/configreceiver
   - github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/config/receiver/configreceiver/someothermodule
+  - github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/config/receiver/varconfigreceiver

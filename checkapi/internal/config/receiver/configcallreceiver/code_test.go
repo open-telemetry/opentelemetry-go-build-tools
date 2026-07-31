@@ -48,6 +48,12 @@ type SubConfig struct {
 
 type SubConfig2 struct {
 	FooBar string
+	// Embedded struct two levels below the config struct
+	DeepEmbedded
+}
+
+type DeepEmbedded struct {
+	Baz string
 }
 
 type Embedded struct {

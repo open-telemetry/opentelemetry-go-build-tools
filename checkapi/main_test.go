@@ -98,6 +98,42 @@ func TestComponentCallConfig(t *testing.T) {
 	require.NoError(t, err, "all config structs are valid")
 }
 
+func TestEmbeddedConfigFields(t *testing.T) {
+	for _, tt := range []struct{ name, folder, config, expectedErr string }{
+		{
+			name:   "embedded fields at every depth",
+			folder: filepath.Join("receiver", "configcallreceiver"),
+			config: "config_embedded.yaml",
+			expectedErr: `[.] config struct "Config" must not have embedded fields, found "Embedded,EmbeddedPtr"
+[.] config struct "SubConfig2" must not have embedded fields, found "DeepEmbedded"`,
+		},
+		{
+			name:        "embedded type from another package",
+			folder:      filepath.Join("receiver", "configreceiver"),
+			config:      "config_embedded.yaml",
+			expectedErr: `[.] config struct "Config" must not have embedded fields, found "emb.Config,EmbeddedPtr"`,
+		},
+		{
+			name:        "ignored types are allowed",
+			folder:      filepath.Join("receiver", "configcallreceiver"),
+			config:      "config_embedded_ignored.yaml",
+			expectedErr: `[.] config struct "Config" must not have embedded fields, found "Embedded"`,
+		},
+		{
+			// createDefaultConfig here returns a variable rather than a literal.
+			name:        "config assigned to a variable",
+			folder:      filepath.Join("receiver", "varconfigreceiver"),
+			config:      "config_embedded.yaml",
+			expectedErr: `[.] config struct "Config" must not have embedded fields, found "Embedded"`,
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Chdir(filepath.Join("internal", "config", tt.folder))
+			require.EqualError(t, run(".", filepath.Join("..", "..", tt.config)), tt.expectedErr)
+		})
+	}
+}
+
 func TestComponentConfigBadStruct(t *testing.T) {
 	t.Chdir(filepath.Join("internal", "config", "receiver", "badconfigreceiver"))
 	err := run(".", filepath.Join("..", "..", "config.yaml"))

@@ -337,6 +337,11 @@ func extractFunctionReturnType(fn *ast.FuncDecl) string {
 			}
 		}
 	case *ast.Ident:
+		// The identifier may name a variable holding the config rather than the config
+		// type, as in `cfg := &Config{...}; return cfg`.
+		if name := structNameFromIdent(r); name != "" {
+			return name
+		}
 		return r.Name
 	case *ast.CallExpr:
 		switch x := r.Fun.(type) {
@@ -353,6 +358,34 @@ func extractFunctionReturnType(fn *ast.FuncDecl) string {
 		}
 	default:
 		panic(fmt.Sprintf("[%s] Unsupported type %T", fn.Name.Name, r))
+	}
+	return ""
+}
+
+// structNameFromIdent returns the struct type assigned to a variable declared as
+// `x := &T{...}`, `x := T{...}` or `var x = &T{...}`, or an empty string otherwise.
+func structNameFromIdent(id *ast.Ident) string {
+	if id.Obj == nil {
+		return ""
+	}
+	var value ast.Expr
+	switch d := id.Obj.Decl.(type) {
+	case *ast.AssignStmt:
+		if len(d.Lhs) == 1 && len(d.Rhs) == 1 {
+			value = d.Rhs[0]
+		}
+	case *ast.ValueSpec:
+		if len(d.Names) == 1 && len(d.Values) == 1 {
+			value = d.Values[0]
+		}
+	}
+	if u, ok := value.(*ast.UnaryExpr); ok {
+		value = u.X // &T{...}
+	}
+	if lit, ok := value.(*ast.CompositeLit); ok {
+		if t, ok := lit.Type.(*ast.Ident); ok {
+			return t.Name
+		}
 	}
 	return ""
 }
