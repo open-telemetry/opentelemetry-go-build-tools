@@ -63,7 +63,14 @@ type Config struct {
 	ComponentAPI       bool                  `yaml:"component_api"`
 	ComponentAPIStrict bool                  `yaml:"component_api_strict"`
 	JSONSchema         JSONSchemaConfig      `yaml:"json_schema"`
+	EmbeddedConfigFields EmbeddedConfigFields  `yaml:"embedded_config_fields"`
 	DefaultCtors       DefaultConstructors   `yaml:"default_constructors"`
+}
+
+// EmbeddedConfigFields represents the configuration for the embedded config fields check.
+type EmbeddedConfigFields struct {
+	Enabled      bool     `yaml:"enabled"`
+	IgnoredTypes []string `yaml:"ignored_types"`
 }
 
 // DefaultConstructors configures the default constructor check: config structs borrowed
