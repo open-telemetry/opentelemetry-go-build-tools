@@ -2,7 +2,7 @@ module github.com/open-telemetry/opentelemetry-go-build-tools/checkapi/internal/
 
 go 1.25.0
 
-require go.opentelemetry.io/collector/receiver v1.63.0
+require go.opentelemetry.io/collector/receiver v1.64.0
 
 require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
