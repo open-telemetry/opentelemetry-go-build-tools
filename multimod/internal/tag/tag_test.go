@@ -484,6 +484,7 @@ func TestTagAllModules(t *testing.T) {
 		shouldExistTags    []string
 		shouldNotExistTags []string
 		shouldError        bool
+		alreadyTagged      bool
 	}{
 		{
 			name:       "mod_set_1",
@@ -536,7 +537,8 @@ func TestTagAllModules(t *testing.T) {
 				"test/v0.1.0",
 				"v1.0.0-doesNotExist",
 			},
-			shouldError: true,
+			shouldError:   false,
+			alreadyTagged: true,
 		},
 	}
 
@@ -572,6 +574,11 @@ func TestTagAllModules(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
+			assert.Equal(t, tc.alreadyTagged, tagger.alreadyTagged)
+
+			if tagger.alreadyTagged {
+				return
+			}
 			require.NoError(t, tagger.tagAllModules(sharedtest.TestAuthor))
 			for _, tagName := range tc.shouldExistTags {
 				tagRef, tagRefErr := repo.Tag(tagName)

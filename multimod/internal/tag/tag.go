@@ -51,8 +51,12 @@ func Run(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags b
 
 		log.Println("Successfully deleted module tags")
 	} else {
-		if err := t.tagAllModules(nil); err != nil {
-			log.Fatalf("unable to tag modules: %v", err)
+		if t.alreadyTagged {
+			log.Println("Tags already exist on specified commit, skipping tag creation")
+		} else {
+			if err := t.tagAllModules(nil); err != nil {
+				log.Fatalf("unable to tag modules: %v", err)
+			}
 		}
 	}
 
@@ -65,8 +69,9 @@ func Run(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags b
 
 type tagger struct {
 	shared.ModuleSetRelease
-	CommitHash plumbing.Hash
-	Repo       *git.Repository
+	CommitHash    plumbing.Hash
+	Repo          *git.Repository
+	alreadyTagged bool
 }
 
 func newTagger(versioningFilename, modSetToUpdate, repoRoot, hash string, deleteModuleSetTags bool) (tagger, error) {
@@ -86,6 +91,7 @@ func newTagger(versioningFilename, modSetToUpdate, repoRoot, hash string, delete
 	}
 
 	modFullTagNames := modRelease.ModuleFullTagNames()
+	var alreadyTagged bool
 
 	if deleteModuleSetTags {
 		if err = verifyTagsOnCommit(modFullTagNames, repo, fullCommitHash); err != nil {
@@ -93,7 +99,14 @@ func newTagger(versioningFilename, modSetToUpdate, repoRoot, hash string, delete
 		}
 	} else {
 		if err = modRelease.CheckGitTagsAlreadyExist(repo); err != nil {
-			return tagger{}, fmt.Errorf("CheckGitTagsAlreadyExist failed: %w", err)
+			var alreadyExistErr shared.ErrGitTagsAlreadyExist
+			if !errors.As(err, &alreadyExistErr) {
+				return tagger{}, fmt.Errorf("CheckGitTagsAlreadyExist failed: %w", err)
+			}
+			if verifyErr := verifyTagsOnCommit(modFullTagNames, repo, fullCommitHash); verifyErr != nil {
+				return tagger{}, fmt.Errorf("tags already exist but not on specified commit: %w", verifyErr)
+			}
+			alreadyTagged = true
 		}
 	}
 
@@ -101,6 +114,7 @@ func newTagger(versioningFilename, modSetToUpdate, repoRoot, hash string, delete
 		ModuleSetRelease: modRelease,
 		CommitHash:       fullCommitHash,
 		Repo:             repo,
+		alreadyTagged:    alreadyTagged,
 	}, nil
 }
 
