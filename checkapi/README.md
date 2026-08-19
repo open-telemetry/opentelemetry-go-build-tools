@@ -35,4 +35,8 @@ embedded_config_fields:
   enabled: <bool>
   ignored_types:
     - <type names of embedded fields that are allowed, as written in the source>
+default_constructors:
+  enabled: <bool>
+  types:
+    <type as written in the source>: <constructor to use>
 ```
