@@ -1,6 +1,6 @@
 module go.opentelemetry.io/build-tools/grater
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/moby/go-archive v0.3.3
