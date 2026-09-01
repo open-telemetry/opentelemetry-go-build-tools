@@ -5,9 +5,12 @@ package internal
 
 import (
 	"go/ast"
+	"go/parser"
+	"go/token"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAST(t *testing.T) {
@@ -158,4 +161,35 @@ func TestAST(t *testing.T) {
 			assert.Equal(t, test.expected, ExprToString(test.expr))
 		})
 	}
+}
+
+func TestCollectQualifiedLiterals(t *testing.T) {
+	src := `package p
+
+type Config struct{}
+
+func createDefaultConfig() any {
+	local := Config{}
+	_ = local
+	return &Config{
+		A: configgrpc.ClientConfig{},
+		B: configtls.ClientConfig{},
+		C: []configgrpc.ServerConfig{{}},
+	}
+}
+`
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, "code.go", src, 0)
+	require.NoError(t, err)
+	fn := f.Decls[len(f.Decls)-1].(*ast.FuncDecl)
+
+	literals := collectQualifiedLiterals(fset, fn)
+	got := make([]string, 0, len(literals))
+	for _, l := range literals {
+		got = append(got, l.Type)
+	}
+	assert.Equal(t, []string{"configgrpc.ClientConfig", "configtls.ClientConfig"}, got)
+
+	assert.Equal(t, "code.go", literals[0].File)
+	assert.Equal(t, 9, literals[0].Line)
 }
