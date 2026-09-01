@@ -22,15 +22,42 @@ When creating a or editing a `versions.yaml` file...
 An example versioning file is given in [the versions-example.yaml
 file](./docs/versions-example.yaml).
 
-## Creating the app binary
+## Acquiring the app binary
 
-TODO: switch to automatically pulling newest version of `multimod` app binary.
+There are several ways to acquire the `multimod` binary. We recommend using `go install` for most local development needs.
 
-This section describes the current process used for building the Cobra app
-binary, but the process will be updated soon to automatically fetch the most
-recent version of the app.
+### Using go run (One-off use)
 
-To build the binary, simply use the following commands:
+If you just want to run the tool once without installing it:
+
+```sh
+go run go.opentelemetry.io/build-tools/multimod@latest [command]
+```
+
+### Using go install (Recommended)
+
+To install the binary to your `GOBIN` (defaults to `GOPATH/bin`):
+
+```sh
+go install go.opentelemetry.io/build-tools/multimod@latest
+```
+
+### Using the bootstrap script
+
+For CI/CD or automated environments, you can use the provided bootstrap script:
+
+```sh
+./multimod/get-multimod.sh
+```
+
+The script supports custom installation paths and versions:
+```sh
+./multimod/get-multimod.sh -v latest -p /usr/local/bin
+```
+
+### Manual Build
+
+If you are a developer working on `multimod` itself:
 
 ```sh
 # from the opentelemetry-go-build-tools repo root
