@@ -1,6 +1,6 @@
 module go.opentelemetry.io/build-tools/issuegenerator
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/google/go-github/v85 v85.0.0
@@ -13,6 +13,7 @@ require (
 
 require (
 	github.com/google/go-github/v73 v73.0.0 // indirect
+	github.com/google/go-github/v91 v91.0.0 // indirect
 	github.com/google/go-querystring v1.2.0 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
