@@ -78,11 +78,10 @@ jobs:
       - name: Render .chloggen changelog entries
         run: make chlog-preview > changelog_preview.md
       - name: Install markdown-link-check
-        # The package is version-pinned; its transitive dependencies are not.
-        run: npm install -g markdown-link-check@3.12.2 # zizmor: ignore[adhoc-packages]
+        run: npm ci --ignore-scripts --prefix .github/markdown-link-check
       - name: Run markdown-link-check
         run: |
-          markdown-link-check \
+          .github/markdown-link-check/node_modules/.bin/markdown-link-check \
             --verbose \
             --config .github/workflows/check_links_config.json \
             changelog_preview.md \
