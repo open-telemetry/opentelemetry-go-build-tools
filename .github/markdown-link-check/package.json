@@ -1,0 +1,8 @@
+{
+  "name": "changelog-link-check",
+  "version": "1.0.0",
+  "private": true,
+  "devDependencies": {
+    "markdown-link-check": "3.12.2"
+  }
+}
