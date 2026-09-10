@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"go.opentelemetry.io/build-tools/grater/internal/module"
+	"go.opentelemetry.io/build-tools/grater/internal/report"
 )
 
 func TestNewWorkspace(t *testing.T) {
@@ -200,4 +201,43 @@ func TestCommitToFileFails(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to write")
+}
+
+func TestWriteReport(t *testing.T) {
+	testDir := t.TempDir()
+	t.Chdir(testDir)
+
+	ws, err := NewWorkspace()
+	require.NoError(t, err)
+
+	results := []report.Result{
+		{Dependent: "foo/bar", Status: "pass", BaseOutput: "ok", HeadOutput: "ok"},
+		{Dependent: "foo/baz", Status: "regression", BaseOutput: "ok", HeadOutput: "fail"},
+	}
+
+	err = ws.WriteReport(results)
+	require.NoError(t, err)
+
+	content, err := os.ReadFile(ws.reportPath)
+	require.NoError(t, err)
+	assert.JSONEq(t, `[{"dependent":"foo/bar","status":"pass","base_output":"ok","head_output":"ok"},{"dependent":"foo/baz","status":"regression","base_output":"ok","head_output":"fail"}]`, string(content))
+}
+
+func TestWriteRegressionReport(t *testing.T) {
+	testDir := t.TempDir()
+	t.Chdir(testDir)
+
+	ws, err := NewWorkspace()
+	require.NoError(t, err)
+
+	results := []report.Result{
+		{Dependent: "foo/baz", Status: "regression", BaseOutput: "ok", HeadOutput: "fail"},
+	}
+
+	err = ws.WriteRegressionReport(results)
+	require.NoError(t, err)
+
+	content, err := os.ReadFile(ws.regressionReportPath)
+	require.NoError(t, err)
+	assert.JSONEq(t, `[{"dependent":"foo/baz","status":"regression","base_output":"ok","head_output":"fail"}]`, string(content))
 }
