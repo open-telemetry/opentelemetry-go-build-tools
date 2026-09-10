@@ -134,6 +134,13 @@ PR: N/A
 
 **Note**: Information about any subsequent build failures that happen while
 this issue is open, will be added as comments with more information to this issue.
+
+<details>
+<summary>Failing job(s)</summary>
+
+
+
+</details>
 `,
 		},
 		{
@@ -152,6 +159,13 @@ PR: N/A
 
 ` + "```" + `
 
+
+<details>
+<summary>Failing job(s)</summary>
+
+
+
+</details>
 `,
 		},
 	}
@@ -159,7 +173,12 @@ PR: N/A
 	require.GreaterOrEqual(t, len(reports), len(tests))
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := os.Expand(tt.template, templateHelper(envVariables, reports[i], 0))
+			// Return empty list to test the fallback logic (getRunURL)
+			mockedHTTPClient := newMockHTTPClient(t, mock.GetReposActionsRunsJobsByOwnerByRepoByRunId, &github.Jobs{Jobs: []*github.WorkflowJob{}}, 0)
+			client := newTestClient(t, mockedHTTPClient)
+			client.envVariables = envVariables
+
+			result := os.Expand(tt.template, templateHelper(t.Context(), client, envVariables, reports[i], 0))
 			assert.Equal(t, tt.expected, result)
 		})
 	}
@@ -391,4 +410,117 @@ func TestExtractPRNumberFromMessage(t *testing.T) {
 			assert.Equal(t, tt.expectedPR, prNum)
 		})
 	}
+}
+
+func TestGetFailedJobURLs(t *testing.T) {
+	tests := []struct {
+		name     string
+		jobs     []*github.WorkflowJob
+		expected map[string]string
+	}{
+		{
+			name: "single failure found",
+			jobs: []*github.WorkflowJob{
+				{Name: github.Ptr("Success Job"), Conclusion: github.Ptr("success"), HTMLURL: github.Ptr("http://job/1")},
+				{Name: github.Ptr("Failed Job"), Conclusion: github.Ptr("failure"), HTMLURL: github.Ptr("http://job/2")},
+			},
+			expected: map[string]string{"Failed Job": "http://job/2"},
+		},
+		{
+			name: "multiple failures",
+			jobs: []*github.WorkflowJob{
+				{Name: github.Ptr("Lint"), Conclusion: github.Ptr("failure"), HTMLURL: github.Ptr("http://job/1")},
+				{Name: github.Ptr("Test-Linux"), Conclusion: github.Ptr("failure"), HTMLURL: github.Ptr("http://job/2")},
+				{Name: github.Ptr("Test-Windows"), Conclusion: github.Ptr("success"), HTMLURL: github.Ptr("http://job/3")},
+			},
+			expected: map[string]string{"Lint": "http://job/1", "Test-Linux": "http://job/2"},
+		},
+		{
+			name: "no failures found",
+			jobs: []*github.WorkflowJob{
+				{Name: github.Ptr("Success Job"), Conclusion: github.Ptr("success"), HTMLURL: github.Ptr("http://job/1")},
+			},
+			expected: map[string]string{},
+		},
+		{
+			name: "timed_out jobs are excluded",
+			jobs: []*github.WorkflowJob{
+				{Name: github.Ptr("Failed Job"), Conclusion: github.Ptr("failure"), HTMLURL: github.Ptr("http://job/1")},
+				{Name: github.Ptr("Timed out Job"), Conclusion: github.Ptr("timed_out"), HTMLURL: github.Ptr("http://job/2")},
+			},
+			expected: map[string]string{"Failed Job": "http://job/1"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockResponse := &github.Jobs{Jobs: tt.jobs}
+			mockedHTTPClient := newMockHTTPClient(t, mock.GetReposActionsRunsJobsByOwnerByRepoByRunId, mockResponse, 0)
+			client := newTestClient(t, mockedHTTPClient)
+
+			failedJobs, err := client.getFailedJobURLs(t.Context(), 123)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expected, failedJobs)
+		})
+	}
+}
+
+func TestFailedJobsTemplateExpansion(t *testing.T) {
+	envVariables := map[string]string{
+		githubWorkflow:   "test-ci",
+		githubServerURL:  "https://github.com",
+		githubOwner:      "test-org",
+		githubRepository: "test-repo",
+		githubRunID:      "555555",
+		githubSHAKey:     "abcde12345",
+	}
+
+	report := report.Report{
+		Module: "test-module",
+	}
+
+	t.Run("single failed job", func(t *testing.T) {
+		mockResponse := &github.Jobs{Jobs: []*github.WorkflowJob{
+			{Name: github.Ptr("Job A"), Conclusion: github.Ptr("failure"), HTMLURL: github.Ptr("http://job/a")},
+		}}
+		mockedHTTPClient := newMockHTTPClient(t, mock.GetReposActionsRunsJobsByOwnerByRepoByRunId, mockResponse, 0)
+		client := newTestClient(t, mockedHTTPClient)
+		client.envVariables = envVariables
+
+		expand := templateHelper(t.Context(), client, envVariables, report, 0)
+		result := expand("failedJobs")
+
+		expected := "- [`Job A`](http://job/a)\n"
+		assert.Equal(t, expected, result)
+	})
+
+	t.Run("multiple failed jobs", func(t *testing.T) {
+		mockResponse := &github.Jobs{Jobs: []*github.WorkflowJob{
+			{Name: github.Ptr("Job A"), Conclusion: github.Ptr("failure"), HTMLURL: github.Ptr("http://job/a")},
+			{Name: github.Ptr("Job B"), Conclusion: github.Ptr("failure"), HTMLURL: github.Ptr("http://job/b")},
+		}}
+		mockedHTTPClient := newMockHTTPClient(t, mock.GetReposActionsRunsJobsByOwnerByRepoByRunId, mockResponse, 0)
+		client := newTestClient(t, mockedHTTPClient)
+		client.envVariables = envVariables
+
+		expand := templateHelper(t.Context(), client, envVariables, report, 0)
+		result := expand("failedJobs")
+
+		expected := "- [`Job A`](http://job/a)\n- [`Job B`](http://job/b)\n"
+		assert.Equal(t, expected, result)
+	})
+
+	t.Run("no failed jobs", func(t *testing.T) {
+		mockResponse := &github.Jobs{Jobs: []*github.WorkflowJob{
+			{Name: github.Ptr("Job A"), Conclusion: github.Ptr("success"), HTMLURL: github.Ptr("http://job/a")},
+		}}
+		mockedHTTPClient := newMockHTTPClient(t, mock.GetReposActionsRunsJobsByOwnerByRepoByRunId, mockResponse, 0)
+		client := newTestClient(t, mockedHTTPClient)
+		client.envVariables = envVariables
+
+		expand := templateHelper(t.Context(), client, envVariables, report, 0)
+		result := expand("failedJobs")
+
+		assert.Equal(t, "", result)
+	})
 }
