@@ -208,7 +208,10 @@ func getGithubMembers(skipGithub bool, githubOrg string) (map[string]struct{}, e
 	if githubToken == "" {
 		return nil, fmt.Errorf("set the environment variable `GITHUB_TOKEN` to a PAT token to authenticate")
 	}
-	client := github.NewClient(nil).WithAuthToken(githubToken)
+	client, err := github.NewClient(github.WithAuthToken(githubToken))
+	if err != nil {
+		return nil, err
+	}
 	var allUsers []*github.User
 	pageIndex := 0
 	for {
@@ -248,7 +251,10 @@ func getGithubTeamMembers(skipGithub bool, githubOrg, teamSlug string) (map[stri
 	if githubToken == "" {
 		return nil, fmt.Errorf("set the environment variable `GITHUB_TOKEN` to a PAT token to authenticate")
 	}
-	client := github.NewClient(nil).WithAuthToken(githubToken)
+	client, err := github.NewClient(github.WithAuthToken(githubToken))
+	if err != nil {
+		return nil, err
+	}
 	var allUsers []*github.User
 	opts := &github.TeamListTeamMembersOptions{
 		ListOptions: github.ListOptions{

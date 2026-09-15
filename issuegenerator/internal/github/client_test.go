@@ -48,14 +48,18 @@ func newTestReport() report.Report {
 	}
 }
 
+func ptr[T any](v T) *T { return &v }
+
 func newTestIssue() *github.Issue {
-	return &github.Issue{ID: github.Ptr[int64](123), Number: github.Ptr(123), HTMLURL: github.Ptr(testIssueURL)}
+	return &github.Issue{ID: ptr(int64(123)), Number: ptr(123), HTMLURL: ptr(testIssueURL)}
 }
 
 func newTestClient(t *testing.T, httpClient *http.Client) *Client {
+	ghClient, err := github.NewClient(github.WithHTTPClient(httpClient))
+	require.NoError(t, err)
 	return &Client{
 		logger: zaptest.NewLogger(t),
-		client: github.NewClient(httpClient),
+		client: ghClient,
 		envVariables: map[string]string{
 			githubOwner:      testOwner,
 			githubRepository: testRepo,
@@ -254,16 +258,16 @@ func TestGetExistingIssue(t *testing.T) {
 			name: "multiple existing issues",
 			mockResponse: []*github.Issue{
 				{
-					ID:      github.Ptr[int64](1),
-					Number:  github.Ptr(123),
-					HTMLURL: github.Ptr(testIssueURL),
+					ID:      ptr(int64(1)),
+					Number:  ptr(123),
+					HTMLURL: ptr(testIssueURL),
 				},
 				newTestIssue(),
 			},
 			expectedIssue: &github.Issue{
-				ID:      github.Ptr[int64](1),
-				Number:  github.Ptr(123),
-				HTMLURL: github.Ptr(testIssueURL),
+				ID:      ptr(int64(1)),
+				Number:  ptr(123),
+				HTMLURL: ptr(testIssueURL),
 			},
 		},
 	}
@@ -293,8 +297,8 @@ func TestCommentOnIssue(t *testing.T) {
 	testReport := newTestReport()
 	existingIssue := newTestIssue()
 	expectedComment := &github.IssueComment{
-		ID:      github.Ptr[int64](789),
-		HTMLURL: github.Ptr(testCommentURL),
+		ID:      ptr(int64(789)),
+		HTMLURL: ptr(testCommentURL),
 	}
 	mockedHTTPClient := newMockHTTPClient(t, mock.PostReposIssuesCommentsByOwnerByRepoByIssueNumber, expectedComment, http.StatusCreated)
 	client := newTestClient(t, mockedHTTPClient)
