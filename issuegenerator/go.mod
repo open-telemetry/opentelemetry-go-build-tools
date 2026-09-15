@@ -3,7 +3,7 @@ module go.opentelemetry.io/build-tools/issuegenerator
 go 1.26.0
 
 require (
-	github.com/google/go-github/v85 v85.0.0
+	github.com/google/go-github/v92 v92.0.0
 	github.com/joshdk/go-junit v1.0.0
 	github.com/migueleliasweb/go-github-mock v1.5.0
 	github.com/stretchr/testify v1.12.1
@@ -12,8 +12,7 @@ require (
 )
 
 require (
-	github.com/google/go-github/v92 v92.0.0 // indirect
-	github.com/google/go-github/v92 v92.0.0 // indirect
+	github.com/google/go-github/v73 v73.0.0 // indirect
 	github.com/google/go-querystring v1.2.0 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
