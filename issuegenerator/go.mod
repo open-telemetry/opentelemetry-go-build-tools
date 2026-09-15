@@ -13,6 +13,7 @@ require (
 
 require (
 	github.com/google/go-github/v73 v73.0.0 // indirect
+	github.com/google/go-github/v92 v92.0.0 // indirect
 	github.com/google/go-querystring v1.2.0 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
