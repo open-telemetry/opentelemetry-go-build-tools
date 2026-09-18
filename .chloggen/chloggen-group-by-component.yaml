@@ -1,0 +1,4 @@
+change_type: enhancement
+component: chloggen
+note: "Group changelog entries for the same component under a single bullet."
+issues: [971]

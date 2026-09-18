@@ -127,3 +127,14 @@ func TestCustomSummary(t *testing.T) {
 
 	assert.Equal(t, string(expected), actual)
 }
+
+func TestGroupByComponent(t *testing.T) {
+	foo1 := &Entry{Component: "foo", Note: "first foo"}
+	bar := &Entry{Component: "bar", Note: "bar"}
+	foo2 := &Entry{Component: "foo", Note: "second foo"}
+
+	assert.Equal(t, []componentGroup{
+		{Component: "foo", Entries: []*Entry{foo1, foo2}},
+		{Component: "bar", Entries: []*Entry{bar}},
+	}, groupByComponent([]*Entry{foo1, bar, foo2}))
+}

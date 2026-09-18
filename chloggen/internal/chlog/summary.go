@@ -68,7 +68,28 @@ func TemplateFuncMap() template.FuncMap {
 			indent := strings.Repeat(" ", n)
 			return indent + strings.ReplaceAll(s, "\n", "\n"+indent)
 		},
+		"groupByComponent": groupByComponent,
 	}
+}
+
+type componentGroup struct {
+	Component string
+	Entries   []*Entry
+}
+
+func groupByComponent(entries []*Entry) []componentGroup {
+	var groups []componentGroup
+	index := make(map[string]int)
+	for _, e := range entries {
+		i, ok := index[e.Component]
+		if !ok {
+			i = len(groups)
+			index[e.Component] = i
+			groups = append(groups, componentGroup{Component: e.Component})
+		}
+		groups[i].Entries = append(groups[i].Entries, e)
+	}
+	return groups
 }
 
 // String renders the summary using the provided template.

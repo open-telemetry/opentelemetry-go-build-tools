@@ -6,8 +6,9 @@
 
 ### 💡 Enhancements 💡
 
-- `receiver/foo`: Some change (#1)
-- `receiver/foo`: One more foo change (#4)
+- `receiver/foo`:
+  - Some change (#1)
+  - One more foo change (#4)
 
 ## v0.44.0
 
