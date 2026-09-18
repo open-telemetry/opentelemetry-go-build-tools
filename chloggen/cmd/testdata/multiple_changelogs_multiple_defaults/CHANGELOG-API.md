@@ -6,27 +6,31 @@
 
 ### 🛑 Breaking changes 🛑
 
-- `receiver/foo`: Some change relevant to [api] (#125)
-- `receiver/foo`: Some change relevant to [user,api] (#11)
+- `receiver/foo`:
+  - Some change relevant to [api] (#125)
+  - Some change relevant to [user,api] (#11)
 
 ### 🚩 Deprecations 🚩
 
-- `receiver/foo`: Some change relevant to [default] (#123)
-- `receiver/foo`: Some change relevant to [api] (#223)
-- `receiver/foo`: Some change relevant to [user,api] (#234)
+- `receiver/foo`:
+  - Some change relevant to [default] (#123)
+  - Some change relevant to [api] (#223)
+  - Some change relevant to [user,api] (#234)
 
 ### 💡 Enhancements 💡
 
-- `receiver/foo`: Some change relevant to [default] (#21)
-- `receiver/foo`: Some change relevant to [api,user] (#333)
-- `receiver/foo`: Some change relevant to [api] (#555)
+- `receiver/foo`:
+  - Some change relevant to [default] (#21)
+  - Some change relevant to [api,user] (#333)
+  - Some change relevant to [api] (#555)
 
 ### 🧰 Bug fixes 🧰
 
-- `receiver/foo`: Some change relevant to [default] (#32)
-- `receiver/foo`: Some change relevant to [default] (#222)
-- `receiver/foo`: Some change relevant to [api] (#111)
-- `receiver/foo`: Some change relevant to [api] (#777)
+- `receiver/foo`:
+  - Some change relevant to [default] (#32)
+  - Some change relevant to [default] (#222)
+  - Some change relevant to [api] (#111)
+  - Some change relevant to [api] (#777)
 
 ## v0.44.0
 

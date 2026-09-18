@@ -6,12 +6,13 @@
 
 ### 🛑 Breaking changes 🛑
 
-- `processor/oops`: Change behavior when ... (#12350)
-- `processor/oops`: Change behavior when ... (#12350)
-  - foo
-    - bar
-  - blah
-    - 1234567
+- `processor/oops`:
+  - Change behavior when ... (#12350)
+  - Change behavior when ... (#12350)
+    - foo
+      - bar
+    - blah
+      - 1234567
 
 ### 🚩 Deprecations 🚩
 
