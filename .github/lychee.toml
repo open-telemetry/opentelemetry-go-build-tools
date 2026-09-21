@@ -1,0 +1,6 @@
+accept = ["200..=299", "429"]
+
+exclude  = [
+    "^http(s)?://localhost",
+    "^http(s)?://example.com"
+]
