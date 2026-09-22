@@ -32,10 +32,11 @@ const updateUsage = `Usage:
   chloggen update [flags]
 
 Flags:
-  -c, --component string   only select entries with this exact component
-  -d, --dry                will generate the update text and print to stdout
-  -h, --help               help for update
-  -v, --version string     will be rendered directly into the update text (default "vTODO")
+  -c, --component string     only select entries with this exact component
+  -d, --dry                  will generate the update text and print to stdout
+      --group-by-component   group entries for the same component under a single bullet
+  -h, --help                 help for update
+  -v, --version string       will be rendered directly into the update text (default "vTODO")
 
 Global Flags:
       --config string   (optional) chloggen config file`
@@ -75,6 +76,7 @@ func TestUpdate(t *testing.T) {
 		version           string
 		dry               bool
 		componentFilter   string
+		groupByComponent  bool
 	}{
 		{
 			name:    "all_change_types",
@@ -85,6 +87,12 @@ func TestUpdate(t *testing.T) {
 			name:    "all_change_types_multiple",
 			entries: append(getSampleEntries(), getSampleEntries()...),
 			version: "v0.45.0",
+		},
+		{
+			name:             "group_by_component",
+			entries:          append(getSampleEntries(), getSampleEntries()...),
+			version:          "v0.45.0",
+			groupByComponent: true,
 		},
 		{
 			name:    "dry_run",
@@ -306,6 +314,9 @@ func TestUpdate(t *testing.T) {
 			}
 			if tc.componentFilter != "" {
 				args = append(args, "--component", tc.componentFilter)
+			}
+			if tc.groupByComponent {
+				args = append(args, "--group-by-component")
 			}
 
 			var out string

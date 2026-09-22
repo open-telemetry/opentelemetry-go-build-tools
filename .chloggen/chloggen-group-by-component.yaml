@@ -1,4 +1,4 @@
 change_type: enhancement
 component: chloggen
-note: "Group changelog entries for the same component under a single bullet."
+note: "Add `--group-by-component` flag to `chloggen update` to group entries for the same component under a single bullet."
 issues: [971]

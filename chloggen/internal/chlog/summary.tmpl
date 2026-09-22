@@ -33,7 +33,7 @@
 
 ### 🛑 Breaking changes 🛑
 
-{{- range $i, $group := groupByComponent .BreakingChanges }}
+{{- range $i, $group := $.Groups .BreakingChanges }}
 {{- if eq $i 0}}
 {{end}}
 {{ template "group" $group }}
@@ -44,7 +44,7 @@
 
 ### 🚩 Deprecations 🚩
 
-{{- range $i, $group := groupByComponent .Deprecations }}
+{{- range $i, $group := $.Groups .Deprecations }}
 {{- if eq $i 0}}
 {{end}}
 {{ template "group" $group }}
@@ -55,7 +55,7 @@
 
 ### 🚀 New components 🚀
 
-{{- range $i, $group := groupByComponent .NewComponents }}
+{{- range $i, $group := $.Groups .NewComponents }}
 {{- if eq $i 0}}
 {{end}}
 {{ template "group" $group }}
@@ -66,7 +66,7 @@
 
 ### 💡 Enhancements 💡
 
-{{- range $i, $group := groupByComponent .Enhancements }}
+{{- range $i, $group := $.Groups .Enhancements }}
 {{- if eq $i 0}}
 {{end}}
 {{ template "group" $group }}
@@ -77,7 +77,7 @@
 
 ### 🧰 Bug fixes 🧰
 
-{{- range $i, $group := groupByComponent .BugFixes }}
+{{- range $i, $group := $.Groups .BugFixes }}
 {{- if eq $i 0}}
 {{end}}
 {{ template "group" $group }}

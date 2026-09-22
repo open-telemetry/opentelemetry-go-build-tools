@@ -10,21 +10,18 @@
 
 ### 🚩 Deprecations 🚩
 
-- `receiver/foo`:
-  - Some change relevant to [user] (#123)
-  - Some change relevant to [user,api] (#234)
+- `receiver/foo`: Some change relevant to [user] (#123)
+- `receiver/foo`: Some change relevant to [user,api] (#234)
 
 ### 💡 Enhancements 💡
 
-- `receiver/foo`:
-  - Some change relevant to [user] (#21)
-  - Some change relevant to [api,user] (#333)
+- `receiver/foo`: Some change relevant to [user] (#21)
+- `receiver/foo`: Some change relevant to [api,user] (#333)
 
 ### 🧰 Bug fixes 🧰
 
-- `receiver/foo`:
-  - Some change relevant to [user] (#32)
-  - Some change relevant to [user] (#222)
+- `receiver/foo`: Some change relevant to [user] (#32)
+- `receiver/foo`: Some change relevant to [user] (#222)
 
 ## v0.44.0
 
