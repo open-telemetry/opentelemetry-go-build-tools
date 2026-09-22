@@ -27,7 +27,7 @@ func TestGetModuleFromProxy(t *testing.T) {
 
 	useContainerResp, err := c.UseContainer(ctx,
 		container.NewUseContainerConfig(
-			container.WithImageName("golang:1.25"),
+			container.WithImageName("golang:1.26"),
 		),
 	)
 	require.NoError(t, err)
@@ -71,7 +71,7 @@ func TestSetReplaceDirective(t *testing.T) {
 	}
 	useContainerResp, err := c.UseContainer(ctx,
 		container.NewUseContainerConfig(
-			container.WithImageName("golang:1.25.0"),
+			container.WithImageName("golang:1.26.0"),
 			container.WithHostToContainerPaths(binds),
 		),
 	)
@@ -117,7 +117,7 @@ func TestRunModuleTest(t *testing.T) {
 	}
 	useContainerResp, err := c.UseContainer(ctx,
 		container.NewUseContainerConfig(
-			container.WithImageName("golang:1.25.0"),
+			container.WithImageName("golang:1.26.0"),
 			container.WithHostToContainerPaths(binds),
 		),
 	)
