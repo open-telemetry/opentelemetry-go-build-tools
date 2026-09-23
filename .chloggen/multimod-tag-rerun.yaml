@@ -1,0 +1,4 @@
+change_type: enhancement
+component: multimod
+note: "Allow `multimod tag` to be run again on a commit that already has the module set tags."
+issues: [205]
