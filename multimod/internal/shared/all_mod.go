@@ -16,7 +16,6 @@ package shared // nolint:revive // keeping generic package name until a proper r
 
 import (
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -26,31 +25,41 @@ import (
 func newAllModulePathMap(root string) (ModulePathMap, error) {
 	modPathMap := make(ModulePathMap)
 
-	findGoMod := func(filePath string, _ fs.FileInfo, err error) error {
+	var walk func(string) error
+	walk = func(dir string) error {
+		entries, err := os.ReadDir(dir)
 		if err != nil {
-			fmt.Printf("Warning: file could not be read during filepath.Walk(): %v", err)
-			return nil
+			return fmt.Errorf("failed to read directory %q: %w", dir, err)
 		}
-		if filepath.Base(filePath) == "go.mod" {
-			// read go.mod file into mod []byte
-			mod, err := os.ReadFile(filepath.Clean(filePath))
-			if err != nil {
-				return err
+
+		for _, entry := range entries {
+			entryPath := filepath.Join(dir, entry.Name())
+
+			if entry.IsDir() {
+				if err := walk(entryPath); err != nil {
+					return err
+				}
+				continue
 			}
 
-			// read path of module from go.mod file
-			modPathString := modfile.ModulePath(mod)
+			if entry.Name() == "go.mod" {
+				mod, err := os.ReadFile(filepath.Clean(entryPath))
+				if err != nil {
+					return err
+				}
 
-			// convert modPath, filePath string to modulePath and moduleFilePath
-			modPath := ModulePath(modPathString)
-			modFilePath := ModuleFilePath(filePath)
+				modPathString := modfile.ModulePath(mod)
+				modPath := ModulePath(modPathString)
+				modFilePath := ModuleFilePath(entryPath)
 
-			modPathMap[modPath] = modFilePath
+				modPathMap[modPath] = modFilePath
+			}
 		}
+
 		return nil
 	}
 
-	if err := filepath.Walk(root, findGoMod); err != nil {
+	if err := walk(root); err != nil {
 		return nil, err
 	}
 

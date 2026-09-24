@@ -116,7 +116,7 @@ func setupTestDir(t *testing.T, entries []*chlog.Entry) {
 	require.NotNil(t, globalCfg, "test should instantiate globalCfg before calling setupTestDir")
 
 	// Create dummy changelogs which may be updated by the test
-	changelogBytes, err := os.ReadFile(filepath.Join("testdata", config.DefaultChangeLogFilename))
+	changelogBytes, err := readBytes(filepath.Join("testdata", config.DefaultChangeLogFilename))
 	require.NoError(t, err)
 	for _, filename := range globalCfg.ChangeLogs {
 		require.NoError(t, os.MkdirAll(filepath.Dir(filename), os.FileMode(0o755)))
@@ -128,7 +128,7 @@ func setupTestDir(t *testing.T, entries []*chlog.Entry) {
 
 	// Copy the entry template, for tests that ensure it is not deleted
 	templateInRootDir := config.New("testdata").TemplateYAML
-	templateBytes, err := os.ReadFile(filepath.Clean(templateInRootDir))
+	templateBytes, err := readBytes(filepath.Clean(templateInRootDir))
 	require.NoError(t, err)
 	require.NoError(t, os.WriteFile(globalCfg.TemplateYAML, templateBytes, os.FileMode(0o755)))
 
@@ -154,4 +154,14 @@ func runCobra(t *testing.T, args ...string) (string, error) {
 	require.NoError(t, ioErr, "read stdout")
 
 	return string(out), err
+}
+
+func readBytes(path string) ([]byte, error) {
+	file, err := os.Open(filepath.Clean(path))
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	return io.ReadAll(file)
 }

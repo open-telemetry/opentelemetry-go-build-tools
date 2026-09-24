@@ -31,4 +31,8 @@ ignored_functions:
 unkeyed_literal_initialization:
   enabled: <bool>
   limit: <number of fields under which we should prevent unkeyed literal initialization> 
+embedded_config_fields:
+  enabled: <bool>
+  ignored_types:
+    - <type names of embedded fields that are allowed, as written in the source>
 ```

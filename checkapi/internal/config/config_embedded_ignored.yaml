@@ -1,0 +1,5 @@
+embedded_config_fields:
+  enabled: true
+  ignored_types:
+    - EmbeddedPtr
+    - DeepEmbedded

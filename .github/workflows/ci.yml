@@ -4,6 +4,7 @@ on:
     branches:
       - main
   pull_request:
+  merge_group:
 permissions:
   contents: read
 env:
@@ -11,22 +12,25 @@ env:
   TEST_RESULTS: /tmp/test-results
 jobs:
   lint:
+    needs: [detect-changes]
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Install Go
-      uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
+      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
       with:
         go-version: stable
         check-latest: true
 
     - name: Checkout Repo
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
 
     - name: Module cache
-      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       env:
         cache-name: go-mod-cache
       with:
@@ -35,7 +39,7 @@ jobs:
 
     - name: Tools cache
       id: cache-tools
-      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       env:
         cache-name: go-tools-cache
       with:
@@ -55,28 +59,39 @@ jobs:
         done
 
     - name: Run linters
-      run: make multimod-verify license-check lint
+      shell: bash
+      env:
+        AFFECTED_MODULES: ${{ needs.detect-changes.outputs.affected_modules }}
+      run: |
+        make multimod-verify license-check lint ALL_GO_MOD_DIRS="$AFFECTED_MODULES"
 
     - name: Build
-      run: make build
+      shell: bash
+      env:
+        AFFECTED_MODULES: ${{ needs.detect-changes.outputs.affected_modules }}
+      run: |
+        make build ALL_GO_MOD_DIRS="$AFFECTED_MODULES"
 
     - name: Check clean repository
       run: make check-clean-work-tree
 
   test-race:
+    needs: [detect-changes]
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Install Go
-      uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
+      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
       with:
         go-version: oldstable
         check-latest: true
 
     - name: Checkout Repo
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
 
     - name: Setup Environment
       run: |
@@ -84,7 +99,7 @@ jobs:
         echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
     - name: Module cache
-      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       env:
         cache-name: go-mod-cache
       with:
@@ -92,19 +107,61 @@ jobs:
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/go.sum') }}
 
     - name: Run tests with race detector
-      run: make test-race
+      shell: bash
+      env:
+        AFFECTED_MODULES: ${{ needs.detect-changes.outputs.affected_modules }}
+      run: |
+        make test-race ALL_GO_MOD_DIRS="$AFFECTED_MODULES"
+
+  test-integration:
+    needs: [detect-changes]
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: oldstable
+          check-latest: true
+
+      - name: Checkout Repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Environment
+        run: |
+          echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+      - name: Module cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        env:
+          cache-name: go-mod-cache
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/go.sum') }}
+
+      - name: Run integration tests
+        shell: bash
+        env:
+          AFFECTED_MODULES: ${{ needs.detect-changes.outputs.affected_modules }}
+        run: |
+          make test-integration ALL_GO_MOD_DIRS="$AFFECTED_MODULES"
 
   test-coverage:
+    needs: [detect-changes]
     runs-on: ubuntu-latest
     steps:
     - name: Install Go
-      uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
+      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
       with:
         go-version: oldstable
         check-latest: true
 
     - name: Checkout Repo
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
 
     - name: Setup Environment
       run: |
@@ -112,7 +169,7 @@ jobs:
         echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
     - name: Module cache
-      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       env:
         cache-name: go-mod-cache
       with:
@@ -120,15 +177,17 @@ jobs:
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/go.sum') }}
 
     - name: Run coverage tests
+      env:
+        AFFECTED_MODULES: ${{ needs.detect-changes.outputs.affected_modules }}
       run: |
-        make test-coverage
+        make test-coverage ALL_COVERAGE_MOD_DIRS="$AFFECTED_MODULES"
         mkdir $TEST_RESULTS
         cp coverage.out $TEST_RESULTS
         cp coverage.txt $TEST_RESULTS
         cp coverage.html $TEST_RESULTS
 
     - name: Upload coverage report
-      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
+      uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
       with:
         file: ./coverage.txt
         fail_ci_if_error: true
@@ -136,7 +195,7 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
 
     - name: Store coverage test output
-      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
           name: opentelemetry-go-test-output
           path: ${{ env.TEST_RESULTS }}
@@ -158,3 +217,36 @@ jobs:
         run: |
           echo ${{ needs.test-race.result }}
           test ${{ needs.test-race.result }} == "success"
+
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      affected_modules: ${{ steps.set-affected-modules.outputs.affected_modules }}
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: set affected modules
+        id: set-affected-modules
+        run: |
+          BASE="${{ github.event.pull_request.base.sha || github.event.before }}"
+          echo "BASE=$BASE"
+          AFFECTED_FILES=$(git diff --name-only "$BASE" HEAD || true)
+          echo "AFFECTED_FILES=$AFFECTED_FILES"
+          chmod +x ./get_affected_pkgs.sh
+          AFFECTED_MODULES=$(./get_affected_pkgs.sh $AFFECTED_FILES)
+
+          # Exclude tools and internal test modules
+          TOOLS_MOD_DIR="./internal/tools"
+          INTERNAL_TEST_MOD_DIRS=$(find ./*/internal/test* -type f -name 'go.mod' -exec dirname {} \;)
+
+          for exclude in $TOOLS_MOD_DIR $INTERNAL_TEST_MOD_DIRS; do
+            AFFECTED_MODULES=$(echo "$AFFECTED_MODULES" | tr ' ' '\n' | grep -v "^${exclude#./}" | tr '\n' ' ')
+          done
+
+          AFFECTED_MODULES=$(echo "$AFFECTED_MODULES" | xargs)
+          echo "affected_modules=$AFFECTED_MODULES" >> $GITHUB_OUTPUT

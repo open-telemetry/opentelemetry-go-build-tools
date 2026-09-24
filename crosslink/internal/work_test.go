@@ -132,6 +132,11 @@ func TestGoVersionValid(t *testing.T) {
 		"1.21",
 		"21.0",
 		"10.0",
+		"1.23.0",
+		"1.24.0",
+		"1.0.0",
+		"1.21.10",
+		"10.5.100",
 	}
 	for _, goVersion := range goVersions {
 		t.Run(goVersion, func(t *testing.T) {
@@ -145,12 +150,15 @@ func TestGoVersionInvalid(t *testing.T) {
 	goVersions := []string{
 		"1.-0",
 		"a.1",
-		"1.2.3",
+		"1.2.3.4",
 		"0.0",
 		"1",
 		"-1.2",
 		"01.2",
 		"1.02",
+		"1.2.03",
+		"0.0.0",
+		"1.2.-1",
 	}
 	for _, goVersion := range goVersions {
 		t.Run(goVersion, func(t *testing.T) {

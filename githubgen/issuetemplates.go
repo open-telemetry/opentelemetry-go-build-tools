@@ -4,6 +4,7 @@ package main
 
 import (
 	"bytes"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -58,11 +59,13 @@ func (itg *issueTemplatesGenerator) Generate(data datatype.GithubData) error {
 	if err != nil {
 		return err
 	}
+	issuesFS := os.DirFS(issuesFolder)
 	for _, e := range entries {
-		templateContents, err := os.ReadFile(filepath.Join(issuesFolder, e.Name())) // nolint: gosec
+		templateContents, err := fs.ReadFile(issuesFS, e.Name())
 		if err != nil {
 			return err
 		}
+
 		matchOldContent := regexp.MustCompile("(?s)" + startComponentList + ".*" + endComponentList)
 		oldContent := matchOldContent.FindSubmatch(templateContents)
 		if len(oldContent) > 0 {

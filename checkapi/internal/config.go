@@ -45,14 +45,21 @@ type FunctionDescription struct {
 
 // Config represents the configuration for the codebase analysis.
 type Config struct {
-	IgnoredPaths       []string              `yaml:"ignored_paths"`
-	ExcludedFiles      []string              `yaml:"excluded_files"`
-	AllowedFunctions   []FunctionDescription `yaml:"allowed_functions"`
-	IgnoredFunctions   []string              `yaml:"ignored_functions"`
-	UnkeyedLiteral     UnkeyedLiteral        `yaml:"unkeyed_literal_initialization"`
-	ComponentAPI       bool                  `yaml:"component_api"`
-	ComponentAPIStrict bool                  `yaml:"component_api_strict"`
-	JSONSchema         JSONSchemaConfig      `yaml:"json_schema"`
+	IgnoredPaths         []string              `yaml:"ignored_paths"`
+	ExcludedFiles        []string              `yaml:"excluded_files"`
+	AllowedFunctions     []FunctionDescription `yaml:"allowed_functions"`
+	IgnoredFunctions     []string              `yaml:"ignored_functions"`
+	UnkeyedLiteral       UnkeyedLiteral        `yaml:"unkeyed_literal_initialization"`
+	ComponentAPI         bool                  `yaml:"component_api"`
+	ComponentAPIStrict   bool                  `yaml:"component_api_strict"`
+	JSONSchema           JSONSchemaConfig      `yaml:"json_schema"`
+	EmbeddedConfigFields EmbeddedConfigFields  `yaml:"embedded_config_fields"`
+}
+
+// EmbeddedConfigFields represents the configuration for the embedded config fields check.
+type EmbeddedConfigFields struct {
+	Enabled      bool     `yaml:"enabled"`
+	IgnoredTypes []string `yaml:"ignored_types"`
 }
 
 // JSONSchemaConfig represents the configuration of JSON schema validation and mapping

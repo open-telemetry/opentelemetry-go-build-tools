@@ -179,7 +179,7 @@ func walkFolder(cfg internal.Config, folder string, metadata internal.Metadata) 
 		}
 	}
 
-	if (!cfg.JSONSchema.CheckPresent && !cfg.JSONSchema.CheckValid && !cfg.ComponentAPI && !cfg.ComponentAPIStrict) || !isFactoryComponent {
+	if (!cfg.JSONSchema.CheckPresent && !cfg.JSONSchema.CheckValid && !cfg.ComponentAPI && !cfg.ComponentAPIStrict && !cfg.EmbeddedConfigFields.Enabled) || !isFactoryComponent {
 		return errors.Join(errs...)
 	}
 
@@ -209,11 +209,15 @@ func walkFolder(cfg internal.Config, folder string, metadata internal.Metadata) 
 		return errors.Join(errs...)
 	}
 
+	if cfg.EmbeddedConfigFields.Enabled {
+		errs = append(errs, checkNoEmbeddedConfigFields(cfg.EmbeddedConfigFields, structsByName, *cfgStruct, folder, map[string]struct{}{})...)
+	}
+
 	if metadata.Config == nil {
 		if cfg.JSONSchema.CheckPresent {
 			errs = append(errs, err)
 		}
-	} else {
+	} else if cfg.JSONSchema.CheckValid {
 		configSchemaBytes, err := json.Marshal(metadata.Config)
 		if err != nil {
 			errs = append(errs, err)
@@ -264,6 +268,32 @@ func filterStructs(structMap map[string]internal.APIstruct, current internal.API
 			filterStructs(structMap, s, allStructs)
 		}
 	}
+}
+
+// checkNoEmbeddedConfigFields reports the embedded (anonymous) fields of the config struct and of
+// every struct reachable from it.
+func checkNoEmbeddedConfigFields(cfg internal.EmbeddedConfigFields, structMap map[string]internal.APIstruct, current internal.APIstruct, folder string, visited map[string]struct{}) []error {
+	if _, seen := visited[current.Name]; seen {
+		return nil
+	}
+	visited[current.Name] = struct{}{}
+
+	var embedded []string
+	for _, f := range current.Fields {
+		if f.Name == "" && !slices.Contains(cfg.IgnoredTypes, f.Type) {
+			embedded = append(embedded, f.Type)
+		}
+	}
+	var errs []error
+	if len(embedded) > 0 {
+		errs = append(errs, fmt.Errorf("[%s] config struct %q must not have embedded fields, found %q", folder, current.Name, strings.Join(embedded, ",")))
+	}
+	for _, f := range current.Fields {
+		if s, ok := structMap[f.Type]; ok {
+			errs = append(errs, checkNoEmbeddedConfigFields(cfg, structMap, s, folder, visited)...)
+		}
+	}
+	return errs
 }
 
 func checkStructDisallowUnkeyedLiteral(cfg internal.Config, s internal.APIstruct, folder string) error {

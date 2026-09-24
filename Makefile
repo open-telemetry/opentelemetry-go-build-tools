@@ -28,16 +28,17 @@ else
 endif
 
 TOOLS_MOD_DIR := ./internal/tools
-CHECKAPI_INTERNAL_MOD_DIRS := $(shell find ./checkapi/internal -type f -name 'go.mod' -exec dirname {} \; | sort)
+INTERNAL_TEST_MOD_DIRS := $(shell find ./*/internal/test* -type f -name 'go.mod' -exec dirname {} \; | sort)
 
 # All source code and documents. Used in spell check.
 ALL_DOCS := $(shell find . -name '*.md' -type f | sort)
 # All directories with go.mod files related to opentelemetry library. Used for building, testing and linting.
-ALL_GO_MOD_DIRS := $(filter-out $(TOOLS_MOD_DIR) $(CHECKAPI_INTERNAL_MOD_DIRS), $(shell find . -type f -name 'go.mod' -exec dirname {} \; | sort))
+ALL_GO_MOD_DIRS := $(filter-out $(TOOLS_MOD_DIR) $(INTERNAL_TEST_MOD_DIRS), $(shell find . -type f -name 'go.mod' -exec dirname {} \; | sort))
 ALL_COVERAGE_MOD_DIRS := $(shell find . -type f -name 'go.mod' -exec dirname {} \; | grep -v '^$(TOOLS_MOD_DIR)' | sort)
 
 GO ?= go
 TIMEOUT = 60
+TIMEOUT_INTEGRATION = 180
 
 # User to run as in docker images.
 DOCKER_USER=$(shell id -u):$(shell id -g)
@@ -165,6 +166,15 @@ test:
 		  | xargs $(GO) test -timeout $(TIMEOUT)s $(ARGS)); \
 	done
 
+test-integration:
+	@set -e; for dir in $(ALL_GO_MOD_DIRS); do \
+	  echo "$(GO) test -timeout $(TIMEOUT_INTEGRATION)s -tags=integration $${dir}/..."; \
+	  (cd "$${dir}" && \
+	    $(GO) list -tags=integration ./... \
+	      | grep -v third_party \
+	      | xargs $(GO) test -timeout $(TIMEOUT_INTEGRATION)s -tags=integration); \
+	done
+
 COVERAGE_MODE    = atomic
 COVERAGE_PROFILE = coverage.out
 .PHONY: test-coverage
@@ -172,11 +182,11 @@ test-coverage:
 	@set -e; \
 	printf "" > coverage.txt; \
 	for dir in $(ALL_COVERAGE_MOD_DIRS); do \
-	  echo "$(GO) test -coverpkg=./... -covermode=$(COVERAGE_MODE) -coverprofile="$(COVERAGE_PROFILE)" $${dir}/..."; \
+	  echo "$(GO) test -tags=integration -coverpkg=./... -covermode=$(COVERAGE_MODE) -coverprofile="$(COVERAGE_PROFILE)" $${dir}/..."; \
 	  (cd "$${dir}" && \
-	    $(GO) list ./... \
+	    $(GO) list -tags=integration ./... \
 	    | grep -v third_party \
-	    | xargs $(GO) test -coverpkg=./... -covermode=$(COVERAGE_MODE) -coverprofile="$(COVERAGE_PROFILE)" && \
+	    | xargs $(GO) test -tags=integration -coverpkg=./... -covermode=$(COVERAGE_MODE) -coverprofile="$(COVERAGE_PROFILE)" && \
 	  $(GO) tool cover -html=coverage.out -o coverage.html); \
 	  [ -f "$${dir}/coverage.out" ] && cat "$${dir}/coverage.out" >> coverage.txt; \
 	done; \
@@ -285,3 +295,7 @@ codespell: $(CODESPELL)
 	@echo "Running codespell"
 	@$(DOCKERPY) $(CODESPELL)
 
+MARKDOWNIMAGE := $(shell awk '$$4=="markdown" {print $$2}' $(DEPENDENCIES_DOCKERFILE))
+.PHONY: lint-markdown
+lint-markdown:
+	docker run --rm -u $(DOCKER_USER) -v "$(CURDIR):$(WORKDIR)" $(MARKDOWNIMAGE) --config $(WORKDIR)/.markdownlint-cli2.yaml $(WORKDIR)/**/*.md

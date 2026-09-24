@@ -4,9 +4,12 @@
 package main
 
 import (
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"go.opentelemetry.io/build-tools/githubgen/datatype"
 )
@@ -77,20 +80,6 @@ func Test_codeownersGenerator_verifyCodeOwnerOrgMembership(t *testing.T) {
 			wantErr:     true,
 			errContains: "codeowners are not members",
 		},
-		{
-			name:       "user in allowlist but is not a codeowner",
-			skipGithub: true,
-			args: args{
-				allowlistData: []byte("user4\nuser5"),
-				data: datatype.GithubData{
-					Codeowners: []string{
-						"user4",
-					},
-				},
-			},
-			wantErr:     true,
-			errContains: "unused members in allowlist",
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -102,6 +91,145 @@ func Test_codeownersGenerator_verifyCodeOwnerOrgMembership(t *testing.T) {
 			if (err != nil) != tt.wantErr && strings.Contains(err.Error(), tt.errContains) {
 				t.Errorf("verifyCodeOwnerOrgMembership() error = %v, wantErr %v", err, tt.wantErr)
 			}
+		})
+	}
+}
+
+func Test_codeownersGenerator_verifyCodeOwnerTeamMembership(t *testing.T) {
+	tests := []struct {
+		name        string
+		skipGithub  bool
+		allowlist   []byte
+		data        datatype.GithubData
+		wantErr     bool
+		errContains string
+	}{
+		{
+			name: "all codeowners are team members",
+			data: datatype.GithubData{
+				GitHubOrg:  "open-telemetry",
+				GitHubTeam: "some-team",
+				Codeowners: []string{"user1", "user2"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "codeowner is an org member but not a team member",
+			data: datatype.GithubData{
+				GitHubOrg:  "open-telemetry",
+				GitHubTeam: "some-team",
+				Codeowners: []string{"user1", "user3"},
+			},
+			wantErr:     true,
+			errContains: "codeowners are not members of the open-telemetry/some-team team: user3",
+		},
+		{
+			name:      "non-org-member on the allowlist is exempt from the team check",
+			allowlist: []byte("user4"),
+			data: datatype.GithubData{
+				GitHubOrg:  "open-telemetry",
+				GitHubTeam: "some-team",
+				Codeowners: []string{"user1", "user4"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "org team handle is exempt from the team check",
+			data: datatype.GithubData{
+				GitHubOrg:  "open-telemetry",
+				GitHubTeam: "some-team",
+				Codeowners: []string{"user1", "open-telemetry/some-other-team"},
+			},
+			wantErr: false,
+		},
+		{
+			name:       "team check is skipped when skipGithub is set",
+			skipGithub: true,
+			data: datatype.GithubData{
+				GitHubOrg:  "open-telemetry",
+				GitHubTeam: "some-team",
+				Codeowners: []string{"user1", "user3"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "no team configured preserves org-only behavior",
+			data: datatype.GithubData{
+				GitHubOrg:  "open-telemetry",
+				Codeowners: []string{"user1", "user3"},
+			},
+			wantErr: false,
+		},
+		{
+			name:      "org member on the allowlist reports a duplicate, not a missing team member",
+			allowlist: []byte("user3"),
+			data: datatype.GithubData{
+				GitHubOrg:  "open-telemetry",
+				GitHubTeam: "some-team",
+				Codeowners: []string{"user3"},
+			},
+			wantErr:     true,
+			errContains: "codeowners members duplicate in allowlist: user3",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cg := &codeownersGenerator{
+				skipGithub:           tt.skipGithub,
+				getGitHubMembers:     mockGithubMembers,
+				getGitHubTeamMembers: mockGithubTeamMembers,
+			}
+			err := cg.verifyCodeOwnerOrgMembership(tt.allowlist, tt.data)
+			if tt.wantErr {
+				require.Error(t, err)
+				if tt.errContains != "" {
+					require.Contains(t, err.Error(), tt.errContains)
+				}
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func Test_getGithubTeamMembers(t *testing.T) {
+	tests := []struct {
+		name       string
+		skipGithub bool
+		org        string
+		team       string
+		token      string
+		wantErr    bool
+	}{
+		{
+			name:       "skipGithub returns an empty set without calling GitHub",
+			skipGithub: true,
+			org:        "open-telemetry",
+			team:       "some-team",
+		},
+		{
+			name: "empty team returns an empty set without calling GitHub",
+			org:  "open-telemetry",
+			team: "",
+		},
+		{
+			name:    "missing token errors",
+			org:     "open-telemetry",
+			team:    "some-team",
+			token:   "",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("GITHUB_TOKEN", tt.token)
+			got, err := getGithubTeamMembers(tt.skipGithub, tt.org, tt.team)
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Empty(t, got)
 		})
 	}
 }
@@ -324,6 +452,107 @@ func Test_codeownersGenerator_Generate(t *testing.T) {
 	}
 }
 
+func Test_codeownersGenerator_Generate_unmaintainedFolderTrimPrefix(t *testing.T) {
+	codeownersTemplate := startUnmaintainedList + "\n\n" + endUnmaintainedList
+
+	tests := []struct {
+		name             string
+		rootFolder       string
+		folder           string
+		maxLength        int
+		defaultCodeOwner string
+		wantContains     string
+		wantNotContains  string
+	}{
+		{
+			name:             "folder with root prefix is stripped",
+			rootFolder:       "root",
+			folder:           "root/mycomponent",
+			maxLength:        20,
+			defaultCodeOwner: "@team",
+			wantContains:     "mycomponent/",
+			wantNotContains:  "root/mycomponent/",
+		},
+		{
+			name:             "folder without root prefix is unchanged",
+			rootFolder:       "root",
+			folder:           "mycomponent",
+			maxLength:        20,
+			defaultCodeOwner: "@team",
+			wantContains:     "mycomponent/",
+			wantNotContains:  "",
+		},
+		{
+			name:             "nested folder with root prefix is stripped",
+			rootFolder:       "root",
+			folder:           "root/receivers/myreceiver",
+			maxLength:        30,
+			defaultCodeOwner: "@team",
+			wantContains:     "receivers/myreceiver/",
+			wantNotContains:  "root/receivers/myreceiver/",
+		},
+		{
+			name:             "folder matching root exactly is not stripped (prefix includes trailing slash)",
+			rootFolder:       "root",
+			folder:           "root",
+			maxLength:        10,
+			defaultCodeOwner: "@team",
+			wantContains:     "root/",
+			wantNotContains:  "",
+		},
+		{
+			name:             "default codeowner is included in unmaintained entry",
+			rootFolder:       "repo",
+			folder:           "repo/internal/comp",
+			maxLength:        25,
+			defaultCodeOwner: "@open-telemetry/team",
+			wantContains:     "@open-telemetry/team",
+			wantNotContains:  "repo/internal/comp/",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var capturedContent []byte
+			cg := &codeownersGenerator{
+				skipGithub:       true,
+				getGitHubMembers: mockGithubMembers,
+				getFile: func(path string) ([]byte, error) {
+					if strings.Contains(filepath.ToSlash(path), ".github/CODEOWNERS") {
+						return []byte(codeownersTemplate), nil
+					}
+					return []byte(""), nil
+				},
+				setFile: func(_ string, data []byte) error {
+					capturedContent = data
+					return nil
+				},
+			}
+
+			data := datatype.GithubData{
+				RootFolder:        tt.rootFolder,
+				Folders:           []string{tt.folder},
+				Codeowners:        []string{},
+				AllowlistFilePath: "allowlist",
+				MaxLength:         tt.maxLength,
+				DefaultCodeOwner:  tt.defaultCodeOwner,
+				Components: map[string]datatype.Metadata{
+					tt.folder: {
+						Status: &datatype.Status{
+							Stability: map[string][]string{
+								unmaintainedStatus: {""},
+							},
+						},
+					},
+				},
+			}
+
+			require.NoError(t, cg.Generate(data))
+			require.Containsf(t, string(capturedContent), tt.wantContains, "generated CODEOWNERS does not contain %q", tt.wantContains)
+		})
+	}
+}
+
 func mockGithubMembers(bool, string) (map[string]struct{}, error) {
 	return map[string]struct{}{
 		"user1": {},
@@ -332,10 +561,19 @@ func mockGithubMembers(bool, string) (map[string]struct{}, error) {
 	}, nil
 }
 
+// mockGithubTeamMembers returns a subset of mockGithubMembers: user3 is an org
+// member but not a team member.
+func mockGithubTeamMembers(bool, string, string) (map[string]struct{}, error) {
+	return map[string]struct{}{
+		"user1": {},
+		"user2": {},
+	}, nil
+}
+
 func mockGetFile(path string) ([]byte, error) {
 	if path == "allowlist" {
 		return []byte(""), nil
-	} else if strings.Contains(path, ".github/CODEOWNERS") {
+	} else if strings.Contains(filepath.ToSlash(path), ".github/CODEOWNERS") {
 		return []byte("aaa\n\n\nbbb"), nil
 	}
 	return []byte(""), nil

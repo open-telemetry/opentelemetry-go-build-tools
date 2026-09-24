@@ -22,6 +22,7 @@ type GithubData struct {
 	Distributions     []DistributionData
 	DefaultCodeOwner  string
 	GitHubOrg         string
+	GitHubTeam        string
 	Chloggen          ChloggenConfig
 }
 

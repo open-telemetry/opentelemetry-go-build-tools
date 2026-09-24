@@ -22,6 +22,7 @@ func Test_run(t *testing.T) {
 		distributions     []datatype.DistributionData
 		defaultCodeOwners string
 		githubOrg         string
+		githubTeam        string
 	}
 	tests := []struct {
 		name    string
@@ -77,7 +78,7 @@ func Test_run(t *testing.T) {
 	// nolint:govet
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := run(tt.args.folder, tt.args.allowlistFilePath, []datatype.Generator{&tt.args.generators}, tt.args.distributions, tt.args.defaultCodeOwners, tt.args.githubOrg); (err != nil) != tt.wantErr {
+			if err := run(tt.args.folder, tt.args.allowlistFilePath, []datatype.Generator{&tt.args.generators}, tt.args.distributions, tt.args.defaultCodeOwners, tt.args.githubOrg, tt.args.githubTeam); (err != nil) != tt.wantErr {
 				t.Errorf("run() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			require.Equal(t, len(tt.args.generators.GenerateCalls()), 1)
