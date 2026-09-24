@@ -425,32 +425,32 @@ func TestGetFailedJobURLs(t *testing.T) {
 		{
 			name: "single failure found",
 			jobs: []*github.WorkflowJob{
-				{Name: github.Ptr("Success Job"), Conclusion: github.Ptr("success"), HTMLURL: github.Ptr("http://job/1")},
-				{Name: github.Ptr("Failed Job"), Conclusion: github.Ptr("failure"), HTMLURL: github.Ptr("http://job/2")},
+				{Name: ptr("Success Job"), Conclusion: ptr("success"), HTMLURL: ptr("http://job/1")},
+				{Name: ptr("Failed Job"), Conclusion: ptr("failure"), HTMLURL: ptr("http://job/2")},
 			},
 			expected: map[string]string{"Failed Job": "http://job/2"},
 		},
 		{
 			name: "multiple failures",
 			jobs: []*github.WorkflowJob{
-				{Name: github.Ptr("Lint"), Conclusion: github.Ptr("failure"), HTMLURL: github.Ptr("http://job/1")},
-				{Name: github.Ptr("Test-Linux"), Conclusion: github.Ptr("failure"), HTMLURL: github.Ptr("http://job/2")},
-				{Name: github.Ptr("Test-Windows"), Conclusion: github.Ptr("success"), HTMLURL: github.Ptr("http://job/3")},
+				{Name: ptr("Lint"), Conclusion: ptr("failure"), HTMLURL: ptr("http://job/1")},
+				{Name: ptr("Test-Linux"), Conclusion: ptr("failure"), HTMLURL: ptr("http://job/2")},
+				{Name: ptr("Test-Windows"), Conclusion: ptr("success"), HTMLURL: ptr("http://job/3")},
 			},
 			expected: map[string]string{"Lint": "http://job/1", "Test-Linux": "http://job/2"},
 		},
 		{
 			name: "no failures found",
 			jobs: []*github.WorkflowJob{
-				{Name: github.Ptr("Success Job"), Conclusion: github.Ptr("success"), HTMLURL: github.Ptr("http://job/1")},
+				{Name: ptr("Success Job"), Conclusion: ptr("success"), HTMLURL: ptr("http://job/1")},
 			},
 			expected: map[string]string{},
 		},
 		{
 			name: "timed_out jobs are excluded",
 			jobs: []*github.WorkflowJob{
-				{Name: github.Ptr("Failed Job"), Conclusion: github.Ptr("failure"), HTMLURL: github.Ptr("http://job/1")},
-				{Name: github.Ptr("Timed out Job"), Conclusion: github.Ptr("timed_out"), HTMLURL: github.Ptr("http://job/2")},
+				{Name: ptr("Failed Job"), Conclusion: ptr("failure"), HTMLURL: ptr("http://job/1")},
+				{Name: ptr("Timed out Job"), Conclusion: ptr("timed_out"), HTMLURL: ptr("http://job/2")},
 			},
 			expected: map[string]string{"Failed Job": "http://job/1"},
 		},
@@ -485,7 +485,7 @@ func TestFailedJobsTemplateExpansion(t *testing.T) {
 
 	t.Run("single failed job", func(t *testing.T) {
 		mockResponse := &github.Jobs{Jobs: []*github.WorkflowJob{
-			{Name: github.Ptr("Job A"), Conclusion: github.Ptr("failure"), HTMLURL: github.Ptr("http://job/a")},
+			{Name: ptr("Job A"), Conclusion: ptr("failure"), HTMLURL: ptr("http://job/a")},
 		}}
 		mockedHTTPClient := newMockHTTPClient(t, mock.GetReposActionsRunsJobsByOwnerByRepoByRunId, mockResponse, 0)
 		client := newTestClient(t, mockedHTTPClient)
@@ -500,8 +500,8 @@ func TestFailedJobsTemplateExpansion(t *testing.T) {
 
 	t.Run("multiple failed jobs", func(t *testing.T) {
 		mockResponse := &github.Jobs{Jobs: []*github.WorkflowJob{
-			{Name: github.Ptr("Job A"), Conclusion: github.Ptr("failure"), HTMLURL: github.Ptr("http://job/a")},
-			{Name: github.Ptr("Job B"), Conclusion: github.Ptr("failure"), HTMLURL: github.Ptr("http://job/b")},
+			{Name: ptr("Job A"), Conclusion: ptr("failure"), HTMLURL: ptr("http://job/a")},
+			{Name: ptr("Job B"), Conclusion: ptr("failure"), HTMLURL: ptr("http://job/b")},
 		}}
 		mockedHTTPClient := newMockHTTPClient(t, mock.GetReposActionsRunsJobsByOwnerByRepoByRunId, mockResponse, 0)
 		client := newTestClient(t, mockedHTTPClient)
@@ -516,7 +516,7 @@ func TestFailedJobsTemplateExpansion(t *testing.T) {
 
 	t.Run("no failed jobs", func(t *testing.T) {
 		mockResponse := &github.Jobs{Jobs: []*github.WorkflowJob{
-			{Name: github.Ptr("Job A"), Conclusion: github.Ptr("success"), HTMLURL: github.Ptr("http://job/a")},
+			{Name: ptr("Job A"), Conclusion: ptr("success"), HTMLURL: ptr("http://job/a")},
 		}}
 		mockedHTTPClient := newMockHTTPClient(t, mock.GetReposActionsRunsJobsByOwnerByRepoByRunId, mockResponse, 0)
 		client := newTestClient(t, mockedHTTPClient)
