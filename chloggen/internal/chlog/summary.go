@@ -35,12 +35,15 @@ type summary struct {
 	NewComponents   []*Entry
 	Enhancements    []*Entry
 	BugFixes        []*Entry
+
+	groupByComponent bool
 }
 
 // GenerateSummary generates a changelog entry summary.
-func GenerateSummary(version string, entries []*Entry, cfg *config.Config) (string, error) {
+func GenerateSummary(version string, entries []*Entry, cfg *config.Config, groupByComponent bool) (string, error) {
 	s := summary{
-		Version: version,
+		Version:          version,
+		groupByComponent: groupByComponent,
 	}
 
 	for _, entry := range entries {
@@ -69,6 +72,26 @@ func TemplateFuncMap() template.FuncMap {
 			return indent + strings.ReplaceAll(s, "\n", "\n"+indent)
 		},
 	}
+}
+
+type componentGroup struct {
+	Component string
+	Entries   []*Entry
+}
+
+func (s summary) Groups(entries []*Entry) []componentGroup {
+	var groups []componentGroup
+	index := make(map[string]int)
+	for _, e := range entries {
+		i, ok := index[e.Component]
+		if !ok || !s.groupByComponent {
+			i = len(groups)
+			index[e.Component] = i
+			groups = append(groups, componentGroup{Component: e.Component})
+		}
+		groups[i].Entries = append(groups[i].Entries, e)
+	}
+	return groups
 }
 
 // String renders the summary using the provided template.
