@@ -1,0 +1,4 @@
+default_constructors:
+  enabled: false
+  types:
+    component.BuildInfo: NewDefaultBuildInfo
