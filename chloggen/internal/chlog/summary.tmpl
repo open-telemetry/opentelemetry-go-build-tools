@@ -1,13 +1,30 @@
-{{- define "entry" -}}
-- `{{ .Component }}`: {{ .Note }} (
+{{- define "issues" -}}
+(
 {{- range $i, $issue := .Issues }}
 {{- if $i }}, {{ end -}}
 #{{ $issue }}
 {{- end -}}
 )
+{{- end }}
+{{- define "entry" -}}
+- `{{ .Component }}`: {{ .Note }} {{ template "issues" . }}
 
 {{- if .SubText }}
 {{ .SubText | indent 2 }}
+{{- end }}
+{{- end }}
+{{- define "group" -}}
+{{- if eq (len .Entries) 1 -}}
+{{ template "entry" index .Entries 0 }}
+{{- else -}}
+- `{{ .Component }}`:
+{{- range .Entries }}
+  - {{ .Note }} {{ template "issues" . }}
+
+{{- if .SubText }}
+{{ .SubText | indent 4 }}
+{{- end }}
+{{- end }}
 {{- end }}
 {{- end }}
 ## {{ .Version }}
@@ -16,10 +33,10 @@
 
 ### 🛑 Breaking changes 🛑
 
-{{- range $i, $change := .BreakingChanges }}
+{{- range $i, $group := $.Groups .BreakingChanges }}
 {{- if eq $i 0}}
 {{end}}
-{{ template "entry" $change }}
+{{ template "group" $group }}
 {{- end }}
 {{- end }}
 
@@ -27,10 +44,10 @@
 
 ### 🚩 Deprecations 🚩
 
-{{- range $i, $change := .Deprecations }}
+{{- range $i, $group := $.Groups .Deprecations }}
 {{- if eq $i 0}}
 {{end}}
-{{ template "entry" $change }}
+{{ template "group" $group }}
 {{- end }}
 {{- end }}
 
@@ -38,10 +55,10 @@
 
 ### 🚀 New components 🚀
 
-{{- range $i, $change := .NewComponents }}
+{{- range $i, $group := $.Groups .NewComponents }}
 {{- if eq $i 0}}
 {{end}}
-{{ template "entry" $change }}
+{{ template "group" $group }}
 {{- end }}
 {{- end }}
 
@@ -49,10 +66,10 @@
 
 ### 💡 Enhancements 💡
 
-{{- range $i, $change := .Enhancements }}
+{{- range $i, $group := $.Groups .Enhancements }}
 {{- if eq $i 0}}
 {{end}}
-{{ template "entry" $change }}
+{{ template "group" $group }}
 {{- end }}
 {{- end }}
 
@@ -60,9 +77,9 @@
 
 ### 🧰 Bug fixes 🧰
 
-{{- range $i, $change := .BugFixes }}
+{{- range $i, $group := $.Groups .BugFixes }}
 {{- if eq $i 0}}
 {{end}}
-{{ template "entry" $change }}
+{{ template "group" $group }}
 {{- end }}
 {{- end }}

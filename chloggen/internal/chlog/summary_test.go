@@ -93,7 +93,7 @@ func TestSummary(t *testing.T) {
 		SubText:    "more details",
 	}
 
-	actual, err := GenerateSummary("1.0", []*Entry{&brk1, &brk2, &dep1, &dep2, &enh1, &enh2, &bug1, &bug2, &new1, &new2}, &config.Config{})
+	actual, err := GenerateSummary("1.0", []*Entry{&brk1, &brk2, &dep1, &dep2, &enh1, &enh2, &bug1, &bug2, &new1, &new2}, &config.Config{}, false)
 	assert.NoError(t, err)
 
 	// This file is not meant to be the entire changelog so will not pass markdownlint if named with .md extension.
@@ -118,7 +118,7 @@ func TestCustomSummary(t *testing.T) {
 		SubText:    "more details",
 	}
 
-	actual, err := GenerateSummary("1.0", []*Entry{&brk1, &brk2}, &config.Config{SummaryTemplate: filepath.Join("testdata", "custom.tmpl")})
+	actual, err := GenerateSummary("1.0", []*Entry{&brk1, &brk2}, &config.Config{SummaryTemplate: filepath.Join("testdata", "custom.tmpl")}, false)
 	require.NoError(t, err)
 
 	// This file is not meant to be the entire changelog so will not pass markdownlint if named with .md extension.
@@ -126,4 +126,22 @@ func TestCustomSummary(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, string(expected), actual)
+}
+
+func TestGroups(t *testing.T) {
+	foo1 := &Entry{Component: "foo", Note: "first foo"}
+	bar := &Entry{Component: "bar", Note: "bar"}
+	foo2 := &Entry{Component: "foo", Note: "second foo"}
+	entries := []*Entry{foo1, bar, foo2}
+
+	assert.Equal(t, []componentGroup{
+		{Component: "foo", Entries: []*Entry{foo1}},
+		{Component: "bar", Entries: []*Entry{bar}},
+		{Component: "foo", Entries: []*Entry{foo2}},
+	}, summary{}.Groups(entries))
+
+	assert.Equal(t, []componentGroup{
+		{Component: "foo", Entries: []*Entry{foo1, foo2}},
+		{Component: "bar", Entries: []*Entry{bar}},
+	}, summary{groupByComponent: true}.Groups(entries))
 }
