@@ -484,6 +484,8 @@ func TestTagAllModules(t *testing.T) {
 		shouldExistTags    []string
 		shouldNotExistTags []string
 		shouldError        bool
+		alreadyTagged      bool
+		tagsOnOtherCommit  bool
 	}{
 		{
 			name:       "mod_set_1",
@@ -536,7 +538,25 @@ func TestTagAllModules(t *testing.T) {
 				"test/v0.1.0",
 				"v1.0.0-doesNotExist",
 			},
-			shouldError: true,
+			alreadyTagged: true,
+		},
+		{
+			name:       "mod_set_3_already_exists_on_other_commit",
+			modSetName: "mod-set-3",
+			shouldExistTags: []string{
+				"test/test1/v1.2.3-oldVersion",
+				"test/test2/v0.1.0-oldVersion",
+				"test/v0.1.0-oldVersion",
+				"v2.2.2",
+			},
+			shouldNotExistTags: []string{
+				"test/test1/v1.2.3-RC1+meta",
+				"test/test2/v0.1.0",
+				"test/v0.1.0",
+				"v1.0.0-doesNotExist",
+			},
+			shouldError:       true,
+			tagsOnOtherCommit: true,
 		},
 	}
 
@@ -566,12 +586,19 @@ func TestTagAllModules(t *testing.T) {
 				require.NoError(t, err)
 			}
 
+			if tc.tagsOnOtherCommit {
+				otherHash, commitErr := shared.CommitChangesToNewBranch("other_commit", "other commit used in a test", repo, sharedtest.TestAuthor)
+				require.NoError(t, commitErr)
+				hashPrefix = otherHash.String()[:8]
+			}
+
 			tagger, err := newTagger(versioningFilename, tc.modSetName, tmpRootDir, hashPrefix, false)
 			if tc.shouldError {
 				assert.Error(t, err)
 				return
 			}
 			require.NoError(t, err)
+			assert.Equal(t, tc.alreadyTagged, tagger.AlreadyTagged)
 			require.NoError(t, tagger.tagAllModules(sharedtest.TestAuthor))
 			for _, tagName := range tc.shouldExistTags {
 				tagRef, tagRefErr := repo.Tag(tagName)
