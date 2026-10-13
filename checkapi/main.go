@@ -179,6 +179,10 @@ func walkFolder(cfg internal.Config, folder string, metadata internal.Metadata) 
 		}
 	}
 
+	if cfg.DefaultCtors.Enabled {
+		errs = append(errs, checkDefaultConstructors(cfg, result, folder)...)
+	}
+
 	if (!cfg.JSONSchema.CheckPresent && !cfg.JSONSchema.CheckValid && !cfg.ComponentAPI && !cfg.ComponentAPIStrict && !cfg.EmbeddedConfigFields.Enabled) || !isFactoryComponent {
 		return errors.Join(errs...)
 	}
@@ -268,6 +272,26 @@ func filterStructs(structMap map[string]internal.APIstruct, current internal.API
 			filterStructs(structMap, s, allStructs)
 		}
 	}
+}
+
+// checkDefaultConstructors reports config structs that the default config function builds
+// with a struct literal instead of the NewDefault* constructor.
+func checkDefaultConstructors(cfg internal.Config, result internal.API, folder string) []error {
+	var errs []error
+	for _, lit := range result.DefaultConfigLiterals {
+		constructor, ok := cfg.DefaultCtors.Types[lit.Type]
+		if !ok {
+			continue
+		}
+		pkg, _, _ := strings.Cut(lit.Type, ".")
+		location := lit.File
+		if rel, err := filepath.Rel(folder, lit.File); err == nil {
+			location = rel
+		}
+		errs = append(errs, fmt.Errorf("[%s] %s:%d builds %s as a struct literal, use %s.%s() instead",
+			folder, location, lit.Line, lit.Type, pkg, constructor))
+	}
+	return errs
 }
 
 // checkNoEmbeddedConfigFields reports the embedded (anonymous) fields of the config struct and of
