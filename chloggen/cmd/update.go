@@ -32,9 +32,10 @@ const (
 )
 
 var (
-	version         string
-	dry             bool
-	componentFilter string
+	version          string
+	dry              bool
+	componentFilter  string
+	groupByComponent bool
 )
 
 func updateCmd() *cobra.Command {
@@ -62,7 +63,7 @@ func updateCmd() *cobra.Command {
 					}
 					entries = filteredEntries
 				}
-				chlogUpdate, err := chlog.GenerateSummary(version, entries, globalCfg)
+				chlogUpdate, err := chlog.GenerateSummary(version, entries, globalCfg, groupByComponent)
 				if err != nil {
 					return err
 				}
@@ -112,5 +113,6 @@ func updateCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&version, "version", "v", "vTODO", "will be rendered directly into the update text")
 	cmd.Flags().BoolVarP(&dry, "dry", "d", false, "will generate the update text and print to stdout")
 	cmd.Flags().StringVarP(&componentFilter, "component", "c", "", "only select entries with this exact component")
+	cmd.Flags().BoolVar(&groupByComponent, "group-by-component", false, "group entries for the same component under a single bullet")
 	return cmd
 }
