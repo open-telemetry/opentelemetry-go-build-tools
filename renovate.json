@@ -7,7 +7,8 @@
   "ignorePaths": [],
   "labels": ["Skip Changelog", "dependencies"],
   "postUpdateOptions" : [
-    "gomodTidy"
+    "gomodTidy",
+    "gomodUpdateImportPaths"
   ],
   "packageRules": [
     {
