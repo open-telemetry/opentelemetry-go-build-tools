@@ -193,7 +193,7 @@ func TestCommitToFileFails(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create a directory for dependentsPath to fail file creation.
-	err = os.MkdirAll(ws.dependentsPath, dirReadWrite)
+	err = os.MkdirAll(ws.dependentsPath, dirReadWrite) //nolint:gosec // preserve existing directory permissions
 	require.NoError(t, err)
 
 	err = commitToFile([]byte(`foo/bar`), ws.dependentsPath)

@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const fileReadWrite = os.FileMode(0o644)
+const fileReadWrite = os.FileMode(0o600)
 const addUsage = `Adds one or more dependents to be tested. The dependents local or remote path can be specified as command line arguments or in a .txt file, or both.
 
 Usage:
