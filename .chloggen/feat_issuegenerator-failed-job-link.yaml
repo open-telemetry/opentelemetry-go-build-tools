@@ -1,0 +1,5 @@
+change_type: enhancement
+component: issuegenerator
+note: "Link to all failing jobs in GitHub Actions instead of general workflow run."
+issues: [1183]
+subtext:
