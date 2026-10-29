@@ -48,7 +48,7 @@ func NewWorkspace() (*Workspace, error) {
 // Create initializes a .grater directory in the given path.
 func (w *Workspace) create() error {
 	graterDir := filepath.Join(w.dir, ".grater")
-	err := os.MkdirAll(graterDir, dirReadWrite)
+	err := os.MkdirAll(graterDir, dirReadWrite) //nolint:gosec // preserve existing directory permissions
 
 	if err != nil {
 		return fmt.Errorf("failed to create .grater/ directory: %w", err)
@@ -100,7 +100,7 @@ func (w *Workspace) WriteReplacements() error {
 func commitToFile(content []byte, path string) error {
 	cleanPath := filepath.Clean(path)
 
-	f, err := os.OpenFile(cleanPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, fileReadWrite)
+	f, err := os.OpenFile(cleanPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, fileReadWrite) //nolint:gosec // preserve existing file permissions
 	if err != nil {
 		return fmt.Errorf("failed to write to %s: %w", cleanPath, err)
 	}
