@@ -32,10 +32,10 @@ const updateUsage = `Usage:
   chloggen update [flags]
 
 Flags:
-  -c, --component string   only select entries with this exact component
-  -d, --dry                will generate the update text and print to stdout
-  -h, --help               help for update
-  -v, --version string     will be rendered directly into the update text (default "vTODO")
+  -c, --component string    only select entries with this exact component
+  -d, --dry[=true|false]    will generate the update text and print to stdout
+  -h, --help[=true|false]   help for update
+  -v, --version string      will be rendered directly into the update text (default "vTODO")
 
 Global Flags:
       --config string   (optional) chloggen config file`

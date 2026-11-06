@@ -26,8 +26,8 @@ grater add -f dependents.txt
 
 
 Flags:
-  -f, --file string   path to the dependents file
-  -h, --help          help for add`
+  -f, --file string         path to the dependents file
+  -h, --help[=true|false]   help for add`
 
 func TestAdd(t *testing.T) {
 	out, err := runCobra(t, "add", "--help")
