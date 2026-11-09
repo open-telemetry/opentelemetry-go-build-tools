@@ -7,14 +7,23 @@
   "ignorePaths": [],
   "labels": ["Skip Changelog", "dependencies"],
   "postUpdateOptions" : [
-    "gomodTidy",
+    "gomodTidyAll",
     "gomodUpdateImportPaths"
   ],
   "packageRules": [
     {
       "matchManagers": ["gomod"],
       "matchDepTypes": ["indirect"],
+      "abandonmentThreshold": "50 years",
       "enabled": true
+    },
+    {
+      "matchManagers": ["gomod"],
+      "matchDepTypes": ["indirect"],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "enabled": false
     },
     {
       "matchPackageNames": ["go.opentelemetry.io/build-tools/**"],
