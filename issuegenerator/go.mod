@@ -8,7 +8,7 @@ require (
 	github.com/migueleliasweb/go-github-mock v1.5.0
 	github.com/stretchr/testify v1.12.1
 	go.uber.org/zap v1.28.0
-	golang.org/x/oauth2 v0.37.0
+	golang.org/x/oauth2 v0.38.0
 )
 
 require (
