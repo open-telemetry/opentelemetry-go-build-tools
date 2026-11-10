@@ -11,7 +11,7 @@ require (
 	go.opentelemetry.io/build-tools v0.30.0
 	go.uber.org/multierr v1.11.0
 	golang.org/x/mod v0.43.0
-	golang.org/x/sync v0.24.0
+	golang.org/x/sync v0.25.0
 )
 
 require (
@@ -44,7 +44,7 @@ require (
 	golang.org/x/crypto v0.58.0 // indirect
 	golang.org/x/net v0.62.0 // indirect
 	golang.org/x/sys v0.50.0 // indirect
-	golang.org/x/text v0.43.0 // indirect
+	golang.org/x/text v0.44.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
 
