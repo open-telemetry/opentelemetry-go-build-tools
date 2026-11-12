@@ -65,8 +65,9 @@ func Run(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags b
 
 type tagger struct {
 	shared.ModuleSetRelease
-	CommitHash plumbing.Hash
-	Repo       *git.Repository
+	CommitHash    plumbing.Hash
+	Repo          *git.Repository
+	AlreadyTagged bool
 }
 
 func newTagger(versioningFilename, modSetToUpdate, repoRoot, hash string, deleteModuleSetTags bool) (tagger, error) {
@@ -87,13 +88,17 @@ func newTagger(versioningFilename, modSetToUpdate, repoRoot, hash string, delete
 
 	modFullTagNames := modRelease.ModuleFullTagNames()
 
+	var alreadyTagged bool
 	if deleteModuleSetTags {
 		if err = verifyTagsOnCommit(modFullTagNames, repo, fullCommitHash); err != nil {
 			return tagger{}, fmt.Errorf("verifyTagsOnCommit failed: %w", err)
 		}
 	} else {
 		if err = modRelease.CheckGitTagsAlreadyExist(repo); err != nil {
-			return tagger{}, fmt.Errorf("CheckGitTagsAlreadyExist failed: %w", err)
+			if verifyTagsOnCommit(modFullTagNames, repo, fullCommitHash) != nil {
+				return tagger{}, fmt.Errorf("CheckGitTagsAlreadyExist failed: %w", err)
+			}
+			alreadyTagged = true
 		}
 	}
 
@@ -101,6 +106,7 @@ func newTagger(versioningFilename, modSetToUpdate, repoRoot, hash string, delete
 		ModuleSetRelease: modRelease,
 		CommitHash:       fullCommitHash,
 		Repo:             repo,
+		AlreadyTagged:    alreadyTagged,
 	}, nil
 }
 
@@ -176,6 +182,11 @@ func deleteTags(modFullTags []string, repo *git.Repository) error {
 }
 
 func (t tagger) tagAllModules(customTagger *object.Signature) error {
+	if t.AlreadyTagged {
+		log.Printf("Tags already exist on commit %s\n", t.CommitHash)
+		return nil
+	}
+
 	modFullTags := t.ModuleFullTagNames()
 
 	tagMessage := fmt.Sprintf("Module set %v, Version %v",
