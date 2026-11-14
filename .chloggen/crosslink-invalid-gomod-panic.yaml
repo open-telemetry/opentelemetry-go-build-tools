@@ -1,0 +1,19 @@
+# One of 'breaking', 'deprecation', 'new_component', 'enhancement', 'bug_fix', 'telemetry'
+change_type: bug_fix
+
+# The name of the component, or a single word describing the area of concern, (e.g. crosslink)
+component: crosslink
+
+# A brief description of the change.  Surround your text with quotes ("") if it needs to start with a backtick (`).
+note: Return an error instead of panicking when a go.mod file in the repository cannot be parsed.
+
+# One or more tracking issues related to the change
+issues: [2388]
+
+# (Optional) One or more lines of additional information to render under the primary note.
+# These lines will be padded with 2 spaces and then inserted directly into the document.
+# Use pipe (|) for multiline entries.
+subtext: |
+  The parse error was only logged, and the nil result was passed on, so `crosslink`,
+  `crosslink prune` and `crosslink tidylist` crashed with a nil pointer dereference.
+  The error now names the broken file, which can be excluded with `--skip`.
