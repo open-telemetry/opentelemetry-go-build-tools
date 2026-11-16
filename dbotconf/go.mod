@@ -5,7 +5,7 @@ go 1.26.0
 require (
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.12.1
-	go.opentelemetry.io/build-tools v0.30.0
+	go.opentelemetry.io/build-tools v0.31.0
 	golang.org/x/mod v0.43.0
 	gopkg.in/yaml.v3 v3.0.1
 )

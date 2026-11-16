@@ -4,6 +4,30 @@
 
 <!-- next version -->
 
+## v0.31.0
+
+### 💡 Enhancements 💡
+
+- `checkapi`: Add an `embedded_config_fields` option that forbids embedded fields on component config structs (#2063)
+- `chloggen`: This adds a new change type of `telemetry` (#2016)
+- `githubgen`: Add a `--github-team` flag to require codeowners to be members of a specific org team (#1993)
+  When `--github-team` is set, codeowners must be members of the given org team in addition to
+  being members of the organization. Team membership is what grants the repository access required
+  for a code owner to be requested as a reviewer. Allowlisted codeowners and org team handles are
+  exempt. When the flag is unset, behavior is unchanged and only organization membership is checked.
+  
+- `issuegenerator`: Link to all failing jobs in GitHub Actions instead of general workflow run. (#1183)
+
+### 🧰 Bug fixes 🧰
+
+- `githubgen`: Do not validate that allowlist members are unused (#1796)
+  The githubgen tool validated that members of the allowlist were at least used in one component.
+  The problem arises when we need to add a member to the allowlist, but the component is not
+  present yet. We also run into this issue when we check the allowlist of the main branch vs
+  what is in the fork, which we leverage for security reasons in github actions.
+  
+- `githubgen`: Fix unmaintained codeowners to be relative to the root folder instead of absolute paths. (#1932)
+
 ## v0.30.0
 
 ### 🛑 Breaking changes 🛑
