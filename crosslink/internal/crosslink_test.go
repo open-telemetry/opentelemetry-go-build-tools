@@ -414,6 +414,30 @@ func TestBadRootPath(t *testing.T) {
 	}
 }
 
+func TestInvalidGoMod(t *testing.T) {
+	lg, _ := zap.NewDevelopment()
+
+	tmpRootDir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(tmpRootDir, "go.mod"),
+		[]byte("module go.opentelemetry.io/build-tools/crosslink/testroot\n\ngo 1.20\n"), 0o600))
+	require.NoError(t, os.Mkdir(filepath.Join(tmpRootDir, "testA"), 0o700))
+	require.NoError(t, os.WriteFile(filepath.Join(tmpRootDir, "testA", "go.mod"),
+		[]byte("module go.opentelemetry.io/build-tools/crosslink/testroot/testA\n\ngo 1.20\n\nrequire (\n"), 0o600))
+
+	config := RunConfig{
+		RootPath: tmpRootDir,
+		Logger:   lg,
+	}
+
+	require.ErrorContains(t, Crosslink(config), "failed to parse go.mod file")
+	require.ErrorContains(t, Prune(config), "failed to parse go.mod file")
+	require.ErrorContains(t, TidyList(config, filepath.Join(tmpRootDir, "schedule.txt")), "failed to parse go.mod file")
+
+	// Skipping the broken module lets the rest of the repository be processed.
+	config.SkippedPaths = map[string]struct{}{"testA/go.mod": {}}
+	require.NoError(t, Crosslink(config))
+}
+
 // Testing skipping specified go modules.
 func TestSkip(t *testing.T) {
 	testName := "testSkip"

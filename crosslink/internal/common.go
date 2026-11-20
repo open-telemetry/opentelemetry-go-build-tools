@@ -91,9 +91,7 @@ func forGoModFiles(rc RunConfig, fn func(modPath string, modName string, modFile
 
 		modContents, err := modfile.Parse(fullPath, modFile, nil)
 		if err != nil {
-			rc.Logger.Error("Modfile could not be parsed",
-				zap.Error(err),
-				zap.String("file_path", path))
+			return fmt.Errorf("failed to parse go.mod file: %w", err)
 		}
 
 		return fn(path, modfile.ModulePath(modFile), modContents)
