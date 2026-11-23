@@ -190,18 +190,14 @@ func (t tagger) tagAllModules(customTagger *object.Signature) error {
 
 		var err error
 		if customTagger == nil {
-			cfg, err2 := t.Repo.Config()
+			worktree, err2 := t.Repo.Worktree()
 			if err2 != nil {
-				err = fmt.Errorf("unable to load repo config: %w", err2)
-				if cfg == nil || cfg.Core.Worktree == "" {
-					// This is not recoverable, do not panic below.
-					return err
-				}
+				return fmt.Errorf("unable to get worktree: %w", err2)
 			}
 			// TODO: figure out how to use go-git and gpg-agent without needing to have decrypted private key material
 			// #nosec G204
 			cmd := exec.Command("git", "tag", "-a", "-s", "-m", tagMessage, newFullTag, t.CommitHash.String())
-			cmd.Dir = cfg.Core.Worktree
+			cmd.Dir = worktree.Filesystem.Root()
 			output, err2 := cmd.CombinedOutput()
 			if err2 != nil {
 				err = fmt.Errorf("unable to create tag: %q: %w", string(output), err2)
