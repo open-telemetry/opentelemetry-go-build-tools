@@ -389,6 +389,28 @@ func TestFindYamlFilesNonRecursive(t *testing.T) {
 	assert.ElementsMatch(t, []string{rootYAML.Name()}, files)
 }
 
+func TestDeleteEntriesError(t *testing.T) {
+	tempDir := t.TempDir()
+	entriesDir := filepath.Join(tempDir, config.DefaultEntriesDir)
+	require.NoError(t, os.Mkdir(entriesDir, 0750))
+
+	// Create a file that we will try to delete
+	fileToKeep := filepath.Join(entriesDir, "keep.yaml")
+	require.NoError(t, os.WriteFile(fileToKeep, []byte("test"), 0600))
+
+	cfg := &config.Config{
+		EntriesDir: entriesDir,
+	}
+.
+	f, err := os.OpenFile(fileToKeep, os.O_RDONLY, 0)
+	require.NoError(t, err)
+	defer f.Close()
+
+	err = DeleteEntries(cfg)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to delete")
+}
+
 func writeEntry(t *testing.T, dir string, entry *Entry, ext string) {
 	require.Contains(t, []string{"yaml", "yml"}, ext, "ext must be 'yaml' or 'yml'")
 
