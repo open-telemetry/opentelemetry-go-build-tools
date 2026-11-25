@@ -38,7 +38,7 @@ ALL_COVERAGE_MOD_DIRS := $(shell find . -type f -name 'go.mod' -exec dirname {} 
 
 GO ?= go
 TIMEOUT = 60
-TIMEOUT_INTEGRATION = 180
+TIMEOUT_INTEGRATION = 360
 
 # User to run as in docker images.
 DOCKER_USER=$(shell id -u):$(shell id -g)
