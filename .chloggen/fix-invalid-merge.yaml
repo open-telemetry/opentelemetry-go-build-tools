@@ -1,5 +1,5 @@
 change_type: bug_fix
 component: multimod
 note: Handle Git branch configurations that track pull request refs during prerelease and tagging.
-issues: [47]
+issues: [47, 2417]
 subtext:
