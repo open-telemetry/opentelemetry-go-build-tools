@@ -124,7 +124,7 @@ func Read(folder string, ignoredFunctions []string, excludedFiles []string) (API
 			}
 
 			for _, pack := range packs {
-				if err := readPackage(pack, ignoredFunctions, excludedFiles, result, isInternal, path == folder); err != nil {
+				if err := readPackage(set, pack, ignoredFunctions, excludedFiles, result, isInternal, path == folder); err != nil {
 					return err
 				}
 			}
@@ -155,7 +155,7 @@ func parseDir(fset *token.FileSet, dir string) (map[string]*ast.Package, error) 
 	return pkgs, nil
 }
 
-func readPackage(pack *ast.Package, ignoredFunctions []string, excludedFiles []string, result *API, internal bool, root bool) error { // nolint:staticcheck // SA1019
+func readPackage(fset *token.FileSet, pack *ast.Package, ignoredFunctions []string, excludedFiles []string, result *API, internal bool, root bool) error { // nolint:staticcheck // SA1019
 FILE:
 	for path, f := range pack.Files {
 		for _, exclusionPattern := range excludedFiles {
@@ -171,7 +171,7 @@ FILE:
 		if root {
 			packageName = ""
 		}
-		readFile(ignoredFunctions, f, result, internal, packageName)
+		readFile(fset, ignoredFunctions, f, result, internal, packageName)
 	}
 	return nil
 }
@@ -211,7 +211,7 @@ func interpretFieldType(f *ast.Field, expr ast.Expr) []APIstructField {
 	return fieldNames
 }
 
-func readFile(ignoredFunctions []string, f *ast.File, result *API, internal bool, packageName string) {
+func readFile(fset *token.FileSet, ignoredFunctions []string, f *ast.File, result *API, internal bool, packageName string) {
 	for _, d := range f.Decls {
 		if str, isStr := d.(*ast.GenDecl); isStr {
 			for _, s := range str.Specs {
@@ -309,6 +309,7 @@ func readFile(ignoredFunctions []string, f *ast.File, result *API, internal bool
 				}
 				if !fn.Name.IsExported() && len(apiFn.ReturnTypes) == 1 && apiFn.ReturnTypes[0] == "component.Config" {
 					result.ConfigStructName = extractFunctionReturnType(fn)
+					result.DefaultConfigLiterals = append(result.DefaultConfigLiterals, collectQualifiedLiterals(fset, fn)...)
 				} else if fn.Name.IsExported() {
 					result.Functions = append(result.Functions, apiFn)
 				}
@@ -316,6 +317,28 @@ func readFile(ignoredFunctions []string, f *ast.File, result *API, internal bool
 			}
 		}
 	}
+}
+
+// collectQualifiedLiterals in fn of types belonging to another package, such as configgrpc.ClientConfig{}.
+func collectQualifiedLiterals(fset *token.FileSet, fn *ast.FuncDecl) []TypeLiteral {
+	var literals []TypeLiteral
+	ast.Inspect(fn.Body, func(n ast.Node) bool {
+		lit, ok := n.(*ast.CompositeLit)
+		if !ok {
+			return true
+		}
+		if _, ok := lit.Type.(*ast.SelectorExpr); !ok {
+			return true
+		}
+		pos := fset.Position(lit.Pos())
+		literals = append(literals, TypeLiteral{
+			Type: ExprToString(lit.Type),
+			File: pos.Filename,
+			Line: pos.Line,
+		})
+		return true
+	})
+	return literals
 }
 
 func extractFunctionReturnType(fn *ast.FuncDecl) string {
