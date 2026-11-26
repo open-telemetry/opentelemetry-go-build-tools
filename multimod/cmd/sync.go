@@ -31,6 +31,7 @@ var (
 	allModuleSetsSync   bool
 	moduleSetNamesSync  []string
 	skipGoModTidySync   bool
+	computeLocalSync    bool
 )
 
 // syncCmd represents the sync command
@@ -62,7 +63,7 @@ var syncCmd = &cobra.Command{
 			otherVersioningFile = filepath.Join(otherRepoRoot,
 				fmt.Sprintf("%v.%v", defaultVersionsConfigName, defaultVersionsConfigType))
 		}
-		sync.Run(versioningFile, otherVersioningFile, otherRepoRoot, moduleSetNamesSync, otherVersionCommit, allModuleSetsSync, skipGoModTidySync)
+		sync.Run(versioningFile, otherVersioningFile, otherRepoRoot, moduleSetNamesSync, otherVersionCommit, allModuleSetsSync, skipGoModTidySync, computeLocalSync)
 	},
 }
 
@@ -85,6 +86,12 @@ func init() {
 	syncCmd.Flags().StringVar(&otherVersionCommit, "commit-hash", "",
 		"Supports specifying to a commit hash or branch name to sync the modules to. "+
 			"If unspecified, defaults to version in versions.yaml.")
+
+	syncCmd.Flags().BoolVar(&computeLocalSync, "compute-versions-locally", false,
+		"Compute the version of --commit-hash from the local checkout given by --other-repo-root "+
+			"instead of querying the Go module proxy, which can take a long time to learn about new commits. "+
+			"The version is based on the module set version in the other versioning file, "+
+			"which is assumed to be the latest release before the commit. Requires --commit-hash.")
 
 	syncCmd.Flags().BoolVarP(&allModuleSetsSync, "all-module-sets", "a", false,
 		"Specify this flag to update versions of modules in all sets listed in the versioning file.",

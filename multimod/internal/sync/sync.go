@@ -33,7 +33,11 @@ import (
 )
 
 // Run runs the synchronization process.
-func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot string, otherModuleSetNames []string, otherVersionCommit string, allModuleSets bool, skipModTidy bool) {
+func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot string, otherModuleSetNames []string, otherVersionCommit string, allModuleSets bool, skipModTidy bool, computeVersionsLocally bool) {
+	if computeVersionsLocally && otherVersionCommit == "" {
+		log.Fatal("computing versions locally requires a commit hash or branch name to sync to")
+	}
+
 	myRepoRoot, err := repo.FindRoot()
 	if err != nil {
 		log.Fatalf("unable to find repo root: %v", err)
@@ -63,6 +67,14 @@ func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot stri
 		}
 
 		log.Printf("===== Module Set: %v =====\n", moduleSetName)
+
+		if computeVersionsLocally {
+			s.localVersion, err = localPseudoVersion(otherRepoRoot, otherVersionCommit, s.OtherModuleSet.Version)
+			if err != nil {
+				log.Fatalf("could not compute version locally: %v", err)
+			}
+			log.Printf("Computed version %s locally from %s\n", s.localVersion, otherVersionCommit)
+		}
 
 		if err = s.updateAllGoModFiles(); err != nil {
 			log.Fatalf("updateAllGoModFiles failed: %v", err)
@@ -102,6 +114,9 @@ type sync struct {
 	OtherModuleSet           shared.ModuleSet
 	MyModuleVersioning       shared.ModuleVersioning
 	client                   *http.Client
+	// localVersion, when set, is used for every module in the set instead of
+	// querying the Go module proxy for OtherModuleVersionCommit.
+	localVersion string
 }
 
 func newSync(myVersioningFilename, otherVersioningFilename, modSetToUpdate, myRepoRoot string, otherVersionCommit string) (sync, error) {
@@ -180,7 +195,10 @@ func (s sync) updateAllGoModFiles() error {
 	for _, mod := range s.OtherModuleSet.Modules {
 		g.Go(func() error {
 			ver := s.OtherModuleSet.Version
-			if s.OtherModuleVersionCommit != "" {
+			switch {
+			case s.localVersion != "":
+				ver = s.localVersion
+			case s.OtherModuleVersionCommit != "":
 				version, err := s.parseVersionInfo(string(mod), s.OtherModuleVersionCommit)
 				if err != nil {
 					return err
