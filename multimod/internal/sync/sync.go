@@ -41,30 +41,30 @@ func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot stri
 
 	myRepoRoot, err := repo.FindRoot()
 	if err != nil {
-		return fmt.Errorf("unable to find repo root: %v", err)
+		return fmt.Errorf("unable to find repo root: %w", err)
 	}
 	log.Printf("Using repo with root at %s\n\n", myRepoRoot)
 
 	if allModuleSets {
 		otherModuleSetNames, err = shared.GetAllModuleSetNames(otherVersioningFile, otherRepoRoot)
 		if err != nil {
-			return fmt.Errorf("could not automatically get all module set names: %v", err)
+			return fmt.Errorf("could not automatically get all module set names: %w", err)
 		}
 	}
 
 	repo, err := git.PlainOpen(myRepoRoot)
 	if err != nil {
-		return fmt.Errorf("could not open repo at %v: %v", myRepoRoot, err)
+		return fmt.Errorf("could not open repo at %v: %w", myRepoRoot, err)
 	}
 
 	if err = shared.VerifyWorkingTreeClean(repo); err != nil {
-		return fmt.Errorf("VerifyWorkingTreeClean failed: %v", err)
+		return fmt.Errorf("VerifyWorkingTreeClean failed: %w", err)
 	}
 
 	for _, moduleSetName := range otherModuleSetNames {
 		s, err := newSync(myVersioningFile, otherVersioningFile, moduleSetName, myRepoRoot, otherVersionCommit)
 		if err != nil {
-			return fmt.Errorf("error creating new sync struct: %v", err)
+			return fmt.Errorf("error creating new sync struct: %w", err)
 		}
 
 		log.Printf("===== Module Set: %v =====\n", moduleSetName)
@@ -72,13 +72,13 @@ func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot stri
 		if computeVersionsLocally {
 			s.localVersion, err = localPseudoVersion(otherRepoRoot, otherVersionCommit, s.OtherModuleSet.Version)
 			if err != nil {
-				return fmt.Errorf("could not compute version locally: %v", err)
+				return fmt.Errorf("could not compute version locally: %w", err)
 			}
 			log.Printf("Computed version %s locally from %s\n", s.localVersion, otherVersionCommit)
 		}
 
 		if err = s.updateAllGoModFiles(); err != nil {
-			return fmt.Errorf("updateAllGoModFiles failed: %v", err)
+			return fmt.Errorf("updateAllGoModFiles failed: %w", err)
 		}
 
 		modSetUpToDate, err := checkModuleSetUpToDate(repo)
