@@ -63,7 +63,11 @@ var syncCmd = &cobra.Command{
 			otherVersioningFile = filepath.Join(otherRepoRoot,
 				fmt.Sprintf("%v.%v", defaultVersionsConfigName, defaultVersionsConfigType))
 		}
-		sync.Run(versioningFile, otherVersioningFile, otherRepoRoot, moduleSetNamesSync, otherVersionCommit, allModuleSetsSync, skipGoModTidySync, computeLocalSync)
+
+		err := sync.Run(versioningFile, otherVersioningFile, otherRepoRoot, moduleSetNamesSync, otherVersionCommit, allModuleSetsSync, skipGoModTidySync, computeLocalSync)
+		if err != nil {
+			log.Fatalf("sync failed: %v", err)
+		}
 	},
 }
 

@@ -17,6 +17,7 @@ package sync // nolint:revive // TODO: rename this internal package
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -33,37 +34,37 @@ import (
 )
 
 // Run runs the synchronization process.
-func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot string, otherModuleSetNames []string, otherVersionCommit string, allModuleSets bool, skipModTidy bool, computeVersionsLocally bool) {
+func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot string, otherModuleSetNames []string, otherVersionCommit string, allModuleSets bool, skipModTidy bool, computeVersionsLocally bool) error {
 	if computeVersionsLocally && otherVersionCommit == "" {
-		log.Fatal("computing versions locally requires a commit hash or branch name to sync to")
+		return errors.New("computing versions locally requires a commit hash or branch name to sync to")
 	}
 
 	myRepoRoot, err := repo.FindRoot()
 	if err != nil {
-		log.Fatalf("unable to find repo root: %v", err)
+		return fmt.Errorf("unable to find repo root: %v", err)
 	}
 	log.Printf("Using repo with root at %s\n\n", myRepoRoot)
 
 	if allModuleSets {
 		otherModuleSetNames, err = shared.GetAllModuleSetNames(otherVersioningFile, otherRepoRoot)
 		if err != nil {
-			log.Fatalf("could not automatically get all module set names: %v", err)
+			return fmt.Errorf("could not automatically get all module set names: %v", err)
 		}
 	}
 
 	repo, err := git.PlainOpen(myRepoRoot)
 	if err != nil {
-		log.Fatalf("could not open repo at %v: %v", myRepoRoot, err)
+		return fmt.Errorf("could not open repo at %v: %v", myRepoRoot, err)
 	}
 
 	if err = shared.VerifyWorkingTreeClean(repo); err != nil {
-		log.Fatalf("VerifyWorkingTreeClean failed: %v", err)
+		return fmt.Errorf("VerifyWorkingTreeClean failed: %v", err)
 	}
 
 	for _, moduleSetName := range otherModuleSetNames {
 		s, err := newSync(myVersioningFile, otherVersioningFile, moduleSetName, myRepoRoot, otherVersionCommit)
 		if err != nil {
-			log.Fatalf("error creating new sync struct: %v", err)
+			return fmt.Errorf("error creating new sync struct: %v", err)
 		}
 
 		log.Printf("===== Module Set: %v =====\n", moduleSetName)
@@ -71,13 +72,13 @@ func Run(myVersioningFile string, otherVersioningFile string, otherRepoRoot stri
 		if computeVersionsLocally {
 			s.localVersion, err = localPseudoVersion(otherRepoRoot, otherVersionCommit, s.OtherModuleSet.Version)
 			if err != nil {
-				log.Fatalf("could not compute version locally: %v", err)
+				return fmt.Errorf("could not compute version locally: %v", err)
 			}
 			log.Printf("Computed version %s locally from %s\n", s.localVersion, otherVersionCommit)
 		}
 
 		if err = s.updateAllGoModFiles(); err != nil {
-			log.Fatalf("updateAllGoModFiles failed: %v", err)
+			return fmt.Errorf("updateAllGoModFiles failed: %v", err)
 		}
 
 		modSetUpToDate, err := checkModuleSetUpToDate(repo)
@@ -105,6 +106,7 @@ Prerelease finished successfully. Now run the following to verify the changes:
 git diff main
 
 Then, if necessary, commit changes and push to upstream/make a pull request.`)
+	return nil
 }
 
 // sync holds fields needed to update one module set at a time.

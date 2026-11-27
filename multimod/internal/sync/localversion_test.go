@@ -96,6 +96,23 @@ func TestLocalPseudoVersion(t *testing.T) {
 	})
 }
 
+func TestResolveCommitNotACommit(t *testing.T) {
+	repo, _, err := sharedtest.InitNewRepoWithCommit(t.TempDir())
+	require.NoError(t, err)
+	head, err := repo.Head()
+	require.NoError(t, err)
+	commit, err := repo.CommitObject(head.Hash())
+	require.NoError(t, err)
+
+	got, err := resolveCommit(repo, commit.Hash)
+	require.NoError(t, err)
+	assert.Equal(t, commit.Hash, got.Hash)
+
+	// A tree is neither a commit nor an annotated tag.
+	_, err = resolveCommit(repo, commit.TreeHash)
+	require.ErrorContains(t, err, "neither a commit nor an annotated tag")
+}
+
 func TestUpdateAllGoModFilesWithLocalVersion(t *testing.T) {
 	versionsYamlDir := filepath.Join(testDataDir, "update_all_go_mod_files_with_commit_hash")
 	myVersioningFilename := filepath.Join(versionsYamlDir, "versions_valid.yaml")
