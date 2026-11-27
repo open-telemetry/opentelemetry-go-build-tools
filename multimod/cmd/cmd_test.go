@@ -158,17 +158,17 @@ func newRepo(t *testing.T, files map[string]string) (string, *git.Repository) {
 // directory and points the versioning file at it.
 func setupMyRepo(t *testing.T) (string, *git.Repository) {
 	t.Helper()
-	// go-git reads the committer identity from the global git config.
-	home := t.TempDir()
-	require.NoError(t, os.WriteFile(filepath.Join(home, ".gitconfig"),
-		[]byte("[user]\n\tname = test\n\temail = test@example.com\n"), 0o600))
-	t.Setenv("HOME", home)
-
 	root, repo := newRepo(t, map[string]string{
 		"go.mod":        runRootGoMod,
 		"b/go.mod":      runSubGoMod,
 		"versions.yaml": runMyVersions,
 	})
+	// go-git takes the committer identity from git config; set it on the repo
+	// itself so the test does not depend on the machine's (or OS's) global config.
+	cfg, err := repo.Config()
+	require.NoError(t, err)
+	cfg.User.Name, cfg.User.Email = "test", "test@example.com"
+	require.NoError(t, repo.SetConfig(cfg))
 	t.Chdir(root)
 
 	old := versioningFile
