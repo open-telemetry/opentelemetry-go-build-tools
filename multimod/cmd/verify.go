@@ -35,7 +35,10 @@ var verifyCmd = &cobra.Command{
 	Run: func(*cobra.Command, []string) {
 		log.Println("Using versioning file", versioningFile)
 
-		verify.Run(versioningFile)
+		err := verify.Run(versioningFile)
+		if err != nil {
+			log.Fatalf("verify failed: %v", err)
+		}
 	},
 }
 

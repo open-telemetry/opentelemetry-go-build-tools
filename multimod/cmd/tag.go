@@ -39,7 +39,10 @@ var tagCmd = &cobra.Command{
 	Run: func(*cobra.Command, []string) {
 		log.Println("Using versioning file", versioningFile)
 
-		tag.Run(versioningFile, moduleSetName, commitHash, deleteModuleSetTags, printTags)
+		err := tag.Run(versioningFile, moduleSetName, commitHash, deleteModuleSetTags, printTags)
+		if err != nil {
+			log.Fatalf("tag failed: %v", err)
+		}
 	},
 }
 

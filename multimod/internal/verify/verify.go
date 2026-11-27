@@ -28,30 +28,31 @@ import (
 )
 
 // Run runs the verification.
-func Run(versioningFile string) {
+func Run(versioningFile string) error {
 	repoRoot, err := repo.FindRoot()
 	if err != nil {
-		log.Fatalf("unable to find repo root: %v", err)
+		return fmt.Errorf("unable to find repo root: %v", err)
 	}
 
 	v, err := newVerification(versioningFile, repoRoot)
 	if err != nil {
-		log.Fatalf("Error creating new verification struct: %v", err)
+		return fmt.Errorf("Error creating new verification struct: %v", err)
 	}
 
 	if err = v.verifyAllModulesInSet(); err != nil {
-		log.Fatalf("verifyAllModulesInSet failed: %v", err)
+		return fmt.Errorf("verifyAllModulesInSet failed: %v", err)
 	}
 
 	if err = v.verifyVersions(); err != nil {
-		log.Fatalf("verifyVersions failed: %v", err)
+		return fmt.Errorf("verifyVersions failed: %v", err)
 	}
 
 	if err = v.verifyDependencies(); err != nil {
-		log.Fatalf("verifyDependencies failed: %v", err)
+		return fmt.Errorf("verifyDependencies failed: %v", err)
 	}
 
 	log.Println("PASS: Module sets successfully verified.")
+	return nil
 }
 
 type verification struct {
