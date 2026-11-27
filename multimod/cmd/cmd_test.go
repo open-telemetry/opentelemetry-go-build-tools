@@ -235,7 +235,7 @@ func TestSyncRun(t *testing.T) {
 
 	syncCmd.Run(syncCmd, nil)
 
-	got, err := os.ReadFile(filepath.Join(root, "b", "go.mod"))
+	got, err := os.ReadFile(filepath.Join(root, "b", "go.mod")) // #nosec G304
 	require.NoError(t, err)
 	assert.Contains(t, string(got), "example.com/other v1.2.4-0.")
 	assert.Equal(t, filepath.Join(otherRoot, "versions.yaml"), otherVersioningFile)
@@ -265,7 +265,7 @@ func TestRunFailures(t *testing.T) {
 
 	for _, name := range []string{"verify", "tag", "prerelease", "sync"} {
 		t.Run(name, func(t *testing.T) {
-			c := exec.Command(os.Args[0], "-test.run=^TestRunFailures$") // #nosec G204
+			c := exec.Command(os.Args[0], "-test.run=^TestRunFailures$") // #nosec G702 G204
 			c.Env = append(os.Environ(), "MULTIMOD_CMD_FATAL="+name)
 			out, err := c.CombinedOutput()
 
