@@ -26,6 +26,8 @@ type codeownersGenerator struct {
 	setFile              func(fileName string, data []byte) error
 }
 
+const goModSuffix = "go.*" // Covers both go.mod and go.sum
+
 func (cg *codeownersGenerator) Generate(data datatype.GithubData) error {
 	allowlistData, err := cg.getFile(data.AllowlistFilePath)
 	if err != nil {
@@ -41,11 +43,14 @@ func (cg *codeownersGenerator) Generate(data datatype.GithubData) error {
 
 LOOP:
 	for _, folder := range data.Folders {
+		trimmedFolder := strings.TrimPrefix(folder, data.RootFolder+"/")
+		spacing := data.MaxLength - len(folder) // MaxLength was calculated based on untrimmed folder
+
 		m := data.Components[folder]
 		// check if component is unmaintained or deprecated
 		for stability := range m.Status.Stability {
 			if stability == unmaintainedStatus {
-				unmaintainedCodeowners = append(unmaintainedCodeowners, fmt.Sprintf("%s/%s %s", strings.TrimPrefix(folder, data.RootFolder+"/"), strings.Repeat(" ", data.MaxLength-len(folder)), data.DefaultCodeOwner))
+				unmaintainedCodeowners = append(unmaintainedCodeowners, fmt.Sprintf("%s/%s %s", trimmedFolder, strings.Repeat(" ", spacing), data.DefaultCodeOwner))
 				continue LOOP
 			}
 		}
@@ -57,7 +62,10 @@ LOOP:
 				owners += " "
 				owners += formatGithubUser(owner)
 			}
-			ownerComponents = append(ownerComponents, fmt.Sprintf("%s/%s %s%s", strings.TrimPrefix(folder, data.RootFolder+"/"), strings.Repeat(" ", data.MaxLength-len(folder)), data.DefaultCodeOwner, owners))
+			ownerComponents = append(ownerComponents, fmt.Sprintf("%s/%s %s%s", trimmedFolder, strings.Repeat(" ", spacing), data.DefaultCodeOwner, owners))
+			if m.Status.Codeowners.ExcludeGoMod {
+				ownerComponents = append(ownerComponents, fmt.Sprintf("%s/%s%s %s", trimmedFolder, goModSuffix, strings.Repeat(" ", spacing-len(goModSuffix)), data.DefaultCodeOwner))
+			}
 		}
 	}
 
