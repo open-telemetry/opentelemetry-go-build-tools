@@ -56,7 +56,10 @@ var prereleaseCmd = &cobra.Command{
 	Run: func(*cobra.Command, []string) {
 		log.Println("Using versioning file", versioningFile)
 
-		prerelease.Run(versioningFile, moduleSetNames, skipGoModTidy, commitToDifferentBranch)
+		err := prerelease.Run(versioningFile, moduleSetNames, skipGoModTidy, commitToDifferentBranch)
+		if err != nil {
+			log.Fatalf("prerelease failed: %v", err)
+		}
 	},
 }
 

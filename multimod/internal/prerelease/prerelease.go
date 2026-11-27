@@ -31,14 +31,6 @@ import (
 	"go.opentelemetry.io/build-tools/multimod/internal/shared"
 )
 
-// Run runs the prerelease process.
-func Run(versioningFile string, moduleSetNames []string, skipModTidy bool, commitToDifferentBranch bool) {
-	err := run(versioningFile, moduleSetNames, skipModTidy, commitToDifferentBranch)
-	if err != nil {
-		log.Fatalf("prerelease failed: %v", err)
-	}
-}
-
 // Used for testing overrides.
 var (
 	workingTreeClean = shared.VerifyWorkingTreeClean
@@ -46,7 +38,8 @@ var (
 	commit           = commitChanges
 )
 
-func run(versioningFile string, moduleSetNames []string, skipModTidy bool, commitToDifferentBranch bool) error {
+// Run runs the prerelease process.
+func Run(versioningFile string, moduleSetNames []string, skipModTidy bool, commitToDifferentBranch bool) error {
 	repoRoot, err := findRoot()
 	if err != nil {
 		return fmt.Errorf("unable to find repo root: %w", err)

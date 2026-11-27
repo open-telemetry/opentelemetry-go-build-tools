@@ -570,7 +570,7 @@ func TestUpdateAll(t *testing.T) {
 	}
 
 	require.NoError(t, sharedtest.WriteTempFiles(modFiles))
-	require.NoError(t, run(vFile, nil, true, false))
+	require.NoError(t, Run(vFile, nil, true, false))
 
 	expected := map[string][]byte{
 		filepath.Join("test", "test1", "go.mod"): []byte("module go.opentelemetry.io/all/test/test1\n\n" +
