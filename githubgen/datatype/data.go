@@ -29,26 +29,28 @@ type GithubData struct {
 // Codeowners represents the code owners for a component.
 type Codeowners struct {
 	// Active codeowners
-	Active []string `mapstructure:"active"`
+	Active []string `yaml:"active"`
 	// Emeritus codeowners
-	Emeritus []string `mapstructure:"emeritus"`
+	Emeritus []string `yaml:"emeritus"`
+	// Whether to leave go.mod and go.sum assigned to default codeowner
+	ExcludeGoMod bool `yaml:"exclude_go_mod"`
 }
 
 // Status represents the status of a component.
 type Status struct {
-	Stability     map[string][]string `mapstructure:"stability"`
-	Distributions []string            `mapstructure:"distributions"`
-	Class         string              `mapstructure:"class"`
-	Warnings      []string            `mapstructure:"warnings"`
-	Codeowners    *Codeowners         `mapstructure:"codeowners"`
+	Stability     map[string][]string `yaml:"stability"`
+	Distributions []string            `yaml:"distributions"`
+	Class         string              `yaml:"class"`
+	Warnings      []string            `yaml:"warnings"`
+	Codeowners    *Codeowners         `yaml:"codeowners"`
 }
 
 // Metadata represents the metadata for a component.
 type Metadata struct {
 	// Type of the component.
-	Type string `mapstructure:"type"`
+	Type string `yaml:"type"`
 	// Status information for the component.
-	Status *Status `mapstructure:"status"`
+	Status *Status `yaml:"status"`
 }
 
 // DistributionData represents the distribution data for a component.

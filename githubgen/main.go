@@ -133,6 +133,12 @@ func run(folder string, allowlistFilePath string, generators []datatype.Generato
 			if len(currentFolder) > maxLength {
 				maxLength = len(currentFolder)
 			}
+			if m.Status.Codeowners.ExcludeGoMod {
+				goModPattern := filepath.Join(folder, goModSuffix)
+				if len(goModPattern) > maxLength {
+					maxLength = len(goModPattern)
+				}
+			}
 		}
 		return nil
 	})
