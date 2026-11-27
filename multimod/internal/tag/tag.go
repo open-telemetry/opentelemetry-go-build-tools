@@ -33,12 +33,12 @@ import (
 func Run(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags bool, shouldPrintTags bool) error {
 	repoRoot, err := repo.FindRoot()
 	if err != nil {
-		return fmt.Errorf("unable to change to repo root: %v", err)
+		return fmt.Errorf("unable to change to repo root: %w", err)
 	}
 
 	t, err := newTagger(versioningFile, moduleSetName, repoRoot, commitHash, deleteModuleSetTags)
 	if err != nil {
-		return fmt.Errorf("Error creating new tagger struct: %v", err)
+		return fmt.Errorf("Error creating new tagger struct: %w", err)
 	}
 
 	// if delete-module-set-tags is specified, then delete all newModTagNames
@@ -46,13 +46,13 @@ func Run(versioningFile, moduleSetName, commitHash string, deleteModuleSetTags b
 	// modules in the given set.
 	if deleteModuleSetTags {
 		if err := t.deleteModuleSetTags(); err != nil {
-			return fmt.Errorf("Error deleting tags for the specified module set: %v", err)
+			return fmt.Errorf("Error deleting tags for the specified module set: %w", err)
 		}
 
 		log.Println("Successfully deleted module tags")
 	} else {
 		if err := t.tagAllModules(nil); err != nil {
-			return fmt.Errorf("unable to tag modules: %v", err)
+			return fmt.Errorf("unable to tag modules: %w", err)
 		}
 	}
 

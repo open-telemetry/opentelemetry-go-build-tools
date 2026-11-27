@@ -31,24 +31,24 @@ import (
 func Run(versioningFile string) error {
 	repoRoot, err := repo.FindRoot()
 	if err != nil {
-		return fmt.Errorf("unable to find repo root: %v", err)
+		return fmt.Errorf("unable to find repo root: %w", err)
 	}
 
 	v, err := newVerification(versioningFile, repoRoot)
 	if err != nil {
-		return fmt.Errorf("Error creating new verification struct: %v", err)
+		return fmt.Errorf("Error creating new verification struct: %w", err)
 	}
 
 	if err = v.verifyAllModulesInSet(); err != nil {
-		return fmt.Errorf("verifyAllModulesInSet failed: %v", err)
+		return fmt.Errorf("verifyAllModulesInSet failed: %w", err)
 	}
 
 	if err = v.verifyVersions(); err != nil {
-		return fmt.Errorf("verifyVersions failed: %v", err)
+		return fmt.Errorf("verifyVersions failed: %w", err)
 	}
 
 	if err = v.verifyDependencies(); err != nil {
-		return fmt.Errorf("verifyDependencies failed: %v", err)
+		return fmt.Errorf("verifyDependencies failed: %w", err)
 	}
 
 	log.Println("PASS: Module sets successfully verified.")
