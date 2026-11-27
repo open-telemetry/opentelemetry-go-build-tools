@@ -57,7 +57,7 @@ func newCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			err = os.WriteFile(filepath.Clean(pathWithExt), templateBytes, os.FileMode(0644))
+			err = os.WriteFile(filepath.Clean(pathWithExt), templateBytes, os.FileMode(0644)) //nolint:gosec // preserve existing file permissions
 			if err != nil {
 				return err
 			}

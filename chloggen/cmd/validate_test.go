@@ -29,7 +29,7 @@ const validateUsage = `Usage:
   chloggen validate [flags]
 
 Flags:
-  -h, --help   help for validate
+  -h, --help[=true|false]   help for validate
 
 Global Flags:
       --config string   (optional) chloggen config file`

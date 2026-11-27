@@ -15,7 +15,7 @@ import (
 	"go.opentelemetry.io/build-tools/grater/internal/workspace"
 )
 
-const fileReadWrite = 0644
+const fileReadWrite = 0o600
 
 func TestAdd(t *testing.T) {
 	testDir := t.TempDir()

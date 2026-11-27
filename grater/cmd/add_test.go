@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const fileReadWrite = os.FileMode(0o644)
+const fileReadWrite = os.FileMode(0o600)
 const addUsage = `Adds one or more dependents to be tested. The dependents local or remote path can be specified as command line arguments or in a .txt file, or both.
 
 Usage:
@@ -26,8 +26,8 @@ grater add -f dependents.txt
 
 
 Flags:
-  -f, --file string   path to the dependents file
-  -h, --help          help for add`
+  -f, --file string         path to the dependents file
+  -h, --help[=true|false]   help for add`
 
 func TestAdd(t *testing.T) {
 	out, err := runCobra(t, "add", "--help")

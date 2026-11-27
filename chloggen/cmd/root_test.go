@@ -33,8 +33,8 @@ Available Commands:
   validate    Validates the files in the changelog directory
 
 Flags:
-      --config string   (optional) chloggen config file
-  -h, --help            help for chloggen
+      --config string       (optional) chloggen config file
+  -h, --help[=true|false]   help for chloggen
 
 Use "chloggen [command] --help" for more information about a command.`
 

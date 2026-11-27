@@ -30,8 +30,8 @@ const newUsage = `Usage:
   chloggen new [flags]
 
 Flags:
-  -f, --filename string   name of the file to add
-  -h, --help              help for new
+  -f, --filename string     name of the file to add
+  -h, --help[=true|false]   help for new
 
 Global Flags:
       --config string   (optional) chloggen config file`

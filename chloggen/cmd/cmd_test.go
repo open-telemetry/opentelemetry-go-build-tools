@@ -119,25 +119,25 @@ func setupTestDir(t *testing.T, entries []*chlog.Entry) {
 	changelogBytes, err := readBytes(filepath.Join("testdata", config.DefaultChangeLogFilename))
 	require.NoError(t, err)
 	for _, filename := range globalCfg.ChangeLogs {
-		require.NoError(t, os.MkdirAll(filepath.Dir(filename), os.FileMode(0o755)))
-		require.NoError(t, os.WriteFile(filename, changelogBytes, os.FileMode(0o755)))
+		require.NoError(t, os.MkdirAll(filepath.Dir(filename), os.FileMode(0o750)))
+		require.NoError(t, os.WriteFile(filename, changelogBytes, os.FileMode(0o600)))
 	}
 
 	// Create the entries directory
-	require.NoError(t, os.MkdirAll(globalCfg.EntriesDir, os.FileMode(0o755)))
+	require.NoError(t, os.MkdirAll(globalCfg.EntriesDir, os.FileMode(0o750)))
 
 	// Copy the entry template, for tests that ensure it is not deleted
 	templateInRootDir := config.New("testdata").TemplateYAML
 	templateBytes, err := readBytes(filepath.Clean(templateInRootDir))
 	require.NoError(t, err)
-	require.NoError(t, os.WriteFile(globalCfg.TemplateYAML, templateBytes, os.FileMode(0o755)))
+	require.NoError(t, os.WriteFile(globalCfg.TemplateYAML, templateBytes, os.FileMode(0o600)))
 
 	// Write the entries to the entries directory
 	for i, entry := range entries {
 		entryBytes, err := yaml.Marshal(entry)
 		require.NoError(t, err)
 		path := filepath.Join(globalCfg.EntriesDir, fmt.Sprintf("%d.yaml", i))
-		require.NoError(t, os.WriteFile(path, entryBytes, os.FileMode(0o755)))
+		require.NoError(t, os.WriteFile(path, entryBytes, os.FileMode(0o600)))
 	}
 }
 

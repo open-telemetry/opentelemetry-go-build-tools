@@ -26,8 +26,8 @@ grater replace -f replacements.txt
 
 
 Flags:
-  -f, --file string   path to the replacements file
-  -h, --help          help for replace`
+  -f, --file string         path to the replacements file
+  -h, --help[=true|false]   help for replace`
 
 func TestReplace(t *testing.T) {
 	out, err := runCobra(t, "replace", "--help")
