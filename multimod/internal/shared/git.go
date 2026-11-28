@@ -18,6 +18,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
+	"os/exec"
+	"strings"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -80,6 +83,32 @@ func CommitChanges(commitMessage string, repo *git.Repository, customAuthor *obj
 
 	hash, err := worktree.Commit(commitMessage, commitOptions)
 	if err != nil {
+		// go-git rejects valid branch merge refs such as refs/pull/123/head.
+		// Git itself accepts them, so use it when that config validation fails.
+		if strings.Contains(err.Error(), "branch config: invalid merge") {
+			// The commit message is passed as a separate argument, never through a shell.
+			// #nosec G204
+			cmd := exec.Command("git", "commit", "--all", "--allow-empty", "-m", commitMessage)
+			cmd.Dir = worktree.Filesystem.Root()
+			if customAuthor != nil {
+				cmd.Env = append(os.Environ(),
+					"GIT_AUTHOR_NAME="+customAuthor.Name,
+					"GIT_AUTHOR_EMAIL="+customAuthor.Email,
+					"GIT_AUTHOR_DATE="+customAuthor.When.Format("2006-01-02T15:04:05-0700"),
+					"GIT_COMMITTER_NAME="+customAuthor.Name,
+					"GIT_COMMITTER_EMAIL="+customAuthor.Email,
+					"GIT_COMMITTER_DATE="+customAuthor.When.Format("2006-01-02T15:04:05-0700"),
+				)
+			}
+			if output, gitErr := cmd.CombinedOutput(); gitErr != nil {
+				return plumbing.ZeroHash, fmt.Errorf("could not commit changes to git: %s: %w", output, gitErr)
+			}
+			ref, headErr := repo.Head()
+			if headErr != nil {
+				return plumbing.ZeroHash, fmt.Errorf("could not get committed head: %w", headErr)
+			}
+			return ref.Hash(), nil
+		}
 		return plumbing.ZeroHash, fmt.Errorf("could not commit changes to git: %w", err)
 	}
 
